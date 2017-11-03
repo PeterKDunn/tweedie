@@ -1,13 +1,15 @@
 \name{AICtweedie}
 \alias{AICtweedie}
 \title{Tweedie Distributions}
-\description{The AIC for Tweedie models}
+\description{The AIC for Tweedie glms}
 \usage{
-	AICtweedie( glm.obj, k = 2)
+	AICtweedie( glm.obj, dispersion=NULL, k = 2, verbose=TRUE)
 }
 \arguments{
 	\item{glm.obj}{a fitted Tweedie \code{glm} object}
+	\item{dispersion}{the dispersion parameter \eqn{\phi}{phi}; the default is \code{NULL} which means to use an estimate}
 	\item{k}{numeric: the penalty per parameter to be used; the default is \eqn{k=2}}
+	\item{verbose}{if \code{TRUE} (the default), a warning message is produced about the Poisson case; see the second Note below}
 }
 \value{
 	Returns a numeric value with the
@@ -19,7 +21,18 @@
 }
     
 \section{Note}{
-	Computing the \acronym{AIC} can take a long time!
+	Computing the \acronym{AIC} may take a long time.
+}
+\section{Note}{
+	Tweedie distributions with the index parameter as 1
+	correspond to Poisson distributions when \eqn{\phi = 1}{phi=1}.
+	However,
+	in general a Tweedie distribution with an index parameter equal to one
+	may not be referring to a Poisson distribution with \eqn{\phi=1}{phi=1},
+	so we cannot assume that \eqn{\phi=1}{phi=1} just because the index parameter is set to one.
+	If the Poisson distribution is intended,
+	then \code{dispersion=1} should be specified.
+	The same argument applies for similar situations.
 }
 \author{Peter Dunn (\email{pdunn2@usc.edu.au})}
 \references{
