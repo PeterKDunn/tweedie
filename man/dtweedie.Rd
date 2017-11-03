@@ -12,14 +12,14 @@
 \description{Density, distribution function, quantile function and random
      generation for the Tweedie family of distributions}
 \usage{
-	dtweedie(y, xi=NULL, mu, phi, power=NULL)
+	dtweedie(y, xi=power, mu, phi, power=NULL)
 	dtweedie.series(y, power, mu, phi)
 	dtweedie.inversion(y, power, mu, phi, exact=TRUE, method)
 	dtweedie.stable(y, power, mu, phi)
-	ptweedie(q, xi=NULL, mu, phi, power=NULL)
+	ptweedie(q, xi=power, mu, phi, power=NULL)
 	ptweedie.series(q, power, mu, phi)
-	qtweedie(p, xi=NULL, mu, phi, power=NULL)
-	rtweedie(n, xi=NULL, mu, phi, power=NULL)
+	qtweedie(p, xi=power, mu, phi, power=NULL)
+	rtweedie(n, xi=power, mu, phi, power=NULL)
 }
 \arguments{
 	\item{y, q}{vector of quantiles}

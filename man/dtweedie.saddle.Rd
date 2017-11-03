@@ -2,7 +2,7 @@
 \alias{dtweedie.saddle}
 \title{Tweedie Distributions (saddlepoint approximation)}
 \description{Saddlepoint density for the Tweedie distributions}
-\usage{dtweedie.saddle(y, xi=NULL, mu, phi, eps=1/6, power=NULL)}
+\usage{dtweedie.saddle(y, xi=power, mu, phi, eps=1/6, power=NULL)}
 \arguments{
 	\item{y}{the vector of responses}
 	\item{xi}{the value of \eqn{\xi}{xi} such that the variance is 

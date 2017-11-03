@@ -137,7 +137,7 @@
    Since the function can be slow and sometimes problematic,
    feedback can be good;
    but it can also be unnecessary when one knows all is well.}
-   \item{add0}{if \code{TRUE}, the value \code{p=0} is used in forming the profile log-likelihood
+   \item{add0}{if \code{TRUE}, the value \code{p=0} is used in forming the profile lohg-likelihood
    (corresponding to the normal distribution);
    the default value is \code{add0=FALSE}}
 }
@@ -149,7 +149,7 @@
    a plot is produced that shows the profile log-likelihood
    computed at each value in \code{p.vec}
    (smoothed if \code{do.smooth=TRUE}).
-   This function can be temperamental 
+   This function can be tempermental 
    (for theoretical reasons involved in numerically computing the density),
    and this plot shows the values of \eqn{p}{p} requested on the
    horizontal axis (using \code{\link{rug}}); 
