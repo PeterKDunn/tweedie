@@ -71,6 +71,6 @@ These are not to be called by the user.
 	An extended quasi-likelihood function
 	\emph{Biometrika},
 	\bold{74}(2), 221--232.
-	doi{https://doi.org/10.1093/biomet/74.2.221}
+	doi{10.1093/biomet/74.2.221}
 }
 \keyword{models}

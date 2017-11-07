@@ -230,13 +230,13 @@
    Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
    \emph{Statistics and Computing}, 
    \bold{18}, 73--86.
-   \doi{https://doi.org/10.1007/s11222-007-9039-6}
+   \doi{10.1007/s11222-007-9039-6}
    
    Dunn, Peter K and Smyth, Gordon K (2005).
    Series evaluation of Tweedie exponential dispersion model densities
    \emph{Statistics and Computing},
    \bold{15}(4). 267--280.
-   \doi{https://doi.org/10.1007/s11222-005-4070-y}
+   \doi{10.1007/s11222-005-4070-y}
 
    Dunn, Peter K and Smyth, Gordon K (2001).
    Tweedie family densities: methods of evaluation.
@@ -257,7 +257,7 @@
    \emph{Biometrika}
    \bold{74}(2),
    221--232.
-   \doi{https://doi.org/10.1093/biomet/74.2.221}
+   \doi{10.1093/biomet/74.2.221}
    
    Tweedie, M. C. K. (1984).
    An index which distinguishes between some important exponential families.
