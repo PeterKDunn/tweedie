@@ -131,7 +131,7 @@
    Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
    \emph{Statistics and Computing}, 
    \bold{18}, 73--86.
-   \doi{https://doi.org/10.1007/s11222-007-9039-6}
+   \doi{10.1007/s11222-007-9039-6}
 
 	Dunn, Peter K and Smyth, Gordon K (2005).
 	Series evaluation of Tweedie exponential dispersion model densities

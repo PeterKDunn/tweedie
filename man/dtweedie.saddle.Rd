@@ -93,7 +93,7 @@
 	An extended quasi-likelihood function.
 	\emph{Biometrika},
 	\bold{74}(2), 221--232.
-	\doi{2}
+	\doi{10.1093/biomet/74.2.221}
 	
 	Tweedie, M. C. K. (1984). 
 	An index which distinguishes between some important exponential families.
