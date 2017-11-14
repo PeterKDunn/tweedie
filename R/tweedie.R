@@ -1060,7 +1060,7 @@ ptweedie.series <- function(q, power, mu, phi) {
   logfmax <-  -log(lambda)/2
   estlogf <- logfmax
   
-  N <- min( lambda )
+  N <- max( lambda )
   
   while ( estlogf > (logfmax - drop) ) {
     N <- N + 1
