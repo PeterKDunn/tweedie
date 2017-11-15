@@ -10,6 +10,8 @@
 \alias{dtweedie.series.bigp}
 \alias{dtweedie.series.smallp}
 \alias{stored.grids}
+\alias{twcdf}
+\alias{twpdf}
 
 
 \title{Tweedie internal function}
@@ -50,6 +52,12 @@
 	The default is \code{eps=1/6}
 	(as suggested by Nelder and Pregibon, 1987).}
 	\item{p}{the Tweedie index parameter}
+	\item{exact}{a flag for the FORTRAN to use exact-zeros acceleration algorithmic the calculation (1 means to do so)}
+	\item{verbose}{a flag for the FORTRAN: 1 means to be verbose }
+	\item{funvalue}{the value of the call returned by the FORTRAN code}
+	\item{exitstatus}{the exit status returned by the FORTRAN code}
+	\item{relerr}{an estimation of the relative error returned by the FORTRAN code}
+	\item{its}{the number of iterations of the algorithm returned by the FORTRAN code}	
 }
 \details{
 These are not to be called by the user.
