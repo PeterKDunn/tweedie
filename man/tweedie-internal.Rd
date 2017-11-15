@@ -50,7 +50,6 @@
 	The default is \code{eps=1/6}
 	(as suggested by Nelder and Pregibon, 1987).}
 	\item{p}{the Tweedie index parameter}
-	\item{exact}{a flag for the FORTRAN to use exact-zeros acceleration algorithmic the calculation (1 means to do so)}
 }
 \details{
 These are not to be called by the user.
