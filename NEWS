@@ -6,7 +6,7 @@
 	- Fixed an issue with AICtweedie, where the incorrect AIC
 	  was given when prior weights used (reported by David Scollnik)
 	- Fixed a compilation error (in the subroutine smallp, where 
-	  variables were declared as initialised (mant thanks to 
+	  variables were declared as initialised (many thanks to 
 	  Iñaki Úcar <i.ucar86@gmail.com>)
 	- Other minor edits.
 
