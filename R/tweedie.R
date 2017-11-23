@@ -6925,7 +6925,7 @@ tweedie.convert <- function(xi=NULL, mu, phi, power=NULL){
   gam    <- phi * (xi - 1) * mu^(xi - 1)   # gamma distribution beta  (scale)
   p0     <- exp( -lambda )
   phi    <- 1/alpha
-  mu     <- scale/phi
+  mu     <- gam/phi
   
   list( poisson.lambda = lambda, 
         gamma.shape = alpha, 
