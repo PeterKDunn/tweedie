@@ -6920,11 +6920,18 @@ tweedie.convert <- function(xi=NULL, mu, phi, power=NULL){
   # Now  mu  and  phi  will be the same length if one of them happened to be a scalar, so this works:
   if( length(mu) != length(phi) ) stop("phi and mu must be scalars, or the same length.\n")
   
-  lambda <- ( mu^(2-xi) ) / ( phi*(2-xi) )
-  alpha  <- (2-xi)  /(xi-1)
-  gam    <- phi * (xi - 1) * mu^(xi-1)
+  lambda <- ( mu^(2 - xi) ) / ( phi * (2 - xi) )  # Poissson distribution mean
+  alpha  <- (2 - xi)  / (xi - 1)           # gamma distribution alpha (shape)
+  gam    <- phi * (xi - 1) * mu^(xi - 1)   # gamma distribution beta  (scale)
   p0     <- exp( -lambda )
+  phi    <- 1/alpha
+  mu     <- scale/phi
   
-  list( poisson.lambda=lambda, gamma.shape=alpha, gamma.scale=gam, p0=p0)
+  list( poisson.lambda = lambda, 
+        gamma.shape = alpha, 
+        gamma.scale = gam, 
+        p0 = p0,
+        gamma.mean = mu,
+        gamma.phi = 1/alpha)
   
 }
