@@ -6890,12 +6890,14 @@ tweedie.convert <- function(xi=NULL, mu, phi, power=NULL){
   
   if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")
   xi.notation <- TRUE
-  if ( is.null(power) ) {
+  if ( is.null(power) ) {   # Then  xi  is given
+    if ( !is.numeric(xi)) stop("xi  must be numeric.\n")
     power <- xi
   } else {
     xi.notation <- FALSE
   }
-  if ( is.null(xi) ) {
+  if ( is.null(xi) ) {   # Then   power  is given
+    if ( !is.numeric(xi)) stop("power  must be numeric.\n")
     xi.notation <- FALSE
     xi <- power
   }
