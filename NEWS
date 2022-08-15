@@ -3,16 +3,12 @@ DATE ; tweedie 2.3.2
   - Added more error checks to  tweedie.convert()  to prevent a model being provided
 
 15 November 2017: tweedie 2.3.1
-   - Updated pwteedie.series to fix a bug (reported by Lu Yang),
-     where incorrect answers could sometimes be returned.
+   - Updated pwteedie.series to fix a bug (reported by Lu Yang), where incorrect answers could sometimes be returned.
    - Other minor fixes
    
 06 November 2017: tweedie 2.3.0
-	- Fixed an issue with AICtweedie, where the incorrect AIC
-	  was given when prior weights used (reported by David Scollnik)
-	- Fixed a compilation error (in the subroutine smallp, where 
-	  variables were declared as initialised (many thanks to 
-	  Iñaki Úcar <i.ucar86@gmail.com>)
+	- Fixed an issue with AICtweedie, where the incorrect AIC was given when prior weights used (reported by David Scollnik)
+	- Fixed a compilation error (in the subroutine smallp, where variables were declared as initialised (thanks to Iñaki Úcar <i.ucar86@gmail.com>)
 	- Other minor edits.
 
 23 August 2017: tweedie 2.2.10
@@ -21,8 +17,7 @@ DATE ; tweedie 2.3.2
 
 22 August 2017: tweedie 2.2.9
 
-   - Fixed tweedie.f to keep it quiet more often (sometimes, diagnostic reports 
-     meant for internal monitoring, were printed)
+   - Fixed tweedie.f to keep it quiet more often (sometimes, diagnostic reports meant for internal monitoring, were printed)
    - Fixed a problem reported by Gustavo Lacerda, where  ptweedie()  returned NaN
    - As a result, the series is now used in far more cases when  1<xi<2  for  ptweedie()
    - Changed  rtweedie()  algorithm for the case 1<xi<2 (thanks to Carlos J. Gil Bellosta)
@@ -63,13 +58,9 @@ June 2014: tweedie 2.1.9
    - Added NAMESPACE
    
 09 June 2011: tweedie 2.1.0 
-	- Changed tweedie.profile to ignore values of p/xi outside (1,2)
-	  rather than report an error.
-	- In some unusual cases, when p/xi=0 was used (with add0=TRUE), the
-	  mle of p was between 0 and 1 (which is impossible).  We report a
-	  warning message to check the data and the call to tweedie.profile(),
-	  but then set the mle to the value of p/xi giving the larger value
-	  of the likelihood
+	- Changed tweedie.profile to ignore values of p/xi outside (1,2) rather than report an error.
+	- In some unusual cases, when p/xi=0 was used (with add0=TRUE), the mle of p was between 0 and 1 (which is impossible).  We report a
+	  warning message to check the data and the call to tweedie.profile(), but then set the mle to the value of p/xi giving the larger value of the likelihood
 	- Made the functions usually called by users able to accept xi or power
 	- A few minor edits to FORTRAN code; some variables not declared
 
@@ -77,22 +68,15 @@ June 2014: tweedie 2.1.9
 	- Minor fixes to documentation
  	- Fixed the  add0  input
  	- Some minor changes to the code to tidy up adding the zero
-	- If values of xi/p are given between 0 and 1, or less than 0, 
-     they are now omitted (with a message) rather than creating an error.  
-     If there are no values left after omitting the problem value,
-     an error message is given.
+	- If values of xi/p are given between 0 and 1, or less than 0, they are now omitted (with a message) rather than creating an error. If there are no values left after omitting the problem value, an error message is given.
  	
 30 September 2010: tweedie 2.0.7 
-   - Ensured tweedie.profile does not use power=1.  This case 
-    (power=1 and phi not equal to 1) is too hard for me to deal with at present.
-   - Fixed an error introduced in version 2.0.5, where the value of xi/vec/p.vec
-     was set to 1.2 (y>=0) or 1.5 (y>0) when not explictly specified
-   - Fixed an error that reported the wrong mle of phi when the mle 
-     occured at an endpoint of the given  xi  values.
+   - Ensured tweedie.profile does not use power=1.  This case (power=1 and phi not equal to 1) is too hard for me to deal with at present.
+   - Fixed an error introduced in version 2.0.5, where the value of xi/vec/p.vec was set to 1.2 (y>=0) or 1.5 (y>0) when not explictly specified
+   - Fixed an error that reported the wrong mle of phi when the mle occured at an endpoint of the given  xi  values.
 
 26 August 2010: tweedie 2.0.5 
-   - Change to dtweedie.inversion to ensure density=0 is returned
-     when y<0 (1<p<2) or p<-0 (when p>2)
+   - Change to dtweedie.inversion to ensure density=0 is returned when y<0 (1<p<2) or p<-0 (when p>2)
    - Change to tweedie.profile to fix a problem that p=1 returned an error
    - Changed so that tweedie.profile works withg p/xi = 0 when add0=TRUE (default is FALSE)
    - Fixed some minor outputting messages (when verbose==2)  
@@ -106,8 +90,7 @@ June 2014: tweedie 2.1.9
 	- Added the facility to refer to  p  as  xi  in line with GLMs text
 
 17 November 2009: tweedie 2.0.1 
-  - Changed the default p.vec when 1<p<2 to seq(1.2, 1.8, by=0.05)
-    (it was  seq(1.2, 1.8, by=0.1)  )
+  - Changed the default p.vec when 1<p<2 to seq(1.2, 1.8, by=0.05) (it was  seq(1.2, 1.8, by=0.1)  )
   - Slightly changed default output (added sep="" to some paste commands)
   - Added  AICtweedie  to compute AIC for Tweedie glms
 
@@ -124,12 +107,10 @@ tweedie 1.6.9
   - Made minor changes to output when  verbose=FALSE
 
 tweedie 1.6.8
-  - Correct error in dtweedie.saddle y=0 for 1<p,2 
-    (Thanks to Glenn Meyers <GMeyers@iso.com>)
+  - Correct error in dtweedie.saddle y=0 for 1<p<2 (Thanks to Glenn Meyers <GMeyers@iso.com>)
   
 tweedie 1.6.7
-  - Correct error in rtweedie when power=1 and phi\ne 1 
-    (Thanks to Frederic Gosselin <frederic.gosselin@cemagref.fr>)
+  - Correct error in rtweedie when power=1 and phi\ne 1 (Thanks to Frederic Gosselin <frederic.gosselin@cemagref.fr>)
   
 tweedie 1.6.6
   - Corrected specification of GPL; no changes to functionality, code or documentation
@@ -163,61 +144,42 @@ tweedie 1.5.3:
   
 tweedie 1.5.2: 
   - Built for R version 2.5.1
-  - Removed the inversion computation from the example for  dtweedie;
-    it was very slow and hence caused problems
+  - Removed the inversion computation from the example for  dtweedie; it was very slow and hence caused problems
 
 tweedie 1.5.1: 
   - Built for R version 2.5.0
   - Fixed citation details
-  - Added note in dtweedie help page indicating where the methods
-    are defined (Dunn and Smyth, 2007).
+  - Added note in dtweedie help page indicating where the methods are defined (Dunn and Smyth, 2007).
   - Added tweedie-package.Rd
   - Fixed a small bug in  dtweedie.inversion (replaced  p  with   power)
 
 02 May 2007: tweedie  1.5
   - Built for R version 2.5
   - Made change to use of pmatch in function  tweedie
-  - Swapped the order of methods 1 and 2 in the call of
-    tweedie.inversion  to make consistent with a change
-    in the associated paper Dunn and Smyth.
-  - Fixed an uninitialized variable error in the FORTRAN code
-    which sometimes caused the inversion procedure to fail.
-  - Other minor changes (fixing spelling errors, updated
-    Dunn and Smyth reference; etc.)
+  - Swapped the order of methods 1 and 2 in the call of tweedie.inversion  to make consistent with a change in the associated paper Dunn and Smyth.
+  - Fixed an uninitialized variable error in the FORTRAN code which sometimes caused the inversion procedure to fail.
+  - Other minor changes (fixing spelling errors, updated Dunn and Smyth reference; etc.)
 
 04 December 2006: tweedie 1.4
   - Some very minor changes (some cosmetic) in the code
-  - Made the code more robust, exiting gracefully when Inf and NA appear
-    in the computed log-likelihood
-  - Slightly changed the output plot in tweedie.profile, to reflect
-    that some value of  p.vec  may not have a corresponding likelihood
-    computed accurately (or, indeed, at all)
-  - Added new function   tweedie.plot  to make it easier to plot Tweedie
-    densities
+  - Made the code more robust, exiting gracefully when Inf and NA appear in the computed log-likelihood
+  - Slightly changed the output plot in tweedie.profile, to reflect that some value of  p.vec  may not have a corresponding likelihood computed accurately (or, indeed, at all)
+  - Added new function   tweedie.plot  to make it easier to plot Tweedie densities
 
 tweedie 1.02  
   - Built for R version 2.0.0
-  - Major fix: The mle estimate of phi was incorrect in tweedie.profile 
-    (thanks Sarah Lennox, QDPI&F) 
+  - Major fix: The mle estimate of phi was incorrect in tweedie.profile (thanks Sarah Lennox, QDPI&F) 
   - Some better warnings in  tweedie.profile
-  - tweedie.profile now allows the actual computed points to
-    be added to the plot using the  do.points  option (default 
-	 is TRUE)
-  - The tweedie.profile function now smooth and computes 
-    confidence intervals even when the computed likelihood 
-	 values contain Infs or NAs.
+  - tweedie.profile now allows the actual computed points to be added to the plot using the  do.points  option (default is TRUE)
+  - The tweedie.profile function now smooth and computes confidence intervals even when the computed likelihood values contain Infs or NAs.
 
 tweedie 1.01  
   - Built for R version 1.9
-  - fixed a bug in rtweedie: it failed for p=2 (thanks 
-    Sarah Lennox, QDPI&F)
-  - fixed a bug in qtweedie: it failed in some cases
-   (thanks Gordon Smyth, WEHI)
-  - added a proper  .First.lib  function (!) (thanks to
-    James Wettenhall and Gordon Smyth, WEHI)
+  - fixed a bug in rtweedie: it failed for p=2 (thanks Sarah Lennox, QDPI&F)
+  - fixed a bug in qtweedie: it failed in some cases (thanks Gordon Smyth, WEHI)
+  - added a proper  .First.lib  function (!) (thanks to James Wettenhall and Gordon Smyth, WEHI)
   - other minor bugs fixed
-  - the  tweedie  family function removed, and package
-    made dependent on the  statmod  package
+  - the  tweedie  family function removed, and package made dependent on the  statmod  package
   - updated for R version 1.9
 
 tweedie 1.0  
