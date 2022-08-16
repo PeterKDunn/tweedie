@@ -6500,7 +6500,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
     
     
     skip.obs <- FALSE
-    if ( class( catch.possible.error ) == "try-error" ) {
+    if ( is( catch.possible.error, "try-error" ) ) {
       skip.obs <- TRUE 
     }
     
@@ -6639,7 +6639,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                 "2" = sum( log( dtweedie.series( y = ydata, 
                                                  mu = mu, 
                                                  power =p, 
-                                                 phic =phi) ) ),
+                                                 phi =phi) ) ),
                 "3" = sum( log( dtweedie.inversion( y = ydata, 
                                                     mu = mu, 
                                                     power = p, 
