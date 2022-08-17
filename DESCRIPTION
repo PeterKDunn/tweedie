@@ -1,6 +1,6 @@
 Package: tweedie
-Version: 2.3.4
-Date: 2022-08-16
+Version: 2.3.5
+Date: 2022-08-17
 Title: Evaluation of Tweedie Exponential Family Models
 Authors@R: person("Peter K.", "Dunn", email = "pdunn2@usc.edu.au", role = c("cre", "aut") )
 Author: Peter K. Dunn [cre, aut]

@@ -1,4 +1,4 @@
-tweedie 2.3.4 (Release date: 2022-08-16)
+tweedie 2.3.5 (Release date: 2022-08-17)
 ==============
 
 Changes:
