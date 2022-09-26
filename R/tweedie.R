@@ -7194,7 +7194,7 @@ tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
     xi.notation <- FALSE
   }
   if ( is.null(xi) ) {   # Then   power  is given
-    if ( !is.numeric(xi)) stop("power  must be numeric.\n")
+    if ( !is.numeric(power)) stop("power  must be numeric.\n")
     xi.notation <- FALSE
     xi <- power
   }
