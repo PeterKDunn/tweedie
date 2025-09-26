@@ -1,32 +1,23 @@
-\name{tweedie.plot}
-\alias{tweedie.plot}
+\name{tweedie_Plot}
+\alias{tweedie_Plot}
 \title{Tweedie Distributions: plotting}
 \description{Plotting Tweedie density and distribution functions}
 \usage{
-   tweedie.plot(y, xi, mu, phi, type="pdf", power=NULL, add=FALSE, ...)
+   tweedie_Plot(y, xi, mu, phi, type="pdf", power=NULL, add=FALSE, ...)
 }
 \arguments{
    \item{y}{vector of values at which to evaluate and plot}
-	\item{xi}{the value of \eqn{\xi}{xi} such that the variance is 
-	\eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var(Y) = phi * mu^xi}}
+   \item{xi}{the value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var(Y) = phi * mu^xi}}
    \item{power}{a synonym for \eqn{\xi}{xi}}
    \item{mu}{the mean}
    \item{phi}{the dispersion}
-   \item{type}{what to plot: \code{pdf} (the default) means the probability function,
-               or \code{cdf}, the cumulative distribution function}
-   \item{add}{if \code{TRUE}, the plot is added to the current device;
-              if \code{FALSE} (the default), a new plot is produced}
+   \item{type}{what to plot: \code{pdf} (the default) means the probability function, or \code{cdf}, the cumulative distribution function}
+   \item{add}{if \code{TRUE}, the plot is added to the current device; if \code{FALSE} (the default), a new plot is produced}
    \item{...}{Arguments to be passed to the plotting method}
 }
 \value{
-   this function is usually called for side-effect of
-   producing a plot of the specified Tweedie distribution,
-   properly plotting the exact zero that occurs at \eqn{y=0}{y=0}
-   when \eqn{1<p<2}{1<p<2}.
-   However,
-   it also produces a list with the computed density at the given points,
-   with components \code{y} and \code{x} respectively,
-   such that \code{plot(y~x)} approximately reproduces the plot.
+   this function is usually called for side-effect of producing a plot of the specified Tweedie distribution, properly plotting the exact zero that occurs at \eqn{y=0}{y=0} when \eqn{1<p<2}{1<p<2}.
+   However, it also produces a list with the computed density at the given points, with components \code{y} and \code{x} respectively, such that \code{plot(y ~ x)} approximately reproduces the plot.
 }
 \details{
    For details, see \code{\link{dtweedie}}
@@ -90,24 +81,24 @@
 
 \examples{
 ### Plot a Tweedie density with 1<p<2
-yy <- seq(0,5,length=100)
-tweedie.plot( power=1.7, mu=1, phi=1, y=yy, lwd=2)
-tweedie.plot( power=1.2, mu=1, phi=1, y=yy, add=TRUE, lwd=2, col="red")
-legend("topright",lwd=c(2,2), col=c("black","red"), pch=c(19,19),
-   legend=c("p=1.7","p=1.2") )
+yy <- seq(0, 5, length = 100)
+tweedie_Plot( power = 1.7, mu = 1, phi = 1, y = yy, lwd = 2)
+tweedie_Plot( power = 1.2, mu = 1, phi = 1, y = yy, add = TRUE, lwd = 2, col = "red")
+legend("topright", lwd = c(2, 2), col = c("black", "red"), pch = c(19, 19),
+       legend = c("p = 1.7", "p = 1.2") )
 
 ### Plot distribution functions
-tweedie.plot( power=1.05, mu=1, phi=1, y=yy,
-   lwd=2, type="cdf", ylim=c(0,1))
-tweedie.plot( power=2, mu=1, phi=1, y=yy, 
-   add=TRUE, lwd=2, type="cdf",col="red")
-legend("bottomright",lwd=c(2,2), col=c("black","red"),
-   legend=c("p=1.05","p=2") )
+tweedie_Plot( power = 1.05, mu = 1, phi = 1, y = yy,
+   lwd = 2, type = "cdf", ylim = c(0, 1))
+tweedie_Plot( power = 2, mu = 1, phi = 1, y = yy, 
+   add = TRUE, lwd = 2, type = "cdf", col = "red")
+legend("bottomright", lwd = c(2, 2), col = c("black", "red"),
+   legend = c("p = 1.05", "p = 2") )
 
 ### Now, plot two densities, combining p>2 and 1<p<2
-tweedie.plot( power=3.5, mu=1, phi=1, y=yy, lwd=2)
-tweedie.plot( power=1.5, mu=1, phi=1, y=yy, lwd=2, col="red", add=TRUE)
-legend("topright",lwd=c(2,2), col=c("black","red"), pch=c(NA,19),
-   legend=c("p=3.5","p=1.5") )
+tweedie_Plot( power = 3.5, mu = 1, phi = 1, y = yy, lwd = 2)
+tweedie_Plot( power = 1.5, mu = 1, phi = 1, y = yy, lwd = 2, col = "red", add = TRUE)
+legend("topright", lwd = c(2, 2), col = c("black", "red"), pch = c(NA, 19),
+   legend = c("p = 3.5", "p = 1.5") )
 } 
 \keyword{models}

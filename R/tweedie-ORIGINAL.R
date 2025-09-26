@@ -165,7 +165,7 @@ dtweedie.logv.bigp <- dtweedie.logv.bigp <- function( y, phi, power){
   #
   
   p <- power
-  a <- ( 2 - p ) / ( 1 - p )
+  a <- (2 - p) / (1 - p)
   a1 <- 1 - a
   
   r <- -a1 * log(phi) - log(p - 2) - a * log(y) + a * log(p - 1)
@@ -276,7 +276,7 @@ dtweedie.logw.smallp <- function(y, phi, power){
   # Set up
   #
   p <- power
-  a <- ( 2 - p ) / ( 1 - p )         # Note that a<0 for 1<p<2
+  a <- (2 - p) / (1 - p)         # Note that a<0 for 1<p<2
   
   a1 <- 1 - a
   r <- -a * log(y) + a * log(p - 1) - a1 * log(phi) - log(2 - p)        # All terms to power j
@@ -287,7 +287,7 @@ dtweedie.logw.smallp <- function(y, phi, power){
   # to approximate gamma terms, and find max as j.max
   #
   logz <- max(r)             # To find largest  j  needed
-  j.max <- max( y ^ ( 2 - p ) / ( phi * (2 - p) ) )
+  j.max <- max( y ^ (2 - p) / ( phi * (2 - p) ) )
   j <- max( 1, j.max )
   
   cc <- logz + a1 + a * log(-a)    #
@@ -459,10 +459,10 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL)
   id.series <- id.type0
   id.interp <- id.type0
   
-  ###   Now consider the cases 1<p<2   ###
+  ###   Now consider the cases 1 < p < 2   ###
   id.type0 <- (y == 0)
-  if (any(id.type0)) {
-    if ( power > 2 ) {
+  if (any(id.type0) ) {
+    if (power > 2) {
       density[id.type0] <- 0
     } else {
       lambda <- mu[id.type0] ^ (2 - power) / (phi[id.type0] * (2 - power))
@@ -821,8 +821,8 @@ dtweedie.series <- function(y, power, mu, phi){
   }
   
   
-  y0 <- (y == 0 )
-  yp <- ( y!=0 )
+  y0 <- (y == 0)
+  yp <- (y != 0)
   density <- array( dim = length(y))
   
   if ( (power == 2) | (power == 1) ) { # Special cases
@@ -846,17 +846,17 @@ dtweedie.series <- function(y, power, mu, phi){
   } else{
     
     if ( any(y == 0) ) {
-      if ( power > 2 ) {
+      if (power > 2) {
         density[y0] <- 0 * y[y0]
       }
-      if ( ( power > 1) && (power < 2) ) {
+      if ( (power > 1) && (power < 2) ) {
         lambda <- mu[y0] ^ (2 - power) / ( phi[y0] * (2 - power) )
         density[y0] <- exp( -lambda )
       }
     }
     
     if ( any( y!= 0 ) ) { 
-      if ( power > 2 ) {
+      if (power > 2) {
         density[yp] <- dtweedie.series.bigp(power = power,
                                             mu = mu[yp], 
                                             y = y[yp],
@@ -931,8 +931,7 @@ dtweedie.series.smallp <- function(power, y, mu, phi){
 
 #############################################################################
 ptweedie <- function(q, xi = NULL, mu, phi, power = NULL) {
-  # Evaluates the cdf for
-  # Tweedie distributions.
+  # Evaluates the cdf for Tweedie distributions.
   
   # Peter Dunn
   # 01 May 2001
@@ -1007,7 +1006,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL) {
                lambda = mu / phi )
   }
   
-  # Now, for p>2 the only option is the inversion
+  # Now, for p > 2 the only option is the inversion
   if ( power> 2 ) {
     
     # However, when y/q is very small, 
@@ -1103,11 +1102,11 @@ ptweedie.series <- function(q, power, mu, phi) {
   p <- power
   lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
   tau <- phi * (p - 1) * mu ^ ( p - 1 )
-  alpha <- (2 - p) / ( 1 - p )
+  alpha <- (2 - p) / (1 - p)
   
   
-  # Now find the limits on N:
-  # First the lower limit on N
+  # Now find the limits on N, the summation index
+  # First the *lower* limit on N
   
   drop <- 39
   lambda <- max(lambda )
@@ -1123,7 +1122,7 @@ ptweedie.series <- function(q, power, mu, phi) {
   lo.N <- max(1, floor(N) )
   
   
-  # Now for the upper limit on N
+  # Now for the *upper* limit on N
   
   lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
   lambda <- min( lambda )
@@ -1145,7 +1144,7 @@ ptweedie.series <- function(q, power, mu, phi) {
   
   lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
   tau <- phi * (p - 1) * mu ^ ( p - 1 )
-  alpha <- (2 - p) / ( 1 - p )
+  alpha <- (2 - p) / (1 - p)
   
   
   for (N in (lo.N : hi.N)) {
@@ -5812,7 +5811,7 @@ dtweedie.jw.smallp <- function(y, phi, power ){
   # Set up
   #
   p <- power
-  a <- ( 2 - p ) / ( 1 - p )         # Note that a<0 for 1<p<2
+  a <- (2 - p) / (1 - p)         # Note that a<0 for 1<p<2
   
   a1 <- 1 - a
   r <- -a * log(y) + a * log(p - 1) - a1 * log(phi) - log(2 - p)        # All terms to power j
@@ -5823,7 +5822,7 @@ dtweedie.jw.smallp <- function(y, phi, power ){
   # to approximate gamma terms, and find max as j.max
   #
   logz <- max(r)             # To find largest  j  needed
-  j.max <- max( y^( 2 - p ) / ( phi * (2 - p) ) )
+  j.max <- max( y^(2 - p) / ( phi * (2 - p) ) )
   j <- max( 1, j.max )
   
   c <- logz + a1 + a * log(-a)
@@ -5912,7 +5911,7 @@ dtweedie.kv.bigp <- function(y, phi, power){
   #
   
   p <- power
-  a <- ( 2 - p ) / ( 1 - p )
+  a <- (2 - p) / (1 - p)
   a1 <- 1 - a
   
   r <- -a1 * log(phi) - log(p - 2) - a * log(y) + a * log(p - 1)
@@ -7071,7 +7070,7 @@ dtweedie.stable <- function(y, power, mu, phi)
 
 
 #############################################################################
-tweedie.plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
+tweedie_Plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
                          add =FALSE, ...) {
    
   # Sort out the xi/power notation
@@ -7182,7 +7181,7 @@ AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
 
 #############################################################################
 
-tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
+tweedie_Convert <- function(xi = NULL, mu, phi, power = NULL){
   ### ADDED 14 July 2017
   
   if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")

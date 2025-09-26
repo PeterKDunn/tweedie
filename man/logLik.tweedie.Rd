@@ -13,22 +13,16 @@
 	Returns the log-likelihood from the specified model
 }
 \details{
-	The log-likelihood is computed from the \acronym{AIC},
-	so see \code{\link{AICtweedie}} for more details.
+	The log-likelihood is computed from the \acronym{AIC}, so see \code{\link{AICtweedie}} for more details.
 }
     
 \section{Note}{
 	Computing the log-likelihood may take a long time.
 }
 \section{Note}{
-	Tweedie distributions with the index parameter as 1
-	correspond to Poisson distributions when \eqn{\phi = 1}{phi=1}.
-	However,
-	in general a Tweedie distribution with an index parameter equal to one
-	may not be referring to a Poisson distribution with \eqn{\phi=1}{phi=1},
-	so we cannot assume that \eqn{\phi=1}{phi=1} just because the index parameter is set to one.
-	If the Poisson distribution is intended,
-	then \code{dispersion=1} should be specified.
+	Tweedie distributions with the index parameter as 1 correspond to Poisson distributions when \eqn{\phi = 1}{phi=1}.
+	However, in general a Tweedie distribution with an index parameter equal to one may not be referring to a Poisson distribution with \eqn{\phi = 1}{phi = 1}, so we cannot assume that \eqn{\phi = 1}{phi = 1} just because the index parameter is set to one.
+	If the Poisson distribution is intended, then \code{dispersion=1} should be specified.
 	The same argument applies for similar situations.
 }
 \author{Peter Dunn (\email{pdunn2@usc.edu.au})}

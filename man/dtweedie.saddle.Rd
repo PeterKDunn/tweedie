@@ -2,53 +2,29 @@
 \alias{dtweedie.saddle}
 \title{Tweedie Distributions (saddlepoint approximation)}
 \description{Saddlepoint density for the Tweedie distributions}
-\usage{dtweedie.saddle(y, xi=NULL, mu, phi, eps=1/6, power=NULL)}
+\usage{dtweedie.saddle(y, xi = NULL, mu, phi, eps = 1/6, power=NULL)}
 \arguments{
 	\item{y}{the vector of responses}
-	\item{xi}{the value of \eqn{\xi}{xi} such that the variance is 
-	\eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var(Y) = phi * mu^xi}}
-   \item{power}{a synonym for \eqn{\xi}{xi}}
+	\item{xi}{the value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var(Y) = phi * mu^xi}}
+  \item{power}{a synonym for \eqn{\xi}{xi}}
 	\item{mu}{the mean}
 	\item{phi}{the dispersion}
 	\item{eps}{the offset in computing the variance function.
-	The default is \code{eps=1/6}
-	(as suggested by Nelder and Pregibon, 1987).}
+	           The default is \code{eps = 1/6} (as suggested by Nelder and Pregibon, 1987).}
 	}
-	\value{saddlepoint (approximate) density
-	for the given Tweedie distribution with parameters 
-	\code{mu},
-	\code{phi}
-	and
-	\code{power}.
+	\value{saddlepoint (approximate) density for the given Tweedie distribution with parameters \code{mu}, \code{phi}	and 	\code{power}.
 }
 \details{
-    The Tweedie family of distributions belong to the class
-    of exponential dispersion models (\acronym{EDM}s),
-    famous for their role in generalized linear models.
-    The Tweedie distributions are the \acronym{EDM}s with a variance of the form
-    \eqn{\mbox{var}[Y]=\phi\mu^p}{var(Y) = phi * mu^power}
-    where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
-    \bold{This function only evaluates for \eqn{p}{power}
-    greater than or equal to one.}
-    Special cases include the 
-    normal (\eqn{p=0}{power=0}),
-    Poisson (\eqn{p=1}{power=1} with \eqn{\phi=1}{phi=1}),
-    gamma (\eqn{p=2}{power=2})
-    and
-    inverse Gaussian (\eqn{p=3}{power=3})
-    distributions.
-    For other values of  \code{power},
-    the distributions are still defined but cannot be written in closed form,
-    and hence evaluation is very difficult.
-    
-    When \eqn{1<p<2}{1 < power < 2},
-    the distribution are continuous for \eqn{Y}{Y} greater than zero,
-    with a positive mass at \eqn{Y=0}{Y=0}.
-    For \eqn{p>2}{power > 2}, 
-    the distributions are continuous for \eqn{Y}{Y} greater than zero.
+    The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{EDM}s), famous for their role in generalized linear models.
+    The Tweedie distributions are the \acronym{EDM}s with a variance of the form \eqn{\mbox{var}[Y]=\phi\mu^p}{var(Y) = phi * mu^power} where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
+    \bold{This function only evaluates for \eqn{p}{power} greater than or equal to one.}
+    Special cases include the normal (\eqn{p = 0}{power = 0}), Poisson (\eqn{p = 1}{power = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}{power = 2}) and inverse Gaussian (\eqn{p = 3}{power = 3}) distributions.
+    For other values of  \code{power}, the distributions are still defined but cannot be written in closed form, and hence evaluation is very difficult.
 
-    This function approximates the density using the
-    saddlepoint approximation defined by Nelder and Pregibon (1987).
+    When \eqn{1<p<2}{1 < power < 2}, the distribution are continuous for \eqn{Y}{Y} greater than zero, with a positive mass at \eqn{Y = 0}{Y = 0}.
+    For \eqn{p>2}{power > 2}, the distributions are continuous for \eqn{Y}{Y} greater than zero.
+
+    This function approximates the density using the saddlepoint approximation defined by Nelder and Pregibon (1987).
 }
 \author{Peter Dunn (\email{pdunn2@usc.edu.au})}
 \references{
