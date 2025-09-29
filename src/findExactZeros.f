@@ -1,0 +1,19 @@
+      SUBROUTINE findExactZeros(zeroL, zeroR, zeroSP, zero)
+*     Finds the exact zeros, to integrate between
+
+      IMPLICIT NONE
+      INTEGER m
+      DOUBLE PRECISION zeroR, zeroL, zero, zeroSP
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi
+      DOUBLE PRECISION x1, x2, xacc, rtnewton
+      COMMON /params/ Cp, Cy, Cmu, Cphi
+      COMMON /mparam/ m 
+
+
+      EXTERNAL findImkM
+      
+      xacc = 1.0d-10
+      zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
+
+      RETURN
+      END

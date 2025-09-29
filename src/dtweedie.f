@@ -1557,7 +1557,7 @@
       double precision  x, p, phi, y, rl
 
       mu = 1.0d00
-      call kt( p, phi, y, mu, x, rl, imgcgf )
+*      call kt( p, phi, y, mu, x, rl, imgcgf )
 
       return
       end
@@ -1759,7 +1759,7 @@
 
 *****************************************************************
 ****************************************************************
-      subroutine findkmax(p, phi, y, kmax, tmax, mmax, ier)
+      subroutine findkmax2(p, phi, y, kmax, tmax, mmax, ier)
 *     Finds  k_max and t_max; solve k'(t) = 0 with Newton's method.
 
       double precision  kmax, tmax, imgdcgf, kddasht, 
@@ -1955,7 +1955,7 @@
       double precision  x, p, phi, y
 
       mu = 1.0d00
-      call kdasht( p, phi, y, mu, x, tmp)
+*      call kdasht( p, phi, y, mu, x, tmp)
       dk = tmp
       return
       end
@@ -1974,7 +1974,7 @@
 
       mu = 1.0d00
       call kt(p, phi, y, mu, x, rl, im)
-      call kdasht(p, phi, y, mu, x, drl, dim)
+*      call kdasht(p, phi, y, mu, x, drl, dim)
 
       lambda = calclambda( p, phi, mu )
 
@@ -2166,5 +2166,4 @@
       end
 
 *****************************************************************
-
 
