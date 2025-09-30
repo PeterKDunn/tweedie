@@ -1,9 +1,8 @@
       SUBROUTINE findImkM(t, f, df)
 
       IMPLICIT NONE
-      DOUBLE PRECISION Cp, Cmu, Cphi, Cy, t, pi, f, df
-      DOUBLE PRECISION Imk, omega, pindex, front, alpha
-      DOUBLE PRECISION Imdk
+      DOUBLE PRECISION Cp, Cmu, Cphi, Cy, t, pi
+      DOUBLE PRECISION f, df, Imk, Imdk
       INTEGER m
       COMMON /params/ Cp, Cy, Cmu, Cphi
       COMMON /mparam/ m 
@@ -13,7 +12,7 @@
       CALL findImk(t, Imk) 
       CALL findImkd(t, Imdk)
       
-      f  = Imk - DBLE(m) * Cy
+      f  = Imk - DBLE(m) * pi
       df = Imdk
 
       RETURN 

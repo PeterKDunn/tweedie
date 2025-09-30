@@ -9,15 +9,12 @@
 
       IMPLICIT NONE
       DOUBLE PRECISION p, phi, y, funvalue, mu, pi
-      DOUBLE PRECISION calclambda, resulta, result
+      DOUBLE PRECISION resulta, result
       DOUBLE PRECISION result0, relerr, aimrerr
       DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION zeroL, zeroR, zero
-      DOUBLE PRECISION kmax, tmax, startPoint
       INTEGER ier, maxit, iteratn, exitstatus
-      INTEGER its, exacti, verbose, mfirst, mmax, m, mOld, mNew
+      INTEGER its, exacti, verbose, m
       LOGICAL  psmall, exact, stopIterating, convergence
-      LOGICAL leftSide
       COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
       COMMON /mparam/ m 
 
@@ -43,6 +40,7 @@
 *               0 if the approx zeros acceleration algorithm is used.
 
       pi = 4.0d0 * DATAN(1.0d0)
+      convergence = .FALSE.
 
 *     Defaults
       verbose = 0
@@ -59,7 +57,7 @@
       psmall = .FALSE.
       IF ( (p .GT. 1.0d00 ) .AND. (p .LT. 2.0d00) ) THEN
         psmall = .TRUE.
-        CALL findLambda(lambda, p, mu, phi)
+        CALL findLambda(lambda, Cp, Cmu, Cphi)
       ENDIF
 
 *     SPECIAL CASE: if y < 0, return 0
@@ -94,9 +92,9 @@
       write(*,*) "**               phi ", phi
 
       IF ( psmall ) THEN
-        CALL DFsmallp(funvalue, exitstatus, relerr, its, exact)
+        CALL DFsmallp(funvalue, exitstatus, relerr, exact)
       ELSE
-        CALL DFbigp(funvalue, exitstatus, relerr, its, exact)
+        CALL DFbigp(funvalue, exitstatus, relerr, exact)
       ENDIF
 
 

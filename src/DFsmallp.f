@@ -1,4 +1,4 @@
-      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, its, exact)
+      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, exact)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: 1 < p < 2
@@ -7,15 +7,11 @@
 *     OUT:  funvalue, exitstatus, relerr, its
 
       IMPLICIT NONE
-      DOUBLE PRECISION funvalue, pi
-      DOUBLE PRECISION calclambda, resulta, result
-      DOUBLE PRECISION result0, relerr, aimrerr
-      DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION zeroL, zeroR, zero
-      DOUBLE PRECISION kmax, tmax, startPoint
-      INTEGER ier, maxit, iteratn, exitstatus
-      INTEGER its, exacti, verbose, mfirst, mmax, m, mOld, mNew
-      LOGICAL  psmall, exact, stopIterating, convergence
+      DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR
+      DOUBLE PRECISION aimrerr, relerr, tmax, kmax, startPoint
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi
+      INTEGER mfirst, m, mOld, mNew, exitstatus, mmax
+      LOGICAL  exact, convergence
       LOGICAL leftSide
       COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
       COMMON /mparam/ m 
@@ -37,6 +33,9 @@
 
       write(*,*) " FOR 1 < p < 2"
       pi = 4.0d0 * DATAN(1.0d0)
+      exitstatus = 0
+      relerr = 1.0d00
+      convergence = .FALSE.
 
 *     FIND kmax, tmax, mmax
       CALL findKmax(kmax, tmax, mmax, mfirst, startPoint)

@@ -1,0 +1,110 @@
+
+      SUBROUTINE accelerate( FF, psi, xvec, mmatrix, nmatrix, w,
+     &                       znum, relerr, wold, sumarea, 
+     &                       flag, verbose )
+
+***
+*     Accelerates the series using Sidi's (1988) method.  Works
+*     faster than Shanks' method for the series with which
+*     we are concerned.
+***
+
+      IMPLICIT NONE
+      DOUBLE PRECISION mmatrix(2, 200), nmatrix(2, 200)
+      DOUBLE PRECISION xvec(200), FF, psi, w, relerr, wold(3)
+      DOUBLE PRECISION denom, sumarea, abserr, largest, wsave
+      INTEGER  i, znum, ell, flag, verbose
+
+***
+*     VARIABLES
+*     FF      : The cdf up to x_l
+*     psi     : the integral between x_l and x_{l+1}
+*     xvec    : contains the x-values used up to  x_{l+1}
+*     znum    : the iteration number for the table
+*     sumarea : the sum of the areas; rarely, psi = 0.0, which
+*               causes things to die.  In this case, use sumarea.
+*     flag    : if FLAG=1,  then the limits of the machine are being
+*               reached (largest integer).
+*     wsave   : the old value of w in case something goes awry
+*     w       : the value of the series summation, since the first
+*               value of x used.
+***
+
+      ell = znum - 1
+
+      flag = 0
+      largest = 1.0d30
+
+      IF ( DABS(psi) .LT. 1.0d-31 ) THEN
+         w = FF
+         relerr = 0.0d00
+*        Converged!
+
+         RETURN
+      ELSE
+*        If not converged, add latest area
+         mmatrix(2, 1) = FF / psi
+         nmatrix(2, 1) = 1.0d00 / psi
+         sumarea = sumarea + psi
+
+*        Add the new information
+         flag = 0
+         DO i = 2, znum
+   
+            denom = 1.0d00 / xvec(znum+ 1 - i) - 
+     &                        1.0d00 / xvec(znum)
+            mmatrix(2, i) = ( mmatrix(1, i - 1) - 
+     &                        mmatrix(2, i - 1) ) 
+     &                      / denom
+            nmatrix(2, i) = ( nmatrix(1, i - 1) - 
+     &                        nmatrix(2, i - 1) ) 
+     &                      / denom
+
+            IF ( (DABS(mmatrix(2, i)) .GT. largest) .OR.
+     &           (DABS(nmatrix(2, i)) .GT. largest) ) THEN
+               flag = 1
+            ENDIF
+         ENDDO
+         
+         IF ( (DABS(mmatrix(2,znum)) .GT. largest) .OR.
+     &        (DABS(nmatrix(2,znum)) .GT. largest) ) THEN
+            flag = 1
+            wsave = w
+         ELSE
+            IF ( znum .GT. 1 ) THEN
+               w = mmatrix(2, znum) / nmatrix(2, znum)
+            ENDIF
+
+            wold(1) = wold(2)
+            wold(2) = wold(3)
+            wold(3) = w
+
+         ENDIF
+
+*        This is the error used in DQEXT:
+*         relerr = abs( w - wold(1) ) + abs( ( w - wold(2) ) )
+*        This causes problems here though, and failure to work?????
+*        (eg, try it with p=1.5, mu=phi=1, y=0(100)10)?????????????
+
+         IF ( ell .GT. 3 ) THEN
+            relerr = DABS( w - wold(1) ) + 
+     &               DABS( ( w - wold(2) ) ) / w
+            abserr = DABS( wold(3) - wold(2) )
+         ELSE
+            relerr = 1.0d00
+         ENDIF
+
+         IF ( w .NE. 0.0d00 ) THEN
+            relerr = relerr
+         ENDIF
+
+*        Now drop first row
+         DO  i = 1, znum
+            mmatrix(1, i) = mmatrix(2, i)
+            nmatrix(1, i) = nmatrix(2, i)
+         ENDDO
+      ENDIF
+
+      RETURN
+      END
+  
