@@ -1,24 +1,29 @@
-      SUBROUTINE advanceM(mmax, kmax, leftSide, mOld, mNew)
+      SUBROUTINE advanceM(mmax, m, mOld, leftOfMax)
     
       IMPLICIT NONE
-      DOUBLE PRECISION kmax
-      INTEGER mOld, mNew, mmax
-      LOGICAL leftSide
-      
-      if (mOld .EQ. mmax) then
-        if (leftSide) then
-          mNew = mmax
-          leftSide = .FALSE.
-        else
-          mNew = mOld - 1
-        endif
-      else
-        if (leftSide) then
-          mNew = mOld + 1
-        else
-          mNew = mOld - 1
-        endif
-      endif
+      DOUBLE PRECISION Cp, Cmu, Cphi, Cy
+      COMMON /params/ Cp, Cy, Cmu, Cphi
+      INTEGER mOld, m, mmax
+      LOGICAL leftOfMax
+
+      IF (Cp. GT. 2.0d00 ) THEN
+        IF (Cy .GE. Cmu) THEN
+*         Always heading downwards, so easy
+          m = m - 1
+        ELSE
+          IF (leftOfMax) THEN
+
+            m = m + 1
+            IF (m .EQ. mmax ) THEN
+              leftOfMax = .FALSE.
+            ENDIF
+          ELSE
+            m = m - 1
+          ENDIF
+        ENDIF
+      ELSE
+*       IS THIS a separate IF???
+      ENDIF
       
       RETURN
       END

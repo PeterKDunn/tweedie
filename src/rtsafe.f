@@ -4,6 +4,7 @@
 *     From Numerical Recipes.
 *     Newton-Raphson, but with bisection
 
+      IMPLICIT NONE
       INTEGER MAXIT, numberTries
       DOUBLE PRECISION rtsafe, x1, x2, xacc
       EXTERNAL funcd

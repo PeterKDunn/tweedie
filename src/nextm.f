@@ -8,6 +8,7 @@
 *     IN:    tmax, mmax, zero2, m, firstm, zlo
 *     OUT:   m, firstm, zlo, zhi, zero
 
+      IMPLICIT NONE
       double precision  tmax, zero2, zlo, zhi, zero
       integer  mmax, m, firstm
 

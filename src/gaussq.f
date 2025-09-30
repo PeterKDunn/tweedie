@@ -1,4 +1,4 @@
-      SUBROUTINE gaussq( f1, sum, a, b, p, phi, y, mu )
+      SUBROUTINE gaussq( f1, sum, a, b)
 
 *     Integrates using the 512-pt Gauss quadrature rules.
 *     The integral requires access to the externally defined
@@ -14,10 +14,14 @@
 * OUTPUTS:
 *    sum    :The value of the integral
 
-      DOUBLE PRECISION  weights(256), absc(256),
-     &       sum, f1, a, b, xl, xu, p, phi, y, mu
+      IMPLICIT NONE
+      DOUBLE PRECISION weights(256), absc(256)
+      DOUBLE PRECISION sum, f1, a, b, xl, xu
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, aimrerr
       INTEGER  i, npoints
       EXTERNAL  f1
+      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+
 
 * VARIABLES:
 *    f1       :must be a double precision function declared externally
@@ -556,7 +560,7 @@
       npoints = 256
 *     For 512-pt quadrature: symmetry
 
-      do i = 1, npoints
+      DO i = 1, npoints
 *        Adjust abscissae
          xl = ( b - a ) / 2.0d00 *
      &         absc(i) + ( b + a ) / 2.0d00
@@ -565,13 +569,12 @@
 
 *        Evaluate
          sum = sum + weights(i) *
-     &            ( f1( p, phi, y, mu, xl ) +
-     &              f1( p, phi, y, mu, xu )   )
+     &            ( f1( xl ) + f1( xu )   )
 
-      enddo
+      ENDDO
       sum = sum * ( b - a ) / 2.0d00
 
-      return
-      end
+      RETURN
+      END
 
 

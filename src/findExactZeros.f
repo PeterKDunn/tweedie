@@ -5,11 +5,9 @@
       INTEGER m
       DOUBLE PRECISION zeroR, zeroL, zero, zeroSP
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION x1, x2, xacc, rtnewton
+      DOUBLE PRECISION xacc, rtnewton
       COMMON /params/ Cp, Cy, Cmu, Cphi
-      COMMON /mparam/ m 
-
-
+      COMMON /mparam/ m
       EXTERNAL findImkM
       
       xacc = 1.0d-10

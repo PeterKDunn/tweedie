@@ -1,16 +1,3 @@
-***
-*     Author:         Peter Dunn
-*     Creation date:  15 February 1999
-*     Last revision:  25 Septembeer 2025
-*
-* IN R, print statements for debugging as follows:
-*     call dblepr("The value of y is ",-1, y, 1)
-*     call intpr("The value of exact is ",-1, exact, 1)
-******************************************************************
-** Density-only routines
-******************************************************************
-
-
 ******************************************************************
       subroutine twpdf(p, phi, y, mu, exact, verbose,
      &               funvalue, exitstatus, relerr, its )
@@ -1952,7 +1939,7 @@
       double precision function dk(p, phi, y, x)
 *     Evaluates the derivative of the  k  function
 
-      double precision  x, p, phi, y
+      double precision  x, p, phi, y, tmp
 
       mu = 1.0d00
 *      call kdasht( p, phi, y, mu, x, tmp)
