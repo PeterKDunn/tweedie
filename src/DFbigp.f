@@ -140,11 +140,14 @@
 *       Accelerate immediately; 'no pre-acceleration' area
         write(*,*) "  > Not using pre-acceleration area"
         area1 = 0.0d00
+
+        mOld = m
+        CALL advanceM(mmax, m, mOld, leftOfMax)
       ELSE
 *       Find some areas BEFORE accelerating
         area1 = 0.0d00
-        mOld = m
 
+        mOld = m
         CALL advanceM(mmax, m, mOld, leftOfMax)
 
         stopPreAccelerate = .FALSE.
@@ -224,7 +227,6 @@
 *         psi: area of the latest region
           wvec(itsAcceleration) = psi
           write(*,*) "  - Area between zeros is:", psi
-          write(*,*) "--------------------------------"
 
           accMax = 40
           Wold = West
@@ -232,6 +234,8 @@
      &                    accMax, West)
 *          W is the best guess of the convergent integration
           write(*,*) "iteration", itsAcceleration, ":", West
+          write(*,*) "  - Estimate of tail area:", West
+          write(*,*) "--------------------------------"
 
 *         Check for convergence
          relerr = DABS( West - Wold ) /
