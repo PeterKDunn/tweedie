@@ -17,18 +17,25 @@
         CALL funcd(rtnewton, f, df)
         dx = f/df
         rtnewton = rtnewton - dx
+      write(*,*) "       j:", j
+      write(*,*) "rtnewton:", rtnewton
+      write(*,*) "       f:", f
+      write(*,*) "      df:", df
+      write(*,*) "  error:", DABS(dx)
+      write(*,*) "   xacc:", xacc
 
         IF ( (x1 - rtnewton) * (rtnewton - x2) .LT. 0.0d00) THEN
-          write(*,*) "rtnewton:", rtnewton
-          write(*,*) "       f:", f
-          write(*,*) "      df:", df
-          write(*,*) "rtnewton jumped out of brackets"
+*          write(*,*) "rtnewton:", rtnewton
+*          write(*,*) "       f:", f
+*          write(*,*) "      df:", df
+*          write(*,*) "rtnewton jumped out of brackets"
 *          STOP
         ENDIF
         IF ( DABS(dx) .LT. xacc) RETURN 
 *       Convergence!
       ENDDO
       write(*,*) "rtnewton: exceeded maximum iterations"
+      write(*,*) "       j:", j
       write(*,*) "rtnewton:", rtnewton
       write(*,*) "       f:", f
       write(*,*) "      df:", df
