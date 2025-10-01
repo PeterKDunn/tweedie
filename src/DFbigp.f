@@ -276,7 +276,7 @@
       
 *     We have the value of the integral in the CDF calculation. 
 *     So now work out the CDF
-      funvalue = (-1.0d00/pi) * areaT + 0.5
+      funvalue = (-1.0d00/pi) * areaT + 0.5d00
       write(*,*) "FINAL AREA: The cdf value is", funvalue
 
       RETURN
