@@ -12,9 +12,10 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, areaT, Wold2
       DOUBLE PRECISION zeroL, zeroR, zero, kmax, tmax
       DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(200)
-      DOUBLE PRECISION omegaInflect, DFintegrand, West, Wold
+      DOUBLE PRECISION omegaInflect, West, Wold
       DOUBLE PRECISION area0, area1, areaA, psi, xvec(200)
       DOUBLE PRECISION zeroBoundL, zeroBoundR
+      DOUBLE PRECISION DFintegrand
       EXTERNAL DFintegrand
       INTEGER exitstatus, itsAcceleration
       INTEGER mfirst, mmax, m, mOld, accMax
