@@ -9,7 +9,7 @@
 *     OUT: DFfun
 
       DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi, aimrerr
-      DOUBLE PRECISION calclambda, Imk, Rek, lambda
+      DOUBLE PRECISION Imk, Rek, lambda
       COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
 
 * MAJOR VARIABLES:
@@ -24,8 +24,11 @@
  
 
 
-      lambda = calclambda( Cp, Cphi, Cmu )
-      IF ( t .EQ. 0.0d00 ) THEN
+      CALL findLambda(lambda, Cp, Cmu, Cphi)
+      
+*     Check for when t = 0, which should never actually happen 
+      IF (DABS(t) .LT. 1.0d-14) THEN
+*        IF ( t .EQ. 0.0d00 ) THEN
          DFintegrand = Cmu - Cy
 * ?????
       ELSE
@@ -35,6 +38,12 @@
          DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
 *         write(*,*) " "
 *         write(*,*) "t", t
+*         write(*,*) "DFintegrand", DFintegrand
+         IF (DFintegrand .GT. 2) THEN
+             write(*,*) "***Integrand too big!"
+             write(*,*) "t", t
+             write(*,*) "DFintegrand", DFintegrand
+        ENDIF
 *         write(*,*) "Imk", Imk
 *         write(*,*) "DSIN(Imk)", DSIN(Imk)
 *         write(*,*) "Rek/t", Rek/t
