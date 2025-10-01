@@ -13,22 +13,28 @@
 *       IS THIS a separate IF??? OR use same one???
 
       ELSE
+      
         IF (Cy .GE. Cmu) THEN
 *         Always heading downwards, so easy
           m = m - 1
         ELSE
           IF (leftOfMax) THEN
-            m = m + 1
-            IF ( (m .EQ. mmax ) .AND.
-     &           (mOld .EQ. mmax ) ) THEN
+            IF (m .EQ. mmax) THEN
+*             Move to the other side
               leftOfMax = .FALSE.
+            ELSE
+              mOld = m
+              m = m + 1
+              leftOfMax = .TRUE.
             ENDIF
           ELSE
-            m = m - 1
+*           Can always just reduce m by one when to the the RIGHT of the maximum
+             m = m - 1
+             leftOfMax = .FALSE.
           ENDIF
         ENDIF
       ENDIF
-      
+
       RETURN
       END
       
