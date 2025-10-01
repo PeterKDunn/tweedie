@@ -1,4 +1,4 @@
-source("./tweedieFunctions.R")
+source("tweedieFunctions.R")
 
 
 kdashdash <- function(p, mu, phi, y, t){
@@ -22,11 +22,11 @@ kdashdash <- function(p, mu, phi, y, t){
 
 
 ## TMP
-mu <- 1.4
-phi <- 0.74
-p <- 3
-y <- 0.05
-t <- seq(0, 1080, 
+mu <- 2
+phi <- 1
+p <- 2.5
+y <- 0.3
+t <- seq(0, 15, 
          length = 1000)
 
 
@@ -91,7 +91,7 @@ plot(exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
      xlab = expression(Values~of~italic(t)),
      ylab = "Integrand",
      las = 1,
-  ylim = c(-0.0001, 0.0001),
+  #ylim = c(-0.0001, 0.0001),
      lwd = 2,
      type = "l")
 abline(h = 0, 
