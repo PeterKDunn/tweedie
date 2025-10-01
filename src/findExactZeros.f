@@ -11,7 +11,9 @@
       COMMON /mparam/ m
       EXTERNAL findImkM
       
-      xacc = 1.0d-10
+      xacc = 1.0d-09
+*     Sometimes, the curve is quite flat and accuracy is hard to 
+*     achieve, but not vital anyway
       zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
 
       RETURN
