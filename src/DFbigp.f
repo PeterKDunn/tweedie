@@ -9,7 +9,7 @@
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, sum
       DOUBLE PRECISION relerr, aimrerr, epsilon
-      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, areaT
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, areaT, Wold2
       DOUBLE PRECISION zeroL, zeroR, zero, kmax, tmax
       DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(200)
       DOUBLE PRECISION omegaInflect, DFintegrand, West, Wold
@@ -189,6 +189,9 @@
 *     3. INTEGRATE: the ACCELERATION regions: areaA
       write(*,*) "*******************************" 
       write(*,*) "3. INTEGRATE: the ACCELERATION"
+      
+      Wold = 0.0d00
+      Wold2 = 1.0d00
 
       IF (exact) THEN
         write(*,*) "----------------------------------"
@@ -229,6 +232,7 @@
           write(*,*) "  - Area between zeros is:", psi
 
           accMax = 40
+          Wold2 = Wold
           Wold = West
           CALL accelerate(xvec, wvec, itsAcceleration, 
      &                    accMax, West)
@@ -238,7 +242,7 @@
           write(*,*) "--------------------------------"
 
 *         Check for convergence
-         relerr = DABS( West - Wold ) /
+         relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
      &           (DABS(West) + epsilon )
           IF (relerr .LT. aimrerr ) THEN 
             write(*,*) "  Relerr is", relerr

@@ -29,6 +29,11 @@
         write(*,*) "FIRST interval has zero area!"
         RETURN
       ENDIF
+      IF (wvec(2) .EQ. 0.0d00) THEN
+        write(*,*) "SECOND interval has zero area!"
+*       So just return West
+        RETURN
+      ENDIF
       
       IF (wvec(nzeros) .EQ. 0.0d00) THEN
         West = Mmatrix(1, 1)  
