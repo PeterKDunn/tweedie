@@ -21,7 +21,7 @@
       INTEGER mfirst, mmax, m, mOld, accMax
       LOGICAL exact, convergence, leftOfMax
       LOGICAL stopPreAccelerate
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      COMMON /params/ Cp, Cy, Cmu, Cphi
       COMMON /mparam/ m 
 
 * VARIABLES:
@@ -154,7 +154,7 @@
         stopPreAccelerate = .FALSE.
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
           IF (leftOfMax ) THEN
-             zeroBoundL =  zeroR
+             zeroBoundL = zeroR
              zeroBoundR = tmax
           ELSE
             zeroBoundL = tmax 
@@ -244,7 +244,7 @@
 
 *         Check for convergence
          relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
-     &           (DABS(West) + epsilon )
+     &                     (DABS(West) + epsilon )
           IF (relerr .LT. aimrerr ) THEN 
             write(*,*) "  Relerr is", relerr
             convergence = .TRUE.
@@ -253,8 +253,6 @@
           mOld = m
           CALL advanceM(mmax, m, mOld, leftOfMax)
 * THIS SHOULD JUST BE m = m = 1 BY NOW...
-
-
 
           GOTO 12
         ENDIF

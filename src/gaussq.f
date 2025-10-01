@@ -17,11 +17,11 @@
       IMPLICIT NONE
       DOUBLE PRECISION weights(256), absc(256)
       DOUBLE PRECISION sum, a, b, xl, xu
-      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, aimrerr
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       INTEGER  i, npoints
       DOUBLE PRECISION f1
       EXTERNAL  f1
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      COMMON /params/ Cp, Cy, Cmu, Cphi
 
 
 * VARIABLES:

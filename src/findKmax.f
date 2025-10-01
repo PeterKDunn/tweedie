@@ -6,8 +6,9 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, myfloor
       INTEGER mmax, mfirst
       EXTERNAL findImkZero, myfloor
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      COMMON /params/ Cp, Cy, Cmu, Cphi
       
+      aimrerr = 1.0d-10
       pi = 4.0d0 * DATAN(1.0d0)
 
       IF (Cp .GT. 2.0d00) THEN

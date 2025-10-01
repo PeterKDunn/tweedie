@@ -13,7 +13,7 @@
       INTEGER mfirst, m, mOld, mNew, exitstatus, mmax
       LOGICAL  exact, convergence
       LOGICAL leftSide
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      COMMON /params/ Cp, Cy, Cmu, Cphi
       COMMON /mparam/ m 
 
 * VARIABLES:

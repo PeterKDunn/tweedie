@@ -8,9 +8,9 @@
 *     IN:  p, phi, y, mu, t
 *     OUT: DFfun
 
-      DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi, aimrerr
+      DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi
       DOUBLE PRECISION Imk, Rek, lambda
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      COMMON /params/ Cp, Cy, Cmu, Cphi
 
 * MAJOR VARIABLES:
 *   p          : the index in the variance function, V(mu) = phi * mu^p
