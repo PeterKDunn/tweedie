@@ -22,11 +22,11 @@ kdashdash <- function(p, mu, phi, y, t){
 
 
 ## TMP
-mu <- 2
-phi <- 1
-p <- 2.5
-y <- 0.3
-t <- seq(0, 15, 
+mu <- 1.4
+phi <- 0.74
+p <- 3
+y <- 0.1
+t <- seq(0, 100, 
          length = 1000)
 
 
