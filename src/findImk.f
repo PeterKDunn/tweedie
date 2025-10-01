@@ -3,7 +3,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION Cp, Cmu, Cphi, Cy, pi, tanArg
       DOUBLE PRECISION t, Imk, omega, front, alpha
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
       pi = 4.0d00 * DATAN(1.0d0)
 

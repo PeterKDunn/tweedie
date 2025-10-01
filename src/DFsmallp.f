@@ -12,8 +12,8 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       INTEGER mfirst, m, mOld, mNew, exitstatus, mmax
       LOGICAL  exact, convergence
-      LOGICAL leftSide
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL leftSide, pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
 * VARIABLES:
@@ -36,6 +36,7 @@
       exitstatus = 0
       relerr = 1.0d00
       convergence = .FALSE.
+      pSmall = .TRUE.
 
 *     FIND kmax, tmax, mmax
       CALL findKmax(kmax, tmax, mmax, mfirst, startPoint)

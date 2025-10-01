@@ -4,74 +4,97 @@
 *     using exact zeros.
 *
 *     IN:
-*        x(nzeros+1) : DOUBLE PRECISION array of zeros of f(t)
-*        w(nzeros)   : DOUBLE PRECISION array of integrals over [x_s, x_{s+1}]
-*        nzeros      : INTEGER, number of intervals
-*        pmax        : INTEGER, maximum acceleration order
+*        xvec(nzeros+1) : DOUBLE PRECISION array of zeros of f(t)
+*        wvec(nzeros)   : DOUBLE PRECISION array of integrals over [x_s, x_{s+1}]
+*        nzeros         : INTEGER, number of intervals (>=1)
+*        pmax           : INTEGER, maximum acceleration order (requested)
 *
 *     OUT:
-*        W           : DOUBLE PRECISION, accelerated integral estimate
+*        West           : DOUBLE PRECISION, accelerated integral estimate
 *
       IMPLICIT NONE
       DOUBLE PRECISION xvec(200), wvec(200), West
       DOUBLE PRECISION Mmatrix(200, 50)
       DOUBLE PRECISION Nmatrix(200, 50)
-* the second dimension should be accMax + 2
-      DOUBLE PRECISION denom
-      INTEGER nzeros, pmax
+      DOUBLE PRECISION denom, sumw, eps, tinyDenom
+      INTEGER nzeros, pmax, pmax_use
       INTEGER s, p
+      LOGICAL bad
 
+*     Set up
+      eps = 1.0d-30         ! treat areas smaller than this as effectively zero
+      tinyDenom = 1.0d-16   ! treat denom smaller than this as dangerous
+      West = 0.0d00
 
-*     ERROR checks: If the latest region is zero, just return; we
-*                   won't be able to improve on the estimate, West
-      IF (wvec(1) .EQ. 0.0d00) THEN
-        West = 0.0d0
-        write(*,*) "FIRST interval has zero area!"
-        RETURN
-      ENDIF
-      IF (wvec(2) .EQ. 0.0d00) THEN
-        write(*,*) "SECOND interval has zero area!"
-*       So just return West
-        RETURN
-      ENDIF
-      
-      IF (wvec(nzeros) .EQ. 0.0d00) THEN
-        West = Mmatrix(1, 1)  
-        write(*,*) "LATEST interval has zero area!"
-*       Return the first interval
+*     Trivial cases
+      IF (nzeros .LE. 0) THEN
+         West = 0.0d00
          RETURN
       ENDIF
 
-*     Trivial case: only one interval
-      IF (nzeros .LE. 1) THEN
+      IF (nzeros .EQ. 1) THEN
          West = wvec(1)
-         write(*,*) "Only one interval:"
-         write(*,*) "returning unaccelerated estimate."
          RETURN
       ENDIF
 
-*     Initialize M and N arrays
-*     Note: Index 1 corresponds to paper's "order -1"
-      DO s = 1, nzeros
-         Mmatrix(s, 1) = wvec(s)
-*        Corresponds to M_{-1}^{(s-1)}
-         Nmatrix(s, 1) = 1.0d00 / wvec(s)
-      END DO
+*     Ensure we don't exceed Mmatrix second dim (50)
+      IF (pmax .GT. nzeros - 1) THEN
+         pmax_use = nzeros - 1
+      ELSE
+         pmax_use = pmax
+      ENDIF
+      IF (pmax_use .GT. 48) pmax_use = 48   ! keep pmax_use+1 <= 49 (safe for 50 cols)
 
-*     Recursive acceleration
-      IF (pmax > nzeros - 1) pmax = nzeros - 1
-      DO p = 1, (pmax + 1)
+*     If unaccelerated sum (fallback)
+      sumw = 0.0d00
+      DO s = 1, nzeros
+         sumw = sumw + wvec(s)
+      ENDDO
+
+*     Initialize M and N; checks for tiny areas
+      bad = .FALSE.
+      DO s = 1, nzeros
+         Mmatrix(s,1) = wvec(s)
+         IF (DABS(wvec(s)) .LT. eps) THEN
+            bad = .TRUE.
+         ELSE
+            Nmatrix(s,1) = 1.0d00 / wvec(s)
+         ENDIF
+      ENDDO
+
+      IF (bad) THEN
+*        If any interval area is effectively zero, acceleration unreliable
+         West = sumw
+         RETURN
+      ENDIF
+
+*     Acceleration using pmax_use
+      DO p = 1, (pmax_use + 1)
          DO s = 1, nzeros - p
             denom = 1.0d00 / xvec(s) - 1.0d00 / xvec(s + p)
+            IF (DABS(denom) .LT. tinyDenom) THEN
+               bad = .TRUE.
+               EXIT
+            ENDIF
             Mmatrix(s, p + 1) = (Mmatrix(s, p) - 
      &                           Mmatrix(s + 1, p)) / denom
             Nmatrix(s, p + 1) = (Nmatrix(s, p) - 
      &                           Nmatrix(s + 1, p)) / denom
          ENDDO
+         IF (bad) EXIT
       ENDDO
 
-*     Compute accelerated integral estimate
-      West = Mmatrix(1, pmax + 1) / Nmatrix(1, pmax + 1)
+      IF (bad) THEN
+         West = sumw
+         RETURN
+      ENDIF
+
+*     Final safety on denominator before returning accelerated value
+      IF (DABS(Nmatrix(1, pmax_use + 1)) .LT. tinyDenom) THEN
+         West = sumw
+      ELSE
+         West = Mmatrix(1, pmax_use + 1) / Nmatrix(1, pmax_use + 1)
+      ENDIF
 
       RETURN
       END

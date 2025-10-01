@@ -4,7 +4,8 @@
       DOUBLE PRECISION Cp, Cmu, Cphi, Cy, t, pi
       DOUBLE PRECISION f, df, Imk, Imdk
       INTEGER m
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
       pi = 4.0d0 * DATAN(1.0d0)

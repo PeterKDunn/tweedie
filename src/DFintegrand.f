@@ -10,7 +10,8 @@
 
       DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi
       DOUBLE PRECISION Imk, Rek, lambda
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
 * MAJOR VARIABLES:
 *   p          : the index in the variance function, V(mu) = phi * mu^p
@@ -24,7 +25,7 @@
  
 
 
-      CALL findLambda(lambda, Cp, Cmu, Cphi)
+      IF (pSmall) CALL findLambda(lambda, Cp, Cmu, Cphi)
       
 *     Check for when t = 0, which should never actually happen 
       IF (DABS(t) .LT. 1.0d-14) THEN

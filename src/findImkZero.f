@@ -5,7 +5,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION t, f, df, Imdk, Imddk
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
       CALL findImkd(t, Imdk) 
       CALL findImkdd(t, Imddk)

@@ -6,7 +6,8 @@
       DOUBLE PRECISION zeroR, zeroL, zero, zeroSP
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       DOUBLE PRECISION xacc, rtnewton
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m
       EXTERNAL findImkM
       

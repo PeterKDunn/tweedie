@@ -3,7 +3,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION Cp, Cmu, Cphi, Cy
       DOUBLE PRECISION Imddk, front, omega, pindex, t
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
       pindex = Cp / (1.0d00 - Cp)
       front = -1.0d00 * Cphi * Cmu**Cp

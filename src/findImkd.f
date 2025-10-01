@@ -3,7 +3,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION Cp, Cmu, Cphi, Cy, t
       DOUBLE PRECISION Imdk, omega, pindex
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
       pindex = 1.0d00 / (1.0d00 - Cp)
       omega = DATAN( ( (1.0d00 - Cp) * t * Cphi)/
