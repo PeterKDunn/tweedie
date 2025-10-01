@@ -17,11 +17,11 @@
       DOUBLE PRECISION zeroBoundL, zeroBoundR
       DOUBLE PRECISION DFintegrand
       EXTERNAL DFintegrand
-      INTEGER exitstatus, itsAcceleration
+      INTEGER exitstatus, itsAcceleration, itsPreAcc
       INTEGER mfirst, mmax, m, mOld, accMax
       LOGICAL exact, convergence, leftOfMax
-      LOGICAL stopPreAccelerate
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      LOGICAL stopPreAccelerate, pSmall
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
 * VARIABLES:
@@ -47,6 +47,7 @@
       epsilon = 1.0d-16
       aimrerr = 1.0d-14
       convergence = .FALSE.
+      pSmall = .FALSE.
       
 *     FIND kmax, tmax, mmax
       IF (Cy. GE. Cmu) THEN
@@ -56,6 +57,7 @@
         tmax = 0.0d00
         mmax = 0
         mfirst = -1
+        mOld = 0
       write(*,*) "** Found(a): kmax =", kmax
       write(*,*) "             tmax =", tmax
       write(*,*) "             mmax =", mmax
@@ -79,13 +81,17 @@
         leftOfMax = .TRUE.
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
+          mOld = 0
           zeroStartPoint = tmax + pi/Cy
           leftOfMax = .FALSE.
         ELSE
           mfirst = 1
+          mOld = 0
           zeroStartPoint = pi / (Cmu - Cy)
           mOld = m
+
           CALL advanceM(mmax, m, mOld, leftOfMax)
+
         ENDIF        
       ENDIF
   
@@ -133,26 +139,34 @@
       write(*,*) "*******************************" 
 *     2. INTEGRATE: the PRE-ACCELERATION regions: area1
       write(*,*) "2. INTEGRATE: the PRE-ACCELERATION regions"
+      write(*,*) " m = ", m
 *     When p > 2, things seem well-behaved most of the time, so 
 *     we declare  area1  to be up to m = mmax - 1 (i.e., just
 *     after the downturn)
 
+      itsPreAcc = 0
       IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
+        itsPreAcc = itsPreAcc + 1
         write(*,*) "  > Not using pre-acceleration area"
         area1 = 0.0d00
 
         mOld = m
+
         CALL advanceM(mmax, m, mOld, leftOfMax)
+
       ELSE
 *       Find some areas BEFORE accelerating
         area1 = 0.0d00
 
         mOld = m
+
         CALL advanceM(mmax, m, mOld, leftOfMax)
 
         stopPreAccelerate = .FALSE.
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
+          itsPreAcc = itsPreAcc + 1
+          
           IF (leftOfMax ) THEN
              zeroBoundL = zeroR
              zeroBoundR = tmax
@@ -174,7 +188,10 @@
           area1 = area1 + sum
           write(*,*) "... giving ", sum
           
-          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
+*         STOP condition for pre-acceleration.
+*         Not sure about this...
+*          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
+          if ( itsPreAcc .GE. 2) stopPreAccelerate = .TRUE.
           CALL advanceM(mmax, m, mOld, leftOfMax)
 
           GOTO 115
@@ -214,7 +231,6 @@
 *         itsAcceleration = 1 means this is the first area found
 *         under the acceleration regime
 
-
           zeroStartPoint = zeroR
           zeroL = zeroR 
           zeroR = zeroR * 20.0d00
@@ -249,10 +265,10 @@
             write(*,*) "  Relerr is", relerr
             convergence = .TRUE.
           ENDIF
+        IF (m .EQ. -10) convergence = .TRUE.
 
           mOld = m
           CALL advanceM(mmax, m, mOld, leftOfMax)
-* THIS SHOULD JUST BE m = m = 1 BY NOW...
 
           GOTO 12
         ENDIF
@@ -267,7 +283,7 @@
       ENDIF
       
       areaA = West
-      areaT = area 0 + area1 + areaA
+      areaT = area0 + area1 + areaA
       write(*,*) "SUMMARY:"
       write(*,*) "  Area0 ", area0
       write(*,*) "  Area1 ", area1
