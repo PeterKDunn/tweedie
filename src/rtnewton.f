@@ -23,7 +23,7 @@
           write(*,*) "       f:", f
           write(*,*) "      df:", df
           write(*,*) "rtnewton jumped out of brackets"
-          STOP
+*          STOP
         ENDIF
         IF ( DABS(dx) .LT. xacc) RETURN 
 *       Convergence!
