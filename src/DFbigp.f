@@ -15,8 +15,8 @@
       DOUBLE PRECISION omegaInflect, West, Wold
       DOUBLE PRECISION area0, area1, areaA, psi, xvec(200)
       DOUBLE PRECISION zeroBoundL, zeroBoundR
-      DOUBLE PRECISION DFintegrand
-      EXTERNAL DFintegrand
+      DOUBLE PRECISION DFintegrand, findKmaxSP
+      EXTERNAL DFintegrand, findKmaxSP
       INTEGER exitstatus, itsAcceleration, itsPreAcc
       INTEGER mfirst, mmax, m, mOld, accMax
       LOGICAL exact, convergence, leftOfMax
@@ -66,11 +66,8 @@
       ELSE
 *     ************** y < MU   **************
         write(*,*) "** y < mu"
-        omegaInflect = (pi/2.0d00) * (1.0d00 - Cp)/
-     &                 ((2.0d00 * Cp) - 1.0d00)
-        startTKmax = (Cmu ** (1.0d00 - Cp)) / 
-     &                   (Cphi * (1.0d00 - Cp)) * 
-     &                   DTAN(omegaInflect)
+        
+        startTKMax = findKmaxSP()
 
         write(*,*) "Starting t for finding kmax: ", startTKmax
         CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
@@ -119,8 +116,7 @@
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-      write(*,*) "    --- Find the right-side zero"
-      write(*,*) "Using m = ", mfirst
+      write(*,*) "    --- Find right-side zero for m:", mfirst
       zeroBoundL = 0.0d00
       zeroBoundR = (pi / Cy ) * 2.0d00
 
@@ -139,7 +135,6 @@
       write(*,*) "*******************************" 
 *     2. INTEGRATE: the PRE-ACCELERATION regions: area1
       write(*,*) "2. INTEGRATE: the PRE-ACCELERATION regions"
-      write(*,*) " m = ", m
 *     When p > 2, things seem well-behaved most of the time, so 
 *     we declare  area1  to be up to m = mmax - 1 (i.e., just
 *     after the downturn)
