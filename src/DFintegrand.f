@@ -40,11 +40,6 @@
 *         write(*,*) " "
 *         write(*,*) "t", t
 *         write(*,*) "DFintegrand", DFintegrand
-         IF (DFintegrand .GT. 2) THEN
-             write(*,*) "***Integrand too big!"
-             write(*,*) "t", t
-             write(*,*) "DFintegrand", DFintegrand
-        ENDIF
 *         write(*,*) "Imk", Imk
 *         write(*,*) "DSIN(Imk)", DSIN(Imk)
 *         write(*,*) "Rek/t", Rek/t
