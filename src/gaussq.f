@@ -19,9 +19,10 @@
       DOUBLE PRECISION sum, a, b, xl, xu
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       INTEGER  i, npoints
+      LOGICAL pSmall
       DOUBLE PRECISION f1
       EXTERNAL  f1
-      COMMON /params/ Cp, Cy, Cmu, Cphi
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
 
 * VARIABLES:

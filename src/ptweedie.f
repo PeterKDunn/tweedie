@@ -14,8 +14,8 @@
       DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
       INTEGER ier, maxit, iteratn, exitstatus
       INTEGER its, exacti, verbose, m
-      LOGICAL  psmall, exact, stopIterating, convergence
-      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      LOGICAL  pSmall, exact, stopIterating, convergence
+      COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
 *     Set COMMON block vars
