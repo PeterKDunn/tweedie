@@ -18,7 +18,13 @@ kdashdash <- function(p, mu, phi, y, t){
   -phi * mu ^ (p/(1 - p)) * sin(omega * p / (1 - p) ) / (cos(omega)^(p/(1 - p))) 
   
 }
-
+kmax_est <- function(p, mu, phi, y){
+  front <- (mu^(1-p))/phi
+  front * (
+        sqrt(2*(mu - y)/mu) + 1/(p - 1)*(mu/y)
+  )
+}
+  
 
 
 ## TMP
@@ -26,7 +32,7 @@ mu <- 1.4
 phi <- 0.74
 p <- 3
 y <- 0.01
-t <- seq(0, 2000, 
+t <- seq(0, .7, 
          length = 1000)
 
 
@@ -122,6 +128,8 @@ lines(x = t,
       col = "grey")
 
 
+cat("ESTIMATE of k_max:", kmax_est(p, mu, phi, y), "\n" )
+  
 
 # library(tweedie); ptweedie.inversion(0.05, mu=1.4, phi=0.74, power=3, exact=TRUE)
 # y /q = 0.1 (or was it 0.01>???) DIES. 
