@@ -174,7 +174,7 @@
           area1 = area1 + sum
           write(*,*) "... giving ", sum
           
-          if ( m .EQ. -1 ) stopPreAccelerate = .TRUE.
+          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
           CALL advanceM(mmax, m, mOld, leftOfMax)
 
           GOTO 115
