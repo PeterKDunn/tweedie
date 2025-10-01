@@ -25,8 +25,8 @@ kdashdash <- function(p, mu, phi, y, t){
 mu <- 1.4
 phi <- 0.74
 p <- 3
-y <- 0.1
-t <- seq(0, 100, 
+y <- 0.01
+t <- seq(0, 2000, 
          length = 1000)
 
 
@@ -86,6 +86,22 @@ abline(v = zs,
        lty = 2)
 
 
+
+
+
+plot(kvals$Real ~ t,
+     main = "Real part of k(t)",
+     xlab = expression(Values~of~italic(t)),
+     ylab = "Re k(t)",
+     las = 1,
+     #ylim = c(-0.0001, 0.0001),
+     lwd = 2,
+     type = "l")
+abline(h = 0, 
+       col="grey")
+
+
+
 plot(exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
      main = "Integrand",
      xlab = expression(Values~of~italic(t)),
@@ -96,7 +112,14 @@ plot(exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
      type = "l")
 abline(h = 0, 
        col="grey")
-
+lines(x = t,
+      y = exp(kvals$Real)/t,
+      lty = 2,
+      col = "grey")
+lines(x = t,
+      y = -exp(kvals$Real)/t,
+      lty = 2,
+      col = "grey")
 
 
 
