@@ -25,7 +25,7 @@
  
 
 
-      IF (pSmall) CALL findLambda(lambda, Cp, Cmu, Cphi)
+      IF (pSmall) CALL findLambda(lambda)
       
 *     Check for when t = 0, which should never actually happen 
       IF (DABS(t) .LT. 1.0d-14) THEN
