@@ -1,3 +1,4 @@
+
       SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exacti)
 
 *     Calculates the DF of the log-likelihood function of a
@@ -308,10 +309,16 @@
       write(*,*) "  AreaA ", areaA
       write(*,*) "  TOTAL ", areaT
       
+      
+*** WHAT DTO DO with relerrr? Might have three rel eerrors: from initila, pre-acc, acc?
+*** Take largest of the three? ADD?
+      write(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
+      
 *     We have the value of the integral in the CDF calculation. 
 *     So now work out the CDF
       funvalue = (-1.0d00/pi) * areaT + 0.5d00
       write(*,*) "FINAL AREA: The cdf value is", funvalue
+      write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
       RETURN
