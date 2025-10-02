@@ -1,4 +1,4 @@
-      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exact)
+      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exacti)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: p > 2
@@ -12,15 +12,15 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, areaT, Wold2
       DOUBLE PRECISION zeroL, zeroR, zero, kmax, tmax
       DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(200)
-      DOUBLE PRECISION omegaInflect, West, Wold
+      DOUBLE PRECISION West, Wold
       DOUBLE PRECISION area0, area1, areaA, psi, xvec(200)
       DOUBLE PRECISION zeroBoundL, zeroBoundR
       DOUBLE PRECISION DFintegrand, findKmaxSP
       EXTERNAL DFintegrand, findKmaxSP
       INTEGER exitstatus, itsAcceleration, itsPreAcc
-      INTEGER mfirst, mmax, m, mOld, accMax
+      INTEGER mfirst, mmax, m, mOld, accMax, exacti
       LOGICAL exact, convergence, leftOfMax
-      LOGICAL stopPreAccelerate, pSmall
+      LOGICAL stopPreAccelerate, pSmall, flip
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
@@ -48,6 +48,8 @@
       aimrerr = 1.0d-14
       convergence = .FALSE.
       pSmall = .FALSE.
+      exact = .TRUE.
+      exacti = 1
       
 *     FIND kmax, tmax, mmax
       IF (Cy. GE. Cmu) THEN
@@ -58,9 +60,8 @@
         mmax = 0
         mfirst = -1
         mOld = 0
-      write(*,*) "** Found(a): kmax =", kmax
-      write(*,*) "             tmax =", tmax
-      write(*,*) "             mmax =", mmax
+        write(*,*) "** Im k(t) heads down immediately"
+      
         zeroStartPoint = pi / Cy
         leftOfMax = .FALSE.
       ELSE
@@ -71,6 +72,7 @@
 
         write(*,*) "Starting t for finding kmax: ", startTKmax
         CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+        
         write(*,*) "** Found(b): kmax =", kmax
         write(*,*) "             tmax =", tmax
         write(*,*) "             mmax =", mmax
@@ -87,7 +89,7 @@
           zeroStartPoint = pi / (Cmu - Cy)
           mOld = m
 
-          CALL advanceM(mmax, m, mOld, leftOfMax)
+          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
         ENDIF        
       ENDIF
@@ -116,9 +118,10 @@
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-      write(*,*) "    --- Find right-side zero for m:", mfirst
+*      write(*,*) "    --- Find right-side zero for m:", mfirst
+*      write(*,*)" ALREADY HAVE: ", zeroStartPoint
       zeroBoundL = 0.0d00
-      zeroBoundR = (pi / Cy ) * 2.0d00
+      zeroBoundR = zeroStartPoint * 2.0d00
 
 *     Now find the right-side zero
       m = mfirst
@@ -148,7 +151,7 @@
 
         mOld = m
 
-        CALL advanceM(mmax, m, mOld, leftOfMax)
+        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
       ELSE
 *       Find some areas BEFORE accelerating
@@ -156,48 +159,48 @@
 
         mOld = m
 
-        CALL advanceM(mmax, m, mOld, leftOfMax)
+        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
         stopPreAccelerate = .FALSE.
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
           itsPreAcc = itsPreAcc + 1
-          
+
           IF (leftOfMax ) THEN
              zeroBoundL = zeroR
-             zeroBoundR = tmax
+             zeroBoundR = zeroR * 10.00d00
           ELSE
             zeroBoundL = tmax 
             zeroBoundR = zeroR * 20.0d00
           ENDIF
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0d00
-
+*       write(*,*) "--> Start pt", zeroStartPoint
+*       write(*,*) "--> BoundsLt", zeroBoundL
+*       write(*,*) "--> BoundsR", zeroBoundR
           zeroL = zeroR
           CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                        zeroStartPoint, zero)
 
           zeroR = zero
           write(*,*) "--- Integrate (m = ", m, ") between " 
-          write(*,*) zeroL, "and ", zeroR
   
           CALL gaussq( DFintegrand, sum, zeroL, zeroR)
           area1 = area1 + sum
-          write(*,*) "... giving ", sum
-          
+          write(*,*) zeroL, "and ", zeroR, ": ", sum
+
 *         STOP condition for pre-acceleration.
 *         Not sure about this...
 *          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
           if ( itsPreAcc .GE. 2) stopPreAccelerate = .TRUE.
-          CALL advanceM(mmax, m, mOld, leftOfMax)
+          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
           GOTO 115
         ENDIF
       ENDIF
 
-      write(*,*) "Finished pre-acc; areas"
-      write(*,*) "SUMMARY (before accelerating):"
-      write(*,*) "  Area0 ", area0
-      write(*,*) "  Area1 ", area1
-
+*      write(*,*) "Finished pre-acc; areas"
+*      write(*,*) "SUMMARY (before accelerating):"
+*      write(*,*) "  Area0 ", area0
+*      write(*,*) "  Area1 ", area1
 
 *     3. INTEGRATE: the ACCELERATION regions: areaA
       write(*,*) "*******************************" 
@@ -207,8 +210,6 @@
       Wold2 = 1.0d00
 
       IF (exact) THEN
-        write(*,*) "----------------------------------"
-        write(*,*) "  - Integrating using the EXACT zeroes:"
 
         itsAcceleration = 0
         areaA = 0.0d00
@@ -219,25 +220,46 @@
 *       value of  t  used in the acceleration (the previous regions *right* value) 
 
  12     IF ( .NOT.(convergence)) THEN
-          write(*,*) "            "
-          write(*,*) "INTEGRATE: all subsequent regions"
+          write(*,*) "  --- Next tail region"
 
           itsAcceleration = itsAcceleration + 1
 *         itsAcceleration = 1 means this is the first area found
 *         under the acceleration regime
 
-          zeroStartPoint = zeroR
-          zeroL = zeroR 
-          zeroR = zeroR * 20.0d00
+          IF (leftOfMax ) THEN
+            zeroStartPoint = zeroR
+            zeroL = zeroR 
+            zeroR = zeroR * 20.0d00
+          ELSE
+            IF (flip) THEN
+*             FLIPPING to other side of tmax
+
+              zeroStartPoint = tmax + ( tmax - zero)
+*             That is, start of the other side of tmax            
+              zeroL = zero
+              zeroR = zeroStartPoint * 20.0d00
+            ELSE
+              zeroStartPoint = zeroR
+              zeroL = zeroR
+              zeroR = zeroR * 10.0d00
+            ENDIF
+          ENDIF
+*  write(*,*) "that factor of 20: depeds on slope!"
+* write(*,*) "Flatter? Larger multiplier"
+*        write(*,*) "Steeper? Smaller multiplier"
 
           CALL findExactZeros(zeroL, zeroR, 
      &                        zeroStartPoint, zero)
-          zeroR = zero
+          IF (leftOfMax) THEN
+            zeroR = zero
+          ELSE
+            zeroR = zero
+          ENDIF
+
           xvec(itsAcceleration + 1) = zeroR
 
-          write(*,*) "--- Integrate (m = ", m, ") between " 
-          write(*,*) zeroL, "and ", zeroR
-          
+          write(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
+
           CALL gaussq( DFintegrand, psi, zeroL, zeroR)
 *         psi: area of the latest region
           wvec(itsAcceleration) = psi
@@ -256,19 +278,20 @@
 *         Check for convergence
          relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
      &                     (DABS(West) + epsilon )
+          write(*,*) "Ws",  West, Wold, Wold2
+          write(*,*) "  Relerr is", relerr
           IF (relerr .LT. aimrerr ) THEN 
             write(*,*) "  Relerr is", relerr
             convergence = .TRUE.
           ENDIF
-        IF (m .EQ. -10) convergence = .TRUE.
+*        IF (m .EQ. -10) convergence = .TRUE.
 
           mOld = m
-          CALL advanceM(mmax, m, mOld, leftOfMax)
+          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
           GOTO 12
         ENDIF
       ELSE
-        write(*,*) "  - DFbifp: for APPROX zeroes:", Cp
         IF ( .NOT.(convergence)) THEN
         write(*,*) "  - Computing for p > 2:", Cp
 *           CALL findApproxZeros()
@@ -289,6 +312,7 @@
 *     So now work out the CDF
       funvalue = (-1.0d00/pi) * areaT + 0.5d00
       write(*,*) "FINAL AREA: The cdf value is", funvalue
+      write(*,*) funvalue, exitstatus, relerr, exacti
 
       RETURN
       END
