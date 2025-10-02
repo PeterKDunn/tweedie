@@ -14,6 +14,8 @@
       xacc = 1.0d-09
 *     Sometimes, the curve is quite flat and accuracy is hard to 
 *     achieve, but not vital anyway
+*      write(*,*) "findExactZeros: ", zeroSP
+*      write(*,*) "              : ", zeroL, zeroR
       zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
 
       RETURN
