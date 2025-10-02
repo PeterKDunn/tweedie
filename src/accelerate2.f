@@ -10,16 +10,17 @@
 
       INTEGER nzeros, pmax
       DOUBLE PRECISION xvec(200), wvec(200), West
-      DOUBLE PRECISION M(200,50), N(200,50)
+      DOUBLE PRECISION Mmatrix(200,50), Nmatrix(200,50)
       DOUBLE PRECISION denom, sumw, eps, tinyDenom
       DOUBLE PRECISION sumw_temp
-      INTEGER s, p, pmax_use
+      INTEGER s, p, pmax_use, maxSize
 
 *     M and N are indexed as M(s, p)
 
 *     Tolerances
-      eps = 1.0d-300
+      eps = 1.0d-100
       tinyDenom = 1.0d-16
+      maxSize = 200
 
 *     Default
       West = 0.0d00
@@ -28,6 +29,11 @@
       IF (nzeros .LE. 0) THEN
          West = 0.0d00
          RETURN
+      ENDIF
+      
+*     Limit nzeros to array size (maxSize = 200)
+      IF (nzeros .GT. maxSize - 1) THEN
+          nzeros = maxSize - 1
       ENDIF
 
       IF (nzeros .EQ. 1) THEN
@@ -53,8 +59,8 @@
       sumw_temp = 0.0d00
       DO s = 1, nzeros
           sumw_temp = sumw_temp + wvec(s)
-          M(s,1) = sumw_temp
-          N(s,1) = 1.0d00
+          Mmatrix(s,1) = sumw_temp
+          Nmatrix(s,1) = 1.0d00
       ENDDO
 
 *     If any w is essentially zero, Sidi acceleration is unreliable:
@@ -79,16 +85,18 @@
                West = sumw
                RETURN
             ENDIF
-            M(s, p+1) = ( M(s, p) - M(s+1, p) ) / denom
-            N(s, p+1) = ( N(s, p) - N(s+1, p) ) / denom
+            Mmatrix(s, p+1) = ( Mmatrix(s, p) - Mmatrix(s+1, p) ) 
+     &                         / denom
+            Nmatrix(s, p+1) = ( Nmatrix(s, p) - Nmatrix(s+1, p) ) 
+     &                         / denom
          ENDDO
       ENDDO
 
 *     Final check and compute accelerated estimate (col index = pmax_use+1)
-      IF (DABS(N(1, pmax_use + 1)) .LT. tinyDenom) THEN
+      IF (DABS(Nmatrix(1, pmax_use + 1)) .LT. tinyDenom) THEN
          West = sumw
       ELSE
-         West = M(1, pmax_use + 1) / N(1, pmax_use + 1)
+         West = Mmatrix(1, pmax_use + 1) / Nmatrix(1, pmax_use + 1)
       ENDIF
 
       RETURN
