@@ -9,13 +9,12 @@
 *     OUT:  funvalue, exitstatus, relerr, its
 
       IMPLICIT NONE
-      DOUBLE PRECISION p, phi, y, funvalue, mu, pi
-      DOUBLE PRECISION resulta, result
-      DOUBLE PRECISION result0, relerr, aimrerr
+      DOUBLE PRECISION p, phi, y, funvalue, mu
+      DOUBLE PRECISION relerr, aimrerr
       DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
-      INTEGER ier, maxit, iteratn, exitstatus
+      INTEGER exitstatus
       INTEGER its, exacti, verbose, m
-      LOGICAL  pSmall, exact, stopIterating, convergence
+      LOGICAL  pSmall, exact
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
@@ -39,9 +38,6 @@
 *               -10  if neither rel or abs error any good
 *    exact    : 1 if the exact zeros acceleration algorithms is used;
 *               0 if the approx zeros acceleration algorithm is used.
-
-      pi = 4.0d0 * DATAN(1.0d0)
-      convergence = .FALSE.
 
 *     Defaults
       verbose = 0
@@ -72,18 +68,7 @@
       ENDIF
 
 *     SET ACCURACY REQUIREMENTS
-      maxit = 25
-      write(*,*) ">>>> Consider changing maxit here"
       aimrerr = 1.0d-10
-
-*     set other parameters
-      iteratn = 0
-      ier = 0
-      resulta = 0.0d00
-      result  = 0.0d00
-      result0 = 0.5d00
-      convergence = .FALSE.
-      stopIterating = .TRUE.
 
       write(*,*) "** Computing for y ", y
       write(*,*) "**               mu ", mu
