@@ -31,8 +31,9 @@ kmax_est <- function(p, mu, phi, y){
 mu <- 1.4
 phi <- 0.74
 p <- 3
-y <- 0.01
-t <- seq(0, .7, 
+# y <- 0.01
+y <- 1
+t <- seq(0, 3.5, 
          length = 1000)
 
 
@@ -56,9 +57,9 @@ kvals <- k(p = p,
 zs <- c(10.2, 214.8, 404.7, 540.2, 659.9, 771.1, 876.8, 978.4, 1077.1)
 
 
-par( mfrow=c(2,2))
+par( mfrow=c(3,2))
 plot(kvals$Imag ~ t,
-     main = expression( bold(Imaginary~part~of~italic(k)*"'"(italic(t)))),
+     main = expression( bold(Imaginary~part~of~italic(k)*(italic(t)))),
      xlab = expression(Values~of~italic(t)),
      ylab = "Im k",
      las = 1,
@@ -68,8 +69,13 @@ abline(h = 0,
        col="grey")
 abline(v = 0.03, 
        col="grey")
-abline(h = (-4:4)*pi, 
+abline(h = (-14:14)*pi, 
        col="grey")
+axis(side = 4, 
+     at = c(-14:14)*pi,
+     las = 1,
+     cex = 0.8,
+     label = (-14:14) )
 abline(v = zs,
        col = "grey",
        lty = 2)
@@ -126,6 +132,43 @@ lines(x = t,
       y = -exp(kvals$Real)/t,
       lty = 2,
       col = "grey")
+
+
+
+plot( kd1~ t,
+     main = "Derivative k'(t)",
+     xlab = expression(Values~of~italic(t)),
+     ylab = "deriv",
+     las = 1,
+     #ylim = c(-0.0001, 0.0001),
+     lwd = 2,
+     type = "l")
+abline(h = 0, 
+       col="grey")
+lines(x = t,
+      y = exp(kvals$Real)/t,
+      lty = 2,
+      col = "grey")
+
+
+
+plot(kd2 ~ t,
+     main = "Second deriv k''(t)",
+     xlab = expression(Values~of~italic(t)),
+     ylab = "2nd deriv",
+     las = 1,
+     #ylim = c(-0.0001, 0.0001),
+     lwd = 2,
+     type = "l")
+abline(h = 0, 
+       col="grey")
+lines(x = t,
+      y = exp(kvals$Real)/t,
+      lty = 2,
+      col = "grey")
+
+
+
 
 
 cat("ESTIMATE of k_max:", kmax_est(p, mu, phi, y), "\n" )
