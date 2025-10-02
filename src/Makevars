@@ -1,1 +1,4 @@
-FFLAGS = -O0 -g -Wall -Wextra -Wuninitialized -fcheck=all -fsanitize=address -fno-omit-frame-pointer  -fbacktrace -g -fbacktrace -fcheck=bounds -ffpe-trap=invalid,zero,overflow 
+FFLAGS = -O0 -g -Wall -Wextra -Wconversion -Wunderflow \
+         -fcheck=all -fbacktrace -finit-real=snan -finit-integer=-999999 \
+         -fno-omit-frame-pointer -fsanitize=address,undefined \
+         -ffpe-trap=invalid,zero,overflow
