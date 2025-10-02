@@ -12,14 +12,16 @@
       tanArg = (1.0d00 - Cp) * t * Cphi/
      &               (Cmu ** (1.0d00 - Cp) )
       omega = DATAN( tanArg )
+
       IF ((omega .GT. 0.0d00 ). OR. 
      &    (omega .LT. (-pi/2.0d00)) ) THEN
-         write(*,*) "ERROR: Omega out of range:", omega
+         write(*,*) "ERROR (FindImk): Omega out of range:", omega
          write(*,*) "Argument: ", tanArg
-         write(*,*) "    p: ", Cp
-         write(*,*) "    phi: ", Cphi
-         write(*,*) "    mu: ", Cmu
+*         write(*,*) "    p: ", Cp
+*         write(*,*) "    phi: ", Cphi
+*         write(*,*) "    mu: ", Cmu
          write(*,*) "    t: ", t
+         STOP
       ENDIF
       alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
 
