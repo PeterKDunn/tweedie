@@ -97,6 +97,10 @@
         write(*,*) "About to call DFbigp from twcdf"
         CALL DFbigp(funvalue, exitstatus, relerr, exacti)
       ENDIF
+      
+*     Fix based on machine accuracy
+      IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
+      IF (funvalue .GT. 1.0d00) funvalue = 1.0d00
       write(*,*) "IN twcdf: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
