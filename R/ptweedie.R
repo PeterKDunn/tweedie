@@ -264,7 +264,6 @@ ptweedie.inversion <- function(q, mu, phi,  power, exact = FALSE ){
       cdf[i] <- 0
     } else {
       
-      #   cat(power,phi[i], y[i], mu[i], as.integer(exact),"\n")
       tmp <- .Fortran( "twcdf",
                        as.double(power),
                        as.double(phi[i]),
@@ -280,7 +279,7 @@ ptweedie.inversion <- function(q, mu, phi,  power, exact = FALSE ){
   }
   
   cdf
-  
+ 
 }
 
 
