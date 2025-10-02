@@ -1,12 +1,13 @@
-      SUBROUTINE advanceM(mmax, m, mOld, leftOfMax)
+      SUBROUTINE advanceM(mmax, m, mOld, leftOfMax, flip)
     
       IMPLICIT NONE
       DOUBLE PRECISION Cp, Cmu, Cphi, Cy
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       INTEGER mOld, m, mmax
-      LOGICAL leftOfMax, pSmall
+      LOGICAL leftOfMax, pSmall, flip
 
       mOld = m
+      flip = .FALSE.
       
       IF (pSmall) THEN
 
@@ -22,6 +23,7 @@
             IF (m .EQ. mmax) THEN
 *             Move to the other side
               leftOfMax = .FALSE.
+              flip = .TRUE.
             ELSE
               mOld = m
               m = m + 1
