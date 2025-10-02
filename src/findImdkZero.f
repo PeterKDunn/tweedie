@@ -1,4 +1,4 @@
-      SUBROUTINE findImkZero(t, f, df)
+      SUBROUTINE findImdkZero(t, f, df)
 *     Evaluates Im(k'(t)) and Im(k''(t)), for finding kmax
 *     Returns both.
 
@@ -8,8 +8,12 @@
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
-      CALL findImkd(t, Imdk) 
+*      write(*,*) '+findImdk', Cp, Cy, Cmu, Cphi, t
+      CALL findImkd( t, Imdk ) 
       CALL findImkdd(t, Imddk)
+*      write(*,*) '+findImdk', Cp, Cy, Cmu, Cphi, t
+*      write(*,*) '+findImdk', Imdk, Imddk
+
       
       f  = Imdk
       df = Imddk
