@@ -3,7 +3,10 @@
 *     [x1, x2]. The root rtnewt will be refined until its accuracy is known within ±xacc. funcd
 *     is a user-supplied subroutine that returns both the function value and the first derivative
 *     of the function at the point x.
-        
+*
+*     Used for find kmax and the zeros. All of these are positive,
+*     and so we can found at zero on left.
+
       IMPLICIT NONE
       INTEGER JMAX, j
       DOUBLE PRECISION rtnewton, x1, x2, xacc, xstart
@@ -12,7 +15,7 @@
       PARAMETER (JMAX=50) 
       
       rtnewton = xstart
-        
+    
       DO j = 1, JMAX
         CALL funcd(rtnewton, f, df)
         dx = f/df
@@ -28,18 +31,19 @@
 *          write(*,*) "rtnewton:", rtnewton
 *          write(*,*) "       f:", f
 *          write(*,*) "      df:", df
-*          write(*,*) "rtnewton jumped out of brackets"
+          write(*,*) "rtnewton jumped out of brackets"
 *          STOP
+           rtnewton = DABS(rtnewton)
+*      write(*,*) "   -> rtnewton:", rtnewton
         ENDIF
         IF ( DABS(dx) .LT. xacc) RETURN 
 *       Convergence!
       ENDDO
-      write(*,*) "rtnewton: exceeded maximum iterations"
-      write(*,*) "       j:", j
-      write(*,*) "rtnewton:", rtnewton
-      write(*,*) "       f:", f
-      write(*,*) "      df:", df
-      STOP
+*      write(*,*) "rtnewton: exceeded maximum iterations", f
+*      write(*,*) "       j:", j
+*      write(*,*) "rtnewton:", rtnewton
+*      write(*,*) "       f:", f
+*      write(*,*) "      df:", df
       
       RETURN
       END

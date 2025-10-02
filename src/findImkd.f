@@ -8,11 +8,16 @@
 
       pindex = 1.0d00 / (1.0d00 - Cp)
       omega = DATAN( ( (1.0d00 - Cp) * t * Cphi)/
-     &              (Cmu ** (1.0d00 - Cp) ) )
+     &               (Cmu ** (1.0d00 - Cp) ) )
      
+*      write(*,*) "  - findImkd on entry:"
+*      write(*,*) "  -", Cp, Cy, Cmu, Cphi
+*      write(*,*) "  AND at t = ", t
+*      write(*,*) "  -", pindex, omega
       Imdk = Cmu *
      &       DCOS( omega * pindex ) /
      &       (DCOS(omega)**pindex) - Cy
+*      write(*,*) "  -  findImkd on exit:", Imdk
 
       RETURN
       END

@@ -16,7 +16,7 @@
       omega = DATAN( tanArg )
       IF ((omega .GT. 0.0d00 ). OR. 
      &    (omega .LT. (-pi/2.0d00)) ) THEN
-         write(*,*) "ERROR: Omega out of range:", omega
+         write(*,*) "ERROR (FindImk): Omega out of range:", omega
          write(*,*) "Argument: ", tanArg
          write(*,*) "Argument: ", tanArg
          write(*,*) "    p: ", Cp
