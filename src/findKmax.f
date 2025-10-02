@@ -2,11 +2,11 @@
 
       IMPLICIT NONE
       DOUBLE PRECISION kmax, tmax, startPoint, pi, rtnewton
-      DOUBLE PRECISION findImkZero, aimrerr
+      DOUBLE PRECISION findImdkZero, aimrerr
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, myfloor
       INTEGER mmax, mfirst
       LOGICAL pSmall
-      EXTERNAL findImkZero, myfloor
+      EXTERNAL findImdkZero, myfloor
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       
       aimrerr = 1.0d-09
@@ -21,8 +21,8 @@
           startPoint = pi / Cy + 0.25d00
         ELSE
 *         Cy < Cmu and 1 < p < 2
-          tmax = rtnewton(findImkZero, 
-     &                  startPoint * 0.75, 
+          tmax = rtnewton(findImdkZero, 
+     &                  0.0d00, 
      &                  startPoint * 2.0d00, 
      &                  startPoint, aimrerr)
 *         funcd returns the fn value, and derivative value
@@ -40,8 +40,10 @@
           kmax = 0.0d00
         ELSE
 *         Cy < Cmu and p > 2
-          tmax = rtnewton(findImkZero, 
-     &                    startPoint * 0.15d00, 
+
+*      write(*,*) "*** (fKM) l=0, right=", startPoint * 30.0d0
+          tmax = rtnewton(findImdkZero, 
+     &                    0.00d00, 
      &                    startPoint * 30.0d00, 
      &                    startPoint, 
      &                    aimrerr)
