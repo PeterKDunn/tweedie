@@ -92,13 +92,14 @@
       write(*,*) "**               phi ", phi
 
       IF ( psmall ) THEN
-        CALL DFsmallp(funvalue, exitstatus, relerr, exact)
+        CALL DFsmallp(funvalue, exitstatus, relerr, exacti)
       ELSE
-        CALL DFbigp(funvalue, exitstatus, relerr, exact)
+        CALL DFbigp(funvalue, exitstatus, relerr, exacti)
       ENDIF
+      write(*,*) funvalue, exitstatus, relerr, exacti
 
+      write(*,*) "Back in TWCDF!"
 
-    
       RETURN
       END
 
