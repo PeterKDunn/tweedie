@@ -22,7 +22,7 @@
       LOGICAL bad
 
 *     Set up
-      eps = 1.0d-30         ! treat areas smaller than this as effectively zero
+      eps = 1.0d-300         ! treat areas smaller than this as effectively zero
       tinyDenom = 1.0d-16   ! treat denom smaller than this as dangerous
       West = 0.0d00
 
@@ -43,7 +43,8 @@
       ELSE
          pmax_use = pmax
       ENDIF
-      IF (pmax_use .GT. 48) pmax_use = 48   ! keep pmax_use+1 <= 49 (safe for 50 cols)
+      IF (pmax_use .GT. 48) pmax_use = 48   
+*     keep pmax_use+1 <= 49 (safe for 50 cols)
 
 *     If unaccelerated sum (fallback)
       sumw = 0.0d00
@@ -51,10 +52,14 @@
          sumw = sumw + wvec(s)
       ENDDO
 
+
+***   Here is the guts of the actual acceleration algorithm ***
 *     Initialize M and N; checks for tiny areas
       bad = .FALSE.
       DO s = 1, nzeros
-         Mmatrix(s,1) = wvec(s)
+         Mmatrix(s, 1) = wvec(s)
+*        M^{(s)}_0
+
          IF (DABS(wvec(s)) .LT. eps) THEN
             bad = .TRUE.
          ELSE
@@ -69,9 +74,11 @@
       ENDIF
 
 *     Acceleration using pmax_use
-      DO p = 1, (pmax_use + 1)
+*      DO p = 1, (pmax_use + 1)
+      DO p = 1, pmax_use
          DO s = 1, nzeros - p
-            denom = 1.0d00 / xvec(s) - 1.0d00 / xvec(s + p)
+            denom = 1.0d00 / xvec(s) - 1.0d00 / xvec(s + p + 1)
+*            denom = 1.0d00 / xvec(s) - 1.0d00 / xvec(s + p)
             IF (DABS(denom) .LT. tinyDenom) THEN
                bad = .TRUE.
                EXIT
