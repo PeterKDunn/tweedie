@@ -1,3 +1,4 @@
+
       SUBROUTINE twcdf(p, phi, y, mu, exacti,
      &                 funvalue, exitstatus, relerr, its )
 
@@ -45,7 +46,7 @@
 *     Defaults
       verbose = 0
       exitstatus = 1
-      relerr = 0.0d00
+      relerr = 0.0d0
       its = 0
       
 *     Create logical: exact = .TRUE. means use exact zeros in acceleration
@@ -53,12 +54,10 @@
       IF (exacti. EQ. 0) exact = .FALSE.
 
 *     Create logical: psmall = TRUE means 1 < p < 2
-      lambda = 0.0d00
       psmall = .FALSE.
-      IF ( (p .GT. 1.0d00 ) .AND. (p .LT. 2.0d00) ) THEN
-        psmall = .TRUE.
-        CALL findLambda(lambda, Cp, Cmu, Cphi)
-      ENDIF
+      IF ( (p .GT. 1.0d00 ) .AND. (p .LT. 2.0d00) ) psmall = .TRUE.
+      CALL findLambda(lambda)
+*     Returns lambda = 0.0d0 for p > 2
 
 *     SPECIAL CASE: if y < 0, return 0
       IF ( y .LT. 0.0d00 ) then
@@ -92,13 +91,15 @@
       write(*,*) "**               phi ", phi
 
       IF ( psmall ) THEN
+        write(*,*) "About to call DFsmallp from twcdf"
         CALL DFsmallp(funvalue, exitstatus, relerr, exacti)
       ELSE
+        write(*,*) "About to call DFbigp from twcdf"
         CALL DFbigp(funvalue, exitstatus, relerr, exacti)
       ENDIF
+      write(*,*) "IN twcdf: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
-      write(*,*) "Back in TWCDF!"
 
       RETURN
       END
