@@ -9,24 +9,17 @@
 *     OUT: DFfun
 
       DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION Imk, Rek, lambda
+      DOUBLE PRECISION Imk, Rek
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
 * MAJOR VARIABLES:
-*   p          : the index in the variance function, V(mu) = phi * mu^p
-*   phi        : the dispersion parameter
-*   y          : the point at which the DF is to be evaluated
-*   mu         : the mean value
 *   t          : the internal variable over which to integrate in this function
 *   rl         : the real part of the cgf
 *   im         : the imaginary part of the cgf
 *   lambda     : P(Y = 0) = exp( -lambda ) when 1 < p < 2
  
 
-
-      IF (pSmall) CALL findLambda(lambda)
-      
 *     Check for when t = 0, which should never actually happen 
       IF (DABS(t) .LT. 1.0d-14) THEN
 *        IF ( t .EQ. 0.0d00 ) THEN
@@ -37,6 +30,7 @@
          CALL findRek(t, Rek)
 
          DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
+
 *         write(*,*) " "
 *         write(*,*) "t", t
 *         write(*,*) "DFintegrand", DFintegrand
