@@ -8,16 +8,16 @@
 
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
-      DOUBLE PRECISION aimrerr, relerr, tmax, kmax, startPoint
+      DOUBLE PRECISION aimrerr, relerr, tmax, kmax
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, findKmaxSP, startTKMax
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
-      DOUBLE PRECISION Wold, Wold2, zeroSP, areaT, epsilon
-      DOUBLE PRECISION West, xvec(200), wvec(200), lambda, front
-      INTEGER mfirst, m, mOld, mNew, exitstatus, mmax
+      DOUBLE PRECISION Wold, Wold2, areaT, epsilon
+      DOUBLE PRECISION West, xvec(200), wvec(200), lambda, P0
+      INTEGER mfirst, m, mOld, exitstatus, mmax
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
-      LOGICAL leftSide, pSmall, stopPreAccelerate
+      LOGICAL pSmall, stopPreAccelerate
       EXTERNAL findKmaxSP, DFintegrand
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
@@ -27,8 +27,6 @@
 *    x        : the range over which the integral is to be integrated; an
 *               internal variable; NOT the value at which the function is to be evaluated
 *    lambda   : for 1 < p < 2, P(Y = 0) = exp( -lambda )
-*    p        : the index (i.e., variance function is V(mu) = mu ^ p)
-*    phi      : the dispersion parameter
 *    funvalue : the value of the function at the given value of  x
 *    bound    : The bound using Chebyshev theorm.
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
@@ -114,7 +112,7 @@
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-*      write(*,*) "    --- Find right-side zero for m:", mfirst
+      write(*,*) "    --- Find right-side zero for m:", mfirst
 *      write(*,*)" ALREADY HAVE: ", zeroStartPoint
       zeroBoundL = 0.0d00
       zeroBoundR = zeroStartPoint * 2.0d00
@@ -241,8 +239,8 @@
               zeroR = zeroR * 10.0d00
             ENDIF
           ENDIF
-* write(*,*) "that factor of 20: depeds on slope!"
-* write(*,*) "Flatter? Larger multiplier"
+*      write(*,*) "that factor for findunf zeroR : depeds on slope!"
+*      write(*,*) "Flatter? Larger multiplier"
 *        write(*,*) "Steeper? Smaller multiplier"
 
           CALL findExactZeros(zeroL, zeroR, 
@@ -314,10 +312,16 @@
 *     We have the value of the integral in the CDF calculation. 
 *     So now work out the CDF
       CALL findLambda(lambda)
-      front = 1.0d0 / (1.0d0 - DEXP(-lambda))
+      P0 = DEXP( -lambda )
       
-      funvalue = (-1.0d00 * front /pi) * areaT + 0.5d00 -
-     &           DEXP(-lambda) * front / 2.0d0
+*     The integration returns the conditional CDF for Y | Y > 0.
+*     So we need to find the CDF of Y.
+*     That also means adding P(Y=0) 
+
+      funvalue = (-areaT/pi  + 
+     &             (1.0d0 - P0)/2.0d0 -
+     &             P0/2.0d0 ) + 
+     &           P0
      
       write(*,*) "FINAL AREA: The cdf value is", funvalue
       write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
