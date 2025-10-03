@@ -7,8 +7,9 @@
 
       lambda = 0.0d0
       IF (pSmall) THEN
-        lambda = -1.00d00 * (Cmu ** (2.0d00 - Cp) ) /
-     &                      (Cphi * (1.0d00 - Cp) )
+        lambda = (Cmu ** (2.0d00 - Cp) ) /
+     &             (Cphi * (2.0d00 - Cp) )
+*       NOTE: No negative sign in front: P(Y=0) = exp(-lambda)
       ENDIF
       
       RETURN
