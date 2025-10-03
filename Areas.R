@@ -6,20 +6,32 @@ mu=1.4
 phi=0.74
 p=3
 
+
+
+
+mu <- 1
+phi <- 4
+p <- 1.5
+# y <- 0.01
+y <- 3
+
+
+
+
 ## INITIAL
 area0 = integrate(igrand,
-          lower = 0, upper = 0.94574893543752026,
+          lower = 0, upper = 1.1096230410971726,
           y=y, mu=mu, phi=phi, p=p)$value
 
 
 ## PRE_Acceleration
 area1 = integrate(igrand,
-                  lower = 0.94574893543752026, upper = 9.8725536234497966     ,
+                  lower = 1.1096230410971726, upper = 2.1314528304773006     ,
                   y=y, mu=mu, phi=phi, p=p)$value
 
 ## TAIL
 areaA = integrate(igrand,
-                  lower = 9.8725536234497966     , upper = Inf,
+                  lower = 2.1314528304773006     , upper = 3.1672637245678148,
                   y=y, mu=mu, phi=phi, p=p)$value
 
 areaT = area0 + area1 + areaA 

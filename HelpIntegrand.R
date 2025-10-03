@@ -28,12 +28,12 @@ kmax_est <- function(p, mu, phi, y){
 
 
 ## TMP
-mu <- 1.4
-phi <- 0.74
-p <- 3
+mu <- 1
+phi <- 4
+p <- 1.5
 # y <- 0.01
-y <- 1
-t <- seq(0, 3.5, 
+y <- 3
+t <- seq(0, 5, 
          length = 1000)
 
 
@@ -170,9 +170,9 @@ lines(x = t,
 
 
 
-
-cat("ESTIMATE of k_max:", kmax_est(p, mu, phi, y), "\n" )
-  
+if (mu > y ){
+  cat("ESTIMATE of k_max:", kmax_est(p, mu, phi, y), "\n" )
+}
 
 # library(tweedie); ptweedie.inversion(0.05, mu=1.4, phi=0.74, power=3, exact=TRUE)
 # y /q = 0.1 (or was it 0.01>???) DIES. 
