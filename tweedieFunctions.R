@@ -31,7 +31,7 @@ k <- function(p, mu, phi, y, t){
   front <- ( mu^(2 - p) ) / (phi * (2 - p) )
   alpha <- (2 - p)/(1 - p) 
   omega <- atan( ( (1 - p) * t * phi) / mu^(1 - p) )
-  
+
   if ( any( (omega <= 0) & (omega >= -pi/2) ) ) {
     # ALL OK
   } else {
