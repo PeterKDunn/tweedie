@@ -30,8 +30,6 @@
 *    x        : the range over which the integral is to be integrated; an
 *               internal variable; NOT the value at which the function is to be evaluated
 *    lambda   : for 1 < p < 2, P(Y = 0) = exp( -lambda )
-*    p        : the index (i.e., variance function is V(mu) = mu ^ p)
-*    phi      : the dispersion parameter
 *    funvalue : the value of the function at the given value of  x
 *    bound    : The bound using Chebyshev theorm.
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
