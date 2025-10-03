@@ -100,7 +100,6 @@
       write(*,*) "--- (Deal with returned errors, non-convergence)"
 
 
-
 *     INTEGRATION
 *     There are three integration regions:
 *
@@ -277,10 +276,8 @@
           write(*,*) "--------------------------------"
 
 *         Check for convergence
-         relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
+          relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
      &                     (DABS(West) + epsilon )
-          write(*,*) "Ws",  West, Wold, Wold2
-          write(*,*) "  Relerr is", relerr
           IF (relerr .LT. aimrerr ) THEN 
             write(*,*) "  Relerr is", relerr
             convergence = .TRUE.
