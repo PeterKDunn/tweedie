@@ -29,8 +29,6 @@
 *    x        : the range over which the integral is to be integrated; an
 *               internal variable; NOT the value at which the function is to be evaluated
 *    lambda   : for 1 < p < 2, P(Y = 0) = exp( -lambda )
-*    p        : the index (i.e., variance function is V(mu) = mu ^ p)
-*    phi      : the dispersion parameter
 *    funvalue : the value of the function at the given value of  x
 *    bound    : The bound using Chebyshev theorm.
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
@@ -84,8 +82,10 @@
       ENDIF
       
 *     Fix based on machine accuracy
-      IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
-      IF (funvalue .GT. 1.0d00) funvalue = 1.0d00
+      write(*,*) "REINSTATE fixes for machine accuracy"
+*      IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
+*      IF (funvalue .GT. 1.0d00) funvalue = 1.0d00
+      write(*,*) "FIX: For 1<p<2, minimum must be exp(-lambda)"
       write(*,*) "IN twcdf: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
