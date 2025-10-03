@@ -11,6 +11,11 @@
       
       IF (pSmall) THEN
 
+        IF (Cy .GE. Cmu) THEN
+*         Always heading downwards, so easy
+          m = m - 1
+        ENDIF
+
 *       IS THIS a separate IF??? OR use same one???
 
       ELSE
