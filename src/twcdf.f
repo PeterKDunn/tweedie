@@ -82,7 +82,7 @@
       ENDIF
       
 *     Fix based on machine accuracy
-      write(*,*) "REINSTATE fixes for machine accuracy"
+      write(*,*) "REINSTATE fixes for machine accuracy temp off"
 *      IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
 *      IF (funvalue .GT. 1.0d00) funvalue = 1.0d00
       write(*,*) "FIX: For 1<p<2, minimum must be exp(-lambda)"
