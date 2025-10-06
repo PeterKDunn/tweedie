@@ -9,8 +9,8 @@
       IMPLICIT NONE
 
       INTEGER nzeros, pmax
-      DOUBLE PRECISION xvec(200), wvec(200), West
-      DOUBLE PRECISION Mmatrix(200,50), Nmatrix(200,50)
+      DOUBLE PRECISION xvec(400), wvec(400), West
+      DOUBLE PRECISION Mmatrix(400, 50), Nmatrix(400, 50)
       DOUBLE PRECISION denom, sumw, eps, tinyDenom
       DOUBLE PRECISION sumw_temp
       INTEGER s, p, pmax_use, maxSize
@@ -20,7 +20,7 @@
 *     Tolerances
       eps = 1.0d-100
       tinyDenom = 1.0d-16
-      maxSize = 200
+      maxSize = 400
 
 *     Default
       West = 0.0d00
