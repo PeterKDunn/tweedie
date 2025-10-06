@@ -27,11 +27,14 @@ K <- function(theta, phi, t){
 
 
 
-k <- function(p, mu, phi, y, t){
+k <- function(p, mu, phi, y, t, verbose=FALSE){
   front <- ( mu^(2 - p) ) / (phi * (2 - p) )
   alpha <- (2 - p)/(1 - p) 
   omega <- atan( ( (1 - p) * t * phi) / mu^(1 - p) )
 
+  if (verbose){
+    cat("omega: ", omega, "\n")
+  }
   if ( any( (omega <= 0) & (omega >= -pi/2) ) ) {
     # ALL OK
   } else {
@@ -82,7 +85,11 @@ igrand <- function(p, mu, phi, y, t){
           phi = phi, 
           y = y, 
           t = t)
-  exp( rk$Real ) * sin(rk$Imag) / t
+  igrand <- exp( rk$Real ) * sin(rk$Imag) / t
+  if ( p < 2 ) {
+    igrand <- igrand - ( exp(rk$Real) * sin(rk$Imag - t*y) ) / t
+  }
+  return(igrand)
 }
 
 
