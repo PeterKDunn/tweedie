@@ -4,7 +4,6 @@
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: p > 2
 *
-*     IN:   p, phi, y, mu, exacti
 *     OUT:  funvalue, exitstatus, relerr, its
 
       IMPLICIT NONE
@@ -40,13 +39,13 @@
 
 
       write(*,*) " FOR p > 2"
+      
       pi = 4.0d0 * DATAN(1.0d0)
       exitstatus = 0
       relerr = 1.0d00
       epsilon = 1.0d-16
       aimrerr = 1.0d-14
       convergence = .FALSE.
-      pSmall = .FALSE.
       exact = .TRUE.
       exacti = 1
       
@@ -300,8 +299,8 @@
       areaT = area0 + area1 + areaA
       write(*,*) "SUMMARY:"
       write(*,*) "  Area0 ", area0
-      write(*,*) "  Area1 ", area1
-      write(*,*) "  AreaA ", areaA
+      write(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
+      write(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
       write(*,*) "  TOTAL ", areaT
       
       

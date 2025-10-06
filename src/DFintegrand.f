@@ -9,7 +9,7 @@
 *     OUT: DFfun
 
       DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION Imk, Rek
+      DOUBLE PRECISION Imk, Rek, lambda
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
@@ -24,20 +24,26 @@
       IF (DABS(t) .LT. 1.0d-14) THEN
 *        IF ( t .EQ. 0.0d00 ) THEN
          DFintegrand = Cmu - Cy
-* ?????
+         write(*,*) "!!!!! DFint: should never happen: t = 0 !!!!!"
       ELSE
-         CALL findImk(t, Imk)
-         CALL findRek(t, Rek)
+        CALL findImk(t, Imk)
+        CALL findRek(t, Rek)
+        
+        DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
 
-         DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
+        IF (pSmall) THEN
+          CALL findLambda(lambda)
+          DFintegrand = DFintegrand - 
+     &                    ( DEXP(Rek) * DSIN( Imk + (t * Cy) ) ) / t
+        ENDIF
 
-*         write(*,*) " "
+      ENDIF
+          write(*,*) " "
 *         write(*,*) "t", t
 *         write(*,*) "DFintegrand", DFintegrand
 *         write(*,*) "Imk", Imk
 *         write(*,*) "DSIN(Imk)", DSIN(Imk)
 *         write(*,*) "Rek/t", Rek/t
-      ENDIF
 
       RETURN
       END

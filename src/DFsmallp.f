@@ -1,9 +1,9 @@
+
       SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, exact)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: 1 < p < 2
 *
-*     IN:   p, phi, y, mu, exacti
 *     OUT:  funvalue, exitstatus, relerr, its
 
       IMPLICIT NONE
@@ -13,7 +13,7 @@
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
       DOUBLE PRECISION Wold, Wold2, areaT, epsilon
-      DOUBLE PRECISION West, xvec(200), wvec(200), lambda, P0
+      DOUBLE PRECISION West, xvec(200), wvec(200), lambda
       INTEGER mfirst, m, mOld, exitstatus, mmax
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
@@ -36,13 +36,13 @@
 *               0 if the approx zeros acceleration algorithm is used.
 
       write(*,*) " FOR 1 < p < 2"
+      
       pi = 4.0d0 * DATAN(1.0d0)
       exitstatus = 0
       relerr = 1.0d00
       epsilon = 1.0d-16
       aimrerr = 1.0d-14
       convergence = .FALSE.
-      pSmall = .TRUE.
       exact = .TRUE.
       exacti = 1
 
@@ -137,23 +137,18 @@
 *     after the downturn)
 
       itsPreAcc = 0
+      area1 = 0.0d00
+      mOld = m
+      CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+
       IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
+
         itsPreAcc = itsPreAcc + 1
         write(*,*) "  > Not using pre-acceleration area"
-        area1 = 0.0d00
-
-        mOld = m
-
-        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-
+        
       ELSE
 *       Find some areas BEFORE accelerating
-        area1 = 0.0d00
-
-        mOld = m
-
-        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
         stopPreAccelerate = .FALSE.
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
@@ -190,7 +185,6 @@
           GOTO 115
         ENDIF
       ENDIF
-
 
 *      write(*,*) "Finished pre-acc; areas"
 *      write(*,*) "SUMMARY (before accelerating):"
@@ -239,9 +233,9 @@
               zeroR = zeroR * 10.0d00
             ENDIF
           ENDIF
-*      write(*,*) "that factor for findunf zeroR : depeds on slope!"
+*      write(*,*) "that factor for finding zeroR: depends on slope!"
 *      write(*,*) "Flatter? Larger multiplier"
-*        write(*,*) "Steeper? Smaller multiplier"
+*      write(*,*) "Steeper? Smaller multiplier"
 
           CALL findExactZeros(zeroL, zeroR, 
      &                        zeroStartPoint, zero)
@@ -295,34 +289,32 @@
 *           CALL accelerate()
         ENDIF
       ENDIF
+      write(*,*) "!!!!! DFsmall/big: Approx zeros can be removed !!!!!"
       
       areaA = West
       areaT = area0 + area1 + areaA
       write(*,*) "SUMMARY:"
       write(*,*) "  Area0 ", area0
-      write(*,*) "  Area1 ", area1
-      write(*,*) "  AreaA ", areaA
+      write(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
+      write(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
       write(*,*) "  TOTAL ", areaT
       
       
 *** WHAT TO DO with relerrr? Might have three rel eerrors: from initila, pre-acc, acc?
 *** Take largest of the three? ADD?
+*** Assume the argest relative error comes fromn the acceleration.
       write(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
       
 *     We have the value of the integral in the CDF calculation. 
 *     So now work out the CDF
       CALL findLambda(lambda)
-      P0 = DEXP( -lambda )
-      
+
 *     The integration returns the conditional CDF for Y | Y > 0.
 *     So we need to find the CDF of Y.
 *     That also means adding P(Y=0) 
 
-      funvalue = (-areaT/pi  + 
-     &             (1.0d0 - P0)/2.0d0 -
-     &             P0/2.0d0 ) + 
-     &           P0
-     
+      funvalue = -areaT/pi  + DEXP(-lambda)/2.0d0
+      
       write(*,*) "FINAL AREA: The cdf value is", funvalue
       write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti

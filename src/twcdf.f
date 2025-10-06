@@ -50,8 +50,9 @@
 *     Create logical: psmall = TRUE means 1 < p < 2
       psmall = .FALSE.
       IF ( (p .GT. 1.0d00 ) .AND. (p .LT. 2.0d00) ) psmall = .TRUE.
+      
+*     Compute lambda: Returns lambda = 0.0d0 for p > 2
       CALL findLambda(lambda)
-*     Returns lambda = 0.0d0 for p > 2
 
 *     SPECIAL CASE: if y < 0, return 0
       IF ( y .LT. 0.0d00 ) then
@@ -68,14 +69,15 @@
 *     SET ACCURACY REQUIREMENTS
       aimrerr = 1.0d-10
 
-      write(*,*) "** Computing for y ", y
-      write(*,*) "**               mu ", mu
-      write(*,*) "**               p ", p
-      write(*,*) "**               phi ", phi
+      write(*,*) "** Computing for y: ", y
+      write(*,*) "**              mu: ", mu
+      write(*,*) "**               p: ", p
+      write(*,*) "**              phi: ", phi
 
       IF ( psmall ) THEN
         write(*,*) "About to call DFsmallp from twcdf"
         CALL DFsmallp(funvalue, exitstatus, relerr, exacti)
+        write(*,*)"::::::: exp(-lamnbda)", DEXP(-lambda)
       ELSE
         write(*,*) "About to call DFbigp from twcdf"
         CALL DFbigp(funvalue, exitstatus, relerr, exacti)
@@ -83,9 +85,11 @@
       
 *     Fix based on machine accuracy
       write(*,*) "REINSTATE fixes for machine accuracy temp off"
-*      IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
-*      IF (funvalue .GT. 1.0d00) funvalue = 1.0d00
-      write(*,*) "FIX: For 1<p<2, minimum must be exp(-lambda)"
+      IF (psmall) THEN
+*        IF (funvalue .LT. exp(-lambda) ) funvalue = exp(-lambda)
+      ELSE
+*        IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
+      ENDIF
       write(*,*) "IN twcdf: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
