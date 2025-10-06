@@ -20,13 +20,13 @@ y <- 3
 
 ## INITIAL
 area0 = integrate(igrand,
-          lower = 0, upper = 1.1096230410971726,
+          lower = 0, upper = 0.3,
           y=y, mu=mu, phi=phi, p=p)$value
 
 
 ## PRE_Acceleration
 area1 = integrate(igrand,
-                  lower = 1.1096230410971726, upper = 2.1314528304773006     ,
+                  lower = 0.3, upper = Inf     ,
                   y=y, mu=mu, phi=phi, p=p)$value
 
 ## TAIL

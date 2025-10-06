@@ -8,7 +8,7 @@ kdashdash <- function(p, mu, phi, y, t){
   print( head( cbind(
                      t, 
                      omega, 
-                     omega = ( (1 - p) * t * phi) / mu^(1 - p),
+                     omegaInner = ( (1 - p) * t * phi) / mu^(1 - p),
                      front = -phi * mu ^ (p/(1 - p)),
                      TOP = sin(omega * p / (1 - p) ),
                      BOTTOM = (cos(omega)^(p/(1 - p))) ,
@@ -33,9 +33,12 @@ phi <- 4
 p <- 1.5
 # y <- 0.01
 y <- 3
-t <- seq(0, 20, 
+t <- seq(0, 100,
          length = 1000)
 
+
+lambda <- mu^(2-p) / (phi * (2-p) )
+p0 = exp(-lambda)
 
 kd1 <- kdash(p = p, 
              mu = mu, 
@@ -53,6 +56,8 @@ kvals <- k(p = p,
                  phi = phi,
                  y = y, 
                  t = t)
+
+print( tail(cbind(y, t, Inmag=kvals$Imag, Real=kvals$Real)))
 
 zs <- c(10.2, 214.8, 404.7, 540.2, 659.9, 771.1, 876.8, 978.4, 1077.1)
 
@@ -119,7 +124,7 @@ plot(exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
      xlab = expression(Values~of~italic(t)),
      ylab = "Integrand",
      las = 1,
-  #ylim = c(-0.0001, 0.0001),
+     #ylim = c(-0.0001, 0.0001),
      lwd = 2,
      type = "l")
 abline(h = 0, 
