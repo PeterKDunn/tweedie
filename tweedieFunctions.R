@@ -85,9 +85,11 @@ igrand <- function(p, mu, phi, y, t){
           phi = phi, 
           y = y, 
           t = t)
-  igrand <- exp( rk$Real ) * sin(rk$Imag) / t
-  if ( p < 2 ) {
-    igrand <- igrand - ( exp(rk$Real) * sin(rk$Imag - t*y) ) / t
+  if ( p > 2 ){
+    igrand <- exp( rk$Real ) * sin(rk$Imag) / t
+  } else {
+    igrand <- exp(rk$Real) * ( sin(rk$Imag - t*y) - sin(rk$Imag) ) -
+              exp(-lambda) * sin(t*y)
   }
   return(igrand)
 }

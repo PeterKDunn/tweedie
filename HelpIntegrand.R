@@ -33,7 +33,7 @@ phi <- 4
 p <- 1.5
 # y <- 0.01
 y <- 3
-t <- seq(0, 100,
+t <- seq(0, 50,
          length = 1000)
 
 
@@ -175,6 +175,9 @@ lines(x = t,
 
 
 
+if ( p < 2 ){
+  cat("lambda = ", lambda, " and P(Y=0) = exp(-lambda) = ", exp(-lambda), "\n") 
+}
 if (mu > y ){
   cat("ESTIMATE of k_max:", kmax_est(p, mu, phi, y), "\n" )
 }
