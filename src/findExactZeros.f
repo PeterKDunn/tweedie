@@ -7,13 +7,17 @@
       DOUBLE PRECISION xacc, rtnewton
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
-      EXTERNAL findImkM
+      EXTERNAL findImkM, findZeroSmallp
       
-      xacc = 1.0d-09
+      xacc = 1.0d-12
 *     Sometimes, the curve is quite flat and accuracy is hard to 
 *     achieve, but not vital anyway
 
-      zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
-
+      IF (pSmall) THEN
+        zero = rtnewton(findZeroSmallp, zeroL, zeroR, zeroSP, xacc)
+      ELSE
+        zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
+      ENDIF
+      
       RETURN
       END

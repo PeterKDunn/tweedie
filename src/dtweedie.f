@@ -138,8 +138,8 @@
 
       double precision  p, phi, y,  pi, area, aimrerr,
      &                  relerr, result, zero1, zero2,
-     &                  mmatrix(2, 200), nmatrix(2, 200),
-     &                  xvec(200), w, wold(3), area0, 
+     &                  mmatrix(2, 300), nmatrix(2, 300),
+     &                  xvec(300), w, wold(3), area0, 
      &                  mu, f, f2, tmax, kmax, sumarea
       integer  its, ier, maxit, flag, exitstatus, itsidi, 
      &         mmax, verbose
@@ -381,8 +381,8 @@
       double precision  p, phi, y,  pi, area, aimrerr,
      &         relerr, result, zero1, zero2,
      &         f, f2, g, intim, flo, fhi, t0, dk,
-     &         mmatrix(2, 200), nmatrix(2, 200),
-     &         xvec(500), w, wold(3), area0, 
+     &         mmatrix(2, 300), nmatrix(2, 300),
+     &         xvec(300), w, wold(3), area0, 
      &         sumarea, sfzero2, mu, area1, 
      &         sfzero, zerofn, zerodfn, 
      &         lower, upper, tstep,     
@@ -697,8 +697,8 @@
       double precision  p, phi, y, mu, pi, area, aimrerr,
      &          relerr, result, zero1, zero2, zero,
      &          f, g, zlo, zhi, intim, flo, fhi, kmax,
-     &          tmax, mmatrix(2, 200), nmatrix(2, 200),
-     &          xvec(200), w, wold(3), area0, sumarea,
+     &          tmax, mmatrix(2, 300), nmatrix(2, 300),
+     &          xvec(300), w, wold(3), area0, sumarea,
      &          dk, sfzero2, diff, largest, smallest
       integer  m, its, mmax, firstm, ier, maxit, flag,
      &         allok, kmaxok, tier, exitstatus, verbose

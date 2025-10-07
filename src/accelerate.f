@@ -9,8 +9,8 @@
       IMPLICIT NONE
 
       INTEGER nzeros, pmax
-      DOUBLE PRECISION xvec(400), wvec(400), West
-      DOUBLE PRECISION Mmatrix(400, 50), Nmatrix(400, 50)
+      DOUBLE PRECISION xvec(300), wvec(300), West
+      DOUBLE PRECISION Mmatrix(300, 50), Nmatrix(300, 50)
       DOUBLE PRECISION denom, sumw, eps, tinyDenom
       DOUBLE PRECISION sumw_temp
       INTEGER s, p, pmax_use, maxSize
@@ -20,7 +20,7 @@
 *     Tolerances
       eps = 1.0d-100
       tinyDenom = 1.0d-16
-      maxSize = 400
+      maxSize = 300
 
 *     Default
       West = 0.0d00
@@ -31,7 +31,7 @@
          RETURN
       ENDIF
       
-*     Limit nzeros to array size (maxSize = 200)
+*     Limit nzeros to array size (maxSize = 300)
       IF (nzeros .GT. maxSize - 1) THEN
           nzeros = maxSize - 1
       ENDIF

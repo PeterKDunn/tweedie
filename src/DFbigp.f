@@ -11,9 +11,9 @@
       DOUBLE PRECISION relerr, aimrerr, epsilon
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, areaT, Wold2
       DOUBLE PRECISION zeroL, zeroR, zero, kmax, tmax
-      DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(200)
-      DOUBLE PRECISION West, Wold
-      DOUBLE PRECISION area0, area1, areaA, psi, xvec(200)
+      DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(300)
+      DOUBLE PRECISION West, Wold, area0, xvec(300)
+      DOUBLE PRECISION areazeroBoundR0, area1, areaA, psi
       DOUBLE PRECISION zeroBoundL, zeroBoundR
       DOUBLE PRECISION DFintegrand, findKmaxSP
       EXTERNAL DFintegrand, findKmaxSP

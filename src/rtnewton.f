@@ -14,6 +14,7 @@
       EXTERNAL funcd
       PARAMETER (JMAX=50) 
       
+*      write(*,*) "RTNEWTON:"
       rtnewton = xstart
     
       DO j = 1, JMAX
@@ -31,7 +32,7 @@
 *          write(*,*) "rtnewton:", rtnewton
 *          write(*,*) "       f:", f
 *          write(*,*) "      df:", df
-          write(*,*) "rtnewton jumped out of brackets"
+*          write(*,*) "rtnewton jumped out of brackets"
 *          STOP
            rtnewton = DABS(rtnewton)
 *      write(*,*) "   -> rtnewton:", rtnewton
