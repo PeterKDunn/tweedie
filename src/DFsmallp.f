@@ -8,13 +8,13 @@
 
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
-      DOUBLE PRECISION aimrerr, relerr, tmax, kmax
+      DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, findKmaxSP, startTKMax
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
-      DOUBLE PRECISION Wold, Wold2, areaT, epsilon
-      DOUBLE PRECISION West, xvec(200), wvec(200), lambda
-      INTEGER mfirst, m, mOld, exitstatus, mmax
+      DOUBLE PRECISION Wold, Wold2, areaT, epsilon, bottom
+      DOUBLE PRECISION West, xvec(300), wvec(300), lambda
+      INTEGER mfirst, m, mOld, exitstatus, mmax, n
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
       LOGICAL pSmall, stopPreAccelerate
@@ -48,7 +48,7 @@
 
 
 *     FIND kmax, tmax, mmax
-      IF (Cy. GE. Cmu) THEN
+*      IF (Cy. GE. Cmu) THEN
 *     ************** y > MU   **************
         write(*,*) "** y >= mu"
         kmax = 0.0d00
@@ -56,43 +56,44 @@
         mmax = 0
         mfirst = -1
         mOld = 0
-        write(*,*) "** Im k(t) heads down immediately"
+*        write(*,*) "** Im k(t) heads down immediately"
       
         zeroStartPoint = pi / Cy
         leftOfMax = .FALSE.
-      ELSE
+*      ELSE
 *     ************** y < MU   **************
 *       HARDER!         
         write(*,*) "** y < mu"
         
-        startTKMax = findKmaxSP()
+*        startTKMax = findKmaxSP()
 
-        write(*,*) "Starting t for finding kmax: ", startTKmax
-        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+*        write(*,*) "Starting t for finding kmax: ", startTKmax
+*        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
         
-        write(*,*) "** Found(b): kmax =", kmax
-        write(*,*) "             tmax =", tmax
-        write(*,*) "             mmax =", mmax
+*        write(*,*) "** Found(b): kmax =", kmax
+*        write(*,*) "             tmax =", tmax
+*        write(*,*) "             mmax =", mmax
 
-        leftOfMax = .TRUE.
-        IF ( mmax .EQ. 0) THEN
-          mfirst = 0
-          mOld = 0
-          zeroStartPoint = tmax + pi/Cy
-          leftOfMax = .FALSE.
-        ELSE
-          mfirst = 1
-          mOld = 0
-          zeroStartPoint = pi / (Cmu - Cy)
-          mOld = m
+*        leftOfMax = .TRUE.
+*        IF ( mmax .EQ. 0) THEN
+*          mfirst = 0
+*          mOld = 0
+*          zeroStartPoint = tmax + pi/Cy
+*          leftOfMax = .FALSE.
+*        ELSE
+*          mfirst = 1
+*          mOld = 0
+*          zeroStartPoint = pi / (Cmu - Cy)
+*          mOld = m
+*
+*          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+*        ENDIF
+*      ENDIF
+*      
+*      write(*,*) "           mfirst =", mfirst
+*      write(*,*) "             StPt =", zeroStartPoint
+*      write(*,*) "--- (Deal with returned errors, non-convergence)"
 
-          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-        ENDIF
-      ENDIF
-      
-      write(*,*) "           mfirst =", mfirst
-      write(*,*) "             StPt =", zeroStartPoint
-      write(*,*) "--- (Deal with returned errors, non-convergence)"
 
 *     INTEGRATION
 *     There are three integration regions:
@@ -109,24 +110,28 @@
       area1 = 0.0d00
       areaA = 0.0d00
       
+      zeroStartPoint = pi / Cy
+      write(*,*) "Start pt for first zero:", zeroStartPoint
+      
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-      write(*,*) "    --- Find right-side zero for m:", mfirst
+      write(*,*) "    --- Find right-side zero"
 *      write(*,*)" ALREADY HAVE: ", zeroStartPoint
-      zeroBoundL = 0.0d00
-      zeroBoundR = zeroStartPoint * 2.0d00
+      zeroBoundL = zeroStartPoint - 0.25d0 * pi / Cy
+      zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
+      write(*,*) "    between ", zeroBoundL, zeroBoundR
 
 *     Now find the right-side zero
-      m = mfirst
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                    zeroStartPoint, zero)
+      write(*,*) "ZERO: ", zero
       zeroL =  0.0d00
       zeroR = zero
 
-      write(*,*) "  - Between ", zeroL, zeroR
       CALL gaussq( DFintegrand, area0, zeroL, zeroR)
       write(*,*) "  - Initial area is", area0
+      write(*,*) "    betwee ", zeroL, " and ", zeroR
       
 
       write(*,*) "*******************************" 
@@ -138,30 +143,25 @@
 
       itsPreAcc = 0
       area1 = 0.0d00
-      mOld = m
-      CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-
-      IF (mfirst .EQ. -1 ) THEN
+      
+*      IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
 
-        itsPreAcc = itsPreAcc + 1
-        write(*,*) "  > Not using pre-acceleration area"
+*        itsPreAcc = itsPreAcc + 1
+*        write(*,*) "  > Not using pre-acceleration area"
         
-      ELSE
+*      ELSE
 *       Find some areas BEFORE accelerating
 
         stopPreAccelerate = .FALSE.
+        
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
           itsPreAcc = itsPreAcc + 1
+          write(*,*) "Using n =", itsPreAcc
+          zeroStartPoint = (itsPreAcc + 1) * pi / Cy
+          zeroBoundL = zeroR
+          zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy
 
-          IF (leftOfMax ) THEN
-             zeroBoundL = zeroR
-             zeroBoundR = zeroR * 10.00d00
-          ELSE
-            zeroBoundL = tmax 
-            zeroBoundR = zeroR * 20.0d00
-          ENDIF
-          zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0d00
 *       write(*,*) "--> Start pt", zeroStartPoint
 *       write(*,*) "--> BoundsLt", zeroBoundL
 *       write(*,*) "--> BoundsR", zeroBoundR
@@ -179,12 +179,12 @@
 *         STOP condition for pre-acceleration.
 *         Not sure about this...
 *          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
-          if ( itsPreAcc .GE. 2) stopPreAccelerate = .TRUE.
+          if ( itsPreAcc .GE. 5) stopPreAccelerate = .TRUE.
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
           GOTO 115
         ENDIF
-      ENDIF
+*      ENDIF
 
 *      write(*,*) "Finished pre-acc; areas"
 *      write(*,*) "SUMMARY (before accelerating):"
@@ -210,44 +210,35 @@
 
  12     IF ( .NOT.(convergence)) THEN
           write(*,*) "  --- Next tail region"
-
+          write(*,*) "Starting with"
           itsAcceleration = itsAcceleration + 1
 *         itsAcceleration = 1 means this is the first area found
 *         under the acceleration regime
 
-          IF (leftOfMax ) THEN
-            zeroStartPoint = zeroR
-            zeroL = zeroR 
-            zeroR = zeroR * 20.0d00
-          ELSE
-            IF (flip) THEN
-*             FLIPPING to other side of tmax
+          n = itsPreAcc + itsAcceleration 
+          write(*,*) " Using n =", n
+          zeroStartPoint = (n + 1) * pi / Cy
+          zeroL = zeroR
+          
+          zeroBoundL = zeroStartPoint - 0.35 * pi / Cy
+          zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy
+          write(*,*) "  - Startpoint:", zeroStartPoint
+          CALL findZeroSmallp(zeroStartPoint, f, df)
+          write(*,*) "    Has value", f, df
+          CALL findZeroSmallp(zeroBoundL, f, df)
+          write(*,*) "    L: Has value", f, df
+          CALL findZeroSmallp(zeroBoundR, f, df)
+          write(*,*) "    R: Has value", f, df
 
-              zeroStartPoint = tmax + ( tmax - zero)
-*             That is, start of the other side of tmax            
-              zeroL = zero
-              zeroR = zeroStartPoint * 20.0d00
-            ELSE
-              zeroStartPoint = zeroR
-              zeroL = zeroR
-              zeroR = zeroR * 10.0d00
-            ENDIF
-          ENDIF
-*      write(*,*) "that factor for finding zeroR: depends on slope!"
-*      write(*,*) "Flatter? Larger multiplier"
-*      write(*,*) "Steeper? Smaller multiplier"
-
-          CALL findExactZeros(zeroL, zeroR, 
+          CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                        zeroStartPoint, zero)
-          IF (leftOfMax) THEN
-            zeroR = zero
-          ELSE
-            zeroR = zero
-          ENDIF
+          write(*,*) "   Zero found:", zero
+          CALL findZeroSmallp(zero, f, df)
+          write(*,*) "    Has value", f, df
 
+          zeroR = zero
           xvec(itsAcceleration + 1) = zeroR
-
-          write(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
+          write(*,*) "  - Integrate between:", zeroL, zeroR
 
           CALL gaussq( DFintegrand, psi, zeroL, zeroR)
 *         psi: area of the latest region
@@ -300,9 +291,9 @@
       write(*,*) "  TOTAL ", areaT
       
       
-*** WHAT TO DO with relerrr? Might have three rel eerrors: from initila, pre-acc, acc?
+*** WHAT TO DO with relerrr? Might have three rel errors: from initila, pre-acc, acc?
 *** Take largest of the three? ADD?
-*** Assume the argest relative error comes fromn the acceleration.
+*** Assume the argest relative error comes from the acceleration.
       write(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
       
 *     We have the value of the integral in the CDF calculation. 
@@ -313,8 +304,9 @@
 *     So we need to find the CDF of Y.
 *     That also means adding P(Y=0) 
 
-      funvalue = -areaT/pi  + DEXP(-lambda)/2.0d0
-      
+      bottom = 1.0d0 - DEXP(-lambda)
+      funvalue = areaT/(pi * bottom) -
+     &              exp(-lambda) / (2.0d0 * bottom)  
       write(*,*) "FINAL AREA: The cdf value is", funvalue
       write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
