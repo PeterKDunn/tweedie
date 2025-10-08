@@ -14,7 +14,8 @@
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
       DOUBLE PRECISION Wold, Wold2, areaT, epsilon, bottom
       DOUBLE PRECISION West, xvec(300), wvec(300), lambda
-      INTEGER mfirst, m, mOld, exitstatus, mmax, n
+      DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
+      INTEGER mfirst, m, mOld, exitstatus, mmax, n, i
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
       LOGICAL pSmall, stopPreAccelerate
@@ -37,6 +38,12 @@
 
       write(*,*) " FOR 1 < p < 2"
       
+      DO i = 1, 200
+        Mmatrix(1, i) = 0.0d0
+        Mmatrix(2, i) = 0.0d0
+        Nmatrix(1, i) = 0.0d0
+        Nmatrix(2, i) = 0.0d0
+      ENDDO
       pi = 4.0d0 * DATAN(1.0d0)
       exitstatus = 0
       relerr = 1.0d00
@@ -248,8 +255,8 @@
           accMax = 40
           Wold2 = Wold
           Wold = West
-          CALL accelerate(xvec, wvec, itsAcceleration, 
-     &                    accMax, West)
+          CALL accelerateNEW(xvec, wvec, itsAcceleration, 
+     &                       Mmatrix, Nmatrix, West)
 *          W is the best guess of the convergent integration
           write(*,*) "iteration", itsAcceleration, ":", West
           write(*,*) "  - Estimate of tail area:", West
@@ -265,8 +272,8 @@
           ELSE
             write(*,*) "  (Keep a-going) Relerr is", relerr
           ENDIF
-*        IF (m .EQ. -10) convergence = .TRUE.
-*         write(*,*) "TEMP: m = -10 stop the"
+        IF (itsAcceleration .EQ. 10) convergence = .TRUE.
+        write(*,*) "TEMP: itsAcceleration = -10: stop"
           mOld = m
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 

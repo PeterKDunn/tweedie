@@ -29,15 +29,7 @@
         CALL findImk(t, Imk)
         CALL findRek(t, Rek)
         
-
-        IF (pSmall) THEN
-          CALL findLambda(lambda)
-          DFintegrand = DEXP( Rek ) * ( DSIN(Imk + (t*Cy) ) -
-     &                                  DSIN(Imk) ) 
-     &                  / t       
-        ELSE
-          DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
-        ENDIF
+        DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
 
       ENDIF
 *          write(*,*) " "
