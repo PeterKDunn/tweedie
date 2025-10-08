@@ -25,6 +25,7 @@
 *        IF ( t .EQ. 0.0d00 ) THEN
          DFintegrand = Cmu - Cy
          write(*,*) "!!!!! DFint: should never happen: t = 0 !!!!!"
+         STOP
       ELSE
         CALL findImk(t, Imk)
         CALL findRek(t, Rek)

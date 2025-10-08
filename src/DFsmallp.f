@@ -88,25 +88,26 @@
         write(*,*) "             tmax =", tmax
         write(*,*) "             mmax =", mmax
 
-*        leftOfMax = .TRUE.
-*        IF ( mmax .EQ. 0) THEN
-*          mfirst = 0
-*          mOld = 0
-*          zeroStartPoint = tmax + pi/Cy
-*          leftOfMax = .FALSE.
-*        ELSE
-*          mfirst = 1
-*          mOld = 0
-*          zeroStartPoint = pi / (Cmu - Cy)
-*          mOld = m
-*
-*          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-*        ENDIF
+        leftOfMax = .TRUE.
+        IF ( mmax .EQ. 0) THEN
+          mfirst = 0
+          mOld = 0
+          zeroStartPoint = tmax + pi/Cy
+          leftOfMax = .FALSE.
+        ELSE
+          mfirst = 1
+          mOld = 0
+          zeroStartPoint = pi / (Cmu - Cy)
+          mOld = m
+
+          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+        ENDIF
       ENDIF
-*      
-*      write(*,*) "           mfirst =", mfirst
-*      write(*,*) "             StPt =", zeroStartPoint
-*      write(*,*) "--- (Deal with returned errors, non-convergence)"
+      
+      write(*,*) "           mfirst =", mfirst
+      write(*,*) "             StPt =", zeroStartPoint
+      write(*,*) "        leftOfMax =", leftOfMax
+      write(*,*) "--- (Deal with returned errors, non-convergence)"
 
 
 *     INTEGRATION
@@ -125,7 +126,7 @@
       areaA = 0.0d00
       m = mfirst 
       
-      write(*,*) "ABOUT TO FINAL TURNING"
+      write(*,*) "ABOUT TO FIND FINAL TURNING"
       
 *     Find the final turning point of Im/Re k, and start accelerating thereafter      
       write(*,*) "IS this about TPs correct??"
@@ -138,17 +139,18 @@
 
 
       zeroStartPoint = pi / Cy
-*      write(*,*) "Start pt for first zero:", zeroStartPoint
+      write(*,*) "Start pt for first zero:", zeroStartPoint
 
       
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-*      write(*,*) "    --- Find right-side zero"
-*      write(*,*)" ALREADY HAVE: ", zeroStartPoint
-      zeroBoundL = zeroStartPoint - 0.25d0 * pi / Cy
+      write(*,*) "    --- Find right-side zero"
+      write(*,*) "    with m = ",m
+      write(*,*)" ALREADY HAVE: ", zeroStartPoint
+      zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
-*      write(*,*) "    & is between ", zeroBoundL, zeroBoundR
+      write(*,*) "    & is between ", zeroBoundL, zeroBoundR
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
