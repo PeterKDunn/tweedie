@@ -41,7 +41,7 @@ k <- function(p, mu, phi, y, t, verbose=FALSE){
     cat("OOPS: change atan() call??\n")
   }
 
-  Real <- front * ( cos(omega * alpha) / ( cos(omega)^alpha) - 1)  
+  Real <- front * ( cos(omega * alpha) / ( cos(omega)^alpha) - 1) 
   Imag <- front *   sin(omega * alpha) / ( cos(omega)^alpha ) - (t * y)
   
   return( list(Real = Real,
@@ -85,11 +85,9 @@ igrand <- function(p, mu, phi, y, t){
           phi = phi, 
           y = y, 
           t = t)
-  if ( p > 2 ){
-    igrand <- exp( rk$Real ) * sin(rk$Imag) / t
-  } else {
-    igrand <- exp(rk$Real) * ( sin(rk$Imag - t*y) - sin(rk$Imag) ) -
-              exp(-lambda) * sin(t*y)
+  igrand <- exp( rk$Real ) * sin(rk$Imag) / t
+  if ( p < 2 ) {
+    igrand <- igrand - ( exp(rk$Real) * sin(rk$Imag - t*y) ) / t
   }
   return(igrand)
 }

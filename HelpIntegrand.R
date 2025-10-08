@@ -28,12 +28,12 @@ kmax_est <- function(p, mu, phi, y){
 
 
 ## TMP
-mu <- 1
-phi <- 4
-p <- 1.5
+mu <- 1.4
+phi <- .35
+p <- 1.05
 # y <- 0.01
-y <- 3
-t <- seq(0, 50,
+y <- .03
+t <- seq(0, 100,
          length = 1000)
 
 
@@ -61,6 +61,7 @@ print( tail(cbind(y, t, Inmag=kvals$Imag, Real=kvals$Real)))
 
 zs <- c(10.2, 214.8, 404.7, 540.2, 659.9, 771.1, 876.8, 978.4, 1077.1)
 
+############################################################################3
 
 par( mfrow=c(3,2))
 plot(kvals$Imag ~ t,
