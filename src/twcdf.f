@@ -77,7 +77,6 @@
       IF ( psmall ) THEN
         write(*,*) "About to call DFsmallp from twcdf"
         CALL DFsmallp(funvalue, exitstatus, relerr, exacti)
-        write(*,*)"::::::: exp(-lamnbda)", DEXP(-lambda)
       ELSE
         write(*,*) "About to call DFbigp from twcdf"
         CALL DFbigp(funvalue, exitstatus, relerr, exacti)

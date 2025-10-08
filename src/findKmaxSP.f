@@ -30,8 +30,10 @@
 
 *     Smooth interpolation: sum of small + large contributions
       findKmaxSP = tsmall + tlarge
+      write(*,*) "findKmaxSP:"
       write(*,*) "The three starting points"
       write(*,*) tsmall, tlarge, findKmaxSP
+
       
       RETURN
       END

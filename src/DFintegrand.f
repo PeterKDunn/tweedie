@@ -9,7 +9,7 @@
 *     OUT: DFfun
 
       DOUBLE PRECISION t, Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION Imk, Rek, lambda
+      DOUBLE PRECISION Imk, Rek
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 

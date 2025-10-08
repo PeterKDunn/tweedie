@@ -14,7 +14,7 @@
 *     achieve, but not vital anyway
 
       IF (pSmall) THEN
-        zero = rtnewton(findZeroSmallp, zeroL, zeroR, zeroSP, xacc)
+        zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
       ELSE
         zero = rtnewton(findImkM, zeroL, zeroR, zeroSP, xacc)
       ENDIF

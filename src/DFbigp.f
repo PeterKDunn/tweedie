@@ -13,9 +13,10 @@
       DOUBLE PRECISION zeroL, zeroR, zero, kmax, tmax
       DOUBLE PRECISION zeroStartPoint, startTKmax, wvec(300)
       DOUBLE PRECISION West, Wold, area0, xvec(300)
-      DOUBLE PRECISION areazeroBoundR0, area1, areaA, psi
+      DOUBLE PRECISION area1, areaA, psi
       DOUBLE PRECISION zeroBoundL, zeroBoundR
       DOUBLE PRECISION DFintegrand, findKmaxSP
+      DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
       EXTERNAL DFintegrand, findKmaxSP
       INTEGER exitstatus, itsAcceleration, itsPreAcc
       INTEGER mfirst, mmax, m, mOld, accMax, exacti
@@ -265,8 +266,8 @@
           accMax = 40
           Wold2 = Wold
           Wold = West
-          CALL accelerate(xvec, wvec, itsAcceleration, 
-     &                    accMax, West)
+          CALL accelerateNEW(xvec, wvec, itsAcceleration, 
+     &     Mmatrix, Nmatrix, West)
 *          W is the best guess of the convergent integration
           write(*,*) "iteration", itsAcceleration, ":", West
           write(*,*) "  - Estimate of tail area:", West

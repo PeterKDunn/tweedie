@@ -3,8 +3,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION kmax, tmax, startPoint, pi, rtnewton
       DOUBLE PRECISION findImdkZero, aimrerr
-      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, myfloor
-      INTEGER mmax, mfirst
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi
+      INTEGER mmax, mfirst, myfloor
       LOGICAL pSmall
       EXTERNAL findImdkZero, myfloor
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall

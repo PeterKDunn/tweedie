@@ -12,9 +12,10 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi, findKmaxSP, startTKMax
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
-      DOUBLE PRECISION Wold, Wold2, areaT, epsilon, bottom
+      DOUBLE PRECISION Wold, Wold2, areaT, epsilon
       DOUBLE PRECISION West, xvec(300), wvec(300), lambda
       DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
+      DOUBLE PRECISION finalTP
       INTEGER mfirst, m, mOld, exitstatus, mmax, n, i
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
@@ -38,12 +39,17 @@
 
       write(*,*) " FOR 1 < p < 2"
       
+*     Initialise the M and N matrices, x and w vectors
       DO i = 1, 200
         Mmatrix(1, i) = 0.0d0
         Mmatrix(2, i) = 0.0d0
         Nmatrix(1, i) = 0.0d0
         Nmatrix(2, i) = 0.0d0
+        xvec(i) = 0.d000
+        wvec(i) = 0.0d00
       ENDDO
+      
+*     Set up
       pi = 4.0d0 * DATAN(1.0d0)
       exitstatus = 0
       relerr = 1.0d00
@@ -55,31 +61,32 @@
 
 
 *     FIND kmax, tmax, mmax
-*      IF (Cy. GE. Cmu) THEN
+      IF (Cy. GE. Cmu) THEN
 *     ************** y > MU   **************
+*     Im k(t) heads down immediately
+
         write(*,*) "** y >= mu"
         kmax = 0.0d00
         tmax = 0.0d00
         mmax = 0
         mfirst = -1
         mOld = 0
-*        write(*,*) "** Im k(t) heads down immediately"
       
         zeroStartPoint = pi / Cy
         leftOfMax = .FALSE.
-*      ELSE
+      ELSE
 *     ************** y < MU   **************
 *       HARDER!         
         write(*,*) "** y < mu"
         
-*        startTKMax = findKmaxSP()
+        startTKMax = findKmaxSP()
 
-*        write(*,*) "Starting t for finding kmax: ", startTKmax
-*        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+        write(*,*) "Starting t for finding kmax: ", startTKmax
+        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
         
-*        write(*,*) "** Found(b): kmax =", kmax
-*        write(*,*) "             tmax =", tmax
-*        write(*,*) "             mmax =", mmax
+        write(*,*) "** Found(b): kmax =", kmax
+        write(*,*) "             tmax =", tmax
+        write(*,*) "             mmax =", mmax
 
 *        leftOfMax = .TRUE.
 *        IF ( mmax .EQ. 0) THEN
@@ -95,7 +102,7 @@
 *
 *          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 *        ENDIF
-*      ENDIF
+      ENDIF
 *      
 *      write(*,*) "           mfirst =", mfirst
 *      write(*,*) "             StPt =", zeroStartPoint
@@ -116,18 +123,32 @@
       area0 = 0.0d00
       area1 = 0.0d00
       areaA = 0.0d00
+      m = mfirst 
       
+      write(*,*) "ABOUT TO FINAL TURNING"
+      
+*     Find the final turning point of Im/Re k, and start accelerating thereafter      
+      write(*,*) "IS this about TPs correct??"
+      finalTP = 0.0d00
+      IF ( Cy .LT. Cmu ) THEN
+        CALL findAccelStart(finalTP)
+      ENDIF
+      
+      write(*,*) "START ACCELERATION AFTER: t:", finalTP
+
+
       zeroStartPoint = pi / Cy
-      write(*,*) "Start pt for first zero:", zeroStartPoint
+*      write(*,*) "Start pt for first zero:", zeroStartPoint
+
       
 *     1. INTEGRATE FIRST REGION: area0
       write(*,*) "*******************************" 
       write(*,*) "1. INTEGRATE: the INITIAL region"
-      write(*,*) "    --- Find right-side zero"
+*      write(*,*) "    --- Find right-side zero"
 *      write(*,*)" ALREADY HAVE: ", zeroStartPoint
       zeroBoundL = zeroStartPoint - 0.25d0 * pi / Cy
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
-      write(*,*) "    between ", zeroBoundL, zeroBoundR
+*      write(*,*) "    & is between ", zeroBoundL, zeroBoundR
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
@@ -138,7 +159,7 @@
 
       CALL gaussq( DFintegrand, area0, zeroL, zeroR)
       write(*,*) "  - Initial area is", area0
-      write(*,*) "    betwee ", zeroL, " and ", zeroR
+      write(*,*) "    between ", zeroL, " and ", zeroR
       
 
       write(*,*) "*******************************" 
@@ -150,7 +171,8 @@
 
       itsPreAcc = 0
       area1 = 0.0d00
-      
+      CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+
 *      IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
 
@@ -181,12 +203,16 @@
   
           CALL gaussq( DFintegrand, sum, zeroL, zeroR)
           area1 = area1 + sum
-          write(*,*) zeroL, "and ", zeroR, ": ", sum
+          write(*,*) zeroL, "and ", zeroR, "; sum: ", sum
 
 *         STOP condition for pre-acceleration.
 *         Not sure about this...
 *          if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
-          if ( itsPreAcc .GE. 5) stopPreAccelerate = .TRUE.
+*          if ( itsPreAcc .GE. 5) stopPreAccelerate = .TRUE.
+          
+*         Stop once the real and imaginary parts have passed their final turning points
+          IF (zeroR .GT. finalTP) stopPreAccelerate = .TRUE.
+          
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
           GOTO 115
@@ -197,6 +223,7 @@
 *      write(*,*) "SUMMARY (before accelerating):"
 *      write(*,*) "  Area0 ", area0
 *      write(*,*) "  Area1 ", area1
+
 
 *     3. INTEGRATE: the ACCELERATION regions: areaA
       write(*,*) "*******************************" 
@@ -217,31 +244,22 @@
 
  12     IF ( .NOT.(convergence)) THEN
           write(*,*) "  --- Next tail region"
-          write(*,*) "Starting with"
+*          write(*,*) "Starting with"
           itsAcceleration = itsAcceleration + 1
 *         itsAcceleration = 1 means this is the first area found
 *         under the acceleration regime
 
           n = itsPreAcc + itsAcceleration 
-          write(*,*) " Using n =", n
+*          write(*,*) " Using n =", n
           zeroStartPoint = (n + 1) * pi / Cy
           zeroL = zeroR
           
           zeroBoundL = zeroStartPoint - 0.35 * pi / Cy
           zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy
-          write(*,*) "  - Startpoint:", zeroStartPoint
-          CALL findZeroSmallp(zeroStartPoint, f, df)
-          write(*,*) "    Has value", f, df
-          CALL findZeroSmallp(zeroBoundL, f, df)
-          write(*,*) "    L: Has value", f, df
-          CALL findZeroSmallp(zeroBoundR, f, df)
-          write(*,*) "    R: Has value", f, df
 
           CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                        zeroStartPoint, zero)
-          write(*,*) "   Zero found:", zero
           CALL findZeroSmallp(zero, f, df)
-          write(*,*) "    Has value", f, df
 
           zeroR = zero
           xvec(itsAcceleration + 1) = zeroR
@@ -272,8 +290,8 @@
           ELSE
             write(*,*) "  (Keep a-going) Relerr is", relerr
           ENDIF
-        IF (itsAcceleration .EQ. 10) convergence = .TRUE.
-        write(*,*) "TEMP: itsAcceleration = -10: stop"
+        IF (itsAcceleration .EQ. 30) convergence = .TRUE.
+        write(*,*) "TEMP: itsAcceleration = -30: stop"
           mOld = m
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
@@ -311,11 +329,11 @@
 *     So we need to find the CDF of Y.
 *     That also means adding P(Y=0) 
 
-      bottom = 1.0d0 - DEXP(-lambda)
-      funvalue = areaT/(pi * bottom) -
-     &              exp(-lambda) / (2.0d0 * bottom)  
+*     So the value returned by the integration  
+     
+      funvalue = -areaT/pi + 0.50d0 
       write(*,*) "FINAL AREA: The cdf value is", funvalue
-      write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
+      write(*,*) "DFsmallp: funvalue, exitstatus, relerr, exacti"
       write(*,*) funvalue, exitstatus, relerr, exacti
 
       RETURN
