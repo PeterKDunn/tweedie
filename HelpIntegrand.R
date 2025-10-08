@@ -29,11 +29,11 @@ kmax_est <- function(p, mu, phi, y){
 
 ## TMP
 mu <- 1.4
-phi <- .35
-p <- 1.05
+phi <- 0.74
+p <- 1.5
 # y <- 0.01
-y <- .03
-t <- seq(0, 100,
+y <- 3
+t <- seq(0, 10,
          length = 1000)
 
 
