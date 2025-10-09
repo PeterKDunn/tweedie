@@ -13,8 +13,8 @@
       DOUBLE PRECISION relerr, aimrerr
       DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
       INTEGER exitstatus
-      INTEGER its, exacti, verbose, m
-      LOGICAL  pSmall, exact
+      INTEGER its, exacti, m
+      LOGICAL  pSmall, exact, verbose
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
@@ -38,7 +38,7 @@
 *               0 if the approx zeros acceleration algorithm is used.
 
 *     Defaults
-      verbose = 0
+      verbose = .TRUE.
       exitstatus = 1
       relerr = 0.0d0
       its = 0
@@ -76,10 +76,10 @@
 
       IF ( psmall ) THEN
         write(*,*) "About to call DFsmallp from twcdf"
-        CALL DFsmallp(funvalue, exitstatus, relerr, exacti)
+        CALL DFsmallp(funvalue, exitstatus, relerr, exacti, verbose)
       ELSE
         write(*,*) "About to call DFbigp from twcdf"
-        CALL DFbigp(funvalue, exitstatus, relerr, exacti)
+        CALL DFbigp(funvalue, exitstatus, relerr, exacti, verbose)
       ENDIF
       
 *     Fix based on machine accuracy

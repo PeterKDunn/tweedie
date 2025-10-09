@@ -1,6 +1,6 @@
-      FUNCTION rtnewton(funcd, x1, x2, xstart, xacc)
+      FUNCTION rtnewtonOLD(funcd, x1, x2, xstart, xacc)
 *     Using the Newton-Raphson method, find the root of a function known to lie in the interval
-*     [x1, x2]. The root rtnewt will be refined until its accuracy is known within ±xacc. funcd
+*     [x1, x2]. The root rtnewt will be refined until its accuracy is known within plus/minus xacc. funcd
 *     is a user-supplied subroutine that returns both the function value and the first derivative
 *     of the function at the point x.
 *
@@ -9,56 +9,45 @@
 
       IMPLICIT NONE
       INTEGER JMAX, j
-      DOUBLE PRECISION rtnewton, x1, x2, xacc, xstart
-      DOUBLE PRECISION f, df, dx, rtnewtonTMP
+      DOUBLE PRECISION rtnewtonOLD, x1, x2, xacc, xstart
+      DOUBLE PRECISION f, df, dx, rtnewtonOLDTMP
       EXTERNAL funcd
       PARAMETER (JMAX=50) 
       
-      write(*,*) "RTNEWTON:"
-      rtnewton = xstart
+      rtnewtonOLD = xstart
     
       DO j = 1, JMAX
-        CALL funcd(rtnewton, f, df)
+        CALL funcd(rtnewtonOLD, f, df)
         dx = f/df
-        rtnewtonTMP = rtnewton - dx
+        rtnewtonOLDTMP = rtnewtonOLD - dx
+        write(*,*) "rtnewtonOLD, j:", rtnewtonOLD, j
+        write(*,*) "rtnewtonOLDTMP:", rtnewtonOLDTMP
+        write(*,*) "     df, dx:", df, dx
 
 *       Check that the new value does not suggest a negative value        
- 50     IF (rtnewtonTMP .LT. 0.0d00) THEN
+ 50     IF (rtnewtonOLDTMP .LT. 0.0d00) THEN
           write(*,*) "ADJUSTING for -ive value!"
           
-          rtnewton = rtnewton / 2.0d00
+          rtnewtonOLD = rtnewtonOLD / 2.0d00
           
-          CALL funcd(rtnewton, f, df)
+          CALL funcd(rtnewtonOLD, f, df)
           dx = f/df
-          rtnewtonTMP = rtnewton - dx
+          rtnewtonOLDTMP = rtnewtonOLD - dx
 
           GOTO 50
         ENDIF
-        rtnewton = rtnewton
-*      write(*,*) "       j:", j
-*      write(*,*) "rtnewton:", rtnewton
-*      write(*,*) "       f:", f
-*      write(*,*) "      df:", df
-*      write(*,*) "  error:", DABS(dx)
-*      write(*,*) "   xacc:", xacc
-
-        IF ( (x1 - rtnewton) * (rtnewton - x2) .LT. 0.0d00) THEN
-*          write(*,*) "rtnewton:", rtnewton
-*          write(*,*) "       f:", f
-*          write(*,*) "      df:", df
-*          write(*,*) "rtnewton jumped out of brackets"
-*          STOP
-           rtnewton = DABS(rtnewton)
-*      write(*,*) "   -> rtnewton:", rtnewton
-        ENDIF
+        
+        rtnewtonOLD = rtnewtonOLDTMP
+        write(*,*) "rtnewtonOLD, j:", rtnewtonOLD, j
+        write(*,*) "     df, dx:", df, dx
+        
+*        IF ( (x1 - rtnewtonOLD) * (rtnewtonOLD - x2) .LT. 0.0d00) THEN
+*           rtnewtonOLD = DABS(rtnewtonOLD)
+*        ENDIF
+        
         IF ( DABS(dx) .LT. xacc) RETURN 
 *       Convergence!
       ENDDO
-*      write(*,*) "rtnewton: exceeded maximum iterations", f
-*      write(*,*) "       j:", j
-*      write(*,*) "rtnewton:", rtnewton
-*      write(*,*) "       f:", f
-*      write(*,*) "      df:", df
-      
+
       RETURN
       END

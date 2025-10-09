@@ -2,11 +2,11 @@
 
       IMPLICIT NONE
       DOUBLE PRECISION kmax, tmax, startPoint, pi, rtnewton
-      DOUBLE PRECISION findImdkZero, aimrerr
+      DOUBLE PRECISION findImdkZero, aimrerr, rtsafe
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       INTEGER mmax, mfirst, myfloor
       LOGICAL pSmall
-      EXTERNAL findImdkZero, myfloor
+      EXTERNAL findImdkZero, myfloor, rtnewton, rtsafe
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       
       aimrerr = 1.0d-09
@@ -21,10 +21,19 @@
           startPoint = pi / Cy + 0.25d00
         ELSE
 *         Cy < Cmu and 1 < p < 2
+      write(*,*) "IN findKmax: startPoint", startPoint
+      write(*,*) "About to call rtnewton/rtsafe"
+*          tmax = rtsafe(findImdkZero, 
+*     &                    0.0d00, 
+*     &                    startPoint * 20.0d00, 
+*     &                    startPoint, aimrerr)
           tmax = rtnewton(findImdkZero, 
-     &                  0.0d00, 
-     &                  startPoint * 2.0d00, 
-     &                  startPoint, aimrerr)
+     &                    0.0d00, 
+     &                    startPoint * 20.0d00, 
+     &                    startPoint, aimrerr)
+*         funcd returns the fn value, and derivative value
+
+      write(*,*) "BACK IN findKmax"
 *         funcd returns the fn value, and derivative value
 *         Find kmax, mmax
           CALL findImk(tmax, kmax)
@@ -42,7 +51,6 @@
         ELSE
 *         Cy < Cmu and p > 2
 
-*      write(*,*) "*** (fKM) l=0, right=", startPoint * 30.0d0
           tmax = rtnewton(findImdkZero, 
      &                    0.00d00, 
      &                    startPoint * 30.0d00, 

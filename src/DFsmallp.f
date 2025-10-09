@@ -1,5 +1,5 @@
 
-      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, exact)
+      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, exact, verbose)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: 1 < p < 2
@@ -20,7 +20,7 @@
       INTEGER mfirst, m, mOld, exitstatus, mmax, n, i
       INTEGER itsPreAcc, accMax, exacti, itsAcceleration
       LOGICAL  exact, convergence, flip, leftOfMax
-      LOGICAL pSmall, stopPreAccelerate
+      LOGICAL pSmall, stopPreAccelerate, verbose
       EXTERNAL findKmaxSP, DFintegrand
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
@@ -38,7 +38,7 @@
 *    exact    : 1 if the exact zeros acceleration algorithms is used;
 *               0 if the approx zeros acceleration algorithm is used.
 
-      write(*,*) " FOR 1 < p < 2"
+      IF (verbose) write(*,*) " FOR 1 < p < 2"
       
 *     Initialise the M and N matrices, x and w vectors
       DO i = 1, 200
@@ -66,7 +66,7 @@
 *     ************** y > MU   **************
 *     Im k(t) heads down immediately
 
-        write(*,*) "** y >= mu"
+        IF (verbose) write(*,*) "** y >= mu"
         kmax = 0.0d00
         tmax = 0.0d00
         mmax = 0
@@ -78,18 +78,19 @@
       ELSE
 *     ************** y < MU   **************
 *       HARDER!         
-        write(*,*) "** y < mu"
-        write(*,*) "ABout to find startTKMax"
-        startTKMax = findKmaxSP()
-        write(*,*) "END find startTKMax"
-
-        write(*,*) "Starting t for kmax: ", startTKmax
-        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+        IF (verbose) write(*,*) "** y < mu"
         
-        write(*,*) "** Found(b): kmax =", kmax
-        write(*,*) "             tmax =", tmax
-        write(*,*) "             mmax =", mmax
+        startTKMax = findKmaxSP()
 
+        IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
+        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+  
+        IF (verbose) THEN
+          write(*,*) "** Found(b): kmax =", kmax
+          write(*,*) "             tmax =", tmax
+          write(*,*) "             mmax =", mmax
+        ENDIF
+        
         leftOfMax = .TRUE.
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
@@ -106,12 +107,8 @@
         ENDIF
       ENDIF
       
-      write(*,*) "           mfirst =", mfirst
-      write(*,*) "             StPt =", zeroStartPoint
-      write(*,*) "        leftOfMax =", leftOfMax
       write(*,*) "--- (Deal with returned errors, non-convergence)"
-
-
+      
 *     INTEGRATION
 *     There are three integration regions:
 *
@@ -128,8 +125,6 @@
       areaA = 0.0d00
       m = mfirst 
       
-      write(*,*) "ABOUT TO FIND FINAL TURNING"
-      
 *     Find the final turning point of Im/Re k, and start accelerating thereafter      
       write(*,*) "IS this about TPs correct??"
       finalTP = 0.0d00
@@ -137,39 +132,34 @@
         CALL findAccelStart(finalTP)
       ENDIF
       
-      write(*,*) "START ACCELERATION AFTER: t:", finalTP
-
-
       zeroStartPoint = pi / Cy
-      write(*,*) "Start pt for first zero:", zeroStartPoint
 
-      
 *     1. INTEGRATE FIRST REGION: area0
-      write(*,*) "*******************************" 
-      write(*,*) "1. INTEGRATE: the INITIAL region"
-      write(*,*) "    --- Find right-side zero"
-      write(*,*) "    with m = ",m
-      write(*,*)" ALREADY HAVE: ", zeroStartPoint
-      write(*,*) "    tmax = ", tmax
+      IF (verbose) THEN
+        write(*,*) "*******************************" 
+        write(*,*) "1. INTEGRATE: the INITIAL region"
+      ENDIF 
       zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
-      write(*,*) "    & is between ", zeroBoundL, zeroBoundR
+      IF (verbose) write(*,*) "    between ", zeroBoundL, zeroBoundR
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                    zeroStartPoint, zero)
-      write(*,*) "ZERO: ", zero
       zeroL =  0.0d00
       zeroR = zero
 
       CALL gaussq( DFintegrand, area0, zeroL, zeroR)
-      write(*,*) "  - Initial area is", area0
-      write(*,*) "    between ", zeroL, " and ", zeroR
-      
+      IF (verbose) write(*,*) "  - Initial area:", area0
+      IF (verbose) write(*,*) "    between:", zeroL, zeroR
 
-      write(*,*) "*******************************" 
+
 *     2. INTEGRATE: the PRE-ACCELERATION regions: area1
-      write(*,*) "2. INTEGRATE: the PRE-ACCELERATION regions"
+      IF (verbose) THEN
+        write(*,*) "*******************************" 
+        write(*,*) "2. INTEGRATE: Pre-acceleration"
+      ENDIF 
+
 *     When p > 2, things seem well-behaved most of the time, so 
 *     we declare  area1  to be up to m = mmax - 1 (i.e., just
 *     after the downturn)
@@ -191,24 +181,25 @@
         
  115    IF ( .NOT.(stopPreAccelerate) ) THEN
           itsPreAcc = itsPreAcc + 1
-          write(*,*) "Using n =", itsPreAcc
+          zeroL = zeroR
+
           zeroStartPoint = (itsPreAcc + 1) * pi / Cy
+          write(*,*)" StartPT:", zeroStartPoint
           zeroBoundL = zeroR
           zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy
-
-*       write(*,*) "--> Start pt", zeroStartPoint
-*       write(*,*) "--> BoundsLt", zeroBoundL
-*       write(*,*) "--> BoundsR", zeroBoundR
-          zeroL = zeroR
+          write(*,*) "Bunds:", zeroBoundL, zeroBoundR
           CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                        zeroStartPoint, zero)
 
           zeroR = zero
-          write(*,*) "--- Integrate (m = ", m, ") between " 
-  
+          write(*,*) "FOUND NEW R BOUND", zero
           CALL gaussq( DFintegrand, sum, zeroL, zeroR)
           area1 = area1 + sum
-          write(*,*) zeroL, "and ", zeroR, "; sum: ", sum
+          
+          IF (verbose) THEN
+            write(*,*) "--- Integrate (m = ", m, ") between " 
+            write(*,*) zeroL, "and ", zeroR, "; sum: ", sum
+          ENDIF
 
 *         STOP condition for pre-acceleration.
 *         Not sure about this...
@@ -224,15 +215,17 @@
         ENDIF
 *      ENDIF
 
-*      write(*,*) "Finished pre-acc; areas"
-*      write(*,*) "SUMMARY (before accelerating):"
-*      write(*,*) "  Area0 ", area0
-*      write(*,*) "  Area1 ", area1
+      IF (verbose) THEN
+        write(*,*) "Finished pre-acc; areas"
+        write(*,*) "  Area1 ", area1
+      ENDIF
 
 
 *     3. INTEGRATE: the ACCELERATION regions: areaA
-      write(*,*) "*******************************" 
-      write(*,*) "3. INTEGRATE: the ACCELERATION"
+      IF (verbose) THEN
+        write(*,*) "*******************************" 
+        write(*,*) "3. INTEGRATE: the ACCELERATION"
+      ENDIF
       
       Wold = 0.0d00
       Wold2 = 1.0d00
@@ -248,14 +241,11 @@
 *       value of  t  used in the acceleration (the previous regions *right* value) 
 
  12     IF ( .NOT.(convergence)) THEN
-          write(*,*) "  --- Next tail region"
-*          write(*,*) "Starting with"
           itsAcceleration = itsAcceleration + 1
 *         itsAcceleration = 1 means this is the first area found
 *         under the acceleration regime
 
           n = itsPreAcc + itsAcceleration 
-*          write(*,*) " Using n =", n
           zeroStartPoint = (n + 1) * pi / Cy
           zeroL = zeroR
           
@@ -268,58 +258,50 @@
 
           zeroR = zero
           xvec(itsAcceleration + 1) = zeroR
-          write(*,*) "  - Integrate between:", zeroL, zeroR
+          IF (verbose) write(*,*) "  - Integrate between:", zeroL, zeroR
 
           CALL gaussq( DFintegrand, psi, zeroL, zeroR)
 *         psi: area of the latest region
           wvec(itsAcceleration) = psi
-          write(*,*) "  - Area between zeros is:", psi
+          IF (verbose) write(*,*) "  - Area between zeros is:", psi
 
-          accMax = 40
+          accMax = 100
           Wold2 = Wold
           Wold = West
           CALL accelerateNEW(xvec, wvec, itsAcceleration, 
      &                       Mmatrix, Nmatrix, West)
 *          W is the best guess of the convergent integration
-          write(*,*) "iteration", itsAcceleration, ":", West
-          write(*,*) "  - Estimate of tail area:", West
-          write(*,*) "--------------------------------"
 
 *         Check for convergence
-          write(*,*) "Ws: ", West, Wold, Wold2
           relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
      &                     (DABS(West) + epsilon )
           IF (relerr .LT. aimrerr ) THEN 
-            write(*,*) "  (Nice) Relerr is", relerr
             convergence = .TRUE.
-          ELSE
-            write(*,*) "  (Keep a-going) Relerr is", relerr
           ENDIF
-        IF (itsAcceleration .EQ. 30) convergence = .TRUE.
-        write(*,*) "TEMP: itsAcceleration = -30: stop"
+
+          IF (itsAcceleration .EQ. accMax) THEN
+            convergence = .TRUE.
+            write(*,*) "No convergence of acceleration."
+          ENDIF
+
           mOld = m
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
           GOTO 12
-        ENDIF
-      ELSE
-        IF ( .NOT.(convergence)) THEN
-        write(*,*) "  - Computing for p:", Cp
-*           CALL findApproxZeros()
-*           CALL integrateRegions()
-*           CALL accelerate()
         ENDIF
       ENDIF
       write(*,*) "!!!!! DFsmall/big: Approx zeros can be removed !!!!!"
       
       areaA = West
       areaT = area0 + area1 + areaA
-      write(*,*) "SUMMARY:"
-      write(*,*) "  Area0 ", area0
-      write(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
-      write(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
-      write(*,*) "  TOTAL ", areaT
       
+      IF (verbose) THEN
+        write(*,*) "SUMMARY:"
+        write(*,*) "  Area0 ", area0
+        write(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
+        write(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
+        write(*,*) "  TOTAL ", areaT
+      ENDIF
       
 *** WHAT TO DO with relerrr? Might have three rel errors: from initila, pre-acc, acc?
 *** Take largest of the three? ADD?
@@ -337,10 +319,12 @@
 *     So the value returned by the integration  
      
       funvalue = -areaT/pi + 0.50d0 
-      write(*,*) "FINAL AREA: The cdf value is", funvalue
-      write(*,*) "DFsmallp: funvalue, exitstatus, relerr, exacti"
-      write(*,*) funvalue, exitstatus, relerr, exacti
-
+      IF (verbose) THEN
+        write(*,*) "FINAL AREA: The cdf value is", funvalue
+        write(*,*) "DFsmallp: funvalue, exitstatus, relerr, exacti"
+        write(*,*) funvalue, exitstatus, relerr, exacti
+      ENDIF
+      
       RETURN
       END
 

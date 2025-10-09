@@ -8,7 +8,6 @@
       LOGICAL pSmall
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
 
-*      write(*,*) '+findImdk', Cp, Cy, Cmu, Cphi, t
       CALL findImkd( t, Imdk ) 
       CALL findImkdd(t, Imddk)
 *      write(*,*) '+findImdk', Cp, Cy, Cmu, Cphi, t
