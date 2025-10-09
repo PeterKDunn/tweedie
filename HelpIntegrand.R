@@ -28,12 +28,12 @@ kmax_est <- function(p, mu, phi, y){
 
 
 ## TMP
-mu <- 1.4
-phi <- 0.74
+mu <- 1
+phi <- 4
 p <- 1.5
 # y <- 0.01
 y <- 0.3
-t <- seq(0, 10,
+t <- seq(0, 2,
          length = 1000)
 
 
