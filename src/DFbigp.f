@@ -1,5 +1,5 @@
 
-      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exacti)
+      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exacti, verbose)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: p > 2
@@ -20,7 +20,7 @@
       EXTERNAL DFintegrand, findKmaxSP
       INTEGER exitstatus, itsAcceleration, itsPreAcc
       INTEGER mfirst, mmax, m, mOld, accMax, exacti
-      LOGICAL exact, convergence, leftOfMax
+      LOGICAL exact, convergence, leftOfMax, verbose
       LOGICAL stopPreAccelerate, pSmall, flip
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
@@ -49,6 +49,7 @@
       convergence = .FALSE.
       exact = .TRUE.
       exacti = 1
+      verbose = .TRUE.
       
 *     FIND kmax, tmax, mmax
       IF (Cy. GE. Cmu) THEN
