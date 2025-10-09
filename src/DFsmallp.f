@@ -9,7 +9,8 @@
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
       DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df
-      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, findKmaxSP, startTKMax
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi
+      DOUBLE PRECISION findKmaxSP, startTKMax
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
       DOUBLE PRECISION Wold, Wold2, areaT, epsilon
@@ -78,10 +79,11 @@
 *     ************** y < MU   **************
 *       HARDER!         
         write(*,*) "** y < mu"
-        
+        write(*,*) "ABout to find startTKMax"
         startTKMax = findKmaxSP()
+        write(*,*) "END find startTKMax"
 
-        write(*,*) "Starting t for finding kmax: ", startTKmax
+        write(*,*) "Starting t for kmax: ", startTKmax
         CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
         
         write(*,*) "** Found(b): kmax =", kmax
@@ -148,6 +150,7 @@
       write(*,*) "    --- Find right-side zero"
       write(*,*) "    with m = ",m
       write(*,*)" ALREADY HAVE: ", zeroStartPoint
+      write(*,*) "    tmax = ", tmax
       zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
       write(*,*) "    & is between ", zeroBoundL, zeroBoundR

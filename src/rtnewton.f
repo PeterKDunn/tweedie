@@ -10,17 +10,31 @@
       IMPLICIT NONE
       INTEGER JMAX, j
       DOUBLE PRECISION rtnewton, x1, x2, xacc, xstart
-      DOUBLE PRECISION f, df, dx
+      DOUBLE PRECISION f, df, dx, rtnewtonTMP
       EXTERNAL funcd
       PARAMETER (JMAX=50) 
       
-*      write(*,*) "RTNEWTON:"
+      write(*,*) "RTNEWTON:"
       rtnewton = xstart
     
       DO j = 1, JMAX
         CALL funcd(rtnewton, f, df)
         dx = f/df
-        rtnewton = rtnewton - dx
+        rtnewtonTMP = rtnewton - dx
+
+*       Check that the new value does not suggest a negative value        
+ 50     IF (rtnewtonTMP .LT. 0.0d00) THEN
+          write(*,*) "ADJUSTING for -ive value!"
+          
+          rtnewton = rtnewton / 2.0d00
+          
+          CALL funcd(rtnewton, f, df)
+          dx = f/df
+          rtnewtonTMP = rtnewton - dx
+
+          GOTO 50
+        ENDIF
+        rtnewton = rtnewton
 *      write(*,*) "       j:", j
 *      write(*,*) "rtnewton:", rtnewton
 *      write(*,*) "       f:", f

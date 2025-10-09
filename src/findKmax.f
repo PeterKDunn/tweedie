@@ -26,12 +26,13 @@
      &                  startPoint * 2.0d00, 
      &                  startPoint, aimrerr)
 *         funcd returns the fn value, and derivative value
-          mmax = 0
-          tmax = 0.0d00
-          kmax = 0.0d00
+*         Find kmax, mmax
+          CALL findImk(tmax, kmax)
+          mmax = myfloor(kmax/pi)
+          mfirst = mmax
         ENDIF
       ELSE
-              IF (Cy .GE. Cmu) THEN
+        IF (Cy .GE. Cmu) THEN
 *         Cy >= Cmu and p > 2
 
           mmax = 0
