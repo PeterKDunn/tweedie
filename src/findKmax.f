@@ -1,8 +1,10 @@
-      SUBROUTINE findKmax(kmax, tmax, mmax, mfirst, startPoint)
+      SUBROUTINE findKmax(kmax, tmax, mmax, mfirst, startPoint,
+     &                    kmaxL, kmaxR)
 
       IMPLICIT NONE
       DOUBLE PRECISION kmax, tmax, startPoint, pi, rtnewton
       DOUBLE PRECISION findImdkZero, aimrerr, rtsafe
+      DOUBLE PRECISION kmaxL, kmaxR
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       INTEGER mmax, mfirst, myfloor
       LOGICAL pSmall
@@ -27,13 +29,10 @@
 *     &                    0.0d00, 
 *     &                    startPoint * 20.0d00, 
 *     &                    startPoint, aimrerr)
-          tmax = rtnewton(findImdkZero, 
-     &                    0.0d00, 
-     &                    startPoint * 20.0d00, 
-     &                    startPoint, aimrerr)
+          tmax = rtsafe(findImdkZero, 
+     &                 kmaxL, kmaxR, startPoint, aimrerr)
 *         funcd returns the fn value, and derivative value
-
-      write(*,*) "BACK IN findKmax"
+*      write(*,*) "BACK IN findKmax"
 *         funcd returns the fn value, and derivative value
 *         Find kmax, mmax
           CALL findImk(tmax, kmax)

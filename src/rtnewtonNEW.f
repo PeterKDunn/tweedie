@@ -14,8 +14,8 @@
         CALL funcd(rtnewton, f, df)
         dx = f / df
         rtnewtonTMP = rtnewton - dx
-*        write(*,*) "RTNEWTON"
-*        write(*,*) rtnewton, f, df
+*        write(*,*) "     RTNEWTON: guess, f, df"
+*        write(*,*) "     ", rtnewton, f, df
 *       Safeguard: do not let root go negative
  50     IF (rtnewtonTMP .LT. 0.0D0) THEN
           rtnewton = rtnewton / 2.0D0

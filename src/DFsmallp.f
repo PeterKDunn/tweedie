@@ -9,6 +9,7 @@
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
       DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df
+      DOUBLE PRECISION kmaxL, kmaxR
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       DOUBLE PRECISION findKmaxSP, startTKMax, front
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
@@ -80,7 +81,14 @@
 *       HARDER!         
         IF (verbose) write(*,*) "** y < mu"
         
+        write(*,*) "About to find kmax"
         startTKMax = findKmaxSP()
+        IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
+        
+*       Sometimes, important to spend some getting a good starting point and bounds.  
+        CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+      write(*,*) ">>>>> BOUNDS FOR KMAX", kmaxL, kmaxR
+        startTKmax =  (kmaxL + kmaxR) / 2.0d0
         
         leftOfMax = .TRUE.
         IF ( mmax .EQ. 0) THEN
@@ -97,10 +105,9 @@
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
         ENDIF        
-      ENDIF
-
         IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
-        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
+        CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax,
+     &                kmaxL, kmaxR)
   
         IF (verbose) THEN
           write(*,*) "** Found(b): kmax =", kmax
@@ -123,8 +130,10 @@
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
         ENDIF
       
+      ENDIF
+
       write(*,*) "--- (Deal with returned errors, non-convergence)"
-      
+
 *     INTEGRATION
 *     There are three integration regions:
 *
@@ -152,6 +161,7 @@
 * TRY A NEW ONE!
       front = Cmu ** (1.0d0 - Cp) / ( Cphi * (1.0d0 - Cp))
       zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
+      write(*,*) "zeroStartPoint", zeroStartPoint
 
 *     1. INTEGRATE FIRST REGION: area0
       IF (verbose) THEN
@@ -161,11 +171,12 @@
       zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
       IF (verbose) write(*,*) " Boundss zero; ", zeroBoundL, zeroBoundR
+      write(*,*), "   m = ", m
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                    zeroStartPoint, zero)
-      write(*,*) "Exact zero found!", zero
+
       zeroL =  0.0d00
       zeroR = zero
 
@@ -204,7 +215,7 @@
           zeroL = zeroR
 
           zeroStartPoint = (itsPreAcc + 1) * pi / Cy
-          write(*,*)" StartPT:", zeroStartPoint
+*          write(*,*)" StartPT:", zeroStartPoint
           zeroBoundL = zeroR
           zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy
 
@@ -291,7 +302,7 @@
           CALL accelerateNEW(xvec, wvec, itsAcceleration, 
      &                       Mmatrix, Nmatrix, West)
 *          W is the best guess of the convergent integration
-           if (verbose) write(*,*) "Tail estimate:", West
+           if (verbose) write(*,*) "  - Tail estimate:", West
 
 *         Check for convergence
           relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
@@ -318,9 +329,9 @@
       
       IF (verbose) THEN
         write(*,*) "SUMMARY:"
-        write(*,*) "  Area0 ", area0
-        write(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
-        write(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
+        write(*,*) "  * Area0 ", area0
+        write(*,*) "  * Area1 ", area1, "(", itsPreAcc, "regions)"
+        write(*,*) "  * AreaA ", areaA, "(", itsAcceleration, " its)"
         write(*,*) "  TOTAL ", areaT
       ENDIF
       

@@ -11,6 +11,7 @@
       ! Initialize root
       rtsafe = xstart
 
+*      write(*,*) "RTSAFE: Bounded between ", x1, x2
       DO j = 1, JMAX
          CALL funcd(rtsafe, f, df)
          dx = f / df
@@ -24,6 +25,7 @@
          ENDIF
 
          rtsafe = rtsafeTMP
+*      write(*,*) "RTSAFE: x, fn value: ", rtsafe, f
 
 *        Convergence check
          IF (DABS(dx) < xacc) RETURN
