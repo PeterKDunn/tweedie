@@ -96,10 +96,10 @@
       write(*,*) "  rtsafe: FOUND BOUNDS: x1=", x1, " x2=",x2
 
       IF (fl .EQ. 0.0d00) THEN
-        rtsafe = x1
+        rtsafeOLD = x1
         RETURN
       ELSE IF (fh .EQ. 0.0d00) THEN
-        rtsafe = x2
+        rtsafeOLD = x2
         RETURN
       ELSE IF (fl .LT. 0.0d00) THEN
 *       Orient the search so that f(xl) < 0.
@@ -111,12 +111,12 @@
       ENDIF
 
 *     Initial guess for root
-      rtsafe = 0.5d00 * (x1 + x2)
+      rtsafeOLD = 0.5d00 * (x1 + x2)
 
       dxold = DABS(x2 - x1)
       dx    = dxold
 
-      CALL funcd(rtsafe, f, df)
+      CALL funcd(rtsafeOLD, f, df)
 
       DO j = 1, MAXIT
 *       Loop over allowed iterations.
@@ -124,53 +124,53 @@
          write(*,*) "  rtsafe: Using : fl=", fl," fh=",fh
          write(*,*) "rtsafe: Using : df", df
 
-        if ( ( ( (rtsafe - xh) * df - f) *
-     &         ( (rtsafe - xl) * df - f) .GT. 0.0d00 )
+        if ( ( ( (rtsafeOLD - xh) * df - f) *
+     &         ( (rtsafeOLD - xl) * df - f) .GT. 0.0d00 )
      &      .OR.
      &       DABS(2.0d00 * f) .GT. DABS(dxold * df) ) then
 *         Bisect if Newton out of range, or not decreasing fast enough.
           dxold  = dx
           dx     = 0.5d00 * (xh - xl)
-          rtsafe = xl + dx
+          rtsafeOLD = xl + dx
 
-          IF (xl .EQ. rtsafe) THEN
+          IF (xl .EQ. rtsafeOLD) THEN
 *           Change in root is negligible.
             return
           ELSE
 *           Newton step acceptable; take it.
             dxold  = dx
             dx     = f / df
-            temp   = rtsafe
-            rtsafe = rtsafe - dx
-            IF (temp .EQ. rtsafe) RETURN
+            temp   = rtsafeOLD
+            rtsafeOLD = rtsafeOLD - dx
+            IF (temp .EQ. rtsafeOLD) RETURN
           ENDIF
 
         ELSE
 *         Newton step was fine
           dxold  = dx
           dx     = f / df
-          temp   = rtsafe
-          rtsafe = rtsafe - dx
-          IF (temp .EQ. rtsafe) RETURN
+          temp   = rtsafeOLD
+          rtsafeOLD = rtsafeOLD - dx
+          IF (temp .EQ. rtsafeOLD) RETURN
         ENDIF
 
 *       Convergence test
         IF (DABS(dx) .LT. xacc) RETURN
 
 *       Evaluate function at new point
-        CALL funcd(rtsafe, f, df)
+        CALL funcd(rtsafeOLD, f, df)
 
 *       Maintain the bracket
         IF (f .LT. 0.0d00) THEN
-          xl = rtsafe
+          xl = rtsafeOLD
         ELSE
-          xh = rtsafe
+          xh = rtsafeOLD
         ENDIF
 
       ENDDO
 
 *     If we get here, we exceeded maximum iterations
-      write(*,*) ' mrtsafe: exceeding maximum iterations'
+      write(*,*) ' rtsafe: exceeding maximum iterations'
 
       RETURN
       END
