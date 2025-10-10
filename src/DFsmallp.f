@@ -186,10 +186,7 @@
 
       itsPreAcc = 0
       area1 = 0.0d00
-      write(*,*) "** mmax, m, mOld, leftOfMax, flip"
-      write(*,*) "** PRE-advanceM:", mmax, m, mOld, leftOfMax, flip
       CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-      write(*,*) "** POST-advanceM:", mmax, m, mOld, leftOfMax, flip
 
 *      IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
@@ -210,12 +207,12 @@
           write(*,*)" StartPT:", zeroStartPoint
           zeroBoundL = zeroR
           zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy
-          write(*,*) "Bunds:", zeroBoundL, zeroBoundR
+
           CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                        zeroStartPoint, zero)
 
           zeroR = zero
-          write(*,*) "FOUND NEW R BOUND", zero
+
           CALL gaussq( DFintegrand, sum, zeroL, zeroR)
           area1 = area1 + sum
           
@@ -294,6 +291,7 @@
           CALL accelerateNEW(xvec, wvec, itsAcceleration, 
      &                       Mmatrix, Nmatrix, West)
 *          W is the best guess of the convergent integration
+           if (verbose) write(*,*) "Tail estimate:", West
 
 *         Check for convergence
           relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
