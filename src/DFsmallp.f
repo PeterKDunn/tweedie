@@ -1,5 +1,5 @@
 
-      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, exact, verbose)
+      SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: 1 < p < 2
@@ -19,8 +19,8 @@
       DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
       DOUBLE PRECISION finalTP
       INTEGER mfirst, m, mOld, exitstatus, mmax, n, i
-      INTEGER itsPreAcc, accMax, exacti, itsAcceleration
-      LOGICAL  exact, convergence, flip, leftOfMax
+      INTEGER itsPreAcc, accMax, itsAcceleration
+      LOGICAL  convergence, flip, leftOfMax
       LOGICAL pSmall, stopPreAccelerate, verbose
       EXTERNAL findKmaxSP, DFintegrand
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
@@ -36,8 +36,6 @@
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
 *                -1  if not, but the absolute error is less than aimrerr
 *               -10  if neither rel or abs error any good
-*    exact    : 1 if the exact zeros acceleration algorithms is used;
-*               0 if the approx zeros acceleration algorithm is used.
 
       IF (verbose) write(*,*) " FOR 1 < p < 2"
       
@@ -58,8 +56,6 @@
       epsilon = 1.0d-16
       aimrerr = 1.0d-14
       convergence = .FALSE.
-      exact = .TRUE.
-      exacti = 1
 
 
 *     FIND kmax, tmax, mmax
@@ -170,8 +166,8 @@
       ENDIF 
       zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
-      IF (verbose) write(*,*) " Boundss zero; ", zeroBoundL, zeroBoundR
-      write(*,*), "   m = ", m
+      IF (verbose) write(*,*) " Bounds zero; ", zeroBoundL, zeroBoundR
+      write(*,*) "   m = ", m
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
@@ -261,66 +257,64 @@
       Wold = 0.0d00
       Wold2 = 1.0d00
 
-      IF (exact) THEN
 
-        itsAcceleration = 0
-        areaA = 0.0d00
-        convergence = .FALSE.
+      itsAcceleration = 0
+      areaA = 0.0d00
+      convergence = .FALSE.
 
-        xvec(1) = zeroR
-*       This will be the very first, left-most value of t used, the left-most
-*       value of  t  used in the acceleration (the previous regions *right* value) 
+      xvec(1) = zeroR
+*     This will be the very first, left-most value of t used, the left-most
+*     value of  t  used in the acceleration (the previous regions *right* value) 
 
- 12     IF ( .NOT.(convergence)) THEN
-          itsAcceleration = itsAcceleration + 1
-*         itsAcceleration = 1 means this is the first area found
-*         under the acceleration regime
+ 12   IF ( .NOT.(convergence)) THEN
+        itsAcceleration = itsAcceleration + 1
+*       itsAcceleration = 1 means this is the first area found
+*       under the acceleration regime
 
-          n = itsPreAcc + itsAcceleration 
-          zeroStartPoint = (n + 1) * pi / Cy
-          zeroL = zeroR
+        n = itsPreAcc + itsAcceleration 
+        zeroStartPoint = (n + 1) * pi / Cy
+        zeroL = zeroR
           
-          zeroBoundL = zeroStartPoint - 0.35 * pi / Cy
-          zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy
+        zeroBoundL = zeroStartPoint - 0.35 * pi / Cy
+        zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy
 
-          CALL findExactZeros(zeroBoundL, zeroBoundR, 
-     &                        zeroStartPoint, zero)
-          CALL findZeroSmallp(zero, f, df)
+        CALL findExactZeros(zeroBoundL, zeroBoundR, 
+     &                      zeroStartPoint, zero)
+        CALL findZeroSmallp(zero, f, df)
 
-          zeroR = zero
-          xvec(itsAcceleration + 1) = zeroR
-          IF (verbose) write(*,*) "  - Integrate between:", zeroL, zeroR
+        zeroR = zero
+        xvec(itsAcceleration + 1) = zeroR
+        IF (verbose) write(*,*) "  - Integrate between:", zeroL, zeroR
 
-          CALL gaussq( DFintegrand, psi, zeroL, zeroR)
-*         psi: area of the latest region
-          wvec(itsAcceleration) = psi
-          IF (verbose) write(*,*) "  - Area between zeros is:", psi
+        CALL gaussq( DFintegrand, psi, zeroL, zeroR)
+*       psi: area of the latest region
+        wvec(itsAcceleration) = psi
+        IF (verbose) write(*,*) "  - Area between zeros is:", psi
 
-          accMax = 100
-          Wold2 = Wold
-          Wold = West
-          CALL accelerateNEW(xvec, wvec, itsAcceleration, 
-     &                       Mmatrix, Nmatrix, West)
-*          W is the best guess of the convergent integration
-           if (verbose) write(*,*) "  - Tail estimate:", West
+        accMax = 100
+        Wold2 = Wold
+        Wold = West
+        CALL accelerateNEW(xvec, wvec, itsAcceleration, 
+     &                     Mmatrix, Nmatrix, West)
+*        W is the best guess of the convergent integration
+         if (verbose) write(*,*) "  - Tail estimate:", West
 
-*         Check for convergence
-          relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
-     &                     (DABS(West) + epsilon )
-          IF (relerr .LT. aimrerr ) THEN 
-            convergence = .TRUE.
-          ENDIF
-
-          IF (itsAcceleration .EQ. accMax) THEN
-            convergence = .TRUE.
-            write(*,*) "No convergence of acceleration."
-          ENDIF
-
-          mOld = m
-          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-
-          GOTO 12
+*       Check for convergence
+        relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
+     &                   (DABS(West) + epsilon )
+        IF (relerr .LT. aimrerr ) THEN 
+          convergence = .TRUE.
         ENDIF
+
+        IF (itsAcceleration .EQ. accMax) THEN
+          convergence = .TRUE.
+          write(*,*) "No convergence of acceleration."
+        ENDIF
+
+        mOld = m
+        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+
+        GOTO 12
       ENDIF
       write(*,*) "!!!!! DFsmall/big: Approx zeros can be removed !!!!!"
       
@@ -353,8 +347,8 @@
       funvalue = -areaT/pi + 0.50d0 
       IF (verbose) THEN
         write(*,*) "FINAL AREA: The cdf value is", funvalue
-        write(*,*) "DFsmallp: funvalue, exitstatus, relerr, exacti"
-        write(*,*) funvalue, exitstatus, relerr, exacti
+        write(*,*) "DFsmallp: funvalue, exitstatus, relerr"
+        write(*,*) funvalue, exitstatus, relerr
       ENDIF
       
       RETURN

@@ -1,11 +1,11 @@
 
-      SUBROUTINE twcdf(p, phi, y, mu, exacti,
+      SUBROUTINE twcdf(p, phi, y, mu,
      &                 funvalue, exitstatus, relerr, its )
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF.
 *
-*     IN:   p, phi, y, mu, exacti
+*     IN:   p, phi, y, mu
 *     OUT:  funvalue, exitstatus, relerr, its
 
       IMPLICIT NONE
@@ -13,8 +13,8 @@
       DOUBLE PRECISION relerr, aimrerr
       DOUBLE PRECISION lambda, Cp, Cy, Cmu, Cphi
       INTEGER exitstatus
-      INTEGER its, exacti, m
-      LOGICAL  pSmall, exact, verbose
+      INTEGER its, m
+      LOGICAL  pSmall, verbose
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
@@ -34,8 +34,7 @@
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
 *                -1  if not, but the absolute error is less than aimrerr
 *               -10  if neither rel or abs error any good
-*    exact    : 1 if the exact zeros acceleration algorithms is used;
-*               0 if the approx zeros acceleration algorithm is used.
+*    Exact zeros acceleration algorithms is used only
 
 *     Defaults
       verbose = .TRUE.
@@ -43,10 +42,6 @@
       relerr = 0.0d0
       its = 0
       
-*     Create logical: exact = .TRUE. means use exact zeros in acceleration
-      exact = .TRUE.
-      IF (exacti. EQ. 0) exact = .FALSE.
-
 *     Create logical: psmall = TRUE means 1 < p < 2
       psmall = .FALSE.
       IF ( (p .GT. 1.0d00 ) .AND. (p .LT. 2.0d00) ) psmall = .TRUE.
@@ -76,10 +71,10 @@
 
       IF ( psmall ) THEN
         write(*,*) "About to call DFsmallp from twcdf"
-        CALL DFsmallp(funvalue, exitstatus, relerr, exacti, verbose)
+        CALL DFsmallp(funvalue, exitstatus, relerr, verbose)
       ELSE
         write(*,*) "About to call DFbigp from twcdf"
-        CALL DFbigp(funvalue, exitstatus, relerr, exacti, verbose)
+        CALL DFbigp(funvalue, exitstatus, relerr, verbose)
       ENDIF
       
 *     Fix based on machine accuracy
@@ -89,8 +84,8 @@
       ELSE
 *        IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
       ENDIF
-      write(*,*) "IN twcdf: funvalue, exitstatus, relerr, exacti"
-      write(*,*) funvalue, exitstatus, relerr, exacti
+      write(*,*) "IN twcdf: funvalue, exitstatus, relerr"
+      write(*,*) funvalue, exitstatus, relerr
 
 
       RETURN

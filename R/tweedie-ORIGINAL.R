@@ -47,7 +47,6 @@ ptweedie.inversion <- function(q, mu, phi,  power, exact = FALSE ){
                        as.double(phi[i]),
                        as.double(y[i]),
                        as.double(mu[i]),
-                       as.integer( exact ),
                        as.double(0), # funvalue
                        as.integer(0), # exitstatus
                        as.double(0), # relerr

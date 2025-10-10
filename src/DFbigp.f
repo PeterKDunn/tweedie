@@ -1,5 +1,5 @@
 
-      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, exacti, verbose)
+      SUBROUTINE DFbigp(funvalue, exitstatus, relerr, verbose)
 
 *     Calculates the DF of the log-likelihood function of a
 *     Poisson-gamma distribution by inverting the MGF: p > 2
@@ -19,8 +19,8 @@
       DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
       EXTERNAL DFintegrand, findKmaxSP
       INTEGER exitstatus, itsAcceleration, itsPreAcc
-      INTEGER mfirst, mmax, m, mOld, accMax, exacti
-      LOGICAL exact, convergence, leftOfMax, verbose
+      INTEGER mfirst, mmax, m, mOld, accMax
+      LOGICAL convergence, leftOfMax, verbose
       LOGICAL stopPreAccelerate, pSmall, flip
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
@@ -35,8 +35,6 @@
 *    exitstatus:  1  if relative error is smaller than wished (aimrerr)
 *                -1  if not, but the absolute error is less than aimrerr
 *               -10  if neither rel or abs error any good
-*    exact    : 1 if the exact zeros acceleration algorithms is used;
-*               0 if the approx zeros acceleration algorithm is used.
 
 
       write(*,*) " FOR p > 2"
@@ -47,8 +45,6 @@
       epsilon = 1.0d-16
       aimrerr = 1.0d-14
       convergence = .FALSE.
-      exact = .TRUE.
-      exacti = 1
       verbose = .TRUE.
       
 *     FIND kmax, tmax, mmax
@@ -208,93 +204,89 @@
       Wold = 0.0d00
       Wold2 = 1.0d00
 
-      IF (exact) THEN
+      itsAcceleration = 0
+      areaA = 0.0d00
+      convergence = .FALSE.
 
-        itsAcceleration = 0
-        areaA = 0.0d00
-        convergence = .FALSE.
+      xvec(1) = zeroR
+*     This will be the very first, left-most value of t used, the left-most
+*     value of  t  used in the acceleration (the previous regions *right* value) 
 
-        xvec(1) = zeroR
-*       This will be the very first, left-most value of t used, the left-most
-*       value of  t  used in the acceleration (the previous regions *right* value) 
+ 12   IF ( .NOT.(convergence)) THEN
+        write(*,*) "  --- Next tail region"
 
- 12     IF ( .NOT.(convergence)) THEN
-          write(*,*) "  --- Next tail region"
+        itsAcceleration = itsAcceleration + 1
+*       itsAcceleration = 1 means this is the first area found
+*       under the acceleration regime
 
-          itsAcceleration = itsAcceleration + 1
-*         itsAcceleration = 1 means this is the first area found
-*         under the acceleration regime
+        IF (leftOfMax ) THEN
+          zeroStartPoint = zeroR
+          zeroL = zeroR 
+          zeroR = zeroR * 20.0d00
+        ELSE
+          IF (flip) THEN
+*           FLIPPING to other side of tmax
 
-          IF (leftOfMax ) THEN
-            zeroStartPoint = zeroR
-            zeroL = zeroR 
-            zeroR = zeroR * 20.0d00
+            zeroStartPoint = tmax + ( tmax - zero)
+*           That is, start of the other side of tmax            
+            zeroL = zero
+            zeroR = zeroStartPoint * 20.0d00
           ELSE
-            IF (flip) THEN
-*             FLIPPING to other side of tmax
-
-              zeroStartPoint = tmax + ( tmax - zero)
-*             That is, start of the other side of tmax            
-              zeroL = zero
-              zeroR = zeroStartPoint * 20.0d00
-            ELSE
-              zeroStartPoint = zeroR
-              zeroL = zeroR
-              zeroR = zeroR * 10.0d00
-            ENDIF
+            zeroStartPoint = zeroR
+            zeroL = zeroR
+            zeroR = zeroR * 10.0d00
           ENDIF
+        ENDIF
 *  write(*,*) "that factor of 20: depeds on slope!"
 * write(*,*) "Flatter? Larger multiplier"
-*        write(*,*) "Steeper? Smaller multiplier"
+*      write(*,*) "Steeper? Smaller multiplier"
 
-          CALL findExactZeros(zeroL, zeroR, 
-     &                        zeroStartPoint, zero)
-          IF (leftOfMax) THEN
-            zeroR = zero
-          ELSE
-            zeroR = zero
-          ENDIF
-
-          xvec(itsAcceleration + 1) = zeroR
-
-          write(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
-
-          CALL gaussq( DFintegrand, psi, zeroL, zeroR)
-*         psi: area of the latest region
-          wvec(itsAcceleration) = psi
-          write(*,*) "  - Area between zeros is:", psi
-
-          accMax = 40
-          Wold2 = Wold
-          Wold = West
-          CALL accelerateNEW(xvec, wvec, itsAcceleration, 
-     &     Mmatrix, Nmatrix, West)
-*          W is the best guess of the convergent integration
-          write(*,*) "iteration", itsAcceleration, ":", West
-          write(*,*) "  - Estimate of tail area:", West
-          write(*,*) "--------------------------------"
-
-*         Check for convergence
-          relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
-     &                     (DABS(West) + epsilon )
-          IF (relerr .LT. aimrerr ) THEN 
-            write(*,*) "  Relerr is", relerr
-            convergence = .TRUE.
-          ENDIF
-*        IF (m .EQ. -10) convergence = .TRUE.
-
-          mOld = m
-          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
-
-          GOTO 12
+        CALL findExactZeros(zeroL, zeroR, 
+     &                      zeroStartPoint, zero)
+        IF (leftOfMax) THEN
+          zeroR = zero
+        ELSE
+          zeroR = zero
         ENDIF
-      ELSE
-        IF ( .NOT.(convergence)) THEN
+
+        xvec(itsAcceleration + 1) = zeroR
+
+        write(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
+
+        CALL gaussq( DFintegrand, psi, zeroL, zeroR)
+*       psi: area of the latest region
+        wvec(itsAcceleration) = psi
+        write(*,*) "  - Area between zeros is:", psi
+
+        accMax = 40
+        Wold2 = Wold
+        Wold = West
+        CALL accelerateNEW(xvec, wvec, itsAcceleration, 
+     &   Mmatrix, Nmatrix, West)
+*        W is the best guess of the convergent integration
+        write(*,*) "iteration", itsAcceleration, ":", West
+        write(*,*) "  - Estimate of tail area:", West
+        write(*,*) "--------------------------------"
+
+*       Check for convergence
+        relerr = (DABS( West - Wold ) + DABS( West - Wold2 ) ) /
+     &                   (DABS(West) + epsilon )
+        IF (relerr .LT. aimrerr ) THEN 
+          write(*,*) "  Relerr is", relerr
+          convergence = .TRUE.
+        ENDIF
+*      IF (m .EQ. -10) convergence = .TRUE.
+
+        mOld = m
+        CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+        GOTO 12
+      ENDIF
+
+      IF ( .NOT.(convergence)) THEN
         write(*,*) "  - Computing for p > 2:", Cp
 *           CALL findApproxZeros()
 *           CALL integrateRegions()
 *           CALL accelerate()
-        ENDIF
       ENDIF
       
       areaA = West
@@ -314,8 +306,8 @@
 *     So now work out the CDF
       funvalue = (-1.0d00/pi) * areaT + 0.5d00
       write(*,*) "FINAL AREA: The cdf value is", funvalue
-      write(*,*) "DFbigp: funvalue, exitstatus, relerr, exacti"
-      write(*,*) funvalue, exitstatus, relerr, exacti
+      write(*,*) "DFbigp: funvalue, exitstatus, relerr"
+      write(*,*) funvalue, exitstatus, relerr
 
       RETURN
       END
