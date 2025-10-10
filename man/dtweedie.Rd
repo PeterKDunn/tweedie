@@ -17,7 +17,7 @@
 	dtweedie.stable(y, power, mu, phi)
 	ptweedie(q, xi = NULL, mu, phi, power = NULL)
 	ptweedie.series(q, power, mu, phi)
-	ptweedie.inversion(q, mu, phi, power, exact = FALSE)
+	ptweedie.inversion(q, mu, phi, power)
 	qtweedie(p, xi = NULL, mu, phi, power = NULL)
 	rtweedie(n, xi = NULL, mu, phi, power = NULL)
 }

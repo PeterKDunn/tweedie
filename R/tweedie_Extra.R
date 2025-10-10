@@ -1,8 +1,8 @@
-ptweedie_Inversion_Report <- function(q, mu, phi,  power, exact=FALSE ){ 
+ptweedie_Inversion_Report <- function(q, mu, phi,  power){ 
   #
   # ptweedie_INVERSION_Report
   #
-  # ptweedie.inversion( y, power, mu, phi, exact )
+  # ptweedie.inversion( y, power, mu, phi )
   #
   # Evaluating Tweedie cdf using cgf inversion
   #
@@ -231,11 +231,11 @@ dtweedie_Series_Report <- function(y, power, mu, phi){
 
 
 
-#ptweedie.inversion.report <- function(q, mu, phi,  power, exact=FALSE ){ 
+#ptweedie.inversion.report <- function(q, mu, phi,  power ){ 
 #
 # ptweedie.INVERSION.report
 #
-# ptweedie.inversion( y, power, mu, phi, exact )
+# ptweedie.inversion( y, power, mu, phi )
 #
 # Evaluating Tweedie cdf using cgf inversion
 #
@@ -253,8 +253,6 @@ dtweedie_Series_Report <- function(y, power, mu, phi){
 #       the variance of the observation is 
 #       var(Y) = phi * mu^power .  
 #
-#   exact:  If exact is TRUE, the exact zero acceleration algorithm 
-#       is used, otherwise the approx zero algorithm is used
 #
 # Description
 #   This function evaluates the Tweedie family of distributions
@@ -311,7 +309,6 @@ dtweedie_Series_Report <- function(y, power, mu, phi){
 #          as.double(phi[i]),
 #          as.double(y[i]),
 #          as.double(mu[i]),
-#          as.integer( exact ),
 #          as.double(0), # funvalue
 #          as.integer(0), # exitstatus
 #          as.double(0), # relerr

@@ -41,7 +41,7 @@
 	dtweedie.series.smallp(power, y, mu, phi)
 	stored.grids(power)
 	twpdf(p, phi, y, mu, exact, verbose, funvalue, exitstatus, relerr, its )
-	twcdf(p, phi, y, mu, exact,          funvalue, exitstatus, relerr, its )
+	twcdf(p, phi, y, mu,                 funvalue, exitstatus, relerr, its )
 }
 
 \arguments{

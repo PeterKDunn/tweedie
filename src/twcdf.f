@@ -37,7 +37,7 @@
 *    Exact zeros acceleration algorithms is used only
 
 *     Defaults
-      verbose = .TRUE.
+      verbose = .FALSE.
       exitstatus = 1
       relerr = 0.0d0
       its = 0

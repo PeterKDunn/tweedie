@@ -213,7 +213,7 @@ ptweedie.series <- function(q, power, mu, phi) {
 
 
 #############################################################################
-ptweedie.inversion <- function(q, mu, phi,  power, exact = FALSE ){ 
+ptweedie.inversion <- function(q, mu, phi,  power ){ 
   # Evaluates the cdf for Tweedie distributions, using Fourier inversion, 
   # for given values of:
   #   q (possibly a vector)
