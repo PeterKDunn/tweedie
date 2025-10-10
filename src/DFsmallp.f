@@ -10,7 +10,7 @@
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
       DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
-      DOUBLE PRECISION findKmaxSP, startTKMax
+      DOUBLE PRECISION findKmaxSP, startTKMax, front
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
       DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
       DOUBLE PRECISION Wold, Wold2, areaT, epsilon
@@ -81,6 +81,23 @@
         IF (verbose) write(*,*) "** y < mu"
         
         startTKMax = findKmaxSP()
+        
+        leftOfMax = .TRUE.
+        IF ( mmax .EQ. 0) THEN
+          mfirst = 0
+          mOld = 0
+          zeroStartPoint = tmax + pi/Cy
+          leftOfMax = .FALSE.
+        ELSE
+          mfirst = 1
+          mOld = 0
+          zeroStartPoint = pi / (Cmu - Cy)
+          mOld = m
+
+          CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+
+        ENDIF        
+      ENDIF
 
         IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
         CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax)
@@ -105,7 +122,6 @@
 
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
         ENDIF
-      ENDIF
       
       write(*,*) "--- (Deal with returned errors, non-convergence)"
       
@@ -133,6 +149,9 @@
       ENDIF
       
       zeroStartPoint = pi / Cy
+* TRY A NEW ONE!
+      front = Cmu ** (1.0d0 - Cp) / ( Cphi * (1.0d0 - Cp))
+      zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
 
 *     1. INTEGRATE FIRST REGION: area0
       IF (verbose) THEN
@@ -141,11 +160,12 @@
       ENDIF 
       zeroBoundL = tmax
       zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy
-      IF (verbose) write(*,*) "    between ", zeroBoundL, zeroBoundR
+      IF (verbose) write(*,*) " Boundss zero; ", zeroBoundL, zeroBoundR
 
 *     Now find the right-side zero
       CALL findExactZeros(zeroBoundL, zeroBoundR, 
      &                    zeroStartPoint, zero)
+      write(*,*) "Exact zero found!", zero
       zeroL =  0.0d00
       zeroR = zero
 
@@ -166,7 +186,10 @@
 
       itsPreAcc = 0
       area1 = 0.0d00
+      write(*,*) "** mmax, m, mOld, leftOfMax, flip"
+      write(*,*) "** PRE-advanceM:", mmax, m, mOld, leftOfMax, flip
       CALL advanceM(mmax, m, mOld, leftOfMax, flip)
+      write(*,*) "** POST-advanceM:", mmax, m, mOld, leftOfMax, flip
 
 *      IF (mfirst .EQ. -1 ) THEN
 *       Accelerate immediately; 'no pre-acceleration' area
