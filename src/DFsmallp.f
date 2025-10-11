@@ -6,6 +6,7 @@
 *
 *     OUT:  funvalue, exitstatus, relerr, its
 
+      USE R_IO_MOD  
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
       DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df
@@ -83,7 +84,7 @@
         
 *       Sometimes, important to spend some getting a good starting point and bounds.  
         CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
-      write(*,*) ">>>>> BOUNDS FOR KMAX", kmaxL, kmaxR
+
         startTKmax =  (kmaxL + kmaxR) / 2.0d0
         
         leftOfMax = .TRUE.
@@ -100,7 +101,7 @@
 
           CALL advanceM(mmax, m, mOld, leftOfMax, flip)
 
-        ENDIF        
+        ENDIF
         IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
         CALL findKmax(kmax, tmax, mmax, mfirst, startTKmax,
      &                kmaxL, kmaxR)
@@ -144,7 +145,7 @@
       area0 = 0.0d00
       area1 = 0.0d00
       areaA = 0.0d00
-      m = mfirst 
+      m = mfirst
       
 *     Find the final turning point of Im/Re k, and start accelerating thereafter      
       write(*,*) "IS this about TPs correct??"

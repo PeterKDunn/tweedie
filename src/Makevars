@@ -2,3 +2,5 @@ FFLAGS = -O0 -g -Wall -Wextra -Wconversion -Wunderflow \
          -fcheck=all -fbacktrace -finit-real=snan -finit-integer=-999999 \
          -fno-omit-frame-pointer -fsanitize=address,undefined \
          -ffpe-trap=invalid,zero,overflow
+
+

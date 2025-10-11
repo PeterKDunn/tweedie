@@ -17,9 +17,6 @@
      &    (omega .LT. (-pi/2.0d00)) ) THEN
          write(*,*) "ERROR (FindImk): Omega out of range:", omega
          write(*,*) "Argument: ", tanArg
-*         write(*,*) "    p: ", Cp
-*         write(*,*) "    phi: ", Cphi
-*         write(*,*) "    mu: ", Cmu
          write(*,*) "    t: ", t
          STOP
       ENDIF
