@@ -26,12 +26,13 @@
 *     ************** LOWER BOUND
 *     If slope at SP is *positive*, only need to creep to the right      
 
+      boundL = startTKmax
       IF (SPslope .LE. 0.0d0) THEN
-        boundL = startTKmax
         keepSearching = .TRUE.
   88    IF (keepSearching) THEN
 *        If slope at SP is negative, take bold steps left to find lower bound 
           boundL = boundL / 2.0d0
+*         NOTE: this will never go negative
 
           CALL findImkd(boundL, slope)
 
@@ -60,10 +61,12 @@
         GOTO 55
       ENDIF
       kmaxL = boundL
-      write(*,*) "LBOUND: ", kmaxL
+*      write(*,*) "LBOUND: ", kmaxL
 
 *     ************** UPPER BOUND
       CALL findImkd(startTKmax, SPslope)
+      boundR = startTKmax
+*      write(*,*) "  - rbound (start): ", boundR
       
 *     If slope at SP is *negative*, only need to creep to the left      
       IF (SPslope .GT. 0.0d0) THEN
@@ -73,6 +76,7 @@
   28    IF (keepSearching) THEN
 *        If slope at SP is positive, take bold steps right to find lower bound 
           boundR = boundR * 1.5d0
+*      write(*,*) "  - rbound (bold right): ", boundR
 
           CALL findImkd(boundR, slope)
 
@@ -91,6 +95,8 @@
 *       If slope at SP is negative, creep to left to improve upper bound 
         oldBoundR = boundR 
         boundR = boundR * 0.90d0
+*      write(*,*) "  - rbound (creep left): ", boundR
+*       NOTE: this will never go negative
         CALL findImkd(boundR, slope)
 
         IF (slope .GT. 0.0d0 ) THEN
@@ -101,7 +107,7 @@
         GOTO 65
       ENDIF
       kmaxR = boundR 
-      write(*,*) "RBOUND: ", kmaxR
+*      write(*,*) "RBOUND: ", kmaxR
 
       RETURN
       END
