@@ -5425,8 +5425,8 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
                          as.double(0), # funvalue
                          as.integer(0), # exitstatus
                          as.double(0), # relerr
-                         as.integer(0)) # its
-#                         PACKAGE="tweedie")
+                         as.integer(0), # its
+                         PACKAGE="tweedie")
         
         den <- tmp[[7]]
         density[i] <- den * m2
@@ -5444,8 +5444,8 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
                            as.double(0), # funvalue
                            as.integer(0), # exitstatus
                            as.double(0), # relerr
-                           as.integer(0)) # its
-#                           PACKAGE="tweedie")
+                           as.integer(0), # its
+                           PACKAGE="tweedie")
           
           den <- tmp[[7]]
           density[i] <- den * m1
@@ -5462,8 +5462,8 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
                            as.double(0), # funvalue
                            as.integer(0), # exitstatus
                            as.double(0), # relerr
-                           as.integer(0)) # its
-#                           PACKAGE="tweedie")
+                           as.integer(0), # its
+                           PACKAGE="tweedie")
           
           den <- tmp[[7]]
           density[i] <- den * m3
