@@ -10,10 +10,10 @@
 \alias{dtweedie.series.bigp}
 \alias{dtweedie.series.smallp}
 \alias{stored.grids}
-\alias{twcdf}
-\alias{twpdf}
 \alias{check_Inputs}
 \alias{sort_Notation}
+\alias{twpdf}
+\alias{twcdf}
 \alias{special_Cases_CDF}
 \alias{dtweedie_Fortran}
 \alias{dtweedie_Inversion_Report}
