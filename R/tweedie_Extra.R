@@ -20,9 +20,6 @@ ptweedie_Inversion_Report <- function(q, mu, phi,  power){
   #       the variance of the observation is 
   #       var(Y) = phi * mu^power .  
   #
-  #   exact:  If exact is TRUE, the exact zero acceleration algorithm 
-  #       is used, otherwise the approx zero algorithm is used
-  #
   # Description
   #   This function evaluates the Tweedie family of distributions
   #   distribution function by inverting the cgf.
@@ -96,9 +93,8 @@ ptweedie_Inversion_Report <- function(q, mu, phi,  power){
                        as.double(0), # funvalue
                        as.integer(0), # exitstatus
                        as.double(0), # relerr
-                       as.integer(0), # its
-                       PACKAGE="tweedie")
-      
+                       as.integer(0) ) # its
+
       density[i] <- tmp[[6]]
       its[i] <- tmp[[9]]
     }
@@ -626,7 +622,6 @@ dtweedie_Inversion_Report <- function(y, power, mu, phi, exact=TRUE, method=3, v
                            as.double(y[i]), # y
                            as.double(1), # mu
                            as.integer( exact ), #exact as an integer
-                           as.integer( verbose ), #verbose as an integer
                            as.double(0), # funvalue
                            as.integer(0), # exitstatus
                            as.double(0), # relerr
@@ -647,7 +642,6 @@ dtweedie_Inversion_Report <- function(y, power, mu, phi, exact=TRUE, method=3, v
                            as.double(1), # y
                            as.double(1), # mu
                            as.integer( exact ), #exact as an integer
-                           as.integer( verbose ), #verbose as an integer
                            as.double(0), # funvalue
                            as.integer(0), # exitstatus
                            as.double(0), # relerr
