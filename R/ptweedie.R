@@ -273,7 +273,7 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
                        as.integer(0), # exitstatus
                        as.double(0), # relerr
                        as.integer(0)) # its
-      cdf[i] <- tmp[[6]]
+      cdf[i] <- tmp[[5]]
     }
   }
   
