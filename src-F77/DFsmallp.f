@@ -6,7 +6,6 @@
 *
 *     OUT:  funvalue, exitstatus, relerr, its
 
-      USE R_IO_MOD  
       IMPLICIT NONE
       DOUBLE PRECISION funvalue, pi, zero, zeroL, zeroR, sum
       DOUBLE PRECISION aimrerr, relerr, tmax, kmax, f, df

@@ -1,0 +1,26 @@
+
+SUBROUTINE findLambda(i, lambda) BIND(C, NAME='findLambda')
+  USE tweedie_params_mod
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
+  IMPLICIT NONE
+  
+  INTEGER(C_INT), INTENT(IN)        :: i
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda ! The output value
+  
+  REAL(KIND=8)           :: current_mu, current_phi
+
+  ! Grab the relevant scalar values for this iteration:
+  current_mu   = Cmu(i)   ! Access mu value for index i
+  current_phi  = Cphi(i)  ! Access phi value for index i
+  
+
+  lambda = 0.0d0
+  IF (CpSmall) THEN
+    ! The calculation for lambda (used in P(Y=0) = exp(-lambda))
+    lambda = (current_mu ** (2.0d00 - Cp) ) / &
+             (current_phi * (2.0d00 - Cp) )
+    ! NOTE: No negative sign in front
+  END IF
+  
+END SUBROUTINE findLambda

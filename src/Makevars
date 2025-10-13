@@ -1,6 +1,30 @@
-FFLAGS = -O0 -g -Wall -Wextra -Wconversion -Wunderflow \
-         -fcheck=all -fbacktrace -finit-real=snan -finit-integer=-999999 \
-         -fno-omit-frame-pointer -fsanitize=address,undefined \
-         -ffpe-trap=invalid,zero,overflow
+# 1. Define the object file containing the Fortran MODULE definition.
+TWEEDIE_MOD_OBJ = 00tweedie_params.o
 
+# 2. Define the object file containing Fortran functions that USE the module.
+TWEEDIE_FUNC_OBJ = tweedie_funcs.o
 
+# 3. List ALL required object files for linking.
+# Includes both DFsmallp.o and DFbigp.o for completeness.
+# 3. List ALL required object files for linking.
+# We assume twcdf.f90 contains the loop that calls DFbigp/DFsmallp.
+# NOTE: The file containing the main twcdf subroutine must be included.
+OBJECTS = twcdf.o DFbigp.o DFsmallp.o DFintegrand.o \
+          $(TWEEDIE_MOD_OBJ) \
+          accelerate.o acceleratenew.o advanceM.o \
+          findAccelStart.o findExactZeros.o findImdkZero.o findImkdd.o findImkd.o findImkM.o findImk.o \
+          findKmax.o findKmaxSP.o findKmaxSPbounds.o findLambda.o \
+          findRekd.o findRek.o findZeroSmallp.o \
+          gaussq.o gtweedie.o dtweedie.o \
+          myfloor.o nextm.o rtnewton.o rtsafe.o \
+          init.o
+
+# 4. *** CRITICAL FIX: EXPLICIT COMPILATION RULE ***
+# This instruction tells 'make' exactly how to build tweedie_params.o from its f90 source.
+# This overrides the lost implicit rule and fixes the "No rule to make target" error.
+$(TWEEDIE_MOD_OBJ): 00tweedie_params.f90
+	$(FC) $(FFLAGS) -c $< -o $@
+
+# 5. CRITICAL DEPENDENCY: This rule ensures the module object (tweedie_params.o)
+# is compiled BEFORE the function file (tweedie_funcs.o) that relies on it.
+$(TWEEDIE_FUNC_OBJ): $(TWEEDIE_MOD_OBJ)

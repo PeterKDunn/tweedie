@@ -1,0 +1,8 @@
+# R Fortran compiler flags (Keep modern F90/F2003 standard)
+PKG_FCFLAGS = -std=f2003 -J. -fallow-argument-mismatch $(STRICT_FLAGS)
+
+# *** THE ULTIMATE LINKER FIX ***
+# Add the R library path and flag to LDFLAGS and PKG_LIBS.
+# This forces the linker to find the R_WriteConsole function.
+PKG_LIBS = $(LIBR)
+LDFLAGS = -L$(R_HOME)/lib$(R_ARCH) -lR

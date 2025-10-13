@@ -247,24 +247,40 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
   }
   
   
-  #its <- y
-  for (i in (1:length(y))) {
+  N <- as.integer( length(y) )
+  cdf <- as.double(rep(0, N))
+  
+  small_Y_cases <- which( ( power > 2 ) & (y < 1.0e-300) )
+  
+  # Set CDF to 0 for the edge cases
+  if (length(small_Y_cases) > 0) {
+    cdf[small_Y_cases] <- 0
+  }
+  
+  # Identify the non-edge cases that need Fortran calculation
+  need_Fortran <- which( !(( power > 2 ) & (y < 1.0e-300)) )
+  # This has been added to avoid an issue with *very* small values of y
+  # causing the FORTRAN to die when p>2; 
+  # reported by Johann Cuenin 09 July 2013 (earlier, but that was the easiest email I could find about it :->)
+    ### THE  e-300  IS ARBITRARY!!!!  ###
+    # Keep an eye on it; perhaps it needs changing
+    # That is, y is very small: Use the limit as y->0 as the answer as FORTRAN has difficulty converging
+    # I have kept the call to the FORTRAN (and for p>2, of course, the limiting value is 0).
+    #  I could have done this differently
+    # by redefining very small y as y=0.... but this is better methinks
     
-    # This has been added to avoid an issue with *very* small values of y
-    # causing the FORTRAN to die when p>2; 
-    # reported by Johann Cuenin 09 July 2013 (earlier, but that was the easiest email I could find about it :->)
-    if ( ( power > 2 ) & (y[i] < 1.0e-300) ) {
-      ### THE  e-300  IS ARBITRARY!!!!  ###
-      # Keep an eye on it; perhaps it needs changing
-      
-      # That is, y is very small: Use the limit as y->0 as the answer as FORTRAN has difficulty converging
-      # I have kept the call to the FORTRAN (and for p>2, of course, the limiting value is 0).
-      #  I could have done this differently
-      # by redefining very small y as y=0.... but this is better methinks
-      cdf[i] <- 0
-    } else {
-      
+  # If there's nothing to calculate, return
+  if (length(need_Fortran) == 0) {
+    return(cdf)
+  }
+  
+  # Initialise
+  exitstatus_scalar <- as.integer(0)
+  relerr_scalar     <- as.double(0.0)
+  its_scalar        <- as.integer(0)
+  
       tmp <- .Fortran( "twcdf",
+                       as.integer(N),
                        as.double(power),
                        as.double(phi[i]),
                        as.double(y[i]),
@@ -273,12 +289,8 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
                        as.integer(0), # exitstatus
                        as.double(0), # relerr
                        as.integer(0)) # its
-      cdf[i] <- tmp[[5]]
-    }
-  }
-  
-  cdf
- 
+      cdf <- tmp[[6]]
+
 }
 
 
