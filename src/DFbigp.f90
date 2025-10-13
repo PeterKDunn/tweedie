@@ -91,13 +91,13 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
 
   ! Local Variables: Error 5 fix: All local variables defined here
   INTEGER(C_INT)      :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)      :: itsacceleration, itsPreAcc, m
+  INTEGER(C_INT)      :: itsacceleration, itsPreAcc, m, accMax
   INTEGER(C_INT)      :: leftOfMax, flip, convergence, stopPreAccelerate
   
   ! FIX 2: funvalue and relerr removed (already defined as dummy args)
   REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, tL, tR, sum
+  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, areaT, sum, f, df, finalTP, front
   REAL(KIND=8)        :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
   REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
   REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
@@ -107,7 +107,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
 
   ! --- Initialization ---
   CpSmall = .FALSE.
-  pi = acos(0.0d0)
+  pi = DACOS(0.0d0)
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -194,7 +194,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
   ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
   ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
-  area0 = gaussq(DFintegrand, zeroL, zeroR, aimrerr)
+  area0 = gaussq(area0, zeroL, zeroR, aimrerr)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
   
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
