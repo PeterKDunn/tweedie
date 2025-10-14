@@ -23,7 +23,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findImkM(i, t, m) RESULT(ImkM_out) BIND(C, NAME='fi
   REAL(KIND=C_DOUBLE)             :: pi, Imk_val
   INTEGER(C_INT), INTENT(IN)      :: m, i
 
-  pi = ACOS(-1.0_8)
+  pi = 4.0D0 * DATAN(1.0D0)
 
   CALL findImk(i, t, Imk_val)
   

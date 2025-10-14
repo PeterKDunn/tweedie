@@ -1,4 +1,4 @@
-SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmallp')
+SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmallp')
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -11,7 +11,7 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
   INTEGER(C_INT), INTENT(OUT)      :: exitstatus     ! Output status
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: funvalue, relerr ! The final computed result and relative error
 
-   ! --- INTERFACES: All C-bound routines called by DFbigp MUST be defined here ---
+   ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
       ! 1. Function to find Kmax special point
       FUNCTION findKmaxSP(j) BIND(C, NAME='findKmaxSP')
@@ -54,19 +54,19 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
       END FUNCTION DFintegrand
 
       ! 5. Function for Gaussian Quadrature integration
-      FUNCTION gaussq(funcd, a, b, aimrerr) BIND(C, NAME='gaussq')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      FUNCTION gaussq(funcd, a, b) BIND(C, NAME='gaussq')
+          USE ISO_C_BINDING, ONLY: C_DOUBLE
 
           REAL(KIND=C_DOUBLE) :: gaussq
           INTERFACE
               FUNCTION funcd(x) BIND(C)
-                USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+                USE ISO_C_BINDING, ONLY: C_DOUBLE
 
                 REAL(KIND=C_DOUBLE) :: funcd
                 REAL(KIND=C_DOUBLE), INTENT(IN) :: x
               END FUNCTION funcd
           END INTERFACE
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b, aimrerr
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b
       END FUNCTION gaussq
 
       ! 6. Subroutine for acceleration
@@ -94,26 +94,16 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
 
   
   ! --- Local Variables ---
-  REAL(KIND=8) :: pi, area, zeroL, zeroR, zero, zeroStartPoint
-  REAL(KIND=8) :: epsilon, aimrerr, omega
-  INTEGER(C_INT) :: m, mmax, n, mOld
-  
-  INTEGER(C_INT)      :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)      :: itsacceleration, itsPreAcc, m
-  INTEGER(C_INT)      :: leftOfMax, flip, convergence, stopPreAccelerate
+  REAL(KIND=8)      :: pi, zeroL, zeroR, zero, aimrerr
+  INTEGER(C_INT)    :: m, n, mOld, mmax, mfirst, accMax, j
+  INTEGER(C_INT)    :: itsacceleration, itsPreAcc
+  INTEGER(C_INT)    :: leftOfMax, flip, convergence, stopPreAccelerate
   
   ! FIX 2: funvalue and relerr removed (already defined as dummy args)
-  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, sum
+  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, df, f, finalTP, front, kmaxL, kmaxR, lambda
+  REAL(KIND=C_DOUBLE) :: areaT, area0, area1, areaA, sum, psi, epsilon
   REAL(KIND=8)        :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
-  REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
-  REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
 
-  ! --- External Function/Subroutine Declarations (CRITICAL: only EXTERNAL needed) ---
-  ! DFsmallp only calls DFintegrand, gaussq, and findExactZeros directly.
-  REAL(KIND=8) DFintegrand
-  
   ! --- Initialization ---
   CpSmall = .TRUE.
   
@@ -122,60 +112,58 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
  
-  pi = DACOS(1.0_8)
   exitstatus = 0
   relerr = 0.0_8 
   epsilon = 1.0_8 / 10.0_8**16 ! 1.0d-16
   aimrerr = 1.0_8 / 10.0_8**14 ! 1.0d-14
-  
-     IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
-      ! Initialise the M and N matrices, x and w vectors
-      DO i = 1, 200
-        Mmatrix(1, i) = 0.0d0
-        Mmatrix(2, i) = 0.0d0
-        Nmatrix(1, i) = 0.0d0
-        Nmatrix(2, i) = 0.0d0
-        xvec(i) = 0.d000
-        wvec(i) = 0.0d00
-      ENDDO
+
+  IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
+    ! Initialise the M and N matrices, x and w vectors
+    DO j = 1, 200
+      Mmatrix(1, j) = 0.0d0
+      Mmatrix(2, j) = 0.0d0
+      Nmatrix(1, j) = 0.0d0
+      Nmatrix(2, j) = 0.0d0
+      xvec(j) = 0.d000
+      wvec(j) = 0.0d00
+    END DO
+    
+    ! Set up
+    pi = 4.0D0 * DATAN(1.0D0)
+    exitstatus = 0
+    relerr = 1.0d00
+    epsilon = 1.0d-16
+    aimrerr = 1.0d-14
+    convergence = 0
+
+    ! FIND kmax, tmax, mmax
+    IF (Cy(i) .GE. Cmu(i)) THEN
+      ! ************** y > MU   **************
+      ! Im k(t) heads down immediately
+
+      IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
+      kmax = 0.0d00
+      tmax = 0.0d00
+      mmax = 0
+      mfirst = -1
+      mOld = 0
+    
+      zeroStartPoint = pi / Cy(i)
+      leftOfMax = 0
+    ELSE
+      ! ************** y < MU   **************
+      ! HARDER!         
+      IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
       
-      ! Set up
-      pi = 4.0d0 * DATAN(1.0d0)
-      exitstatus = 0
-      relerr = 1.0d00
-      epsilon = 1.0d-16
-      aimrerr = 1.0d-14
-      convergence = 0
-
-
-      ! FIND kmax, tmax, mmax
-      IF (Cy(i) .GE. Cmu(i)) THEN
-        ! ************** y > MU   **************
-        ! Im k(t) heads down immediately
-
-        IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
-        kmax = 0.0d00
-        tmax = 0.0d00
-        mmax = 0
-        mfirst = -1
-        mOld = 0
-      
-        zeroStartPoint = pi / Cy
-        leftOfMax = .FALSE.
-      ELSE
-        ! ************** y < MU   **************
-        ! HARDER!         
-        IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
-        
         WRITE(*,*) "About to find kmax"
         startTKMax = findKmaxSP(i)
         IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
-        
+      
         ! Sometimes, important to spend some getting a good starting point and bounds.  
         CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
 
         startTKmax =  (kmaxL + kmaxR) / 2.0d0
-        
+      
         leftOfMax = 1
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
@@ -192,14 +180,15 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
 
         END IF
         IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
-        CALL findKmax(i,kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
-  
+          CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+          !  WAS:            CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+
         IF (verbose .EQ. 1) THEN
           WRITE(*,*) "** Found(b): kmax =", kmax
           WRITE(*,*) "             tmax =", tmax
           WRITE(*,*) "             mmax =", mmax
         END IF
-        
+      
         leftOfMax = 1
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
@@ -214,7 +203,7 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
 
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
         END IF
-      
+    
       END IF
 
       WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
@@ -231,17 +220,17 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
       area1 = 0.0d00
       areaA = 0.0d00
       m = mfirst
-      
+    
       ! Find the final turning point of Im/Re k, and start accelerating thereafter      
       WRITE(*,*) "IS this about TPs correct??"
       finalTP = 0.0d00
-      IF ( Cy .LT. Cmu ) THEN
+      IF ( Cy(i) .LT. Cmu(i) ) THEN
         CALL findAccelStart(finalTP)
       END IF
-      
-      zeroStartPoint = pi / Cy
+    
+      zeroStartPoint = pi / Cy(i)
       ! TRY A NEW ONE!
-      front = Cmu ** (1.0d0 - Cp) / ( Cphi * (1.0d0 - Cp))
+      front = Cmu(i) ** (1.0d0 - Cp) / ( Cphi(i) * (1.0d0 - Cp))
       zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
       WRITE(*,*) "zeroStartPoint", zeroStartPoint
 
@@ -256,11 +245,11 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
       WRITE(*,*) "   m = ", m
 
       ! Now find the right-side zero
-      CALL findExactZeros(zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+      CALL findExactZeros(i, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
       zeroL =  0.0d00
       zeroR = zero
-      area0 = gaussq(area0, zeroL, zeroR, aimrerr)
+      area0 = gaussq(DFintegrand, zeroL, zeroR)
 
       IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
       IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -289,42 +278,41 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
       ! ELSE
       ! Find some areas BEFORE accelerating
 
-        stopPreAccelerate = .FALSE.
+      stopPreAccelerate = 0
         
- 115    IF ( .NOT.(stopPreAccelerate) ) THEN
-          itsPreAcc = itsPreAcc + 1
-          zeroL = zeroR
+      DO WHILE ( stopPreAccelerate .EQ. 0 )
+        itsPreAcc = itsPreAcc + 1
+        zeroL = zeroR
 
-          zeroStartPoint = (itsPreAcc + 1) * pi / Cy(i)
-          ! WRITE(*,*)" StartPT:", zeroStartPoint
-          zeroBoundL = zeroR
-          zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy(i)
+        zeroStartPoint = (itsPreAcc + 1) * pi / Cy(i)
+        ! WRITE(*,*)" StartPT:", zeroStartPoint
+        zeroBoundL = zeroR
+        zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy(i)
 
-          CALL findExactZeros(zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+        CALL findExactZeros(i, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
-          zeroR = zero
+        zeroR = zero
 
-          CALL gaussq( DFintegrand, sum, zeroL, zeroR)
-          area1 = area1 + sum
-          
-          IF (verbose .EQ. 1) THEN
-            WRITE(*,*) "--- Integrate (m = ", m, ") between " 
-            WRITE(*,*) zeroL, "and ", zeroR, "; sum: ", sum
-          END IF
-
-          ! STOP condition for pre-acceleration.
-          ! Not sure about this...
-          ! if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
-          ! if ( itsPreAcc .GE. 5) stopPreAccelerate = .TRUE.
-          
-          ! Stop once the real and imaginary parts have passed their final turning points
-          IF (zeroR .GT. finalTP) stopPreAccelerate = 1
-          
-          CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-
-          GOTO 115
+        sum = gaussq( DFintegrand, zeroL, zeroR)
+        area1 = area1 + sum
+        
+        IF (verbose .EQ. 1) THEN
+          WRITE(*,*) "--- Integrate (m = ", m, ") between " 
+          WRITE(*,*) zeroL, "and ", zeroR, "; sum: ", sum
         END IF
-        ! END IF
+
+        ! STOP condition for pre-acceleration.
+        ! Not sure about this...
+        ! if ( m .EQ. (mmax - 1) ) stopPreAccelerate = .TRUE.
+        ! if ( itsPreAcc .GE. 5) stopPreAccelerate = .TRUE.
+        
+        ! Stop once the real and imaginary parts have passed their final turning points
+        IF (zeroR .GT. finalTP) stopPreAccelerate = 1
+        
+        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
+
+      END DO
+      ! END IF
 
       IF (verbose .EQ. 1) THEN
         WRITE(*,*) "Finished pre-acc; areas"
@@ -350,7 +338,7 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
       ! This will be the very first, left-most value of t used, the left-most
       ! value of  t  used in the acceleration (the previous regions *right* value) 
 
- 12   IF ( convergence .EQ. 0) THEN
+      DO WHILE ( convergence .EQ. 0)
         itsAcceleration = itsAcceleration + 1
         ! itsAcceleration = 1 means this is the first area found
         ! under the acceleration regime
@@ -362,14 +350,14 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
         zeroBoundL = zeroStartPoint - 0.35 * pi / Cy(i)
         zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy(i)
 
-        CALL findExactZeros(zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+        CALL findExactZeros(i, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
         CALL findZeroSmallp(zero, f, df)
 
         zeroR = zero
         xvec(itsAcceleration + 1) = zeroR
         IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate between:", zeroL, zeroR
 
-        CALL gaussq( DFintegrand, psi, zeroL, zeroR)
+        psi = gaussq( DFintegrand, zeroL, zeroR)
         ! psi: area of the latest region
         wvec(itsAcceleration) = psi
         IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
@@ -395,10 +383,9 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
         mOld = m
         CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
-        GOTO 12
-      END IF
+      END DO
       WRITE(*,*) "!!!!! DFsmall/big: Approx zeros can be removed !!!!!"
-      
+    
       areaA = West
       areaT = area0 + area1 + areaA
       
@@ -431,5 +418,5 @@ SUBROUTINE DFsmallp(funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsmall
         WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"
         WRITE(*,*) funvalue, exitstatus, relerr
       END IF
-      
+    
 END SUBROUTINE DFsmallp

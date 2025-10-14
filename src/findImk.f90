@@ -14,7 +14,7 @@ SUBROUTINE findImk(i, t, Imk) BIND(C, NAME='findImk')
   REAL(KIND=8) :: tanArg, omega, front, alpha, pi
   REAL(KIND=8) :: current_y, current_mu, current_phi
       
-  pi = 4.0d00 * DATAN(1.0d0)
+  pi = 4.0D0 * DATAN(1.0D0)
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i

@@ -31,7 +31,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i) BIND(C, NAME='findKmaxSP')
 
   ! Initialize
   abs1mp = ABS(1.0d00 - Cp)
-  pi = ACOS(-1.0d0)
+  pi = 4.0D0 * DATAN(1.0D0)
 
   ! --- Core Logic ---
   

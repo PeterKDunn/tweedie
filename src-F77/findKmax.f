@@ -1,28 +1,52 @@
-! This is a simple, module-less Fortran routine, mirroring the structure of findRek.
-! The name MUST be in all caps (FINDKMAX) to guarantee the R linker finds 'findkmax_'.
-SUBROUTINE FINDKMAX(p, mu, phi, k_max) 
-    IMPLICIT NONE
-    
-    ! Arguments
-    REAL(8), INTENT(IN) :: p, mu, phi
-    INTEGER, INTENT(OUT) :: k_max  
-    
-    ! Local Variables
-    REAL(8) :: exponent
-    
-    IF (mu <= 0.0D0) THEN
-        k_max = 1
-        RETURN
-    END IF
+SUBROUTINE findKmax(kmax, tmax, mmax, mfirst, startPoint)
 
-    IF (p > 1.0D0 .AND. p < 2.0D0) THEN
-        exponent = 1.0D0 / (p - 1.0D0)
-        ! Calculate the result
-        k_max = INT( 1.0D0 + (mu / phi) ** exponent )
-        ! Ensure k_max is at least 10
-        k_max = MAX(10, k_max + 1)
-    ELSE
-        k_max = 1
-    END IF
+      IMPLICIT NONE
+      DOUBLE PRECISION kmax, tmax, startPoint, pi, rtnewton
+      DOUBLE PRECISION x1, x2, xacc, findImkZero, tzero, aimrerr
+      DOUBLE PRECISION Cp, Cy, Cmu, Cphi, myfloor
+      INTEGER mmax, mfirst
+      EXTERNAL findImkZero, myfloor
+      COMMON /params/ Cp, Cy, Cmu, Cphi, aimrerr
+      
+      pi = 4.0d0 * DATAN(1.0d0)
 
-END SUBROUTINE FINDKMAX
+      IF (Cp .GT. 2.0d00) THEN
+        IF (Cy .GE. Cmu) THEN
+
+          mmax = 0
+          mfirst = -1
+          tmax = 0.0d00
+          kmax = 0.0d00
+        ELSE
+          tmax = rtnewton(findImkZero, 
+     &                  startPoint * 0.75, 
+     &                  startPoint * 3.0d00, 
+     &                  startPoint, aimrerr)
+*         funcd returns the fn value, and derivative value
+
+*         Find kmax, mmax
+          CALL findImk(tmax, kmax)
+          mmax = myfloor(kmax/pi)
+          mfirst = mmax
+          
+        ENDIF
+      ELSE
+        IF (Cy .GE. Cmu) THEN
+          mmax = 0
+          tmax = 0.0d00
+          kmax = 0.0d00
+          startPoint = pi / Cy
+        ELSE
+          tmax = rtnewton(findImkZero, 
+     &                  startPoint * 0.75, 
+     &                  startPoint * 2.0d00, 
+     &                  startPoint, aimrerr)
+*         funcd returns the fn value, and derivative value
+          mmax = 0
+          tmax = 0.0d00
+          kmax = 0.0d00
+        ENDIF
+      ENDIF
+
+      RETURN
+      END

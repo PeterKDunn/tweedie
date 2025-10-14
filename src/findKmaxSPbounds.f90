@@ -51,12 +51,12 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR) BIND(C, NAME='findKmaxS
         ! Found a lower bound where the slope is positive
         keepSearching = .FALSE.
       END IF 
-    END DO ! Replaces GOTO 88
+    END DO
   END IF
 
   ! Now creep to the right from boundL (refine the lower bound)
   keepSearching = .TRUE.
-  DO WHILE (keepSearching) ! Replaces GOTO 55
+  DO WHILE (keepSearching)
     oldBoundL = boundL
     boundL = boundL * 1.10d0
     CALL findImkd(i, boundL, slope)
@@ -81,7 +81,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR) BIND(C, NAME='findKmaxS
     boundR = startTKmax
     keepSearching = .TRUE.
     
-    DO WHILE (keepSearching) ! Replaces GOTO 28
+    DO WHILE (keepSearching)
       ! If slope at SP is positive, take bold steps right to find upper bound
       boundR = boundR * 1.5d0
 
@@ -96,7 +96,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR) BIND(C, NAME='findKmaxS
 
   ! Now creep to the left from boundR (refine the upper bound)
   keepSearching = .TRUE.
-  DO WHILE (keepSearching) ! Replaces GOTO 65
+  DO WHILE (keepSearching)
     oldBoundR = boundR
     boundR = boundR * 0.90d0
     CALL findImkd(i, boundR, slope)

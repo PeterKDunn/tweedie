@@ -3,10 +3,9 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-! CRITICAL: IMPLICIT NONE must come directly after USE statements.
   IMPLICIT NONE
 
- ! --- Dummy Arguments (The variables passed into the subroutine) ---
+ ! --- Dummy Arguments, variables passed into the subroutine
   INTEGER(C_INT), INTENT(IN)       :: i              ! Observation index
   INTEGER(C_INT), INTENT(INOUT)    :: verbose        ! Assuming INOUT/IN for verbosity flag
   INTEGER(C_INT), INTENT(OUT)      :: exitstatus     ! Output status
@@ -55,7 +54,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
       END FUNCTION DFintegrand
 
       ! 5. Function for Gaussian Quadrature integration
-      FUNCTION gaussq(funcd, a, b, aimrerr) BIND(C, NAME='gaussq')
+      FUNCTION gaussq(funcd, a, b) BIND(C, NAME='gaussq')
           USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
           REAL(KIND=C_DOUBLE) :: gaussq
@@ -67,7 +66,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
                 REAL(KIND=C_DOUBLE), INTENT(IN) :: x
               END FUNCTION funcd
           END INTERFACE
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b, aimrerr
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b
       END FUNCTION gaussq
 
       ! 6. Subroutine for acceleration
@@ -89,25 +88,23 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   END INTERFACE
   ! --- END INTERFACES ---
 
-  ! Local Variables: Error 5 fix: All local variables defined here
+  ! Local Variables: All local variables defined here
   INTEGER(C_INT)      :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)      :: itsacceleration, itsPreAcc, m, accMax
+  INTEGER(C_INT)      :: itsAcceleration, itsPreAcc, m
   INTEGER(C_INT)      :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  ! FIX 2: funvalue and relerr removed (already defined as dummy args)
   REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, areaT, sum, f, df, finalTP, front
-  REAL(KIND=8)        :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
+  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, sum
+  REAL(KIND=8)        :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
   REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
   REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
-
-
   ! --- Initialization ---
   CpSmall = .FALSE.
-  pi = DACOS(0.0d0)
+  pi = 4.0D0 * DATAN(1.0D0)
+  aimrerr = 1.0D-12
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -119,11 +116,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   exitstatus = 0
   relerr = 1.0_8
   convergence = 0
-  epsilon = 1.0e-12_C_DOUBLE
+  epsilon = 1.0d-12
   
   ! --- Find kmax, tmax, mmax ---
     IF (Cy(i) .GE. Cmu(i)) THEN
       IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
+      
       kmax = 0.0_8
       tmax = 0.0_8
       mmax = 0
@@ -194,7 +192,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
   ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
   ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
-  area0 = gaussq(area0, zeroL, zeroR, aimrerr)
+  area0 = gaussq(DFintegrand, zeroL, zeroR)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
   
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -220,7 +218,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
 
     stopPreAccelerate = 0
     
-    ! --- Start of GOTO 115 loop, converted to DO WHILE ---
     DO WHILE (stopPreAccelerate .EQ. 0)
       itsPreAcc = itsPreAcc + 1
 
@@ -241,7 +238,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
       IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
       
       ! CRITICAL: gaussq must be updated to pass these parameters
-      sum = gaussq(DFintegrand, zeroL, zeroR, aimrerr)
+      sum = gaussq(DFintegrand, zeroL, zeroR)
       area1 = area1 + sum
       IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
 
@@ -252,7 +249,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
       ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
       CALL advanceM(i, mmax, m, mOld, leftOfMax, flip)
     
-    END DO ! End of DO WHILE for GOTO 115
+    END DO 
   END IF
 
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
@@ -268,7 +265,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   ! This will be the very first, left-most value of t used in acceleration
   xvec(1) = zeroR 
 
-  ! --- Start of GOTO 12 loop, converted to DO WHILE ---
   DO WHILE (convergence .EQ. 0)
     IF (verbose .EQ. 1) WRITE(*,*) "  --- Next tail region"
 
@@ -306,7 +302,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
     IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
 
     ! CRITICAL: gaussq must be updated to pass these parameters
-    psi = gaussq(DFintegrand, zeroL, zeroR, aimrerr)
+    psi = gaussq(DFintegrand, zeroL, zeroR)
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi

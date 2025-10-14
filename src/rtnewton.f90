@@ -1,3 +1,4 @@
+
 FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
@@ -21,6 +22,9 @@ FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
   
   ! Arguments (xacc is used as the convergence tolerance)
   REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
+  
+  ! Output (Function result)
+  REAL(KIND=C_DOUBLE) :: rtnewton
   
   ! --- Local Variables (FIXED: removed rtnewton and xacc) ---
   INTEGER(C_INT), PARAMETER      :: MAXITS = 100

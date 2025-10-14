@@ -18,7 +18,7 @@ SUBROUTINE findAccelStart(i, tRightMost) BIND(C, NAME='findAccelStart')
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
   
-  pi = ACOS(-1.0d0) 
+  pi = 4.0D0 * DATAN(1.0D0)
 
   IF ((Cp > 1.4d00) .AND. (Cp < 1.6d00)) THEN
     tRightMost = 1.0d0

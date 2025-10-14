@@ -1,29 +1,13 @@
-
-SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its) BIND(C, NAME='twcdf_internal')
+SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
   IMPLICIT NONE
-  
-  ! --- Subroutine Outputs ---
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr
-  INTEGER(C_INT), INTENT(OUT)       :: exitstatus, its
+  INTEGER, INTENT(IN)           :: N
+  DOUBLE PRECISION, INTENT(IN)  :: p, phi(N), y(N), mu(N)
+  DOUBLE PRECISION, INTENT(OUT) :: funvalue(N), relerr
+  INTEGER, INTENT(OUT)          :: exitstatus, its
 
-  INTEGER(C_INT), INTENT(IN)        :: N
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: p
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: phi(N)
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: y(N)
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: mu(N)
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalue(N)
-  
-  
-  ! --- Local Variables ---
-  INTEGER             :: i
-  REAL(KIND=8)        :: lambda, aimrerr
-  INTEGER             :: verbose
-  
-  ! --- External Subroutines (Must be updated to accept all necessary parameters) ---
-  EXTERNAL findLambda, DFsmallp, DFbigp
+  DOUBLE PRECISION              :: aimrerr, lambda
+  INTEGER                       :: i, verbose
 
   ! --- Initialization: These are then common in 00tweedie_params.F90
   Cp = p

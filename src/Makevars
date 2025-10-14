@@ -1,30 +1,13 @@
-# 1. Define the object file containing the Fortran MODULE definition.
-TWEEDIE_MOD_OBJ = 00tweedie_params.o
+# This file instructs R on how to compile and link Fortran source files.
+# --- 1. Fortran 90/95 Compilation ---
+# Compile all Fortran source files in the current directory, including F90 files.
+# The SHLIB_FFLAGS variable is standard for R packages using Fortran.
+FFLAGS = $(SHLIB_FFLAGS)
 
-# 2. Define the object file containing Fortran functions that USE the module.
-TWEEDIE_FUNC_OBJ = tweedie_funcs.o
-
-# 3. List ALL required object files for linking.
-# Includes both DFsmallp.o and DFbigp.o for completeness.
-# 3. List ALL required object files for linking.
-# We assume twcdf.f90 contains the loop that calls DFbigp/DFsmallp.
-# NOTE: The file containing the main twcdf subroutine must be included.
-OBJECTS = twcdf.o DFbigp.o DFsmallp.o DFintegrand.o \
-          $(TWEEDIE_MOD_OBJ) \
-          accelerate.o acceleratenew.o advanceM.o \
-          findAccelStart.o findExactZeros.o findImdkZero.o findImkdd.o findImkd.o findImkM.o findImk.o \
-          findKmax.o findKmaxSP.o findKmaxSPbounds.o findLambda.o \
-          findRekd.o findRek.o findZeroSmallp.o \
-          gaussq.o gtweedie.o dtweedie.o \
-          myfloor.o nextm.o rtnewton.o rtsafe.o \
-          init.o
-
-# 4. *** CRITICAL FIX: EXPLICIT COMPILATION RULE ***
-# This instruction tells 'make' exactly how to build tweedie_params.o from its f90 source.
-# This overrides the lost implicit rule and fixes the "No rule to make target" error.
-$(TWEEDIE_MOD_OBJ): 00tweedie_params.f90
-	$(FC) $(FFLAGS) -c $< -o $@
-
-# 5. CRITICAL DEPENDENCY: This rule ensures the module object (tweedie_params.o)
-# is compiled BEFORE the function file (tweedie_funcs.o) that relies on it.
-$(TWEEDIE_FUNC_OBJ): $(TWEEDIE_MOD_OBJ)
+# --- 2. Linker Instructions (Crucial for F90 Modules) ---
+# When using Fortran 90/95 modules (like your USE statements), you must usethe $(SHLIB_LDADD) 
+# variable to ensure the object files are correctly
+# included in the final shared library link step.LDFLAGS is for C/C++ linking, 
+# but R uses SHLIB_LDADD for Fortran linking.
+# The '-lgfortran' is often necessary to explicitly link the GNU Fortran runtime.
+SHLIB_LDADD = -lgfortran

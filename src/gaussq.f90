@@ -553,14 +553,8 @@ FUNCTION gaussq(funcd, a, b) RESULT(integral_result) BIND(C, NAME='gaussq')
   ! Set up initial parameters
   H = (b - a)
   
-  ! Initial guess for the integral
-  x = (a + b) / 2.0d0
-  
-  ! Note: The original implementation likely uses a numerical recipe for
-  ! adaptive quadrature. This simplified loop is provided for structure.
-  
+  ! Compute
   DO i = 1, 256
-    ! FIX: Using 'absc(M)' for the point value
     x = (H * absc(i)) + (a + b) / 2.0d0
     w = H * weights(i) 
     

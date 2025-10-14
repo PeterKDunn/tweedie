@@ -17,7 +17,7 @@ SUBROUTINE findRek(i, t, Rek) BIND(C, NAME='findRek')
   current_phi  = Cphi(i)  ! Access phi value for index i
   
 
-  pi = ACOS(-1.0d0) ! Modern F90 way to get PI
+  pi = 4.0D0 * DATAN(1.0D0)
   
   pindex = (2.0d00 - Cp)
   front = current_mu ** pindex  / ( current_phi * pindex)
