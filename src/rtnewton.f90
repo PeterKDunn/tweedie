@@ -1,5 +1,5 @@
 
-FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
+SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root) BIND(C, NAME='rtnewton')
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -8,12 +8,13 @@ FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
 
   ! --- INTERFACE: Declaration of the function to be solved (funcd) ---
   INTERFACE
-      SUBROUTINE funcd_signature(x, f, df) BIND(C)
+      SUBROUTINE funcd_signature(i, x, f, df) BIND(C)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
-        REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
-        REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
+        REAL(KIND=C_DOUBLE), INTENT(IN)     :: x
+        INTEGER(C_INT), INTENT(IN)          :: i
+        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
       END SUBROUTINE funcd_signature
   END INTERFACE
   ! --- END INTERFACE ---
@@ -22,16 +23,17 @@ FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
   
   ! Arguments (xacc is used as the convergence tolerance)
   REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
+  INTEGER(C_INT), INTENT(IN)      :: i
   
   ! Output (Function result)
-  REAL(KIND=C_DOUBLE) :: rtnewton
+  REAL(KIND=C_DOUBLE)           :: root
   
   ! --- Local Variables (FIXED: removed rtnewton and xacc) ---
   INTEGER(C_INT), PARAMETER      :: MAXITS = 100
   INTEGER(C_INT)                 :: j
   
   ! x_current holds the current iteration value, dx is the change
-  REAL(KIND=C_DOUBLE)          :: dx, df, f, x_current, x_iter_old 
+  REAL(KIND=C_DOUBLE)          :: dx, df, f, x_current, x_iter_old
   
   ! --- Newton-Raphson Logic ---
   x_current = xstart ! Start at the initial guess
@@ -41,7 +43,7 @@ FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
     x_iter_old = x_current
     
     ! Calculate function value (f) and derivative (df)
-    CALL funcd(x_current, f, df) 
+    CALL funcd(i, x_current, f, df) 
     
     ! Check for convergence before a step
     IF (ABS(f) < xacc) THEN
@@ -71,6 +73,6 @@ FUNCTION rtnewton(funcd, x1, x2, xstart, xacc) BIND(C, NAME='rtnewton')
   END DO
   
   ! Assign the final root value to the function result
-  rtnewton = x_current
+  root = x_current
 
-END FUNCTION rtnewton
+END SUBROUTINE rtnewton
