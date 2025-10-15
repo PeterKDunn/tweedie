@@ -14,7 +14,7 @@ SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
 
   ! --- Local variables ---
   INTEGER :: i
-  REAL(C_DOUBLE) :: lambda, aimrerr
+  REAL(C_DOUBLE) :: aimrerr
   INTEGER :: verbose
 
   ! --- Initialization ---
@@ -32,9 +32,6 @@ SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Determine case: psmall = TRUE means 1 < p < 2 ---
   CpSmall = .FALSE.
   IF ( (p > 1.0_8) .AND. (p < 2.0_8) ) CpSmall = .TRUE.
-
-  ! --- Compute lambda (pSmall case only) ---
-  CALL findLambda(lambda, p, mu, phi)
 
   ! --- Loop over N ---
   DO i = 1, N

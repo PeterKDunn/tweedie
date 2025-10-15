@@ -2,16 +2,16 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsm
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-! CRITICAL: IMPLICIT NONE must come directly after USE statements.
   IMPLICIT NONE
 
- ! --- Dummy Arguments (The variables passed into the subroutine) ---
-  INTEGER(C_INT), INTENT(IN)       :: i              ! Observation index
-  INTEGER(C_INT), INTENT(INOUT)    :: verbose        ! Assuming INOUT/IN for verbosity flag
-  INTEGER(C_INT), INTENT(OUT)      :: exitstatus     ! Output status
-  REAL(KIND=C_DOUBLE), INTENT(OUT) :: funvalue, relerr ! The final computed result and relative error
+ ! --- Dummy Arguments, variables passed into the subroutine
+  INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
+  INTEGER(C_INT), INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
+  INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
+  REAL(KIND=C_DOUBLE), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
+  REAL(KIND=C_DOUBLE), INTENT(OUT)                :: relerr ! The final computed result and relative error
 
-   ! --- INTERFACES: All C-bound routines called by DFbigp:
+   ! --- INTERFACES: All C-bound routines called by DFsmallp:
   INTERFACE
       ! 1. Function to find Kmax special point
       FUNCTION findKmaxSP(j) BIND(C, NAME='findKmaxSP')
@@ -412,11 +412,11 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsm
 
       ! So the value returned by the integration  
      
-      funvalue = -areaT/pi + 0.50d0 
+      funvalue(i) = -areaT/pi + 0.50d0 
       IF (verbose .EQ. 1) THEN
-        WRITE(*,*) "FINAL AREA: The cdf value is", funvalue
+        WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
         WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"
-        WRITE(*,*) funvalue, exitstatus, relerr
+        WRITE(*,*) funvalue(i), exitstatus, relerr
       END IF
     
 END SUBROUTINE DFsmallp

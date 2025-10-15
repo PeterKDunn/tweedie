@@ -1,4 +1,3 @@
-
 SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp')
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -6,19 +5,20 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)       :: i              ! Observation index
-  INTEGER(C_INT), INTENT(INOUT)    :: verbose        ! Assuming INOUT/IN for verbosity flag
-  INTEGER(C_INT), INTENT(OUT)      :: exitstatus     ! Output status
-  REAL(KIND=C_DOUBLE), INTENT(OUT) :: funvalue, relerr ! The final computed result and relative error
+  INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
+  INTEGER(C_INT), INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
+  INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
+  REAL(KIND=C_DOUBLE), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
+  REAL(KIND=C_DOUBLE), INTENT(OUT)                :: relerr ! The final computed result and relative error
 
-   ! --- INTERFACES: All C-bound routines called by DFbigp MUST be defined here ---
+   ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
       ! 1. Function to find Kmax special point
       FUNCTION findKmaxSP(j) BIND(C, NAME='findKmaxSP')
           USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           
           IMPLICIT NONE  
-          REAL(KIND=C_DOUBLE)                :: findKmaxSP
+          REAL(KIND=C_DOUBLE)         :: findKmaxSP
           INTEGER(C_INT), INTENT(IN)  :: j
       END FUNCTION findKmaxSP
 
@@ -351,12 +351,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
   
     ! We have the value of the integral in the CDF calculation.
     ! So now work out the CDF
-    funvalue = (-1.0_8/pi) * areaT + 0.5_8
+    funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
     
     IF (verbose .EQ. 1) THEN
-      WRITE(*,*) "FINAL AREA: The cdf value is", funvalue
+      WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
       WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
-      WRITE(*,*) funvalue, exitstatus, relerr
+      WRITE(*,*) funvalue(i), exitstatus, relerr
     END IF
 
   

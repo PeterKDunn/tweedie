@@ -29,12 +29,12 @@ SUBROUTINE findImdkZero(i, t, f, df) BIND(C, NAME='findImdkZero')
   
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
-
-  REAL(KIND=8)                  :: current_y, current_mu, current_phi
   INTEGER(C_INT), INTENT(IN)    :: i
+
   
   ! Local Variables
   REAL(KIND=C_DOUBLE) :: Imdk, Imddk
+  REAL(KIND=8)        :: current_y, current_mu, current_phi
   
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
