@@ -1,39 +1,36 @@
 ! Eliminates the F77 COMMON block and updates calls to findImk and findRek
 ! to prevent segmentation faults.
 !
-FUNCTION DFintegrand(t) RESULT(integrand_result) BIND(C, NAME='DFintegrand')
+FUNCTION DFintegrand(t) RESULT(integrand_result) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
  ! NOTE: Added INTERFACE blocks to declare C-binding for helper routines
   INTERFACE
-    SUBROUTINE findImk(i, t, Imk) BIND(C, NAME='findImk')
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+    SUBROUTINE findImk(i, t, Imk)
       IMPLICIT NONE
       
-      INTEGER(C_INT), INTENT(IN)          :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
+      INTEGER, INTENT(IN)          :: i
+      REAL(KIND=8), INTENT(IN)     :: t
+      REAL(KIND=8), INTENT(OUT)    :: Imk
     END SUBROUTINE findImk
     
-    SUBROUTINE findRek(i, t, Rek) BIND(C, NAME='findRek')
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      
+    SUBROUTINE findRek(i, t, Rek)
+
       IMPLICIT NONE
-      INTEGER(C_INT), INTENT(IN)          :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
+      INTEGER, INTENT(IN)          :: i
+      REAL(KIND=8), INTENT(IN)     :: t
+      REAL(KIND=8), INTENT(OUT)    :: Rek
     END SUBROUTINE findRek
   END INTERFACE
     
   ! Arguments (Inputs)
-  REAL(KIND=C_DOUBLE), INTENT(IN) :: t                ! The internal variable for integration
-  REAL(KIND=C_DOUBLE)             :: integrand_result ! The result of the function
+  REAL(KIND=8), INTENT(IN)  :: t                ! The internal variable for integration
+  REAL(KIND=8)              :: integrand_result ! The result of the function
 
-  REAL(KIND=8)          :: current_y, current_mu, current_phi
-  REAL(KIND=C_DOUBLE)   :: Imk, Rek
+  REAL(KIND=8)              :: current_y, current_mu, current_phi
+  REAL(KIND=8)              :: Imk, Rek
 
 
   ! Grab the relevant scalar values for this iteration:

@@ -1,104 +1,96 @@
-SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp')
+SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
-  INTEGER(C_INT), INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
-  INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
-  REAL(KIND=C_DOUBLE), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
-  REAL(KIND=C_DOUBLE), INTENT(OUT)                :: relerr ! The final computed result and relative error
+  INTEGER, INTENT(IN)                      :: i              ! Observation index
+  INTEGER, INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
+  INTEGER, INTENT(OUT)                     :: exitstatus     ! Output status
+  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)                :: relerr ! The final computed result and relative error
 
    ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
       ! 1. Function to find Kmax special point
-      FUNCTION findKmaxSP(j) BIND(C, NAME='findKmaxSP')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-          
+      FUNCTION findKmaxSP(j) 
+
           IMPLICIT NONE  
-          REAL(KIND=C_DOUBLE)         :: findKmaxSP
-          INTEGER(C_INT), INTENT(IN)  :: j
+          REAL(KIND=8)          :: findKmaxSP
+          INTEGER, INTENT(IN)   :: j
       END FUNCTION findKmaxSP
 
       ! 2. Subroutine to find Kmax and related indices
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) BIND(C, NAME='findKmax')
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
         
         IMPLICIT NONE
-          INTEGER(C_INT), INTENT(IN) :: j
-          INTEGER(C_INT), INTENT(OUT) :: mfirst, mmax
+          INTEGER, INTENT(IN) :: j
+          INTEGER, INTENT(OUT) :: mfirst, mmax
           
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: startTKmax
+          REAL(KIND=8), INTENT(OUT) :: kmax, tmax
+          REAL(KIND=8), INTENT(IN)  :: startTKmax
       END SUBROUTINE findKmax
 
       ! 3. Subroutine to advance the iteration index m
-      SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) BIND(C, NAME='advanceM')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
 
-          INTEGER(C_INT), INTENT(IN)      :: j, mmax
-          INTEGER(C_INT), INTENT(INOUT)   :: m_index
-          INTEGER(C_INT), INTENT(OUT)     :: mOld
-          INTEGER(C_INT), INTENT(INOUT)   :: leftOfMax
-          INTEGER(C_INT), INTENT(OUT)     :: flip
+          INTEGER, INTENT(IN)      :: j, mmax
+          INTEGER, INTENT(INOUT)   :: m_index
+          INTEGER, INTENT(OUT)     :: mOld
+          INTEGER, INTENT(INOUT)   :: leftOfMax
+          INTEGER, INTENT(OUT)     :: flip
       END SUBROUTINE advanceM
       
       ! 4. Function for the integrand (used by gaussq)
-      FUNCTION DFintegrand(t) BIND(C, NAME='DFintegrand')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      FUNCTION DFintegrand(t) 
 
-          REAL(KIND=C_DOUBLE) :: DFintegrand
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: t
+          REAL(KIND=8)              :: DFintegrand
+          REAL(KIND=8), INTENT(IN)  :: t
       END FUNCTION DFintegrand
 
       ! 5. Function for Gaussian Quadrature integration
-      FUNCTION gaussq(funcd, a, b) BIND(C, NAME='gaussq')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      FUNCTION gaussq(funcd, a, b)
 
-          REAL(KIND=C_DOUBLE) :: gaussq
+          REAL(KIND=8) :: gaussq
           INTERFACE
-              FUNCTION funcd(x) BIND(C)
-                USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+              FUNCTION funcd(x)
 
-                REAL(KIND=C_DOUBLE) :: funcd
-                REAL(KIND=C_DOUBLE), INTENT(IN) :: x
+                REAL(KIND=8)              :: funcd
+                REAL(KIND=8), INTENT(IN)  :: x
               END FUNCTION funcd
           END INTERFACE
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b
+          REAL(KIND=8), INTENT(IN)        :: a, b
       END FUNCTION gaussq
 
       ! 6. Subroutine for acceleration
-      SUBROUTINE accelerateNEW(xvec, wvec, nzeros, Mmatrix, NMatrix, West) BIND(C, NAME='accelerateNEW')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
 
-          INTEGER(C_INT), INTENT(IN)      :: nzeros
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
-      END SUBROUTINE accelerateNEW
+          INTEGER, INTENT(IN)      :: nzeros
+          REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+      END SUBROUTINE acceleratenew
 
       ! 7. Subroutine to find exact zeros
-      SUBROUTINE findExactZeros(i, tL, tR, zeroL, zeroR) BIND(C, NAME='findExactZeros')
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-        INTEGER(C_INT), INTENT(IN)        :: i
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: tL, tR
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
+      SUBROUTINE findExactZeros(i, tL, tR, zeroL, zeroR)
+
+        INTEGER, INTENT(IN)         :: i
+        REAL(KIND=8), INTENT(IN)    :: tL, tR
+        REAL(KIND=8), INTENT(OUT)   :: zeroL, zeroR
       END SUBROUTINE findExactZeros
 
   END INTERFACE
   ! --- END INTERFACES ---
 
   ! Local Variables: All local variables defined here
-  INTEGER(C_INT)      :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)      :: itsAcceleration, itsPreAcc, m
-  INTEGER(C_INT)      :: leftOfMax, flip, convergence, stopPreAccelerate
+  INTEGER      :: mmax, mfirst, mOld, accMax
+  INTEGER      :: itsAcceleration, itsPreAcc, m
+  INTEGER      :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, sum
-  REAL(KIND=8)        :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
-  REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
-  REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
+  REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
+  REAL(KIND=8) :: zeroL, zeroR, area0, area1, areaA, sum
+  REAL(KIND=8) :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
+  REAL(KIND=8) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
+  REAL(KIND=8) :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
   ! --- Initialization ---
@@ -311,8 +303,8 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFbigp
     Wold2 = Wold
     Wold = West
     
-    ! CRITICAL: accelerateNEW must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-    CALL accelerateNEW(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
+    ! CRITICAL: acceleratenew must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+    CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
     
     IF (verbose .EQ. 1) THEN 
       WRITE(*,*) "iteration", itsAcceleration, ":", West

@@ -1,25 +1,23 @@
 
-REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i) BIND(C, NAME='findKmaxSP')
+REAL(KIND=8) FUNCTION findKmaxSP(i) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)    :: i
-  REAL(KIND=C_DOUBLE)           :: tsmall, tlarge, abs1mp
-  REAL(KIND=C_DOUBLE)           :: omegaInf, slope
+  INTEGER, INTENT(IN)    :: i
+  REAL(KIND=8)           :: tsmall, tlarge, abs1mp
+  REAL(KIND=8)           :: omegaInf, slope
 
   REAL(KIND=8)  :: current_y, current_mu, current_phi, pi
 
   ! --- Interface Declarations ---
   INTERFACE
     SUBROUTINE findImkd(i, t, Imdk)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-      INTEGER, INTENT(IN)               :: i
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imdk
+      REAL(KIND=8), INTENT(IN)    :: t
+      INTEGER, INTENT(IN)         :: i
+      REAL(KIND=8), INTENT(OUT)   :: Imdk
     END SUBROUTINE findImkd
   END INTERFACE
   

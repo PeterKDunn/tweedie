@@ -1,15 +1,13 @@
 
-SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West) BIND(C, NAME='acceleratenew')
-
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
 
   IMPLICIT NONE
 
   ! --- Input/Output Declarations (Dummy Arguments) ---
-  INTEGER(C_INT), INTENT(IN)          :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(200), wvec(200)  
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 200), Nmatrix(2, 200)  
-  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
+  INTEGER, INTENT(IN)          :: nzeros
+  REAL(KIND=8), INTENT(IN)     :: xvec(200), wvec(200)  
+  REAL(KIND=8), INTENT(INOUT)  :: Mmatrix(2, 200), Nmatrix(2, 200)  
+  REAL(KIND=8), INTENT(OUT)    :: West
   
   ! --- Local Variables ---
   INTEGER         :: p, maxSize

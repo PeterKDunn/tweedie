@@ -1,25 +1,18 @@
 
-SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root) BIND(C, NAME='rtsafe')
+SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
-  
-  ! NOTE: All problematic intrinsic declarations (LOGICAL, INTRINSIC, USE)
-  ! have been removed to force the use of the pure Fortran NaN check.
-  
-  ! --- Function Arguments ---
   
   INTERFACE
       ! Define the expected signature of the function pointer passed to rtnewton.
       ! Assuming the solved function (funcd) is a SUBROUTINE returning f and df.
-      SUBROUTINE funcd_signature(i, x, f, df) BIND(C)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE funcd_signature(i, x, f, df)
 
         IMPLICIT NONE
-        REAL(KIND=C_DOUBLE), INTENT(IN)     :: x
-        INTEGER(C_INT), INTENT(IN)          :: i
-        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
+        REAL(KIND=8), INTENT(IN)    :: x
+        INTEGER, INTENT(IN)         :: i
+        REAL(KIND=8), INTENT(OUT)   :: f, df
         ! The remaining arguments are implicitly accessible through the module
       END SUBROUTINE funcd_signature
   END INTERFACE
@@ -28,18 +21,18 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root) BIND(C, NAME='rtsafe')
   PROCEDURE(funcd_signature) :: funcd
  
   ! Inputs
-  REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
-  INTEGER(C_INT), INTENT(IN)      :: i
+  REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
+  INTEGER, INTENT(IN)       :: i
 
   ! Output (Function result)
-  REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
+  REAL(KIND=8), INTENT(OUT) :: root
   
   ! --- Local Variables ---
   
-  INTEGER(C_INT), PARAMETER   :: JMAX = 50
-  INTEGER(C_INT)              :: j
-  REAL(KIND=C_DOUBLE)         :: f, df, dx, rootTMP
-  REAL(KIND=C_DOUBLE)         :: rtsafeTMP, fh, fl, xh, xl
+  INTEGER, PARAMETER   :: JMAX = 50
+  INTEGER              :: j
+  REAL(KIND=8)         :: f, df, dx, rootTMP
+  REAL(KIND=8)         :: rtsafeTMP, fh, fl, xh, xl
   
   ! Initialize root and boundaries
   xl = x1

@@ -1,14 +1,13 @@
 
-SUBROUTINE findZeroSmallp(i, t, f, df) BIND(C, NAME='findZeroSmallp')
+SUBROUTINE findZeroSmallp(i, t, f, df)
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Variables f and df are the function value and derivative output
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-  INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
+  REAL(KIND=8), INTENT(IN)    :: t
+  INTEGER, INTENT(IN)         :: i
+  REAL(KIND=8), INTENT(OUT)   :: f, df
   
   ! --- Local Variables ---
   REAL(KIND=8) :: Imk, Imdk

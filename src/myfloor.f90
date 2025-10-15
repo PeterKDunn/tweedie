@@ -1,10 +1,10 @@
 
-FUNCTION myfloor(x) RESULT(r_myfloor) BIND(C, NAME='myfloor')
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+FUNCTION myfloor(x) RESULT(r_myfloor) 
+
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-  INTEGER(C_INT)                    :: r_myfloor
+  REAL(KIND=8), INTENT(IN)   :: x
+  INTEGER                    :: r_myfloor
 
 
   IF (x .GE. 0.0_8) THEN

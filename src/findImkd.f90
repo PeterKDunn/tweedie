@@ -1,15 +1,14 @@
 
-SUBROUTINE findImkd(i, t, Imdk) BIND(C, NAME='findImkd')
+SUBROUTINE findImkd(i, t, Imdk) 
 
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imdk  ! The result of the calculation
+  INTEGER, INTENT(IN)        :: i
+  REAL(KIND=8), INTENT(IN)   :: t
+  REAL(KIND=8), INTENT(OUT)  :: Imdk  ! The result of the calculation
   
   ! Local Variables
   REAL(KIND=8) :: omega, pindex

@@ -1,15 +1,14 @@
 
-SUBROUTINE findImk(i, t, Imk) BIND(C, NAME='findImk')
+SUBROUTINE findImk(i, t, Imk) 
       
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
       
   ! Arguments
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
-  INTEGER(C_INT), INTENT(IN)          :: i
+  REAL(KIND=8), INTENT(IN)     :: t
+  REAL(KIND=8), INTENT(OUT)    :: Imk
+  INTEGER, INTENT(IN)          :: i
   
   REAL(KIND=8) :: tanArg, omega, front, alpha, pi
   REAL(KIND=8) :: current_y, current_mu, current_phi

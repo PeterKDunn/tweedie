@@ -1,72 +1,69 @@
-SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint) BIND(C, NAME='findKmax')
+SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  REAL(KIND=C_DOUBLE), INTENT(OUT)     :: kmax, tmax
-  REAL(KIND=C_DOUBLE), INTENT(IN)      :: startPoint
-  INTEGER(C_INT), INTENT(OUT)          :: mmax, mfirst
-  INTEGER(C_INT), INTENT(IN)           :: i
+  REAL(KIND=8), INTENT(OUT)     :: kmax, tmax
+  REAL(KIND=8), INTENT(IN)      :: startPoint
+  INTEGER, INTENT(OUT)          :: mmax, mfirst
+  INTEGER, INTENT(IN)           :: i
   
   
   ! --- CRITICAL FIXES: INTERFACES FOR EXTERNAL BIND(C) ROUTINES ---
   
   INTERFACE
       ! A) Define the REQUIRED 4-argument signature for the function pointer (funcd)
-      SUBROUTINE funcd_signature(i_in, t, f, df) BIND(C)
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE funcd_signature(i_in, t, f, df)
+
           IMPLICIT NONE
-          INTEGER(C_INT), INTENT(IN) :: i_in
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+          INTEGER, INTENT(IN)       :: i_in
+          REAL(KIND=8), INTENT(IN)  :: t
+          REAL(KIND=8), INTENT(OUT) :: f, df
       END SUBROUTINE funcd_signature
 
       ! B) 1. The root solver (rtsafe)
-      SUBROUTINE rtsafe(i_in, funcd, x1, x2, xstart, xacc, root) BIND(C, NAME='rtsafe')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-          
+      SUBROUTINE rtsafe(i_in, funcd, x1, x2, xstart, xacc, root) 
+
           ! FIX 1 & 2: Declare funcd using the signature, remove POINTER
           PROCEDURE(funcd_signature) :: funcd 
           
-          INTEGER(C_INT), INTENT(IN) :: i_in
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
+          INTEGER, INTENT(IN)       :: i_in
+          REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
+          REAL(KIND=8), INTENT(OUT) :: root
       END SUBROUTINE rtsafe
       
       ! C) Define the rtnewton solver (used on line 99)
-      SUBROUTINE rtnewton(i_in, funcd, x1, x2, xstart, xacc, root) BIND(C, NAME='rtnewton')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE rtnewton(i_in, funcd, x1, x2, xstart, xacc, root)
+
           PROCEDURE(funcd_signature) :: funcd 
-          INTEGER(C_INT), INTENT(IN) :: i_in
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
+          INTEGER, INTENT(IN)       :: i_in
+          REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
+          REAL(KIND=8), INTENT(OUT) :: root
       END SUBROUTINE rtnewton
       
       ! D) Define findImdkZero (the actual 4-argument routine being passed)
-      SUBROUTINE findImdkZero(i_in, t, f, df) BIND(C, NAME='findImdkZero')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE findImdkZero(i_in, t, f, df)
+
           IMPLICIT NONE
-          INTEGER(C_INT), INTENT(IN) :: i_in
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+          INTEGER, INTENT(IN)       :: i_in
+          REAL(KIND=8), INTENT(IN)  :: t
+          REAL(KIND=8), INTENT(OUT) :: f, df
       END SUBROUTINE findImdkZero
       
-      ! E) Define findImk (used on line 71, 106)
-      SUBROUTINE findImk(i_in, t_in, kmax_out) BIND(C, NAME='findImk')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      SUBROUTINE findImk(i_in, t_in, kmax_out) 
+
           IMPLICIT NONE
-          INTEGER(C_INT), INTENT(IN) :: i_in
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: t_in
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax_out
+          INTEGER, INTENT(IN)         :: i_in
+          REAL(KIND=8), INTENT(IN)    :: t_in
+          REAL(KIND=8), INTENT(OUT)   :: kmax_out
       END SUBROUTINE findImk
       
       ! F) Define myfloor (used on line 72, 107)
-      INTEGER(C_INT) FUNCTION myfloor(x) BIND(C, NAME='myfloor')
-          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER FUNCTION myfloor(x) 
+
           IMPLICIT NONE
-          REAL(KIND=C_DOUBLE), INTENT(IN) :: x
+          REAL(KIND=8), INTENT(IN) :: x
       END FUNCTION myfloor
       
   END INTERFACE

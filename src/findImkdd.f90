@@ -1,14 +1,13 @@
 
-SUBROUTINE findImkdd(i, t, Imkdd) BIND(C, NAME='findImkdd')
+SUBROUTINE findImkdd(i, t, Imkdd)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-  INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkdd
+  REAL(KIND=8), INTENT(IN)   :: t
+  INTEGER, INTENT(IN)        :: i
+  REAL(KIND=8), INTENT(OUT)  :: Imkdd
   
   ! Local Variables
   REAL(KIND=8)    :: front, omega, pindex

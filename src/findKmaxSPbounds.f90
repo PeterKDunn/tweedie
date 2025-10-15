@@ -1,17 +1,16 @@
 
-SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR) BIND(C, NAME='findKmaxSPbounds')
+SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! --- F77 Arguments (from original subroutine definition) ---
   
   ! Inputs
-  REAL(C_DOUBLE), INTENT(IN)      :: startTKmax
-  INTEGER(C_INT), INTENT(IN)      :: i
+  REAL(KIND=8), INTENT(IN)    :: startTKmax
+  INTEGER, INTENT(IN)         :: i
   ! Outputs
-  REAL(C_DOUBLE), INTENT(OUT)     :: kmaxL, kmaxR
+  REAL(KIND=8), INTENT(OUT)   :: kmaxL, kmaxR
 
   ! --- Local Variables ---
   REAL(KIND=8)    :: current_y, current_mu, current_phi

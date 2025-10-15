@@ -1,15 +1,14 @@
 
-SUBROUTINE findAccelStart(i, tRightMost) BIND(C, NAME='findAccelStart')
+SUBROUTINE findAccelStart(i, tRightMost) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(OUT) :: tRightMost      ! The output starting point for acceleration
+  REAL(KIND=8), INTENT(OUT) :: tRightMost      ! The output starting point for acceleration
   
-  REAL(KIND=C_DOUBLE)   :: pi, omegaRM, lRightMostD
-  INTEGER(C_INT)        :: lRightMost, i
-  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
+  REAL(KIND=8)              :: pi, omegaRM, lRightMostD
+  INTEGER                   :: lRightMost, i
+  REAL(KIND=8)              :: current_y, current_mu, current_phi
   
   INTEGER, EXTERNAL :: myfloor
 

@@ -1,15 +1,14 @@
 
-FUNCTION gaussq(funcd, a, b) RESULT(integral_result) BIND(C, NAME='gaussq')
+FUNCTION gaussq(funcd, a, b) RESULT(integral_result) 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  REAL(KIND=C_DOUBLE), INTENT(IN) :: a, b      ! Integration limits
+  REAL(KIND=8), INTENT(IN)  :: a, b      ! Integration limits
   
   ! Function result
-  REAL(KIND=C_DOUBLE) :: integral_result
+  REAL(KIND=8)              :: integral_result
   
   ! Local Variables
   INTEGER                       :: i
@@ -20,12 +19,11 @@ FUNCTION gaussq(funcd, a, b) RESULT(integral_result) BIND(C, NAME='gaussq')
   INTERFACE
       ! Define the expected signature of the function pointer passed to gaussq.
       ! It must be a FUNCTION that accepts x and returns a REAL(KIND=8).
-      FUNCTION funcd(x) RESULT(f_result) BIND(C)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      FUNCTION funcd(x) RESULT(f_result) 
 
         IMPLICIT NONE
-        REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
-        REAL(KIND=C_DOUBLE)                :: f_result
+        REAL(KIND=8), INTENT(IN)    :: x
+        REAL(KIND=8)                :: f_result
       END FUNCTION funcd
   END INTERFACE
   

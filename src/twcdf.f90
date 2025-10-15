@@ -12,6 +12,29 @@ SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   INTEGER(C_INT), INTENT(OUT):: exitstatus, its
   REAL(C_DOUBLE), INTENT(OUT):: relerr
 
+    ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
+    INTERFACE
+        SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
+            IMPLICIT NONE
+            INTEGER, INTENT(IN)                       :: i
+            REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+            INTEGER, INTENT(OUT)                      :: exitstatus
+            REAL(KIND=8), INTENT(OUT)                 :: relerr
+            INTEGER, INTENT(IN)                       :: verbose
+        END SUBROUTINE DFbigp
+
+        SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
+            IMPLICIT NONE
+            INTEGER, INTENT(IN)                       :: i
+            REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+            INTEGER, INTENT(OUT)                      :: exitstatus
+            REAL(KIND=8), INTENT(OUT)                 :: relerr
+            INTEGER, INTENT(IN)                       :: verbose
+        END SUBROUTINE DFsmallp
+    END INTERFACE
+    ! -----------------------------------------------
+
+
   ! --- Local variables ---
   INTEGER :: i
   REAL(C_DOUBLE) :: aimrerr

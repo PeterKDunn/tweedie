@@ -1,14 +1,13 @@
 
-SUBROUTINE findLambda(i, lambda) BIND(C, NAME='findLambda')
+SUBROUTINE findLambda(i, lambda)
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
-  INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda ! The output value
+  INTEGER, INTENT(IN)        :: i
+  REAL(KIND=8), INTENT(OUT)  :: lambda ! The output value
   
-  REAL(KIND=8)           :: current_mu, current_phi
+  REAL(KIND=8)                :: current_mu, current_phi
 
   ! Grab the relevant scalar values for this iteration:
   current_mu   = Cmu(i)   ! Access mu value for index i
