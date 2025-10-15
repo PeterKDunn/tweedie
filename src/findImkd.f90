@@ -1,18 +1,17 @@
-
 SUBROUTINE findImkd(i, t, Imdk) 
-
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  INTEGER, INTENT(IN)        :: i
-  REAL(KIND=8), INTENT(IN)   :: t
-  REAL(KIND=8), INTENT(OUT)  :: Imdk  ! The result of the calculation
+  INTEGER(C_INT), INTENT(IN)        :: i
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imdk  ! The result of the calculation
   
   ! Local Variables
-  REAL(KIND=8) :: omega, pindex
-  REAL(KIND=8) :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE) :: omega, pindex
+  REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i

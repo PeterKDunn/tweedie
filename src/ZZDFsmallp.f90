@@ -15,86 +15,94 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       ! 1. Function to find Kmax special point
       FUNCTION findKmaxSP(j)
 
-          IMPLICIT NONE  
-          REAL(KIND=8)         :: findKmaxSP
-          INTEGER, INTENT(IN)  :: j
+        IMPLICIT NONE  
+        REAL(KIND=8)         :: findKmaxSP
+        INTEGER, INTENT(IN)  :: j
       END FUNCTION findKmaxSP
 
       ! 2. Subroutine to find Kmax and related indices
       SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
 
         IMPLICIT NONE
-          INTEGER, INTENT(IN)   :: j
-          INTEGER, INTENT(OUT)  :: mfirst, mmax
+        INTEGER, INTENT(IN)   :: j
+        INTEGER, INTENT(OUT)  :: mfirst, mmax
           
-          REAL(KIND=8), INTENT(OUT) :: kmax, tmax
-          REAL(KIND=8), INTENT(IN)  :: startTKmax
+        REAL(KIND=8), INTENT(OUT) :: kmax, tmax
+        REAL(KIND=8), INTENT(IN)  :: startTKmax
       END SUBROUTINE findKmax
 
       ! 3. Subroutine to advance the iteration index m
       SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
 
-          INTEGER, INTENT(IN)      :: j, mmax
-          INTEGER, INTENT(INOUT)   :: m_index
-          INTEGER, INTENT(OUT)     :: mOld
-          INTEGER, INTENT(INOUT)   :: leftOfMax
-          INTEGER, INTENT(OUT)     :: flip
+        INTEGER, INTENT(IN)      :: j, mmax
+        INTEGER, INTENT(INOUT)   :: m_index
+        INTEGER, INTENT(OUT)     :: mOld
+        INTEGER, INTENT(INOUT)   :: leftOfMax
+        INTEGER, INTENT(OUT)     :: flip
       END SUBROUTINE advanceM
       
       ! 4. Function for the integrand (used by gaussq)
-      FUNCTION DFintegrand(t)
+      FUNCTION DFintegrand(i, t)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          REAL(KIND=8) DFintegrand
-          REAL(KIND=8), INTENT(IN) :: t
+        INTEGER(C_INT), INTENT(IN)      :: i
+        REAL(KIND=C_DOUBLE), INTENT(IN) :: t
+        REAL(KIND=C_DOUBLE)             :: DFintegrand
       END FUNCTION DFintegrand
 
       ! 5. Function for Gaussian Quadrature integration
-      FUNCTION gaussq(funcd, a, b)
+      SUBROUTINE gaussq(i, funcd, a, b, area)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          REAL(KIND=8) :: gaussq
+        INTEGER(C_INT), INTENT(IN)        :: i
+        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: area
+          
           INTERFACE
-              FUNCTION funcd(x)
+            FUNCTION funcd(x)
+              USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-                REAL(KIND=8)              :: funcd
-                REAL(KIND=8), INTENT(IN)  :: x
-              END FUNCTION funcd
+              REAL(KIND=C_DOUBLE)              :: funcd
+              REAL(KIND=C_DOUBLE), INTENT(IN)  :: x
+            END FUNCTION funcd
           END INTERFACE
-          REAL(KIND=8), INTENT(IN)        :: a, b
-      END FUNCTION gaussq
+          REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
+      END SUBROUTINE gaussq
 
-      ! 6. Subroutine for acceleration
       SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          INTEGER, INTENT(IN)      :: nzeros
-          REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+        INTEGER(C_INT), INTENT(IN)      :: nzeros
+        REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
       END SUBROUTINE acceleratenew
 
-      ! 7. Subroutine to find exact zeros
       SUBROUTINE findExactZeros(i, tL, tR, zeroL, zeroR)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-        INTEGER, INTENT(IN)       :: i
-        REAL(KIND=8), INTENT(IN)  :: tL, tR
-        REAL(KIND=8), INTENT(OUT) :: zeroL, zeroR
+        INTEGER(C_INT), INTENT(IN)       :: i
+        REAL(KIND=C_DOUBLE), INTENT(IN)  :: tL, tR
+        REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
       END SUBROUTINE findExactZeros
 
   END INTERFACE
   ! --- END INTERFACES ---
 
   ! --- Subroutine Outputs/Inputs ---
-  REAL(KIND=8) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
-  REAL(KIND=8) :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
+  REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
 
   
   ! --- Local Variables ---
-  REAL(KIND=8)    :: pi, zeroL, zeroR, zero, aimrerr
-  INTEGER         :: m, n, mOld, mmax, mfirst, accMax, j
-  INTEGER         :: itsacceleration, itsPreAcc
-  INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
-  
+  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr
+  INTEGER               :: m, n, mOld, mmax, mfirst, accMax, j
+  INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
+
+  REAL(KIND=8)          :: pi
+  INTEGER               :: itsacceleration, itsPreAcc
+
   ! FIX 2: funvalue and relerr removed (already defined as dummy args)
-  REAL(KIND=8)  :: kmax, startTKmax, tmax, df, f, finalTP, front, kmaxL, kmaxR, lambda
-  REAL(KIND=8)  :: areaT, area0, area1, areaA, sum, psi, epsilon
-  REAL(KIND=8)  :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
+  REAL(KIND=C_DOUBLE)  :: kmax, startTKmax, tmax, df, f, finalTP, front, kmaxL, kmaxR, lambda
+  REAL(KIND=C_DOUBLE)  :: areaT, area0, area1, areaA, sum, psi, epsilon
+  REAL(KIND=C_DOUBLE)  :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
 
   ! --- Initialization ---
   CpSmall = .TRUE.
@@ -241,7 +249,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
       zeroL =  0.0d00
       zeroR = zero
-      area0 = gaussq(DFintegrand, zeroL, zeroR)
+      CALL gaussq(i, DFintegrand, zeroL, zeroR, area0)
 
       IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
       IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -285,7 +293,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
         zeroR = zero
 
-        sum = gaussq( DFintegrand, zeroL, zeroR)
+        CALL gaussq(i, DFintegrand, zeroL, zeroR, sum)
         area1 = area1 + sum
         
         IF (verbose .EQ. 1) THEN
@@ -349,7 +357,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
         xvec(itsAcceleration + 1) = zeroR
         IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate between:", zeroL, zeroR
 
-        psi = gaussq( DFintegrand, zeroL, zeroR)
+        CALL gaussq(i, DFintegrand, zeroL, zeroR, psi)
         ! psi: area of the latest region
         wvec(itsAcceleration) = psi
         IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi

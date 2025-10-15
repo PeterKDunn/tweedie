@@ -2,6 +2,7 @@
 SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  
   IMPLICIT NONE
 
   ! --- Arguments ---
@@ -36,9 +37,9 @@ SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
 
 
   ! --- Local variables ---
-  INTEGER :: i
-  REAL(C_DOUBLE) :: aimrerr
-  INTEGER :: verbose
+  INTEGER         :: i
+  REAL(C_DOUBLE)  :: aimrerr
+  INTEGER         :: verbose
 
   ! --- Initialization ---
   Cp = p

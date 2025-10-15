@@ -1,15 +1,15 @@
-
 SUBROUTINE findRek(i, t, Rek)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
-  REAL(KIND=8), INTENT(IN)    :: t              ! Input parameter t
-  INTEGER, INTENT(IN)         :: i
-  REAL(KIND=8), INTENT(OUT)   :: Rek            ! Output result (Real part of k(t))
+  REAL(KIND=C_DOUBLE), INTENT(IN)    :: t              ! Input parameter t
+  INTEGER(C_INT), INTENT(IN)         :: i
+  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek            ! Output result (Real part of k(t))
 
-  REAL(KIND=8) :: current_mu, current_phi
-  REAL(KIND=8) :: pi, omega, pindex, front, alpha, tanArg
+  REAL(KIND=C_DOUBLE) :: current_mu, current_phi
+  REAL(KIND=C_DOUBLE) :: pi, omega, pindex, front, alpha, tanArg
   
   ! Grab the relevant scalar values for this iteration:
   current_mu   = Cmu(i)   ! Access mu value for index i

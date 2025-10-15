@@ -1,31 +1,31 @@
-
-FUNCTION gaussq(funcd, a, b) RESULT(integral_result) 
+SUBROUTINE gaussq(i, funcd, a, b, integral_result) 
   USE tweedie_params_mod
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
-  ! Arguments
-  REAL(KIND=8), INTENT(IN)  :: a, b      ! Integration limits
-  
-  ! Function result
-  REAL(KIND=8)              :: integral_result
-  
-  ! Local Variables
-  INTEGER                       :: i
-  REAL(KIND=8)                  :: w, f, x, H
-  REAL(KIND=8), DIMENSION(256)  :: absc, weights  
-  
- ! --- CRITICAL FIX: The funcd argument must be declared C-interoperable ---
-  INTERFACE
-      ! Define the expected signature of the function pointer passed to gaussq.
-      ! It must be a FUNCTION that accepts x and returns a REAL(KIND=8).
-      FUNCTION funcd(x) RESULT(f_result) 
+  ! DECLARATION OF THE FUNCTION POINTER ARGUMENT (using the signature)
+  PROCEDURE(FUNCD_SIGNATURE) :: funcd
 
-        IMPLICIT NONE
-        REAL(KIND=8), INTENT(IN)    :: x
-        REAL(KIND=8)                :: f_result
-      END FUNCTION funcd
+  ! Arguments
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: a, b      ! Integration limits
+  REAL(KIND=C_DOUBLE) , INTENT(OUT) :: integral_result
+  INTEGER(C_INT), INTENT(IN)    :: i
+
+  INTERFACE
+    FUNCTION funcd_signature(i, x) RESULT(f_result)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
+      IMPLICIT NONE
+      INTEGER(C_INT)                    :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
+      REAL(KIND=C_DOUBLE)               :: f_result
+    END FUNCTION funcd_signature
   END INTERFACE
+  
+  INTEGER                       :: j
+  REAL(KIND=C_DOUBLE)           :: w, f, x, H
+  REAL(KIND=C_DOUBLE), DIMENSION(256)  :: absc, weights  
   
   ! --- Abscissae (x) Data (512-pt Gauss-Legendre Quadrature) ---
   ! (Data section is large and remains F77-style at the moment...
@@ -552,13 +552,13 @@ FUNCTION gaussq(funcd, a, b) RESULT(integral_result)
   H = (b - a)
   
   ! Compute
-  DO i = 1, 256
-    x = (H * absc(i)) + (a + b) / 2.0d0
-    w = H * weights(i) 
+  DO j = 1, 256
+    x = (H * absc(j)) + (a + b) / 2.0d0
+    w = H * weights(j) 
     
-    f = funcd(x)
-    
+    CALL fundcd(i, x, f)
+
     integral_result = integral_result + w * f
   END DO
   
-END FUNCTION gaussq
+END SUBROUTINE gaussq

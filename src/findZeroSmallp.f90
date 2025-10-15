@@ -1,17 +1,17 @@
-
 SUBROUTINE findZeroSmallp(i, t, f, df)
   USE tweedie_params_mod
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Variables f and df are the function value and derivative output
-  REAL(KIND=8), INTENT(IN)    :: t
-  INTEGER, INTENT(IN)         :: i
-  REAL(KIND=8), INTENT(OUT)   :: f, df
+  REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
+  INTEGER(C_INT), INTENT(IN)         :: i
+  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
   
   ! --- Local Variables ---
-  REAL(KIND=8) :: Imk, Imdk
-  REAL(KIND=8) :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE) :: Imk, Imdk
+  REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
   
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i

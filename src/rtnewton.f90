@@ -1,26 +1,27 @@
-
 SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
   ! --- INTERFACE: Declaration of the function to be solved (funcd) ---
   INTERFACE
-      SUBROUTINE funcd_signature(i, x, f, df)
+    SUBROUTINE funcd_signature(i, x, f, df)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-        IMPLICIT NONE
-        REAL(KIND=8), INTENT(IN)    :: x
-        INTEGER, INTENT(IN)         :: i
-        REAL(KIND=8), INTENT(OUT)   :: f, df
-      END SUBROUTINE funcd_signature
+      IMPLICIT NONE
+      REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
+      INTEGER(C_INT), INTENT(IN)         :: i
+      REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
+    END SUBROUTINE funcd_signature
   END INTERFACE
   ! --- END INTERFACE ---
 
   PROCEDURE(funcd_signature):: funcd
   
-  REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
-  INTEGER, INTENT(IN)       :: i
+  REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
+  INTEGER(C_INT), INTENT(IN)       :: i
   
   ! Output (Function result)
   REAL(KIND=8)              :: root

@@ -1,13 +1,13 @@
-
 SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
   ! --- Input/Output Declarations (Dummy Arguments) ---
   INTEGER, INTENT(IN)          :: nzeros
-  REAL(KIND=8), INTENT(IN)     :: xvec(200), wvec(200)  
-  REAL(KIND=8), INTENT(INOUT)  :: Mmatrix(2, 200), Nmatrix(2, 200)  
-  REAL(KIND=8), INTENT(OUT)    :: West
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(200), wvec(200)  
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 200), Nmatrix(2, 200)  
+  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
   
   ! --- Local Variables ---
   INTEGER         :: p, maxSize

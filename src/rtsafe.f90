@@ -8,11 +8,12 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
       ! Define the expected signature of the function pointer passed to rtnewton.
       ! Assuming the solved function (funcd) is a SUBROUTINE returning f and df.
       SUBROUTINE funcd_signature(i, x, f, df)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         IMPLICIT NONE
-        REAL(KIND=8), INTENT(IN)    :: x
-        INTEGER, INTENT(IN)         :: i
-        REAL(KIND=8), INTENT(OUT)   :: f, df
+        REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
+        INTEGER(C_INT), INTENT(IN)         :: i
+        REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
         ! The remaining arguments are implicitly accessible through the module
       END SUBROUTINE funcd_signature
   END INTERFACE
@@ -21,11 +22,11 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   PROCEDURE(funcd_signature) :: funcd
  
   ! Inputs
-  REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
-  INTEGER, INTENT(IN)       :: i
+  REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
+  INTEGER(C_INT), INTENT(IN)       :: i
 
   ! Output (Function result)
-  REAL(KIND=8), INTENT(OUT) :: root
+  REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
   
   ! --- Local Variables ---
   

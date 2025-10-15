@@ -1,6 +1,7 @@
 
 SUBROUTINE findImdkZero(i, t, f, df) 
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
@@ -8,30 +9,32 @@ SUBROUTINE findImdkZero(i, t, f, df)
   ! as we are not using MODULEs. This is F90 best practice for clarity.
   INTERFACE
     SUBROUTINE findImkd(i, t, Imdk)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
-      REAL(KIND=8), INTENT(IN)   :: t
-      INTEGER, INTENT(IN)        :: i
-      REAL(KIND=8), INTENT(OUT)  :: Imdk
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imdk
     END SUBROUTINE findImkd
     
     SUBROUTINE findImkdd(i, t, Imddk)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
-      REAL(KIND=8), INTENT(IN)   :: t
-      INTEGER, INTENT(IN)        :: i
-      REAL(KIND=8), INTENT(OUT)  :: Imddk
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imddk
     END SUBROUTINE findImkdd
   END INTERFACE
   
-  REAL(KIND=8), INTENT(IN)     :: t
-  REAL(KIND=8), INTENT(OUT)    :: f, df
-  INTEGER, INTENT(IN)          :: i
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
+  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
+  INTEGER(C_INT), INTENT(IN)          :: i
 
   
   ! Local Variables
-  REAL(KIND=8)  :: Imdk, Imddk
-  REAL(KIND=8)  :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE)  :: Imdk, Imddk
+  REAL(KIND=C_DOUBLE)  :: current_y, current_mu, current_phi
   
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
