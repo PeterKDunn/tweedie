@@ -18,7 +18,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) BIND(C, NAME='DFsm
           USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           
           IMPLICIT NONE  
-          REAL(KIND=C_DOUBLE)                :: findKmaxSP
+          REAL(KIND=C_DOUBLE)         :: findKmaxSP
           INTEGER(C_INT), INTENT(IN)  :: j
       END FUNCTION findKmaxSP
 
