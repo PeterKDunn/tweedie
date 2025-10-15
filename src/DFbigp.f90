@@ -1,8 +1,10 @@
 SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) 
+  USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
   IMPLICIT NONE
+  
 
  ! --- Dummy Arguments, variables passed into the subroutine
   INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
@@ -47,27 +49,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       END SUBROUTINE advanceM
       
       ! 4. Function for the integrand (used by gaussq)
-      FUNCTION DFintegrand(i, t) 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-        INTEGER(C_INT), INTENT(IN)        :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-        REAL(KIND=C_DOUBLE)               :: DFintegrand
-      END FUNCTION DFintegrand
-
+ 
       ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE gaussq(i, funcd, a, b, area)
+      SUBROUTINE gaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
           REAL(KIND=C_DOUBLE) :: area
-          INTERFACE
-            FUNCTION funcd(x)
-              USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-              REAL(KIND=C_DOUBLE)               :: funcd
-              REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-            END FUNCTION funcd
-          END INTERFACE
           REAL(KIND=8), INTENT(IN)        :: a, b
       END SUBROUTINE gaussq
 
@@ -193,7 +180,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
   ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
   ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
-  CALL gaussq(i, DFintegrand, zeroL, zeroR, area0)
+  CALL gaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
   
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -239,7 +226,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
       
       ! CRITICAL: gaussq must be updated to pass these parameters
-      CALL gaussq(i, DFintegrand, zeroL, zeroR, sum)
+      CALL gaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
       IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
 
@@ -303,7 +290,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
 
     ! CRITICAL: gaussq must be updated to pass these parameters
-    CALL gaussq(i, DFintegrand, zeroL, zeroR, psi)
+    CALL gaussq(i, zeroL, zeroR, psi)
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi

@@ -1,31 +1,19 @@
-SUBROUTINE gaussq(i, funcd, a, b, integral_result) 
+SUBROUTINE gaussq(i, a, b, integral_result) 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
+  USE DFintegrand_MOD, ONLY: DFintegrand
+  
   IMPLICIT NONE
   
-  ! DECLARATION OF THE FUNCTION POINTER ARGUMENT (using the signature)
-  PROCEDURE(FUNCD_SIGNATURE) :: funcd
 
   ! Arguments
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: a, b      ! Integration limits
   REAL(KIND=C_DOUBLE) , INTENT(OUT) :: integral_result
-  INTEGER(C_INT), INTENT(IN)    :: i
+  INTEGER(C_INT), INTENT(IN)        :: i
 
-  INTERFACE
-    FUNCTION funcd_signature(i, x) RESULT(f_result)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      INTEGER(C_INT)                    :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-      REAL(KIND=C_DOUBLE)               :: f_result
-    END FUNCTION funcd_signature
-  END INTERFACE
-  
-  INTEGER                       :: j
-  REAL(KIND=C_DOUBLE)           :: w, f, x, H
-  REAL(KIND=C_DOUBLE), DIMENSION(256)  :: absc, weights  
+  INTEGER                               :: j
+  REAL(KIND=C_DOUBLE)                   :: w, f, tt, H
+  REAL(KIND=C_DOUBLE), DIMENSION(256)   :: absc, weights  
   
   ! --- Abscissae (x) Data (512-pt Gauss-Legendre Quadrature) ---
   ! (Data section is large and remains F77-style at the moment...
@@ -553,10 +541,10 @@ SUBROUTINE gaussq(i, funcd, a, b, integral_result)
   
   ! Compute
   DO j = 1, 256
-    x = (H * absc(j)) + (a + b) / 2.0d0
+    tt = (H * absc(j)) + (a + b) / 2.0d0
     w = H * weights(j) 
     
-    CALL fundcd(i, x, f)
+    f = DFintegrand(i, tt)
 
     integral_result = integral_result + w * f
   END DO

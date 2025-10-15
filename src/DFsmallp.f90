@@ -42,29 +42,14 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       END SUBROUTINE advanceM
       
       ! 4. Function for the integrand (used by gaussq)
-      FUNCTION DFintegrand(i, t)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-        INTEGER(C_INT), INTENT(IN)      :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-        REAL(KIND=C_DOUBLE)             :: DFintegrand
-      END FUNCTION DFintegrand
 
       ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE gaussq(i, funcd, a, b, area)
+      SUBROUTINE gaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         INTEGER(C_INT), INTENT(IN)        :: i
         REAL(KIND=C_DOUBLE), INTENT(OUT)  :: area
           
-          INTERFACE
-            FUNCTION funcd(x)
-              USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-              REAL(KIND=C_DOUBLE)              :: funcd
-              REAL(KIND=C_DOUBLE), INTENT(IN)  :: x
-            END FUNCTION funcd
-          END INTERFACE
           REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
       END SUBROUTINE gaussq
 
@@ -249,7 +234,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
       zeroL =  0.0d00
       zeroR = zero
-      CALL gaussq(i, DFintegrand, zeroL, zeroR, area0)
+      CALL gaussq(i, zeroL, zeroR, area0)
 
       IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
       IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -293,7 +278,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
         zeroR = zero
 
-        CALL gaussq(i, DFintegrand, zeroL, zeroR, sum)
+        CALL gaussq(i, zeroL, zeroR, sum)
         area1 = area1 + sum
         
         IF (verbose .EQ. 1) THEN
@@ -357,7 +342,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
         xvec(itsAcceleration + 1) = zeroR
         IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate between:", zeroL, zeroR
 
-        CALL gaussq(i, DFintegrand, zeroL, zeroR, psi)
+        CALL gaussq(i, zeroL, zeroR, psi)
         ! psi: area of the latest region
         wvec(itsAcceleration) = psi
         IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi

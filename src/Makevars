@@ -11,3 +11,9 @@ FFLAGS = $(SHLIB_FFLAGS)
 # but R uses SHLIB_LDADD for Fortran linking.
 # The '-lgfortran' is often necessary to explicitly link the GNU Fortran runtime.
 SHLIB_LDADD = -lgfortran
+
+# --- 3. Explicit Dependency Rule (The missing piece) ---
+# This rule forces the compiler to build the module and the integrator 
+# BEFORE it compiles the file that calls them.
+
+DFbigp.o: DFintegrand.o gaussq.o

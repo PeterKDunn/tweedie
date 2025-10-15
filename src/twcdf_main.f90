@@ -1,5 +1,5 @@
 ! twcdf_main.f90
-SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
+SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -66,4 +66,4 @@ SUBROUTINE twcdf_internal(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
     END IF
   END DO
 
-END SUBROUTINE twcdf_internal
+END SUBROUTINE twcdf_main
