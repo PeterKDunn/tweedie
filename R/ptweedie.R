@@ -228,6 +228,7 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
   y <- q
   cdf <- array( dim = length(y) )
   
+  cat("IN PTWEEDIE.INVERSION\n")
   # Error checks
   if ( power < 1) stop("power must be greater than 1.")
   if ( any(phi <= 0) ) stop("phi must be positive.")
@@ -279,17 +280,17 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
   relerr_scalar     <- as.double(0.0)
   its_scalar        <- as.integer(0)
   
-      tmp <- .Fortran( "twcdf",
-                       as.integer(N),
-                       as.double(power),
-                       as.double(phi[i]),
-                       as.double(y[i]),
-                       as.double(mu[i]),
-                       as.double(0), # funvalue
-                       as.integer(0), # exitstatus
-                       as.double(0), # relerr
-                       as.integer(0)) # its
-      cdf <- tmp[[6]]
+  tmp <- .Fortran( "twcdf",
+                   as.integer(N),
+                   as.double(power),
+                   as.double(phi),
+                   as.double(y),
+                   as.double(mu),
+                   as.double(rep(0, N)), # funvalue
+                   as.integer(0), # exitstatus
+                   as.double(0), # relerr
+                   as.integer(0)) # its
+      cdf <- tmp$funvalue
 
 }
 
