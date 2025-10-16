@@ -1,11 +1,10 @@
-SUBROUTINE findExactZeros(i, xL, xR, xStart, xZero) 
+SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero) 
   USE tweedie_params_mod, ONLY: current_i
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
   IMPLICIT NONE
 
   ! --- Dummy Arguments ---
-  INTEGER(C_INT), INTENT(IN)        :: i
+  INTEGER(C_INT), INTENT(IN)        :: i, m
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: xL, xR, xStart
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: xZero
   
@@ -23,16 +22,18 @@ SUBROUTINE findExactZeros(i, xL, xR, xStart, xZero)
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
     END SUBROUTINE funcd_signature
 
-    FUNCTION rtnewton(funcd, x1, x2, xstart, xacc)
+    SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
-      REAL(KIND=C_DOUBLE) :: rtnewton
+
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
       
       PROCEDURE(funcd_signature) :: funcd
       
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
-    END FUNCTION rtnewton
+    END SUBROUTINE rtnewton
 
     ! 2. The Function being Solved (findImkM)
     ! CRITICAL FIX: Signature reduced to 3 arguments (t, f, df) to match funcd_signature
@@ -49,12 +50,29 @@ SUBROUTINE findExactZeros(i, xL, xR, xStart, xZero)
   ! --- END INTERFACES ---
   
   
+  WRITE(*,*) "findExactZeros: INSIDE"
   ! Set the accuracy
   xacc = 1.0D-12
   
   ! CRITICAL STEP: Set the global context variable 'current_i' before calling the root finder.
   current_i = i
+  WRITE(*,*) "findExactZeros: ABOUT to call RTNEWTON"
   
-  xZero = rtnewton(findImkM, xL, xR, xStart, xacc)
+  CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
+  WRITE(*,*) "findExactZeros: Called RTNEWTON, about to exit findExactZeros"
+  
+  CONTAINS 
+  
+    ! Define the wrapper subroutine
+    SUBROUTINE findImkM_wrapper(i, x, f, df)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  
+      INTEGER(C_INT), INTENT(IN)  :: i
+      REAL(C_DOUBLE), INTENT(IN)  :: x
+      REAL(C_DOUBLE), INTENT(OUT) :: f, df
+     
+      CALL findImkM(i, x, f, df, m) ! Pass the captured 'm' value
+    END SUBROUTINE findImkM_wrapper
+
   
 END SUBROUTINE findExactZeros

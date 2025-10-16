@@ -1,4 +1,4 @@
-REAL(KIND=C_DOUBLE) FUNCTION findImkM(i, t, m) RESULT(ImkM_out) 
+SUBROUTINE findImkM(i, t, m, ImkM_out)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -21,6 +21,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findImkM(i, t, m) RESULT(ImkM_out)
   REAL(KIND=C_DOUBLE), INTENT(IN) :: t
   REAL(KIND=C_DOUBLE)             :: pi, Imk_val
   INTEGER(C_INT), INTENT(IN)      :: m, i
+  REAL(FIND=C_DOUBLE)             :: ImkM_out
 
   pi = 4.0D0 * DATAN(1.0D0)
 
@@ -28,4 +29,4 @@ REAL(KIND=C_DOUBLE) FUNCTION findImkM(i, t, m) RESULT(ImkM_out)
   
   ImkM_out = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
 
-END FUNCTION findImkM
+END SUBROUTINE findImkM

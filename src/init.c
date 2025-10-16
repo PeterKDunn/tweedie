@@ -3,31 +3,24 @@
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-/* Forward declaration for the ONLY top-level routine called by R. */
-// This must match the BIND(C, NAME='twcdf') signature (9 arguments).
-extern void twcdf(
-    int *N, 
-    double *power, 
-    double *phi, 
-    double *y, 
-    double *mu, 
-    double *cdf_out, 
-    int *exitstatus, 
-    double *relerr, 
-    int *its
-); 
+/* Forward declarations for the Fortran subroutines (11 arguments) */
+void twcdf(void*, void*, void*, void*, void*, void*, void*, 
+              void*, void*, void*);
+void twpdf(void*, void*, void*, void*, void*, void*, void*, 
+              void*, void*, void*, void*);
 
-/* Registering ONLY the top-level R entry point. */
-// Internal routines (DFbigp, DFsmallp, rtnewton, etc.) will be resolved dynamically.
+/* List of Fortran routines callable from R */
 static const R_FortranMethodDef FortranEntries[] = {
-  // Top-level R entry point (9 arguments)
-  {"twcdf", (DL_FUNC) &twcdf, 9}, 
+  {"twcdf", (DL_FUNC) twcdf, 9}, 
+  {"twpdf", (DL_FUNC) twpdf, 10},
   {NULL, NULL, 0}
 };
 
+/* The main initialization entry point R looks for */
 void R_init_tweedie(DllInfo *dll)
 {
-  R_registerRoutines(dll, NULL, NULL, FortranEntries, NULL);
-  // CRITICAL: Ensure dynamic symbol resolution is possible for internal calls.
-  R_useDynamicSymbols(dll, FALSE); 
+  // The 5 expected lists are: C, Call, Fortran, External.
+  // DllInfo is the first argument, so 4 more are expected.
+  // The final call MUST have only 5 lists (1 DllInfo + 4 routine lists).
+  R_registerRoutines(dll, NULL, NULL, FortranEntries, NULL); 
 }

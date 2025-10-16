@@ -1,7 +1,7 @@
-SUBROUTINE gaussq(i, a, b, integral_result) 
+SUBROUTINE PDFgaussq(i, a, b, integral_result) 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  USE DFintegrand_MOD, ONLY: DFintegrand
+  USE PDFintegrand_MOD, ONLY: PDFintegrand
   
   IMPLICIT NONE
   
@@ -544,9 +544,9 @@ SUBROUTINE gaussq(i, a, b, integral_result)
     tt = (H * absc(j)) + (a + b) / 2.0d0
     w = H * weights(j) 
     
-    f = DFintegrand(i, tt)
+    f = PDFintegrand(i, tt)
 
     integral_result = integral_result + w * f
   END DO
   
-END SUBROUTINE gaussq
+END SUBROUTINE PDFgaussq

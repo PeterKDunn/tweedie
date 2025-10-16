@@ -1,9 +1,9 @@
-MODULE DFintegrand_MOD
+MODULE PDFintegrand_MOD
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
   
 CONTAINS
-  FUNCTION DFintegrand(i, t) RESULT(integrand_result)  BIND(C, NAME='dfintegrand')
+  FUNCTION PDFintegrand(i, t) RESULT(integrand_result)  BIND(C, NAME='pdfintegrand')
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -58,9 +58,9 @@ CONTAINS
       CALL findImk(i, t, Imk)
       CALL findRek(i, t, Rek) ! Note: Cy passed to findRek
       
-      integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
+      integrand_result = DEXP( Rek ) * DSIN( Imk )
   
     END IF
     
-  END FUNCTION DFintegrand
-END MODULE DFintegrand_MOD
+  END FUNCTION PDFintegrand
+END MODULE PDFintegrand_MOD

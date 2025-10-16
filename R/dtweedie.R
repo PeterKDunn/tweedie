@@ -5415,6 +5415,7 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
       
       if ( use.method == 2 ) {
         tmp <- .Fortran( "twpdf",
+                         as.integer(N),
                          as.double(power),
                          as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
                          as.double(y[i] / mu[i]), # y
@@ -5434,10 +5435,11 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
       } else {
         if ( use.method == 1 ) {
           tmp <- .Fortran( "twpdf",
+                           as.integer(N),
                            as.double(power),
                            as.double(phi[i]), # phi
                            as.double(y[i]), # y
-                           as.double(1), # mu
+                           as.double(1), # mu = 1 for PDF
                            as.integer( exact ), #exact as an integer
                            as.integer( verbose ), #verbose as an integer
                              # NOW WHAT FOLLOWS ARE THE OUTPUTS:
@@ -5452,6 +5454,7 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
           
         } else { # use.method == 3
           tmp <- .Fortran( "twpdf",
+                           as.integre(N),
                            as.double(power),
                            as.double(phi[i] / (y[i] ^ (2 - power))), # phi
                            as.double(1), # y

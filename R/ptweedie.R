@@ -10,7 +10,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL) {
   # Created: 01 May 2001
   # Last edit: 16 Sep 2025
 
-    
+cat(">> ptweedie: GOT THIS FAR\n")    
   # SORT OUT THE NOTATION (i.e., xi VS power)
   out <- sort_Notation(xi = xi, 
                        power = power)
@@ -49,6 +49,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL) {
     # When y/q is very small, the function should return 0.
     # Sometimes it fails (when *very* small...).
     # This adjustment is made in ptweedie.inversion()
+    cat(">> ptweedie: GOT THIS FAR2\n")    
     f <- ptweedie.inversion(power = power, 
                             mu = mu, 
                             q = y, 
@@ -289,7 +290,8 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
                    as.double(rep(0, N)), # funvalue
                    as.integer(0), # exitstatus
                    as.double(0), # relerr
-                   as.integer(0)) # its
+                   as.integer(0), # its
+                   PACKAGE = "tweedie")
       cdf <- tmp$funvalue
 
 }

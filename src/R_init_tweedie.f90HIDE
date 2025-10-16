@@ -1,0 +1,11 @@
+! Add this to a Fortran source file
+SUBROUTINE R_init_tweedie(dll) BIND(C, name='R_init_tweedie')
+USE ISO_C_BINDING, ONLY: C_PTR
+IMPLICIT NONE
+TYPE(C_PTR), INTENT(INOUT) :: dll
+
+! Define a dummy entry point to satisfy R's linker
+  ! The list of routines is usually registered here in C, 
+  ! but Fortran just needs the function to exist.
+  
+END SUBROUTINE R_init_tweedie

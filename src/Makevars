@@ -1,19 +1,16 @@
-# This file instructs R on how to compile and link Fortran source files.
-# --- 1. Fortran 90/95 Compilation ---
-# Compile all Fortran source files in the current directory, including F90 files.
-# The SHLIB_FFLAGS variable is standard for R packages using Fortran.
-FFLAGS = $(SHLIB_FFLAGS)
+FFLAGS = $(SHLIB_FFLAGS)   
+# --- 4. Fortran Dependency Rules (Keep) ---
 
-# --- 2. Linker Instructions (Crucial for F90 Modules) ---
-# When using Fortran 90/95 modules (like your USE statements), you must usethe $(SHLIB_LDADD) 
-# variable to ensure the object files are correctly
-# included in the final shared library link step.LDFLAGS is for C/C++ linking, 
-# but R uses SHLIB_LDADD for Fortran linking.
-# The '-lgfortran' is often necessary to explicitly link the GNU Fortran runtime.
-SHLIB_LDADD = -lgfortran
+.PHONY: all
+all: $(SHLIB)
 
-# --- 3. Explicit Dependency Rule (The missing piece) ---
-# This rule forces the compiler to build the module and the integrator 
-# BEFORE it compiles the file that calls them.
-
-DFbigp.o: DFintegrand.o gaussq.o
+twpdf.o: PDFsmallp.o PDFbigp.o
+twcdf.o: DFsmallp.o DFbigp.o
+PDFgaussq.o: pdfintegrand_mod.mod
+pdfintegrand_mod.mod: PDFintegrand.f90
+	$(FC) $(FFLAGS) -c $< -o $@
+DFgaussq.o: dfintegrand_mod.mod
+dfintegrand_mod.mod: DFintegrand.f90
+	$(FC) $(FFLAGS) -c $< -o $@
+PDFbigp.o: PDFintegrand.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o  PDFgaussq.o
+DFbigp.o: DFintegrand.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o DFgaussq.o rtnewton.o rtsafe.o

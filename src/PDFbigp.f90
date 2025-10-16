@@ -1,11 +1,12 @@
-SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) 
-  USE DFintegrand_MOD, ONLY: DFintegrand
+SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose) 
+  USE PDFintegrand_MOD, ONLY: PDFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
   IMPLICIT NONE
   
  ! --- Dummy Arguments, variables passed into the subroutine
+  INTEGER(C_INT), INTENT(IN)                      :: exact          ! Exact zeros?
   INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
   INTEGER(C_INT), INTENT(IN)                      :: verbose        ! Assuming IN for verbosity flag
   INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
@@ -50,12 +51,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       ! 4. Function for the integrand (used by gaussq)
  
       ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE DFgaussq(i, a, b, area)
+      SUBROUTINE PDFgaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
           REAL(KIND=C_DOUBLE) :: area
           REAL(KIND=8), INTENT(IN)        :: a, b
-      END SUBROUTINE DFgaussq
+      END SUBROUTINE PDFgaussq
 
       ! 6. Subroutine for acceleration
       SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
@@ -92,8 +93,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   CpSmall = .FALSE.
   pi = 4.0D0 * DATAN(1.0D0)
   aimrerr = 1.0D-12
-  mOld = 0
-  m = 0
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -101,13 +100,13 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   current_phi  = Cphi(i)  ! Access phi value for index i
  
   IF (verbose .EQ. 1) WRITE(*,*) " FOR p > 2"
-    
-    exitstatus = 0
-    relerr = 1.0_8
-    convergence = 0
-    epsilon = 1.0d-12
-    
-    ! --- Find kmax, tmax, mmax ---
+  
+  exitstatus = 0
+  relerr = 1.0_8
+  convergence = 0
+  epsilon = 1.0d-12
+  
+  ! --- Find kmax, tmax, mmax ---
     IF (Cy(i) .GE. Cmu(i)) THEN
       IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
       
@@ -121,36 +120,37 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       zeroStartPoint = pi / current_y
       leftOfMax = 0
     ELSE
-      IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
+    IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
     
-      ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-      startTKmax = findKmaxSP(i)
+    ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+    startTKmax = findKmaxSP(i)
 
-      IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
-      CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
-    
-      IF (verbose .EQ. 1) THEN
-        WRITE(*,*) "** Found(b): kmax =", kmax
-        WRITE(*,*) "             tmax =", tmax
-        WRITE(*,*) "             mmax =", mmax
-      END IF
-    
-      leftOfMax = 1
-      IF (mmax .EQ. 0) THEN
-        mfirst = 0
-        mOld = 0
-        zeroStartPoint = tmax + pi/Cy(i)
-        leftOfMax = 0
-      ELSE
-        mfirst = 1
-        mOld = 0
-        zeroStartPoint = pi / (current_mu -current_y)
-        mOld = m
+    IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
   
-        ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-  
-      END IF
+    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+    
+    IF (verbose .EQ. 1) THEN
+      WRITE(*,*) "** Found(b): kmax =", kmax
+      WRITE(*,*) "             tmax =", tmax
+      WRITE(*,*) "             mmax =", mmax
+    END IF
+    
+    leftOfMax = 1
+    IF (mmax .EQ. 0) THEN
+      mfirst = 0
+      mOld = 0
+      zeroStartPoint = tmax + pi/Cy(i)
+      leftOfMax = 0
+    ELSE
+      mfirst = 1
+      mOld = 0
+      zeroStartPoint = pi / (current_mu -current_y)
+      mOld = m
+
+      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
+
+    END IF
   END IF
   
   IF (verbose .EQ. 1) THEN
@@ -173,16 +173,14 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
   m = mfirst ! This line caused the error; now fixed by INOUT
   ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-  WRITE(*,*) "DFbigp: ABOUT TO CALL findExactZeros"
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-  WRITE(*,*) "DFbigp: END CALL findExactZeros"
   zeroL = 0.0_8
   zeroR = zero
 
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
   ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
   ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
-  CALL DFgaussq(i, zeroL, zeroR, area0)
+  CALL PDFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
   
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -228,7 +226,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
       
       ! CRITICAL: gaussq must be updated to pass these parameters
-      CALL DFgaussq(i, zeroL, zeroR, sum)
+      CALL PDFgaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
       IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
 
@@ -292,7 +290,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
 
     ! CRITICAL: gaussq must be updated to pass these parameters
-    CALL DFgaussq(i, zeroL, zeroR, psi)
+    CALL PDFgaussq(i, zeroL, zeroR, psi)
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
@@ -352,5 +350,5 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   
   RETURN
 
-END SUBROUTINE DFbigp
+END SUBROUTINE PDFbigp
 

@@ -124,12 +124,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
     ELSE
       ! Cy < Cmu and p > 2
 
-      CALL rtnewton(i, findImdkZero,         &
-                      0.00d00,               &
-                      startPoint * 30.0d00,  & 
-                      startPoint,            &
-                      aimrerr,               &
-                      tmax)
+      CALL rtnewton(i, findImdkZero, 0.00d0, startPoint * 30.0d0, startPoint, aimrerr, tmax)
       ! funcd returns the fn value, and derivative value
 
       ! Find kmax, mmax

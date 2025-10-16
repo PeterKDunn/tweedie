@@ -1,9 +1,10 @@
-SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) 
+SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose) 
   USE tweedie_params_mod
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
+  INTEGER(C_INT), INTENT(IN)                      :: exact          ! Exact zeros?
   INTEGER, INTENT(IN)                      :: i              ! Observation index
   INTEGER, INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
   INTEGER, INTENT(OUT)                     :: exitstatus     ! Output status
@@ -44,14 +45,14 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       ! 4. Function for the integrand (used by gaussq)
 
       ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE DFgaussq(i, a, b, area)
+      SUBROUTINE PDFgaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         INTEGER(C_INT), INTENT(IN)        :: i
         REAL(KIND=C_DOUBLE), INTENT(OUT)  :: area
           
           REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
-      END SUBROUTINE DFgaussq
+      END SUBROUTINE PDFgaussq
 
       SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -120,8 +121,6 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     epsilon = 1.0d-16
     aimrerr = 1.0d-14
     convergence = 0
-    mOld = 0
-    m = 0
 
     ! FIND kmax, tmax, mmax
     IF (Cy(i) .GE. Cmu(i)) THEN
@@ -148,12 +147,9 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       
         ! Sometimes, important to spend some getting a good starting point and bounds.  
         CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+
         startTKmax =  (kmaxL + kmaxR) / 2.0d0
       
-        IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
-        CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
-          !  WAS:            CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
-
         leftOfMax = 1
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
@@ -169,6 +165,9 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
         END IF
+        IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
+          CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+          !  WAS:            CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
 
         IF (verbose .EQ. 1) THEN
           WRITE(*,*) "** Found(b): kmax =", kmax
@@ -236,7 +235,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
       zeroL =  0.0d00
       zeroR = zero
-      CALL DFgaussq(i, zeroL, zeroR, area0)
+      CALL PDFgaussq(i, zeroL, zeroR, area0)
 
       IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
       IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -280,7 +279,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
         zeroR = zero
 
-        CALL DFgaussq(i, zeroL, zeroR, sum)
+        CALL PDFgaussq(i, zeroL, zeroR, sum)
         area1 = area1 + sum
         
         IF (verbose .EQ. 1) THEN
@@ -344,7 +343,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
         xvec(itsAcceleration + 1) = zeroR
         IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate between:", zeroL, zeroR
 
-        CALL DFgaussq(i, zeroL, zeroR, psi)
+        CALL PDFgaussq(i, zeroL, zeroR, psi)
         ! psi: area of the latest region
         wvec(itsAcceleration) = psi
         IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
@@ -406,4 +405,4 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
         WRITE(*,*) funvalue(i), exitstatus, relerr
       END IF
     
-END SUBROUTINE DFsmallp
+END SUBROUTINE PDFsmallp

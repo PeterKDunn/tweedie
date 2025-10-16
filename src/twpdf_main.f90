@@ -1,4 +1,4 @@
-SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
+SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -7,6 +7,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Arguments ---
   INTEGER(C_INT), INTENT(IN) :: N
   REAL(C_DOUBLE), INTENT(IN) :: p
+  INTEGER(C_INT), INTENT(IN)  :: exact
   REAL(C_DOUBLE), INTENT(IN) :: phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT):: funvalue(N)
   INTEGER(C_INT), INTENT(OUT):: exitstatus, its
@@ -14,23 +15,23 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
 
     ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
     INTERFACE
-        SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
+        SUBROUTINE PDFbigp(i, funvalue, exitstatus, relerr, verbose)
             IMPLICIT NONE
             INTEGER, INTENT(IN)                       :: i
             REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
             INTEGER, INTENT(OUT)                      :: exitstatus
             REAL(KIND=8), INTENT(OUT)                 :: relerr
             INTEGER, INTENT(IN)                       :: verbose
-        END SUBROUTINE DFbigp
+        END SUBROUTINE PDFbigp
 
-        SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
+        SUBROUTINE PDFsmallp(i, funvalue, exitstatus, relerr, verbose)
             IMPLICIT NONE
             INTEGER, INTENT(IN)                       :: i
             REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
             INTEGER, INTENT(OUT)                      :: exitstatus
             REAL(KIND=8), INTENT(OUT)                 :: relerr
             INTEGER, INTENT(IN)                       :: verbose
-        END SUBROUTINE DFsmallp
+        END SUBROUTINE PDFsmallp
     END INTERFACE
     ! -----------------------------------------------
 
@@ -59,10 +60,11 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Loop over N ---
   DO i = 1, N
     IF (CpSmall) THEN
-      CALL DFsmallp(i, funvalue, exitstatus, relerr, verbose)
+      CALL PDFsmallp(i, funvalue, exitstatus, relerr, verbose)
     ELSE
-      CALL DFbigp(i, funvalue, exitstatus, relerr, verbose)
+      CALL PDFbigp(i, funvalue, exitstatus, relerr, verbose)
     END IF
   END DO
 
-END SUBROUTINE twcdf_main
+END SUBROUTINE twpdf_main
+

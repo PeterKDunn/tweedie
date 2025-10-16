@@ -2028,4 +2028,129 @@
       end
 
 ******************************************************************
+*******************************************************************
+      subroutine findsp( p, mu, phi, y, lowerb, upperb, 
+     &                   flo, fhi )
+
+*     Determines a lower and upper bound for the first zero
+*     in the density, conditional trick.
+***
+*     IN:  p, mu, phi, y
+*     OUT: lowerb, upperb, flo, fhi
+***
+      double precision p, mu, phi, y, lowerb, upperb, pi,
+     &          calclambda, lambda, t, told, f1, f2,
+     &          zerofn, t3, f3, othzero, rl, im,
+     &          wt1, wt2, tstep, flo, fhi
+      external calclambda
+
+      pi = dacos( -1.0d00 )
+
+***SURELY can improve when y is small, when t gets large.  This
+*  routine takes a long time to find the zero.
+
+*     We look at two points of interest.  We have the integrand as
+*        dexp( rek ) * dcos( imk ) - dexp( -lambda ) * dcos(t*y)  
+*
+*     For possible zeros, we look at the first zero of each of the
+*     two parts of the function.
+
+*     FIRST, the first zero of the second part of the function, because
+*     that's easy:   dexp( -lambda ) * dcos(t*y)
+
+***NECESSARY??? (see later also)
+      told = 1.0d-02
+
+      mu = 1.0d00
+      t = pi / y
+      f2 = zerofn( p, phi, y, t )
+*      print *,'First option: ',t, f2
+
+*     SECOND, we now examine the first part of the function for it's
+*     first zero.  This is much trickier.
+
+*     We look at the sign of the zeroing function at the turning
+*     points and the zeros of the  dsin(t*y)  part.
+
+      f1 = zerofn( p, phi, y, told )
+      f2 = zerofn( p, phi, y, t )
+*      print *,'f1, zerodfn(0) are: ',f1, zerodfn(p,phi,y,mu,0.0d00)
+*AAAAAAAAAAAAAAA
+***IT looks to me like  told  is here just to establish the sign of the
+*  derivative as we start.  So can we just evaluate  zerodfn() at x=0???
+
+*Well, it appears that  f1  and  zerodfn(..., 0) gives the same sign.
+*But I'm not sure it reads any easier.
+      call kt(p, phi, y, mu, t, rl, im)
+      wt1 = dexp( rl )
+
+      t3 = othzero( p, phi, y )
+
+*     So our two candidate values so far are   t  and  t3.
+
+      f3 = zerofn( p, phi, y, t3 )
+
+      lambda = calclambda(p, phi, mu)
+      wt2 = dexp( -lambda )
+
+*     Now we pick the smaller.  It may not be brilliant, but it the only
+*     way to guarantee we won't miss the first zero.  The larger one may
+*     give a smaller function value, but may be waaaayyy past the first zero.
+
+*      print *,'CANDIDATES:  ', t, t3
+      t = min( t, t3 )
+      f2 = zerofn( p, phi, y, t )
+      tstep = 0.2d00 * t
+
+ 100  if ( ( f1 * f2 ) .GT. 0.0d00 ) then
+
+         told = t
+         t = told + tstep
+
+         f1 = f2
+         f2 = zerofn( p, phi, y, t )
+*      print *,'f1*f2 = ',f1*f2
+
+          goto 100
+
+      endif
+
+      lowerb = told
+      upperb = t
+
+      flo = f1
+      fhi = f2
+
+      return
+      end
+
+*******************************************************************
+*******************************************************************
+      double precision function zerofn( p, phi, y, x )
+
+*     This evaluates the function we are trying to find the zeros
+*     of in finding the conditional density.
+
+*     IN:  p, phi, y, x
+*     OUT: zerofn
+      double precision  p, mu, phi, y, rl, im, calclambda,
+     &                  lambda, x
+
+*     When calculating the density, we always have mu=1
+      mu = 1.0d00
+      call kt(p, phi, y, mu, x, rl, im)
+      
+      lambda = calclambda( p, phi, mu )
+
+       zerofn = dexp( rl ) * dcos( im )  -
+     &         dexp( -lambda ) * dcos( x*y )
+
+*      print *,'p, phi, y, mu, lambda, im, rl, fn1, fn2'
+*      print *,p, phi, y, mu, lambda, im, rl, dexp( rl ) * dsin( im ),
+*     &        dexp( -lambda ) * dsin( x*y ), zerofn
+
+      return
+      end
+
+*****************************************************************
 
