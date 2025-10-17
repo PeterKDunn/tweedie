@@ -4,7 +4,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)                      :: exact          ! Exact zeros?
+  INTEGER(C_INT), INTENT(IN)               :: exact          ! Exact zeros?
   INTEGER, INTENT(IN)                      :: i              ! Observation index
   INTEGER, INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
   INTEGER, INTENT(OUT)                     :: exitstatus     ! Output status
@@ -102,6 +102,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   relerr = 0.0_8 
   epsilon = 1.0_8 / 10.0_8**16 ! 1.0d-16
   aimrerr = 1.0_8 / 10.0_8**14 ! 1.0d-14
+  m = 0
 
   IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
     ! Initialise the M and N matrices, x and w vectors

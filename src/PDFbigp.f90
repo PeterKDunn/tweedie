@@ -93,7 +93,8 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
   CpSmall = .FALSE.
   pi = 4.0D0 * DATAN(1.0D0)
   aimrerr = 1.0D-12
-
+  m = 0
+  
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i

@@ -14,63 +14,53 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
    ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
-      ! 1. Function to find Kmax special point
-      FUNCTION findKmaxSP(j) 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+    FUNCTION findKmaxSP(j) 
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      IMPLICIT NONE  
+      REAL(KIND=8)          :: findKmaxSP
+      INTEGER, INTENT(IN)   :: j
+    END FUNCTION findKmaxSP
 
-          IMPLICIT NONE  
-          REAL(KIND=8)          :: findKmaxSP
-          INTEGER, INTENT(IN)   :: j
-      END FUNCTION findKmaxSP
 
-      ! 2. Subroutine to find Kmax and related indices
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-        
-        IMPLICIT NONE
-        INTEGER, INTENT(IN)         :: j
-        INTEGER(C_INT), INTENT(OUT) :: mfirst, mmax
-          
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-          REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax
-      END SUBROUTINE findKmax
+    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      IMPLICIT NONE
+      INTEGER, INTENT(IN)               :: j
+      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax
+    END SUBROUTINE findKmax
 
       ! 3. Subroutine to advance the iteration index m
-      SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-          INTEGER, INTENT(IN)             :: j
-          INTEGER(C_INT), INTENT(IN)      :: mmax
-          INTEGER(C_INT), INTENT(INOUT)   :: m_index
-          INTEGER(C_INT), INTENT(OUT)     :: mOld
-          INTEGER(C_INT), INTENT(INOUT)   :: leftOfMax
-          INTEGER(C_INT), INTENT(OUT)     :: flip
-      END SUBROUTINE advanceM
+    SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER, INTENT(IN)             :: j
+      INTEGER(C_INT), INTENT(IN)      :: mmax
+      INTEGER(C_INT), INTENT(INOUT)   :: m_index
+      INTEGER(C_INT), INTENT(OUT)     :: mOld
+      INTEGER(C_INT), INTENT(INOUT)   :: leftOfMax
+      INTEGER(C_INT), INTENT(OUT)     :: flip
+    END SUBROUTINE advanceM
       
-      ! 4. Function for the integrand (used by gaussq)
- 
-      ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE DFgaussq(i, a, b, area)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          REAL(KIND=C_DOUBLE) :: area
-          REAL(KIND=8), INTENT(IN)        :: a, b
-      END SUBROUTINE DFgaussq
+    SUBROUTINE DFgaussq(i, a, b, area)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      REAL(KIND=C_DOUBLE)             :: area
+      REAL(KIND=8), INTENT(IN)        :: a, b
+    END SUBROUTINE DFgaussq
 
-      ! 6. Subroutine for acceleration
-      SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
 
-        INTEGER, INTENT(IN)      :: nzeros
-        REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
-      END SUBROUTINE acceleratenew
+    SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
+      INTEGER, INTENT(IN)      :: nzeros
+      REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+    END SUBROUTINE acceleratenew
 
-      ! 7. Subroutine to find exact zeros
-      SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
 
-        INTEGER, INTENT(IN)         :: i, m
-        REAL(KIND=8), INTENT(IN)    :: tL, tR
-        REAL(KIND=8), INTENT(OUT)   :: zeroL, zeroR
-      END SUBROUTINE findExactZeros
+    SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
+      INTEGER, INTENT(IN)         :: i, m
+      REAL(KIND=8), INTENT(IN)    :: tL, tR
+      REAL(KIND=8), INTENT(OUT)   :: zeroL, zeroR
+    END SUBROUTINE findExactZeros
 
   END INTERFACE
   ! --- END INTERFACES ---
@@ -78,7 +68,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)  :: mmax, mfirst, mOld, accMax
   INTEGER         :: itsAcceleration, itsPreAcc, m
-  INTEGER      :: leftOfMax, flip, convergence, stopPreAccelerate
+  INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
   REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
@@ -89,7 +79,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   
 
   ! --- Initialization ---
-  CpSmall = .FALSE.
   pi = 4.0D0 * DATAN(1.0D0)
   aimrerr = 1.0D-12
   mOld = 0

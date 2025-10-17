@@ -5344,18 +5344,19 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
     if ( !(method %in% c(1, 2, 3)) ) stop("method must be 1, 2 or 3 (or left empty).")
   }
   
-  y.len <- length(y)
+  N <- length(y)
   density <- y
   its <- y
   verbose <- FALSE
   
   if ( is.null(method)){
-    method <- array( dim = length(y))
+    method <- array( dim = N)
   } else {
-    method <- array( method, dim = length(y))
+    method <- array( method, 
+                     dim = N)
   }
   
-  for (i in (1:y.len)) {
+  for (i in (1:N)) {
     
     # There are three approaches, each a product of a simple bit
     # and a complicated bit computed in FORTRAN
@@ -5418,16 +5419,16 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
                          as.integer(N),
                          as.double(power),
                          as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
-                         as.double(y[i] / mu[i]), # y
-                         as.double(1), # mu
-                         as.integer( exact ), #exact as an integer
-                         as.integer( verbose ), #verbose as an integer
-                           # NOW WHAT FOLLOWS ARE THE OUTPUTS:
-                         as.double(0), # funvalue
-                         as.integer(0), # exitstatus
-                         as.double(0), # relerr
-                         as.integer(0), # its
-                         PACKAGE="tweedie")
+                         as.double(y[i] / mu[i]),            # y
+                         as.double(1),                       # mu
+                         as.integer( exact ),                # exact as an integer
+                         as.integer( verbose ),              # verbose as an integer
+                           # THE OUTPUTS:
+                         as.double(0),                       # funvalue
+                         as.integer(0),                      # exitstatus
+                         as.double(0),                       # relerr
+                         as.integer(0),                      # its
+                         PACKAGE = "tweedie")
         
         den <- tmp[[7]]
         density[i] <- den * m2
@@ -5437,36 +5438,36 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
           tmp <- .Fortran( "twpdf",
                            as.integer(N),
                            as.double(power),
-                           as.double(phi[i]), # phi
-                           as.double(y[i]), # y
-                           as.double(1), # mu = 1 for PDF
-                           as.integer( exact ), #exact as an integer
-                           as.integer( verbose ), #verbose as an integer
-                             # NOW WHAT FOLLOWS ARE THE OUTPUTS:
-                           as.double(0), # funvalue
-                           as.integer(0), # exitstatus
-                           as.double(0), # relerr
-                           as.integer(0), # its
-                           PACKAGE="tweedie")
+                           as.double(phi[i]),      # phi
+                           as.double(y[i]),        # y
+                           as.double(1),           # mu = 1 for PDF
+                           as.integer( exact ),    # exact as an integer
+                           as.integer( verbose ),  # verbose as an integer
+                             # THE OUTPUTS:
+                           as.double(0),           # funvalue
+                           as.integer(0),          # exitstatus
+                           as.double(0),           # relerr
+                           as.integer(0),          # its
+                           PACKAGE = "tweedie")
           
           den <- tmp[[7]]
           density[i] <- den * m1
           
         } else { # use.method == 3
           tmp <- .Fortran( "twpdf",
-                           as.integre(N),
+                           as.integer(N),
                            as.double(power),
                            as.double(phi[i] / (y[i] ^ (2 - power))), # phi
-                           as.double(1), # y
-                           as.double(1), # mu
-                           as.integer( exact ), #exact as an integer
-                           as.integer( verbose ), #verbose as an integer
-                              # NOW WHAT FOLLOWS ARE THE OUTPUTS:
-                           as.double(0), # funvalue
-                           as.integer(0), # exitstatus
-                           as.double(0), # relerr
-                           as.integer(0), # its
-                           PACKAGE="tweedie")
+                           as.double(1),          # y
+                           as.double(1),          # mu
+                           as.integer( exact ),   # exact as an integer
+                           as.integer( verbose ), # verbose as an integer
+                              # THE OUTPUTS:
+                           as.double(0),          # funvalue
+                           as.integer(0),         # exitstatus
+                           as.double(0),          # relerr
+                           as.integer(0),         # its
+                           PACKAGE = "tweedie")
           
           den <- tmp[[7]]
           density[i] <- den * m3

@@ -4,69 +4,60 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER, INTENT(IN)                      :: i              ! Observation index
-  INTEGER, INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
-  INTEGER, INTENT(OUT)                     :: exitstatus     ! Output status
-  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
-  REAL(KIND=8), INTENT(OUT)                :: relerr ! The final computed result and relative error
+  INTEGER, INTENT(IN)                      :: i               ! Observation index
+  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue        ! The final computed result and relative error
+  INTEGER, INTENT(OUT)                     :: exitstatus      ! Output status
+  REAL(KIND=8), INTENT(OUT)                :: relerr          ! The final computed result and relative error
+  INTEGER, INTENT(INOUT)                   :: verbose         ! Assuming INOUT/IN for verbosity flag
 
    ! --- INTERFACES: All C-bound routines called by DFsmallp:
   INTERFACE
-      ! 1. Function to find Kmax special point
-      FUNCTION findKmaxSP(j)
+    FUNCTION findKmaxSP(j)
+      IMPLICIT NONE  
+      REAL(KIND=8)          :: findKmaxSP
+      INTEGER, INTENT(IN)   :: j
+    END FUNCTION findKmaxSP
 
-        IMPLICIT NONE  
-        REAL(KIND=8)         :: findKmaxSP
-        INTEGER, INTENT(IN)  :: j
-      END FUNCTION findKmaxSP
 
-      ! 2. Subroutine to find Kmax and related indices
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
+    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN)         :: j
+      INTEGER, INTENT(OUT)        :: mfirst, mmax
+      REAL(KIND=8), INTENT(OUT)   :: kmax, tmax
+      REAL(KIND=8), INTENT(IN)    :: startTKmax
+    END SUBROUTINE findKmax
 
-        IMPLICIT NONE
-        INTEGER, INTENT(IN)   :: j
-        INTEGER, INTENT(OUT)  :: mfirst, mmax
-          
-        REAL(KIND=8), INTENT(OUT) :: kmax, tmax
-        REAL(KIND=8), INTENT(IN)  :: startTKmax
-      END SUBROUTINE findKmax
 
-      ! 3. Subroutine to advance the iteration index m
-      SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
-
-        INTEGER, INTENT(IN)      :: j, mmax
-        INTEGER, INTENT(INOUT)   :: m_index
-        INTEGER, INTENT(OUT)     :: mOld
-        INTEGER, INTENT(INOUT)   :: leftOfMax
-        INTEGER, INTENT(OUT)     :: flip
-      END SUBROUTINE advanceM
+    SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
+      INTEGER, INTENT(IN)       :: j, mmax
+      INTEGER, INTENT(INOUT)    :: m_index
+      INTEGER, INTENT(OUT)      :: mOld
+      INTEGER, INTENT(INOUT)    :: leftOfMax
+      INTEGER, INTENT(OUT)      :: flip
+    END SUBROUTINE advanceM
       
-      ! 4. Function for the integrand (used by gaussq)
 
-      ! 5. Function for Gaussian Quadrature integration
-      SUBROUTINE DFgaussq(i, a, b, area)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+    SUBROUTINE DFgaussq(i, a, b, area)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)          :: i
+      REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: a, b
+    END SUBROUTINE DFgaussq
 
-        INTEGER(C_INT), INTENT(IN)        :: i
-        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: area
-          
-          REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
-      END SUBROUTINE DFgaussq
 
-      SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+    SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)      :: nzeros
+      REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+    END SUBROUTINE acceleratenew
 
-        INTEGER(C_INT), INTENT(IN)      :: nzeros
-        REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
-      END SUBROUTINE acceleratenew
 
-      SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-        INTEGER(C_INT), INTENT(IN)       :: i, m
-        REAL(KIND=C_DOUBLE), INTENT(IN)  :: tL, tR
-        REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
-      END SUBROUTINE findExactZeros
+    SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)       :: i, m
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: tL, tR
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
+    END SUBROUTINE findExactZeros
 
   END INTERFACE
   ! --- END INTERFACES ---
@@ -90,8 +81,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   REAL(KIND=C_DOUBLE)  :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
 
   ! --- Initialization ---
-  CpSmall = .TRUE.
-  
+
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i

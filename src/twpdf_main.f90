@@ -7,7 +7,7 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its
   ! --- Arguments ---
   INTEGER(C_INT), INTENT(IN) :: N
   REAL(C_DOUBLE), INTENT(IN) :: p
-  INTEGER(C_INT), INTENT(IN)  :: exact
+  INTEGER(C_INT), INTENT(IN) :: exact
   REAL(C_DOUBLE), INTENT(IN) :: phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT):: funvalue(N)
   INTEGER(C_INT), INTENT(OUT):: exitstatus, its
@@ -15,18 +15,18 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its
 
     ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
     INTERFACE
-        SUBROUTINE PDFbigp(i, funvalue, exitstatus, relerr, verbose)
+        SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
             IMPLICIT NONE
-            INTEGER, INTENT(IN)                       :: i
+            INTEGER, INTENT(IN)                       :: i, exact
             REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
             INTEGER, INTENT(OUT)                      :: exitstatus
             REAL(KIND=8), INTENT(OUT)                 :: relerr
             INTEGER, INTENT(IN)                       :: verbose
         END SUBROUTINE PDFbigp
 
-        SUBROUTINE PDFsmallp(i, funvalue, exitstatus, relerr, verbose)
+        SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
             IMPLICIT NONE
-            INTEGER, INTENT(IN)                       :: i
+            INTEGER, INTENT(IN)                       :: i, exact
             REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
             INTEGER, INTENT(OUT)                      :: exitstatus
             REAL(KIND=8), INTENT(OUT)                 :: relerr
@@ -60,9 +60,9 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its
   ! --- Loop over N ---
   DO i = 1, N
     IF (CpSmall) THEN
-      CALL PDFsmallp(i, funvalue, exitstatus, relerr, verbose)
+      CALL PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
     ELSE
-      CALL PDFbigp(i, funvalue, exitstatus, relerr, verbose)
+      CALL PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     END IF
   END DO
 
