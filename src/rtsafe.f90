@@ -1,4 +1,3 @@
-
 SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   USE tweedie_params_mod
 

@@ -4,9 +4,9 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
   IMPLICIT NONE
 
   ! --- Dummy Arguments ---
-  INTEGER(C_INT), INTENT(IN)        :: i, m
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: xL, xR, xStart
-  REAL(KIND=C_DOUBLE), INTENT(OUT) :: xZero
+  INTEGER(C_INT), INTENT(IN)        :: i, m             ! i: which value; m: the m*pi value to be solving for
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: xL, xR, xStart   ! L and R bounds, and starting point
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xZero
   
   ! --- Local Variables
   REAL(KIND=C_DOUBLE) :: xacc ! Accuracy value
@@ -14,12 +14,13 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
 
   INTERFACE
     ! The signature required by rtnewton (3 arguments: x, f, df)
-    SUBROUTINE funcd_signature(x, f, df)
+    SUBROUTINE funcd_signature(i, x, f, df)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE 
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: x
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     END SUBROUTINE funcd_signature
 
     SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
@@ -37,13 +38,14 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
 
     ! 2. The Function being Solved (findImkM)
     ! CRITICAL FIX: Signature reduced to 3 arguments (t, f, df) to match funcd_signature
-    SUBROUTINE findImkM(t, f, df)
+    SUBROUTINE findImkM(i, t, f, df, m)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
       
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+      INTEGER(C_INT)                    :: i, m
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     END SUBROUTINE findImkM
 
   END INTERFACE
@@ -66,7 +68,8 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
     ! Define the wrapper subroutine
     SUBROUTINE findImkM_wrapper(i, x, f, df)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
+      ! Has access to bariable  m  from the containing function/outer scope
+      
       INTEGER(C_INT), INTENT(IN)  :: i
       REAL(C_DOUBLE), INTENT(IN)  :: x
       REAL(C_DOUBLE), INTENT(OUT) :: f, df

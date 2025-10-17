@@ -1,4 +1,4 @@
-SUBROUTINE findImkM(i, t, m, ImkM_out)
+SUBROUTINE findImkM(i, t, f, df, m)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -18,15 +18,18 @@ SUBROUTINE findImkM(i, t, m, ImkM_out)
     END SUBROUTINE findImk
   END INTERFACE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-  REAL(KIND=C_DOUBLE)             :: pi, Imk_val
-  INTEGER(C_INT), INTENT(IN)      :: m, i
-  REAL(FIND=C_DOUBLE)             :: ImkM_out
+  INTEGER(C_INT), INTENT(IN)        :: i
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
+  INTEGER(C_INT), INTENT(IN)        :: m
+
+  REAL(KIND=8)                      :: pi, Imk_val
 
   pi = 4.0D0 * DATAN(1.0D0)
 
   CALL findImk(i, t, Imk_val)
-  
-  ImkM_out = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
+  f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
 
+  CALL findImkd(i, t, df)
+  
 END SUBROUTINE findImkM

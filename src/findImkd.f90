@@ -1,4 +1,4 @@
-SUBROUTINE findImkd(i, t, Imdk) 
+SUBROUTINE findImkd(i, t, Imkd) 
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -7,7 +7,7 @@ SUBROUTINE findImkd(i, t, Imdk)
   ! Arguments
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imdk  ! The result of the calculation
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
   
   ! Local Variables
   REAL(KIND=C_DOUBLE) :: omega, pindex
@@ -26,6 +26,6 @@ SUBROUTINE findImkd(i, t, Imdk)
   omega = DATAN( ( (1.0_8 - Cp) * t * current_phi) / (current_mu ** (1.0_8 - Cp) ) )
   
   ! Final calculation
-  Imdk = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
+  Imkd = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
 
 END SUBROUTINE findImkd

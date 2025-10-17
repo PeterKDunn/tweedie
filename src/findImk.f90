@@ -25,10 +25,10 @@ SUBROUTINE findImk(i, t, Imk)
 
   IF ((omega .GT. 0.0d00 ) .OR.    &    
       (omega .LT. (-pi/2.0d00)) ) THEN
-         write(*,*) "ERROR (FindImk): Omega out of range:", omega
-         write(*,*) "Argument: ", tanArg
-         write(*,*) "       t: ", t
-         STOP
+    write(*,*) "ERROR (FindImk): Omega out of range:", omega
+    write(*,*) "Argument: ", tanArg
+    write(*,*) "       t: ", t
+    STOP
   END IF
   alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
 

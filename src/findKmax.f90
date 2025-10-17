@@ -1,69 +1,72 @@
 SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint) 
   USE tweedie_params_mod
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   ! Arguments
-  REAL(KIND=8), INTENT(OUT)     :: kmax, tmax
-  REAL(KIND=8), INTENT(IN)      :: startPoint
-  INTEGER, INTENT(OUT)          :: mmax, mfirst
-  INTEGER, INTENT(IN)           :: i
+  REAL(KIND=C_DOUBLE), INTENT(OUT)     :: kmax, tmax
+  REAL(KIND=C_DOUBLE), INTENT(IN)      :: startPoint
+  INTEGER(C_INT), INTENT(OUT)          :: mmax, mfirst
+  INTEGER(C_INT), INTENT(IN)           :: i
   
   
   ! --- CRITICAL FIXES: INTERFACES FOR EXTERNAL BIND(C) ROUTINES ---
   
   INTERFACE
       ! A) Define the REQUIRED 4-argument signature for the function pointer (funcd)
-      SUBROUTINE funcd_signature(i_in, t, f, df)
-
+      SUBROUTINE funcd_signature(i_in, t, f, df) BIND(C)
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           IMPLICIT NONE
-          INTEGER, INTENT(IN)       :: i_in
-          REAL(KIND=8), INTENT(IN)  :: t
-          REAL(KIND=8), INTENT(OUT) :: f, df
+          INTEGER(C_INT), INTENT(IN) :: i_in
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: t
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
       END SUBROUTINE funcd_signature
 
       ! B) 1. The root solver (rtsafe)
       SUBROUTINE rtsafe(i_in, funcd, x1, x2, xstart, xacc, root) 
-
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+          
           ! FIX 1 & 2: Declare funcd using the signature, remove POINTER
           PROCEDURE(funcd_signature) :: funcd 
           
-          INTEGER, INTENT(IN)       :: i_in
-          REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
-          REAL(KIND=8), INTENT(OUT) :: root
+          INTEGER(C_INT), INTENT(IN) :: i_in
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
       END SUBROUTINE rtsafe
       
       ! C) Define the rtnewton solver (used on line 99)
-      SUBROUTINE rtnewton(i_in, funcd, x1, x2, xstart, xacc, root)
-
+      SUBROUTINE rtnewton(i_in, funcd, x1, x2, xstart, xacc, root) 
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           PROCEDURE(funcd_signature) :: funcd 
-          INTEGER, INTENT(IN)       :: i_in
-          REAL(KIND=8), INTENT(IN)  :: x1, x2, xstart, xacc
-          REAL(KIND=8), INTENT(OUT) :: root
+          INTEGER(C_INT), INTENT(IN) :: i_in
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
       END SUBROUTINE rtnewton
       
-      ! D) Define findImdkZero (the actual 4-argument routine being passed)
-      SUBROUTINE findImdkZero(i_in, t, f, df)
-
+      ! D) Define findImkdZero (the actual 4-argument routine being passed)
+      SUBROUTINE findImkdZero(i_in, t, f, df) 
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           IMPLICIT NONE
-          INTEGER, INTENT(IN)       :: i_in
-          REAL(KIND=8), INTENT(IN)  :: t
-          REAL(KIND=8), INTENT(OUT) :: f, df
-      END SUBROUTINE findImdkZero
+          INTEGER(C_INT), INTENT(IN) :: i_in
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: t
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+      END SUBROUTINE findImkdZero
       
+      ! E) Define findImk (used on line 71, 106)
       SUBROUTINE findImk(i_in, t_in, kmax_out) 
-
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           IMPLICIT NONE
-          INTEGER, INTENT(IN)         :: i_in
-          REAL(KIND=8), INTENT(IN)    :: t_in
-          REAL(KIND=8), INTENT(OUT)   :: kmax_out
+          INTEGER(C_INT), INTENT(IN) :: i_in
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: t_in
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax_out
       END SUBROUTINE findImk
       
       ! F) Define myfloor (used on line 72, 107)
-      INTEGER FUNCTION myfloor(x) 
-
+      INTEGER(C_INT) FUNCTION myfloor(x) 
+          USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
           IMPLICIT NONE
-          REAL(KIND=8), INTENT(IN) :: x
+          REAL(KIND=C_DOUBLE), INTENT(IN) :: x
       END FUNCTION myfloor
       
   END INTERFACE
@@ -102,38 +105,38 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
       
     ELSE
       ! Cy < Cmu and 1 < p < 2
-      
-      ! FIX 4: The call site is now correct because funcd's type is explicitly defined.
-      CALL rtsafe(i, findImdkZero, kmaxL, kmaxR, startPoint, aimrerr, tmax)
-      
-      ! funcd returns the fn value, and derivative value
-
-      CALL findImk(i, tmax, kmax)
-      mmax = myfloor(kmax/pi)
-      mfirst = mmax
+      CALL rtsafe(i,            &
+                  findImkdZero, &
+                  kmaxL,        &
+                  kmaxR,        &
+                  startPoint,   &
+                  aimrerr,      &
+                  tmax)
     END IF
   ELSE
     ! IF p > 2
     IF (current_y .GE. current_mu) THEN
       ! Cy >= Cmu and p > 2
-
       mmax = 0
       mfirst = -1
       tmax = 0.0d00
       kmax = 0.0d00
     ELSE
       ! Cy < Cmu and p > 2
-
-      CALL rtnewton(i, findImdkZero, 0.00d0, startPoint * 30.0d0, startPoint, aimrerr, tmax)
-      ! funcd returns the fn value, and derivative value
-
-      ! Find kmax, mmax
-      CALL findImk(i, tmax, kmax)
-      mmax = myfloor(kmax/pi)
-      mfirst = mmax
-      
+      CALL rtnewton(i,                    &
+                    findImkdZero,         &  ! function to find the zeros for
+                    0.00d00,              &  ! Lower bound
+                    startPoint * 30.0d00, &  ! Upper bound
+                    startPoint,           &  ! Starting value
+                    aimrerr,              &  ! The relative error aimed for
+                    tmax)                    ! The root
     END IF
   END IF
+  
+  ! Find kmax, mmax
+  CALL findImk(i, tmax, kmax)
+  mmax = myfloor(kmax/pi)
+  mfirst = mmax
 
   RETURN
 

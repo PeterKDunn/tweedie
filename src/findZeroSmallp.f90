@@ -10,7 +10,7 @@ SUBROUTINE findZeroSmallp(i, t, f, df)
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
   
   ! --- Local Variables ---
-  REAL(KIND=C_DOUBLE) :: Imk, Imdk
+  REAL(KIND=C_DOUBLE) :: Imk, Imkd
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
   
   ! Grab the relevant scalar values for this iteration:
@@ -19,11 +19,11 @@ SUBROUTINE findZeroSmallp(i, t, f, df)
   current_phi  = Cphi(i)  ! Access phi value for index i
   
   CALL findImk(i, t, Imk)
-  CALL findImkd(i, t, Imdk)
+  CALL findImkd(i, t, Imkd)
   
   ! --- Core Calculation ---
   f  = DSIN(Imk + (t * current_y) ) - DSIN( Imk)
-  df = (Imdk + current_y) * DCOS(Imk + (t * current_y) ) - &
-       Imdk * DCOS(Imk)
+  df = (Imkd + current_y) * DCOS(Imk + (t * current_y) ) - &
+       Imkd * DCOS(Imk)
   
 END SUBROUTINE findZeroSmallp
