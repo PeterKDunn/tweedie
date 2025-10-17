@@ -281,7 +281,7 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
   relerr_scalar     <- as.double(0.0)
   its_scalar        <- as.integer(0)
   
-  tmp <- .Fortran( "twcdf",
+  tmp <- .C( "twcdf",
                    as.integer(N),         # number of observations
                    as.double(power),      # p
                    as.double(phi),        # phi

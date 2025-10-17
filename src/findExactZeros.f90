@@ -52,16 +52,16 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
   ! --- END INTERFACES ---
   
   
-  WRITE(*,*) "findExactZeros: INSIDE"
+!  WRITE(*,*) "findExactZeros: INSIDE"
   ! Set the accuracy
   xacc = 1.0D-12
   
   ! CRITICAL STEP: Set the global context variable 'current_i' before calling the root finder.
   current_i = i
-  WRITE(*,*) "findExactZeros: ABOUT to call RTNEWTON"
+!  WRITE(*,*) "findExactZeros: ABOUT to call RTNEWTON"
   
   CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
-  WRITE(*,*) "findExactZeros: Called RTNEWTON, about to exit findExactZeros"
+!  WRITE(*,*) "findExactZeros: Called RTNEWTON, about to exit findExactZeros"
   
   CONTAINS 
   

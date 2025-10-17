@@ -67,15 +67,16 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)  :: mmax, mfirst, mOld, accMax
-  INTEGER         :: itsAcceleration, itsPreAcc, m
+  INTEGER         :: itsAcceleration, itsPreAcc, m, minAccRegions
   INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
   REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
   REAL(KIND=8) :: zeroL, zeroR, area0, area1, areaA, sum
   REAL(KIND=8) :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
-  REAL(KIND=8) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
-  REAL(KIND=8) :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=8)              :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
+  REAL(KIND=8), VOLATILE    :: West, Wold, Wold2
+  REAL(KIND=8)              :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
   ! --- Initialization ---
@@ -162,9 +163,9 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
   m = mfirst ! This line caused the error; now fixed by INOUT
   ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-  WRITE(*,*) "DFbigp: ABOUT TO CALL findExactZeros"
+!  WRITE(*,*) "DFbigp: ABOUT TO CALL findExactZeros"
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-  WRITE(*,*) "DFbigp: END CALL findExactZeros"
+!  WRITE(*,*) "DFbigp: END CALL findExactZeros"
   zeroL = 0.0_8
   zeroR = zero
 
@@ -226,7 +227,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       
       mOld = m
       ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-      CALL advanceM(i, mmax, m, mOld, leftOfMax, flip)
+      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     END DO 
   END IF
@@ -235,17 +236,22 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   IF (verbose .EQ. 1) WRITE(*,*) "*******************************"
   IF (verbose .EQ. 1) WRITE(*,*) "3. INTEGRATE: the ACCELERATION"
   
-  Wold = 0.0_8
+  ! Initialisation
+  West = 3.0_8
+  Wold = 2.0_8
   Wold2 = 1.0_8
   itsAcceleration = 0
   areaA = 0.0_8
   convergence = 0
+  accMax = 40           ! Maximum number of regions in accelerationl arbitrary
+  minAccRegions = 3     ! Minimum number of acceleration regions to use
   
   ! This will be the very first, left-most value of t used in acceleration
   xvec(1) = zeroR 
 
   DO WHILE (convergence .EQ. 0)
-    IF (verbose .EQ. 1) WRITE(*,*) "  --- Next tail region"
+    IF (verbose .EQ. 1) WRITE(*,*) "  --------------------- "
+    IF (verbose .EQ. 1) WRITE(*,*) "  Next tail region"
 
     itsAcceleration = itsAcceleration + 1
     
@@ -267,7 +273,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       END IF
     END IF
 
-    ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+    ! Find the first exact zero
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
 
     IF (leftOfMax .EQ. 1) THEN
@@ -286,36 +292,43 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
 
-    accMax = 40
+    WRITE(*,*) "PRE-acc 1: ", West, Wold, Wold2
     Wold2 = Wold
+    WRITE(*,*) "PRE-acc 2: ", West, Wold, Wold2
     Wold = West
-    
-    ! CRITICAL: acceleratenew must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+    WRITE(*,*) "PRE-acc 3: ", West, Wold, Wold2
     CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
+    WRITE(*,*) "POST-acc: updated to: ", West, Wold, Wold2
     
-    IF (verbose .EQ. 1) THEN 
-      WRITE(*,*) "iteration", itsAcceleration, ":", West
-      WRITE(*,*) "  - Estimate of tail area:", West
-      WRITE(*,*) "--------------------------------"
-    END IF
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
-    IF (relerr .LT. aimrerr) THEN
+
+    WRITE(*,*) "Rel error:", relerr
+    
+    IF (verbose .EQ. 1) THEN 
+      WRITE(*,*) "  - iteration", itsAcceleration, ":", West
+      WRITE(*,*) "  - Estimate of tail area:", West
+    END IF
+    
+    ! Declare convergemce of we have sufficient regions, and relerr estimate is small
+    IF ( (itsAcceleration .GE. minAccRegions) .AND. &
+         (relerr .LT. aimrerr) ) THEN
       IF (verbose .EQ. 1) WRITE(*,*) "  Relerr is", relerr
       convergence = 1
     END IF
-
+    WRITE(*,*) "CONVERGENCE", convergence
     mOld = m
     ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-    CALL advanceM(i, mmax, m, mOld, leftOfMax, flip)
+    CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
+    if (verbose .EQ. 1) WRITE(*,*) "--------------------------------"
     ! NOTE: If convergence is NOT TRUE, the loop continues.
   END DO  
 
   IF (convergence .EQ. 0) THEN
     IF (verbose .EQ. 1) WRITE(*,*) "  - Computing for p > 2:", Cp
   END IF
-  
+
   areaA = West
   areaT = area0 + area1 + areaA
   
@@ -328,15 +341,15 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
   END IF
   
-    ! We have the value of the integral in the CDF calculation.
-    ! So now work out the CDF
-    funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
+  ! We have the value of the integral in the CDF calculation.
+  ! So now work out the CDF
+  funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
     
-    IF (verbose .EQ. 1) THEN
-      WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
-      WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
-      WRITE(*,*) funvalue(i), exitstatus, relerr
-    END IF
+  IF (verbose .EQ. 1) THEN
+    WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
+    WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
+    WRITE(*,*) funvalue(i), exitstatus, relerr
+  END IF
 
   
   RETURN

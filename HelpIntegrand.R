@@ -28,12 +28,12 @@ kmax_est <- function(p, mu, phi, y){
 
 
 ## TMP
-mu <- 1
-phi <- 4
-p <- 1.5
+y <- 1.25
+mu <- 0.74
+phi <- 1.4
+p <- 3
 # y <- 0.01
-y <- 0.3
-t <- seq(0, 0.5,
+t <- seq(0, 15,
          length = 1000)
 
 
@@ -52,12 +52,15 @@ kd2 <- kdashdash(p = p,
                  y = y, 
                  t = t)
 kvals <- k(p = p, 
-                 mu = mu, 
-                 phi = phi,
-                 y = y, 
-                 t = t)
+           mu = mu, 
+           phi = phi,
+           y = y, 
+           t = t)
 
-print( tail(cbind(y, t, Inmag=kvals$Imag, Real=kvals$Real)))
+print( tail(cbind(y, 
+                  t, 
+                  Imag=kvals$Imag, 
+                  Real=kvals$Real)))
 
 zs <- c(10.2, 214.8, 404.7, 540.2, 659.9, 771.1, 876.8, 978.4, 1077.1)
 
@@ -120,7 +123,7 @@ abline(h = 0,
 
 
 
-plot(exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
+plot( exp(kvals$Real) * sin(kvals$Imag)/t ~ t,
      main = "Integrand",
      xlab = expression(Values~of~italic(t)),
      ylab = "Integrand",

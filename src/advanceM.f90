@@ -1,4 +1,5 @@
 SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
+
   ! --- FIX: Import the global module variable 'm' and rename it to 'global_m'
   ! This allows us to access and update the shared state without conflicting
   ! with the local C-bound argument 'm_index'.

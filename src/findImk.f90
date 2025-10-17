@@ -33,7 +33,7 @@ SUBROUTINE findImk(i, t, Imk)
   alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
 
   Imk = front *   &
-        DSIN(omega * alpha)/DCOS(omega) ** alpha - t * current_y
+        DSIN(omega * alpha)/(DCOS(omega) ** alpha) - t * current_y
 
   RETURN
 

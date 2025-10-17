@@ -13,9 +13,9 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t                ! The internal variable for integration
     REAL(KIND=C_DOUBLE)               :: integrand_result ! The result of the function
-    REAL(KIND=C_DOUBLE)               :: current_y, current_mu, current_phi
+    REAL(KIND=C_DOUBLE)               :: current_y, current_mu
     REAL(KIND=C_DOUBLE)               :: Imk, Rek
-  
+    
     
    ! NOTE: Added INTERFACE blocks to declare C-binding for helper routines
     INTERFACE
@@ -42,8 +42,7 @@ CONTAINS
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
     current_mu   = Cmu(i)
-    current_phi  = Cphi(i)
-    
+
     ! The call to findImk and findRek must pass the parameters explicitly.
     
     ! Check for when t = 0 (t is very close to zero)
@@ -55,10 +54,11 @@ CONTAINS
       RETURN
     ELSE
       ! NOTE: Calls to findImk and findRek MUST include the extra parameters
+      CALL findRek(i, t, Rek)
       CALL findImk(i, t, Imk)
-      CALL findRek(i, t, Rek) ! Note: Cy passed to findRek
       
       integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
+      WRITE(*,*) " > DFintegrand (t, Re, Im):", t, Rek, Imk, integrand_result
   
     END IF
     

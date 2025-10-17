@@ -236,7 +236,7 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
       
       mOld = m
       ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-      CALL advanceM(i, mmax, m, mOld, leftOfMax, flip)
+      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     END DO 
   END IF
@@ -317,7 +317,7 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
 
     mOld = m
     ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-    CALL advanceM(i, mmax, m, mOld, leftOfMax, flip)
+    CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     ! NOTE: If convergence is NOT TRUE, the loop continues.
   END DO  

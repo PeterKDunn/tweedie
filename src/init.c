@@ -3,24 +3,36 @@
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-/* Forward declarations for the Fortran subroutines (11 arguments) */
-void twcdf(void*, void*, void*, void*, void*, void*, void*, 
-              void*, void*, void*);
-void twpdf(void*, void*, void*, void*, void*, void*, void*, 
-              void*, void*, void*, void*);
+/* --- Forward declarations for BIND(C) Fortran Subroutines (Unchanged) --- */
+// twcdf has 9 arguments
+extern void twcdf(int *N, double *p, double *phi, double *y, double *mu, double *funvalue, int *exitstatus, double *relerr, int *its);
 
-/* List of Fortran routines callable from R */
-static const R_FortranMethodDef FortranEntries[] = {
-  {"twcdf", (DL_FUNC) twcdf, 9}, 
-  {"twpdf", (DL_FUNC) twpdf, 10},
-  {NULL, NULL, 0}
+// twpdf has 10 arguments
+extern void twpdf(int *N, double *p, double *phi, double *y, double *mu, double *exact, double *funvalue, int *exitstatus, double *relerr, int *its);
+
+
+/* --- C Routine Registration Table (R_CMethodDef) --- */
+/* R will look here for BIND(C) symbols like "twcdf" */
+static const R_CMethodDef CEntries[] = {
+  // R name    C pointer (The BIND(C) name) Arg Count   Argument Types
+  {"twcdf", (DL_FUNC) twcdf, 9, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {"twpdf", (DL_FUNC) twpdf, 10, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {NULL, NULL, 0, {0}}
 };
 
-/* The main initialization entry point R looks for */
+
+/* --- Fortran Routine Registration Table (R_FortranMethodDef) --- */
+/* This table is empty now, as BIND(C) routines go in CEntries */
+static const R_FortranMethodDef FortranEntries[] = {
+  {NULL, NULL, 0, {0}} // EMPTY TABLE
+};
+
+
+/* --- The main initialization entry point R looks for (Single Definition) --- */
 void R_init_tweedie(DllInfo *dll)
 {
-  // The 5 expected lists are: C, Call, Fortran, External.
-  // DllInfo is the first argument, so 4 more are expected.
-  // The final call MUST have only 5 lists (1 DllInfo + 4 routine lists).
-  R_registerRoutines(dll, NULL, NULL, FortranEntries, NULL); 
+  // Register C Routines (CEntries), then Fortran Routines (FortranEntries)
+  R_registerRoutines(dll, CEntries, NULL, FortranEntries, NULL); 
+  
+  R_useDynamicSymbols(dll, FALSE); 
 }

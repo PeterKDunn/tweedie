@@ -38,6 +38,6 @@ SUBROUTINE findRek(i, t, Rek)
   alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
 
   Rek = front * &
-        ( COS(omega * alpha)/(COS(omega)**alpha) - 1.0d00)
+        ( COS(omega * alpha)/(COS(omega)**alpha) - 1.0d00 )
 
 END SUBROUTINE findRek
