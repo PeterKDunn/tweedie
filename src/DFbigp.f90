@@ -269,7 +269,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
     ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
-    
+
     IF (leftOfMax .EQ. 1) THEN
       zeroR = zero
     ELSE

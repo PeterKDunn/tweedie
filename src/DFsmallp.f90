@@ -59,6 +59,20 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
     END SUBROUTINE findExactZeros
 
+
+    SUBROUTINE findZeroSmallp(i, t, f, df)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)       :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: t
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+    END SUBROUTINE findZeroSmallp
+
+
+    SUBROUTINE findLambda(i, lambda)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)       :: i
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: lambda
+    END SUBROUTINE findLambda
   END INTERFACE
   ! --- END INTERFACES ---
 
@@ -327,8 +341,11 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
         zeroBoundL = zeroStartPoint - 0.35 * pi / Cy(i)
         zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy(i)
 
+    WRITE(*,*) "ABOU TO CALL IN DFbigf"
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-        CALL findZeroSmallp(zero, f, df)
+    WRITE(*,*) "BACK IN DFbigf; about to call findZeroSmallp"
+        CALL findZeroSmallp(i, zero, f, df)
+    WRITE(*,*) "OUT FROM findZeroSmallp"
 
         zeroR = zero
         xvec(itsAcceleration + 1) = zeroR
@@ -381,7 +398,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       
       ! We have the value of the integral in the CDF calculation. 
       ! So now work out the CDF
-      CALL findLambda(lambda)
+      CALL findLambda(i, lambda)
 
       ! The integration returns the conditional CDF for Y | Y > 0.
       ! So we need to find the CDF of Y.
