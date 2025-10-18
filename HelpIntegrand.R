@@ -1,5 +1,16 @@
 source("tweedieFunctions.R")
 
+########################################################################
+## TMP
+y <- 2
+mu <- 1
+phi <- 4
+p <- 1.5
+# y <- 0.01
+t <- seq(10, 13,
+         length = 1000)
+########################################################################
+
 
 kdashdash <- function(p, mu, phi, y, t){
   omega <- atan( ( (1 - p) * t * phi) / mu^(1 - p) )
@@ -26,15 +37,6 @@ kmax_est <- function(p, mu, phi, y){
 }
   
 
-
-## TMP
-y <- 1.25
-mu <- 0.74
-phi <- 1.4
-p <- 3
-# y <- 0.01
-t <- seq(0, 15,
-         length = 1000)
 
 
 lambda <- mu^(2-p) / (phi * (2-p) )
