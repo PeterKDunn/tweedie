@@ -96,8 +96,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
  
   IF (verbose .EQ. 1) WRITE(*,*) " FOR p > 2"
-    
-    
+
   ! --- Find kmax, tmax, mmax ---
   IF (current_y .GE. current_mu) THEN
     IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
@@ -170,14 +169,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   zeroBoundL = 0.0_8
   zeroBoundR = zeroStartPoint * 2.0_8
 
-  m = mfirst ! This line caused the error; now fixed by INOUT
+  m = mfirst
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
   zeroL = 0.0_8
   zeroR = zero
 
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
-  ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-  ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
   CALL DFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
 
@@ -193,17 +190,16 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     IF (verbose .EQ. 1) WRITE(*,*) "  > Not using pre-acceleration area"
     area1 = 0.0_8
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
   ELSE
     area1 = 0.0_8
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
     stopPreAccelerate = 0
-    
     DO WHILE (stopPreAccelerate .EQ. 0)
       itsPreAcc = itsPreAcc + 1
 
@@ -217,13 +213,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_8
       
       zeroL = zeroR
-      ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+  
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
       zeroR = zero
       IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
       
-      ! CRITICAL: gaussq must be updated to pass these parameters
       CALL DFgaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
       IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
@@ -232,7 +227,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       IF (itsPreAcc .GE. 2) stopPreAccelerate = 1
       
       mOld = m
-      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     END DO 
@@ -261,7 +255,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
     itsAcceleration = itsAcceleration + 1
     
-
 !!! SUFELY WE ARE ON TEH RIGHT OF TMAX!!!!
     IF (leftOfMax .EQ. 1) THEN
       zeroStartPoint = zeroR
@@ -294,7 +287,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     
     IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
 
-    ! CRITICAL: gaussq must be updated to pass these parameters
     CALL DFgaussq(i, zeroL, zeroR, psi)
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
@@ -307,8 +299,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
 
-    WRITE(*,*) "Rel error:", relerr
-    
     IF (verbose .EQ. 1) THEN 
       WRITE(*,*) "  - iteration", itsAcceleration, ":", West
       WRITE(*,*) "  - Estimate of tail area:", West
@@ -320,9 +310,8 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       IF (verbose .EQ. 1) WRITE(*,*) "  Relerr is", relerr
       convergence = 1
     END IF
-    WRITE(*,*) "CONVERGENCE", convergence
+  
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     if (verbose .EQ. 1) WRITE(*,*) "--------------------------------"
@@ -355,7 +344,6 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     WRITE(*,*) funvalue(i), exitstatus, relerr
   END IF
 
-  
   RETURN
 
 END SUBROUTINE DFbigp

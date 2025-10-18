@@ -15,16 +15,15 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
 
    ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
-      ! 1. Function to find Kmax special point
       FUNCTION findKmaxSP(j) 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          IMPLICIT NONE  
-          REAL(KIND=8)          :: findKmaxSP
-          INTEGER, INTENT(IN)   :: j
+        IMPLICIT NONE  
+        REAL(KIND=8)          :: findKmaxSP
+        INTEGER, INTENT(IN)   :: j
       END FUNCTION findKmaxSP
 
-      ! 2. Subroutine to find Kmax and related indices
+
       SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
@@ -32,42 +31,38 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
         INTEGER, INTENT(IN)         :: j
         INTEGER(C_INT), INTENT(OUT) :: mfirst, mmax
           
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-          REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax
+        REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
+        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax
       END SUBROUTINE findKmax
 
-      ! 3. Subroutine to advance the iteration index m
+
       SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          INTEGER, INTENT(IN)             :: j
-          INTEGER(C_INT), INTENT(IN)      :: mmax
-          INTEGER(C_INT), INTENT(INOUT)   :: m_index
-          INTEGER(C_INT), INTENT(OUT)     :: mOld
-          INTEGER(C_INT), INTENT(INOUT)   :: leftOfMax
-          INTEGER(C_INT), INTENT(OUT)     :: flip
+        INTEGER, INTENT(IN)             :: j
+        INTEGER(C_INT), INTENT(IN)      :: mmax
+        INTEGER(C_INT), INTENT(INOUT)   :: m_index
+        INTEGER(C_INT), INTENT(OUT)     :: mOld
+        INTEGER(C_INT), INTENT(INOUT)   :: leftOfMax
+        INTEGER(C_INT), INTENT(OUT)     :: flip
       END SUBROUTINE advanceM
       
-      ! 4. Function for the integrand (used by gaussq)
- 
-      ! 5. Function for Gaussian Quadrature integration
+
       SUBROUTINE PDFgaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
-          REAL(KIND=C_DOUBLE) :: area
-          REAL(KIND=8), INTENT(IN)        :: a, b
+        REAL(KIND=C_DOUBLE) :: area
+        REAL(KIND=8), INTENT(IN)        :: a, b
       END SUBROUTINE PDFgaussq
 
-      ! 6. Subroutine for acceleration
-      SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
 
+      SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
         INTEGER, INTENT(IN)      :: nzeros
         REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
       END SUBROUTINE acceleratenew
 
-      ! 7. Subroutine to find exact zeros
-      SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
 
+      SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
         INTEGER, INTENT(IN)         :: i, m
         REAL(KIND=8), INTENT(IN)    :: tL, tR
         REAL(KIND=8), INTENT(OUT)   :: zeroL, zeroR
@@ -79,7 +74,7 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)  :: mmax, mfirst, mOld, accMax
   INTEGER         :: itsAcceleration, itsPreAcc, m
-  INTEGER      :: leftOfMax, flip, convergence, stopPreAccelerate
+  INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
   REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
@@ -108,19 +103,19 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
   epsilon = 1.0d-12
   
   ! --- Find kmax, tmax, mmax ---
-    IF (Cy(i) .GE. Cmu(i)) THEN
-      IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
+  IF (Cy(i) .GE. Cmu(i)) THEN
+    IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
       
-      kmax = 0.0_8
-      tmax = 0.0_8
-      mmax = 0
-      mfirst = -1
-      mOld = 0
-      IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
+    kmax = 0.0_8
+    tmax = 0.0_8
+    mmax = 0
+    mfirst = -1
+    mOld = 0
+    IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
       
-      zeroStartPoint = pi / current_y
-      leftOfMax = 0
-    ELSE
+    zeroStartPoint = pi / current_y
+    leftOfMax = 0
+  ELSE
     IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
     
     ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
@@ -148,7 +143,6 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
       zeroStartPoint = pi / (current_mu -current_y)
       mOld = m
 
-      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
     END IF
@@ -173,14 +167,11 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
   zeroBoundR = zeroStartPoint * 2.0_8
 
   m = mfirst ! This line caused the error; now fixed by INOUT
-  ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
   zeroL = 0.0_8
   zeroR = zero
 
   IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
-  ! CRITICAL: DFintegrand must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-  ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
   CALL PDFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
   
@@ -196,17 +187,15 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     IF (verbose .EQ. 1) WRITE(*,*) "  > Not using pre-acceleration area"
     area1 = 0.0_8
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-    CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
+    CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
   ELSE
     area1 = 0.0_8
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
     stopPreAccelerate = 0
-    
     DO WHILE (stopPreAccelerate .EQ. 0)
       itsPreAcc = itsPreAcc + 1
 
@@ -220,13 +209,12 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
       zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_8
       
       zeroL = zeroR
-      ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
       zeroR = zero
       IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
       
-      ! CRITICAL: gaussq must be updated to pass these parameters
       CALL PDFgaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
       IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
@@ -235,7 +223,6 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
       IF (itsPreAcc .GE. 2) stopPreAccelerate = 1
       
       mOld = m
-      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     END DO 
@@ -277,7 +264,6 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
       END IF
     END IF
 
-    ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
     
     IF (leftOfMax .EQ. 1) THEN
@@ -290,7 +276,6 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     
     IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
 
-    ! CRITICAL: gaussq must be updated to pass these parameters
     CALL PDFgaussq(i, zeroL, zeroR, psi)
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
@@ -300,7 +285,6 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     Wold2 = Wold
     Wold = West
     
-    ! CRITICAL: acceleratenew must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
     
     IF (verbose .EQ. 1) THEN 
@@ -316,7 +300,7 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     END IF
 
     mOld = m
-    ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+  
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     ! NOTE: If convergence is NOT TRUE, the loop continues.
@@ -338,17 +322,16 @@ SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
     WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
   END IF
   
-    ! We have the value of the integral in the CDF calculation.
-    ! So now work out the CDF
-    funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
-    
-    IF (verbose .EQ. 1) THEN
-      WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
-      WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
-      WRITE(*,*) funvalue(i), exitstatus, relerr
-    END IF
-
+  ! We have the value of the integral in the CDF calculation.
+  ! So now work out the CDF
+  funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
   
+  IF (verbose .EQ. 1) THEN
+    WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
+    WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
+    WRITE(*,*) funvalue(i), exitstatus, relerr
+  END IF
+
   RETURN
 
 END SUBROUTINE PDFbigp

@@ -4,16 +4,15 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)               :: exact          ! Exact zeros?
-  INTEGER, INTENT(IN)                      :: i              ! Observation index
-  INTEGER, INTENT(INOUT)                   :: verbose        ! Assuming INOUT/IN for verbosity flag
-  INTEGER, INTENT(OUT)                     :: exitstatus     ! Output status
-  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue ! The final computed result and relative error
-  REAL(KIND=8), INTENT(OUT)                :: relerr ! The final computed result and relative error
+  INTEGER(C_INT), INTENT(IN)               :: exact       ! Exact zeros?
+  INTEGER, INTENT(IN)                      :: i           ! Observation index
+  INTEGER, INTENT(INOUT)                   :: verbose     ! Assuming INOUT/IN for verbosity flag
+  INTEGER, INTENT(OUT)                     :: exitstatus  ! Output status
+  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue    ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)                :: relerr      ! The final computed result and relative error
 
-   ! --- INTERFACES: All C-bound routines called by DFsmallp:
   INTERFACE
-      ! 1. Function to find Kmax special point
+      ! Function to find Kmax special point
       FUNCTION findKmaxSP(j)
 
         IMPLICIT NONE  
@@ -21,7 +20,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         INTEGER, INTENT(IN)  :: j
       END FUNCTION findKmaxSP
 
-      ! 2. Subroutine to find Kmax and related indices
+      ! Subroutine to find Kmax and related indices
       SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
 
         IMPLICIT NONE
@@ -32,7 +31,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         REAL(KIND=8), INTENT(IN)  :: startTKmax
       END SUBROUTINE findKmax
 
-      ! 3. Subroutine to advance the iteration index m
+      ! Subroutine to advance the iteration index m
       SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
 
         INTEGER, INTENT(IN)      :: j, mmax
@@ -42,9 +41,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         INTEGER, INTENT(OUT)     :: flip
       END SUBROUTINE advanceM
       
-      ! 4. Function for the integrand (used by gaussq)
-
-      ! 5. Function for Gaussian Quadrature integration
+      ! Function for Gaussian Quadrature integration
       SUBROUTINE PDFgaussq(i, a, b, area)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -54,12 +51,14 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
           REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
       END SUBROUTINE PDFgaussq
 
+
       SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         INTEGER(C_INT), INTENT(IN)      :: nzeros
         REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
       END SUBROUTINE acceleratenew
+
 
       SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -92,7 +91,9 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   ! --- END INTERFACES ---
 
   ! --- Subroutine Outputs/Inputs ---
-  REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200), West, Wold, Wold2
+  REAL(KIND=C_DOUBLE) :: Mmatrix(2, 200), Nmatrix(2, 200)
+  REAL(KIND=C_DOUBLE) :: xvec(200), wvec(200)
+  REAL(KIND=C_DOUBLE) :: West, Wold, Wold2
   REAL(KIND=C_DOUBLE) :: zeroBoundR, zeroBoundL, zeroStartPoint
 
   
@@ -100,14 +101,13 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr
   INTEGER               :: m, n, mOld, mmax, mfirst, accMax, j
   INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
-
   REAL(KIND=8)          :: pi
   INTEGER               :: itsacceleration, itsPreAcc
 
-  ! FIX 2: funvalue and relerr removed (already defined as dummy args)
-  REAL(KIND=C_DOUBLE)  :: kmax, startTKmax, tmax, df, f, finalTP, front, kmaxL, kmaxR, lambda
-  REAL(KIND=C_DOUBLE)  :: areaT, area0, area1, areaA, sum, psi, epsilon
-  REAL(KIND=C_DOUBLE)  :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
+  REAL(KIND=C_DOUBLE)   :: kmax, tmax, startTKmax
+  REAL(KIND=C_DOUBLE)   :: df, f, finalTP, front, kmaxL, kmaxR, lambda
+  REAL(KIND=C_DOUBLE)   :: areaT, area0, area1, areaA, sum, psi, epsilon
+  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
 
   ! --- Initialization ---
   CpSmall = .TRUE.
@@ -143,7 +143,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
     convergence = 0
 
     ! FIND kmax, tmax, mmax
-    IF (Cy(i) .GE. Cmu(i)) THEN
+    IF (current_y .GE. current_mu) THEN
       ! ************** y > MU   **************
       ! Im k(t) heads down immediately
 
@@ -154,7 +154,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
       mfirst = -1
       mOld = 0
     
-      zeroStartPoint = pi / Cy(i)
+      zeroStartPoint = pi / current_y
       leftOfMax = 0
     ELSE
       ! ************** y < MU   **************
@@ -174,12 +174,12 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
           mOld = 0
-          zeroStartPoint = tmax + pi/Cy(i)
+          zeroStartPoint = tmax + pi/current_y
           leftOfMax = 0
         ELSE
           mfirst = 1
           mOld = 0
-          zeroStartPoint = pi / (Cmu(i) - Cy(i))
+          zeroStartPoint = pi / (current_mu - current_y)
           mOld = m
 
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
@@ -187,7 +187,6 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         END IF
         IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
           CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
-          !  WAS:            CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
 
         IF (verbose .EQ. 1) THEN
           WRITE(*,*) "** Found(b): kmax =", kmax
@@ -209,7 +208,6 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
 
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
         END IF
-    
       END IF
 
       WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
