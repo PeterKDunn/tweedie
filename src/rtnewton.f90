@@ -34,18 +34,18 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   REAL(KIND=8)        :: dx, df, f, x_current, x_iter_old
   
   ! --- Newton-Raphson Logic ---
-!  WRITE(*,*) "ENTER RTNEWTON"
+  WRITE(*,*) "ENTER RTNEWTON: xstart", xstart
   x_current = xstart ! Start at the initial guess
   
   DO j = 1, MAXITS
-!  WRITE(*,*) "IN RTNEWTON: iteration ", j
+  WRITE(*,*) "IN RTNEWTON: iteration ", j
     ! Save the old value in case we need to revert
     x_iter_old = x_current
     
     ! Calculate function value (f) and derivative (df)
 !    WRITE(*,*) "IN RTNEWTON, about to call  funcd"
     CALL funcd(i, x_current, f, df) 
-!    WRITE(*,*) "IN RTNEWTON, funcd"
+    WRITE(*,*) "IN RTNEWTON, funcd; x, f, df", x_current, f, df
     
     ! Check for convergence before a step
     IF (ABS(f) < xacc) THEN
@@ -66,6 +66,7 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
     ! Check for bounds violation
     IF ( (x_current < x1) .OR. (x_current > x2) ) THEN
         ! Root is outside bounds, revert to last safe value and exit
+        WRITE(*,*) "!!!! OUT OF BOUDNDS  !!!!!"
         x_current = x_iter_old
         EXIT
     END IF

@@ -24,6 +24,6 @@ SUBROUTINE findZeroSmallp(i, t, f, df)
   ! --- Core Calculation ---
   f  = DSIN(Imk + (t * current_y) ) - DSIN( Imk)
   df = (Imkd + current_y) * DCOS(Imk + (t * current_y) ) - &
-       Imkd * DCOS(Imk)
+        Imkd * DCOS(Imk)
   
 END SUBROUTINE findZeroSmallp

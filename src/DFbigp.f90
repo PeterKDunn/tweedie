@@ -79,68 +79,69 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   REAL(KIND=8)              :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
+  ! Grab the relevant scalar values for this iteration:
+  current_y    = Cy(i)    ! Access y value for index i
+  current_mu   = Cmu(i)   ! Access mu value for index i
+  current_phi  = Cphi(i)  ! Access phi value for index i
+
   ! --- Initialization ---
   pi = 4.0D0 * DATAN(1.0D0)
   aimrerr = 1.0D-12
   mOld = 0
   m = 0
+  exitstatus = 0
+  relerr = 1.0_8
+  convergence = 0
+  epsilon = 1.0d-12
 
-  ! Grab the relevant scalar values for this iteration:
-  current_y    = Cy(i)    ! Access y value for index i
-  current_mu   = Cmu(i)   ! Access mu value for index i
-  current_phi  = Cphi(i)  ! Access phi value for index i
  
   IF (verbose .EQ. 1) WRITE(*,*) " FOR p > 2"
     
-    exitstatus = 0
-    relerr = 1.0_8
-    convergence = 0
-    epsilon = 1.0d-12
     
-    ! --- Find kmax, tmax, mmax ---
-    IF (Cy(i) .GE. Cmu(i)) THEN
-      IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
+  ! --- Find kmax, tmax, mmax ---
+  IF (current_y .GE. current_mu) THEN
+    IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
       
-      kmax = 0.0_8
-      tmax = 0.0_8
-      mmax = 0
-      mfirst = -1
+    kmax = 0.0d0
+    tmax = 0.0d0
+    mmax = 0
+    mfirst = -1
+    mOld = 0
+
+    IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
+      
+    zeroStartPoint = pi / current_y
+    leftOfMax = 0
+  ELSE
+    IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
+    
+    startTKmax = findKmaxSP(i)
+
+    IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
+    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+
+    IF (verbose .EQ. 1) THEN
+      WRITE(*,*) "** Found(b): kmax =", kmax
+      WRITE(*,*) "             tmax =", tmax
+      WRITE(*,*) "             mmax =", mmax
+    END IF
+    
+    leftOfMax = 1
+    IF (mmax .EQ. 0) THEN
+      mfirst = 0
       mOld = 0
-      IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
-      
-      zeroStartPoint = pi / current_y
+      zeroStartPoint = tmax + pi/Cy(i)
       leftOfMax = 0
     ELSE
-      IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
-    
-      ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-      startTKmax = findKmaxSP(i)
-
-      IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
-      CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
-    
-      IF (verbose .EQ. 1) THEN
-        WRITE(*,*) "** Found(b): kmax =", kmax
-        WRITE(*,*) "             tmax =", tmax
-        WRITE(*,*) "             mmax =", mmax
-      END IF
-    
-      leftOfMax = 1
-      IF (mmax .EQ. 0) THEN
-        mfirst = 0
-        mOld = 0
-        zeroStartPoint = tmax + pi/Cy(i)
-        leftOfMax = 0
-      ELSE
-        mfirst = 1
-        mOld = 0
-        zeroStartPoint = pi / (current_mu -current_y)
-        mOld = m
+      mfirst = 1
+      mOld = 0
+      zeroStartPoint = pi / (current_mu -current_y)
+      mOld = m
   
-        ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
+      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
+      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
   
-      END IF
+    END IF
   END IF
   
   IF (verbose .EQ. 1) THEN
@@ -149,6 +150,14 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
   END IF
   
+  ! INTEGRATION
+  ! There are three integration regions:
+  !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
+  !   2. The initial area *before* Sidi acceleration is invoked: area1
+  !      (For instance, wait until Im{k(t)} is on the downturn.)
+  !   3. The area thereafter, upon which Sidi acceleration is
+  !      applied; the area returned by acceleration is areaA
+
   ! --- Integration initialization ---
   area0 = 0.0_8
   area1 = 0.0_8
@@ -162,10 +171,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   zeroBoundR = zeroStartPoint * 2.0_8
 
   m = mfirst ! This line caused the error; now fixed by INOUT
-  ! CRITICAL: findExactZeros must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-!  WRITE(*,*) "DFbigp: ABOUT TO CALL findExactZeros"
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-!  WRITE(*,*) "DFbigp: END CALL findExactZeros"
   zeroL = 0.0_8
   zeroR = zero
 
@@ -174,7 +180,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   ! CRITICAL: gaussq must be updated to pass these parameters to DFintegrand
   CALL DFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
-  
+
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
   IF (verbose .EQ. 1) THEN
     WRITE(*,*) "*******************************"
@@ -255,6 +261,8 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
     itsAcceleration = itsAcceleration + 1
     
+
+!!! SUFELY WE ARE ON TEH RIGHT OF TMAX!!!!
     IF (leftOfMax .EQ. 1) THEN
       zeroStartPoint = zeroR
       zeroL = zeroR
@@ -292,13 +300,9 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
 
-    WRITE(*,*) "PRE-acc 1: ", West, Wold, Wold2
     Wold2 = Wold
-    WRITE(*,*) "PRE-acc 2: ", West, Wold, Wold2
     Wold = West
-    WRITE(*,*) "PRE-acc 3: ", West, Wold, Wold2
     CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
-    WRITE(*,*) "POST-acc: updated to: ", West, Wold, Wold2
     
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
@@ -310,7 +314,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
       WRITE(*,*) "  - Estimate of tail area:", West
     END IF
     
-    ! Declare convergemce of we have sufficient regions, and relerr estimate is small
+    ! Declare convergence of we have sufficient regions, and relerr estimate is small
     IF ( (itsAcceleration .GE. minAccRegions) .AND. &
          (relerr .LT. aimrerr) ) THEN
       IF (verbose .EQ. 1) WRITE(*,*) "  Relerr is", relerr

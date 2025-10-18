@@ -58,7 +58,7 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
   
   ! CRITICAL STEP: Set the global context variable 'current_i' before calling the root finder.
   current_i = i
-!  WRITE(*,*) "findExactZeros: ABOUT to call RTNEWTON"
+  WRITE(*,*) "findExactZeros: ABOUT to call RTNEWTON with xstart", xStart
   
   CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
 !  WRITE(*,*) "findExactZeros: Called RTNEWTON, about to exit findExactZeros"

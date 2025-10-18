@@ -11,8 +11,8 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: integral_result
   INTEGER(C_INT), INTENT(IN)        :: i
 
-  INTEGER                               :: j
-  REAL(KIND=C_DOUBLE)                   :: w, f, tt, H
+  INTEGER                               :: j, npoints
+  REAL(KIND=C_DOUBLE)                   :: w, f, tt, xu, xl, fl, fu
   REAL(KIND=C_DOUBLE), DIMENSION(256)   :: absc, weights  
   
   ! ----------------------------------------------------------------
@@ -535,19 +535,23 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
       weights(256) =   0.000028252637373961186168999649d00
 ! ----------------------------------------------------------------
 
-  integral_result = 0.0d0
-  
+
   ! Set up initial parameters
-  H = (b - a)
+  integral_result = 0.0d0
+  npoints = 256 ! For 512-pt quadrature: symmetry
   
   ! Compute
-  DO j = 1, 256
-    tt = (H * absc(j)) + (a + b) / 2.0d0
-    w = H * weights(j) 
-    
-    f = DFintegrand(i, tt)
+  DO j = 1, npoints
+    !Adjust abscissae
+    xl = ( b - a ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
+    xu = ( a - b ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
 
-    integral_result = integral_result + w * f
+    ! Evaluate
+    fl = DFintegrand(i, xl)
+    fu = DFintegrand(i, xu)
+    integral_result = integral_result + weights(j) * ( fl + fu )
   END DO
   
+  integral_result = integral_result * ( b - a ) / 2.0d00
+
 END SUBROUTINE DFgaussq

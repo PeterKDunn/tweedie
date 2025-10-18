@@ -58,8 +58,7 @@ CONTAINS
       CALL findImk(i, t, Imk)
       
       integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
-      WRITE(*,*) " > DFintegrand (t, Re, Im):", t, Rek, Imk, integrand_result
-  
+
     END IF
     
   END FUNCTION DFintegrand
