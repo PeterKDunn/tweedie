@@ -118,9 +118,9 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   current_phi  = Cphi(i)  ! Access phi value for index i
  
   exitstatus = 0
-  relerr = 0.0_8 
-  epsilon = 1.0_8 / 10.0_8**16 ! 1.0d-16
-  aimrerr = 1.0_8 / 10.0_8**14 ! 1.0d-14
+  relerr = 0.0_C_DOUBLE
+  epsilon = 1.0E-16_C_DOUBLE
+  aimrerr = 1.0E-16_C_DOUBLE
   m = 0
 
   IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
@@ -135,7 +135,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
     END DO
     
     ! Set up
-    pi = 4.0D0 * DATAN(1.0D0)
+    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     exitstatus = 0
     relerr = 1.0d00
     epsilon = 1.0d-16

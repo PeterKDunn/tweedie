@@ -1,13 +1,13 @@
 
 FUNCTION myfloor(x) RESULT(r_myfloor) 
-
+  USE ISO_C_BINDING, ONLY: C_DOUBLE
   IMPLICIT NONE
   
   REAL(KIND=8), INTENT(IN)   :: x
   INTEGER                    :: r_myfloor
 
 
-  IF (x .GE. 0.0_8) THEN
+  IF (x .GE. 0.0_C_DOUBLE) THEN
     ! For positive numbers (2.5 -> 2, 2.0 -> 2)
     r_myfloor = INT(x)
   ELSE

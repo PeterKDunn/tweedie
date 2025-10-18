@@ -46,12 +46,12 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   CN = N
   verbose = 1
   exitstatus = 1
-  relerr = 0.0_8
+  relerr = 0.0_C_DOUBLE
   its = 0
 
   ! --- Determine case: psmall = TRUE means 1 < p < 2 ---
   CpSmall = .FALSE.
-  IF ( (p > 1.0_8) .AND. (p < 2.0_8) ) CpSmall = .TRUE.
+  IF ( (p > 1.0_C_DOUBLE) .AND. (p < 2.0_C_DOUBLE) ) CpSmall = .TRUE.
 
   ! --- Loop over N values ---
   DO i = 1, N

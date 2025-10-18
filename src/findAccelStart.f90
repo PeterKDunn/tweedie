@@ -20,19 +20,19 @@ SUBROUTINE findAccelStart(i, tRightMost)
   current_phi  = Cphi(i)  ! Access phi value for index i
   
   
-  pi = 4.0D0 * DATAN(1.0D0)
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
-  IF ( (Cp > 1.4d00) .AND. (Cp < 1.6d00) ) THEN
-    tRightMost = 1.0d0
+  IF ( (Cp > 1.4_C_DOUBLE) .AND. (Cp < 1.6_C_DOUBLE) ) THEN
+    tRightMost = 1.0_C_DOUBLE
   ELSE
-    lRightMostD = ACOS( (current_y / current_mu)**(Cp - 1.0d0) ) / (pi * (Cp - 1.0d0) )
+    lRightMostD = DACOS( (current_y / current_mu)**(Cp - 1.0_C_DOUBLE) ) / (pi * (Cp - 1.0_C_DOUBLE) )
                   
     lRightMost = myfloor(lRightMostD) + 1
 
     ! Final calculation for tRightMost
-    omegaRM = REAL(lRightMost, KIND=8) * pi * (1.0d0 - Cp)
-    tRightMost = TAN(omegaRM) * current_mu ** (1.0d0 - Cp) / &
-                 ( current_phi * (1.0d0 - Cp) )
+    omegaRM = REAL(lRightMost, KIND=8) * pi * (1.0_C_DOUBLE - Cp)
+    tRightMost = DTAN(omegaRM) * current_mu ** (1.0_C_DOUBLE - Cp) / &
+                  ( current_phi * (1.0_C_DOUBLE - Cp) )
   END IF
   
 END SUBROUTINE findAccelStart

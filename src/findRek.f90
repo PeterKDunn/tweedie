@@ -16,7 +16,7 @@ SUBROUTINE findRek(i, t, Rek)
   current_phi  = Cphi(i)  ! Access phi value for index i
   
 
-  pi = 4.0D0 * DATAN(1.0D0)
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
   pindex = (2.0d00 - Cp)
   front = current_mu ** pindex  / ( current_phi * pindex)
   tanArg = (1.0d00 - Cp) * t * current_phi / (current_mu ** (1.0d00 - Cp) )

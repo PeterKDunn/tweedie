@@ -18,9 +18,9 @@ SUBROUTINE findImkdd(i, t, Imkdd)
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
 
-  pindex = Cp / (1.0_8 - Cp)
-  front = -current_phi * current_mu ** (Cp/(1.0_8 - Cp))
-  omega = DATAN( ( (1.0_8 - Cp) * t * current_phi) / (current_mu ** (1.0_8 - Cp) ) )
+  pindex = Cp / (1.0_C_DOUBLE - Cp)
+  front = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))
+  omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
 
   Imkdd = front * (DSIN(omega * pindex) / (DCOS(omega) ** pindex) )
 

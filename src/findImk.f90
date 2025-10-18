@@ -14,24 +14,24 @@ SUBROUTINE findImk(i, t, Imk)
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
 
 
-  pi = 4.0D0 * DATAN(1.0D0)
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
 
-  front = current_mu ** (2.0d00 - Cp) / ( current_phi * (2.0d00 - Cp))
-  tanArg = (1.0d00 - Cp) * t * current_phi  / (current_mu ** (1.0d00 - Cp) )
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+  front = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
+  tanArg = (1.0_C_DOUBLE - Cp) * t * current_phi  / (current_mu ** (1.0_C_DOUBLE - Cp) )
   omega = DATAN( tanArg )
 
-  IF ((omega .GT. 0.0d00 ) .OR.    &    
-      (omega .LT. (-pi/2.0d00)) ) THEN
+  IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
+      (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
     write(*,*) "ERROR (FindImk): Omega out of range:", omega
     write(*,*) "Argument: ", tanArg
     write(*,*) "       t: ", t
     STOP
   END IF
-  alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
+  alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)
 
   Imk = front *   &
         DSIN(omega * alpha)/(DCOS(omega) ** alpha) - t * current_y

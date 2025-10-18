@@ -109,15 +109,14 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   current_phi  = Cphi(i)  ! Access phi value for index i
  
   ! --- Initialization ---
-  pi = 4.0D0 * DATAN(1.0D0)
-  aimrerr = 1.0D-12
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+  aimrerr = 1.0E-12_C_DOUBLE
   mOld = 0
   m = 0
   exitstatus = 0
-  relerr = 1.0_8
+  relerr = 1.0_C_DOUBLE
   convergence = 0
-  epsilon = 1.0d-12
-
+  epsilon = 1.0-13_C_DOUBLE
 
   IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
 
@@ -127,8 +126,8 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     ! Im k(t) heads down immediately
 
     IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
-    kmax = 0.0d00
-    tmax = 0.0d00
+    kmax = 0.0_C_DOUBLE
+    tmax = 0.0_C_DOUBLE
     mmax = 0
     mfirst = -1
     mOld = 0
@@ -144,9 +143,9 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     startTKMax = findKmaxSP(i)
     IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
     
-    ! In this case, sometimes important to have a good starting point and bounds.  
+    ! For smallp, sometimes very important to have a good starting point and bounds.
     CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
-    startTKmax =  (kmaxL + kmaxR) / 2.0d0
+    startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
       
     IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
@@ -172,20 +171,6 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
       WRITE(*,*) "             mmax =", mmax
     END IF
       
-    leftOfMax = 1
-    IF ( mmax .EQ. 0) THEN
-      mfirst = 0
-      mOld = 0
-      zeroStartPoint = tmax + pi/Cy(i)
-      leftOfMax = 0
-    ELSE
-      mfirst = 1
-      mOld = 0
-      zeroStartPoint = pi / (Cmu(i) - Cy(i))
-      mOld = m
-
-      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-    END IF
   END IF
   
   WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
@@ -199,13 +184,13 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   !      applied; the area returned by acceleration is areaA
 
   ! --- Integration initialization ---
-  area0 = 0.0d00
-  area1 = 0.0d00
-  areaA = 0.0d00
+  area0 = 0.0_C_DOUBLE
+  area1 = 0.0_C_DOUBLE
+  areaA = 0.0_C_DOUBLE
   m = mfirst
   ! Find the final turning point of Im/Re k, and start accelerating thereafter      
   WRITE(*,*) "IS this about TPs correct??"
-  finalTP = 0.0d00
+  finalTP = 0.0_C_DOUBLE
   IF ( current_y .LT. current_mu ) THEN
     ! Find where the oscillations settle down, to use acceleration thereafter
     CALL findAccelStart(i, finalTP)
@@ -213,8 +198,8 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
 
   zeroStartPoint = pi / current_y
   ! TRY A NEW ONE!
-  front = current_mu ** (1.0d0 - Cp) / ( current_phi * (1.0d0 - Cp))
-  zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
+  front = current_mu ** (1.0_C_DOUBLE - Cp) / ( current_phi * (1.0_C_DOUBLE - Cp))
+  zeroStartPoint = front * DTAN( pi * ( 1.0_C_DOUBLE - Cp) / Cp )
 
 
   ! 1. INTEGRATE FIRST REGION: area0
@@ -223,17 +208,17 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     WRITE(*,*) "1. INTEGRATE: the INITIAL region"
   END IF 
   zeroBoundL = tmax
-  zeroBoundR = zeroStartPoint + 3.0d0 * pi / current_y
+  zeroBoundR = zeroStartPoint + 3.0_C_DOUBLE * pi / current_y
   IF (verbose .EQ. 1) WRITE(*,*) " Bounds zero; ", zeroBoundL, zeroBoundR
 
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-  zeroL = 0.0d00
+  zeroL = 0.0_C_DOUBLE
   zeroR = zero
 
   ! Find the right-side zero
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
-  zeroL =  0.0d00
+  zeroL =  0.0_C_DOUBLE
   zeroR = zero
   CALL DFgaussq(i, zeroL, zeroR, area0)
 
@@ -252,7 +237,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   ! after the downturn)
 
   itsPreAcc = 0
-  area1 = 0.0d00
+  area1 = 0.0_C_DOUBLE
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
   stopPreAccelerate = 0
@@ -262,9 +247,8 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     zeroL = zeroR
 
     zeroStartPoint = (itsPreAcc + 1) * pi / current_y
-    ! WRITE(*,*)" StartPT:", zeroStartPoint
     zeroBoundL = zeroR
-    zeroBoundR = zeroStartPoint + 0.75d0 * pi / current_y
+    zeroBoundR = zeroStartPoint + 0.75_C_DOUBLE * pi / current_y
 
     CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
@@ -296,16 +280,15 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   END IF
       
  ! Initialisation
-  West = 3.0_8
-  Wold = 2.0_8
-  Wold2 = 1.0_8
+  West = 3.0_C_DOUBLE
+  Wold = 2.0_C_DOUBLE
+  Wold2 = 1.0_C_DOUBLE
   itsAcceleration = 0
-  areaA = 0.0_8
+  areaA = 0.0_C_DOUBLE
   convergence = 0
   accMax = 40           ! Maximum number of regions in accelerationl arbitrary
   minAccRegions = 3     ! Minimum number of acceleration regions to use
   
-
   xvec(1) = zeroR
   ! This will be the very first, left-most value of t used, the left-most
   ! value of  t  used in the acceleration (the previous regions *right* value) 
@@ -320,25 +303,24 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
     IF (leftOfMax .EQ. 1) THEN
       zeroStartPoint = zeroR
       zeroL = zeroR
-      zeroR = zeroR * 20.0_8
+      zeroR = zeroR * 20.0_C_DOUBLE
     ELSE
       IF (flip .EQ. 1) THEN
         ! FLIPPING to other side of tmax
         zeroStartPoint = tmax + (tmax - zero)
         ! That is, start of the other side of tmax
         zeroL = zero
-        zeroR = zeroStartPoint * 20.0_8
+        zeroR = zeroStartPoint * 20.0_C_DOUBLE
       ELSE
         zeroStartPoint = zeroR
         zeroL = zeroR
-        zeroR = zeroR * 10.0_8
+        zeroR = zeroR * 10.0_C_DOUBLE
       END IF
     END IF
 
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
     WRITE(*,*) " What is next line for...???"
     CALL findZeroSmallp(i, zero, f, df)
-    
     
     zeroR = zero
     xvec(itsAcceleration + 1) = zeroR
@@ -395,7 +377,7 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
       
   ! So the value returned by the integration  
-  funvalue(i) = -areaT/pi + 0.50d0 
+  funvalue(i) = -areaT/pi + 0.50_C_DOUBLE
   IF (verbose .EQ. 1) THEN
     WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
     WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"

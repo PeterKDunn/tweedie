@@ -49,7 +49,7 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
 
   
   ! Set the accuracy
-  xacc = 1.0D-12
+  xacc = 1.0E-13_C_DOUBLE
   
   CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
 

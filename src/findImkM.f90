@@ -23,7 +23,7 @@ SUBROUTINE findImkM(i, t, f, df, m)
 
   REAL(KIND=8)                      :: pi, Imk_val
 
-  pi = 4.0D0 * DATAN(1.0D0)
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
   CALL findImk(i, t, Imk_val)
   f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi

@@ -76,7 +76,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
   
   ! --- Initialization ---
   aimrerr = 1.0d-09
-  pi = 4.0D0 * DATAN(1.0D0)
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -110,14 +110,14 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
       ! Cy >= Cmu and p > 2
       mmax = 0
       mfirst = -1
-      tmax = 0.0d00
-      kmax = 0.0d00
+      tmax = 0.0_C_DOUBLE
+      kmax = 0.0_C_DOUBLE
     ELSE
       ! Cy < Cmu and p > 2
       CALL rtnewton(i,                    &
                     findImkdZero,         &  ! function to find the zeros for
-                    0.00d00,              &  ! Lower bound
-                    startPoint * 30.0d00, &  ! Upper bound
+                    0.0_C_DOUBLE,         &  ! Lower bound
+                    startPoint * 30.0_C_DOUBLE, &  ! Upper bound
                     startPoint,           &  ! Starting value
                     aimrerr,              &  ! The relative error aimed for
                     tmax)                    ! The root

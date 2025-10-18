@@ -45,9 +45,9 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
     CALL funcd(i, rootTMP, f, df)
     
     ! Check for non-finite derivative (NaN/Inf) OR very small derivative
-    IF ( (df .NE. df) .OR. (DABS(df) < 1.0d-12) ) THEN
+    IF ( (df .NE. df) .OR. (DABS(df) < 1.0E-12_C_DOUBLE) ) THEN
         ! Fallback: Use bisection if Newton's method is unstable
-        rtsafeTMP = (xl + xh) / 2.0_8
+        rtsafeTMP = (xl + xh) / 2.0_C_DOUBLE
         dx = DABS(rtsafeTMP - rootTMP)
         rootTMP = rtsafeTMP
     ELSE
@@ -56,11 +56,11 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
         rtsafeTMP = rootTMP - dx
         
         ! Check if Newton step is valid (remains within brackets)
-        IF (((rootTMP - rtsafeTMP) * f) .LT. 0.0_8) THEN
+        IF (((rootTMP - rtsafeTMP) * f) .LT. 0.0_C_DOUBLE) THEN
             rootTMP = rtsafeTMP
         ELSE
             ! Fallback to bisection if step is invalid
-            rtsafeTMP = (xl + xh) / 2.0_8
+            rtsafeTMP = (xl + xh) / 2.0_C_DOUBLE
             dx = DABS(rtsafeTMP - rootTMP)
             rootTMP = rtsafeTMP
         END IF
@@ -70,7 +70,7 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
     IF (DABS(dx) < xacc) RETURN 
     
     ! Update brackets (bisection logic)
-    IF (f .LT. 0.0_8) THEN
+    IF (f .LT. 0.0_C_DOUBLE) THEN
         xl = rootTMP
     ELSE
         xh = rootTMP

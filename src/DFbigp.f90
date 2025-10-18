@@ -85,14 +85,14 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   current_phi  = Cphi(i)  ! Access phi value for index i
 
   ! --- Initialization ---
-  pi = 4.0D0 * DATAN(1.0D0)
-  aimrerr = 1.0D-12
+  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+  aimrerr = 1.0E-12_C_DOUBLE
   mOld = 0
   m = 0
   exitstatus = 0
-  relerr = 1.0_8
+  relerr = 1.0_C_DOUBLE
   convergence = 0
-  epsilon = 1.0d-12
+  epsilon = 1.0_C_DOUBLE
 
  
   IF (verbose .EQ. 1) WRITE(*,*) " FOR p > 2"
@@ -101,8 +101,8 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   IF (current_y .GE. current_mu) THEN
     IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
       
-    kmax = 0.0d0
-    tmax = 0.0d0
+    kmax = 0.0_C_DOUBLE
+    tmax = 0.0_C_DOUBLE
     mmax = 0
     mfirst = -1
     mOld = 0
@@ -115,8 +115,8 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
     
     startTKmax = findKmaxSP(i)
-
     IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
+
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
 
     IF (verbose .EQ. 1) THEN
@@ -158,25 +158,25 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   !      applied; the area returned by acceleration is areaA
 
   ! --- Integration initialization ---
-  area0 = 0.0_8
-  area1 = 0.0_8
-  areaA = 0.0_8
+  area0 = 0.0_C_DOUBLE
+  area1 = 0.0_C_DOUBLE
+  areaA = 0.0_C_DOUBLE
 
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
   IF (verbose .EQ. 1) WRITE(*,*) "*******************************"
   IF (verbose .EQ. 1) WRITE(*,*) "1. INTEGRATE: the INITIAL region"
   
-  zeroBoundL = 0.0_8
-  zeroBoundR = zeroStartPoint * 2.0_8
+  zeroBoundL = 0.0_C_DOUBLE  ! Should be tmax???
+  zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
 
   m = mfirst
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-  zeroL = 0.0_8
+  zeroL = 0.0_C_DOUBLE
   zeroR = zero
 
-  IF (verbose .EQ. 1) WRITE(*,*) "  - Between ", zeroL, zeroR
   CALL DFgaussq(i, zeroL, zeroR, area0)
-  IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area is", area0
+  IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
+  IF (verbose .EQ. 1) WRITE(*,*) "    between ", zeroL, zeroR
 
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
   IF (verbose .EQ. 1) THEN
@@ -188,13 +188,13 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   IF (mfirst .EQ. -1) THEN
     itsPreAcc = itsPreAcc + 1
     IF (verbose .EQ. 1) WRITE(*,*) "  > Not using pre-acceleration area"
-    area1 = 0.0_8
+    area1 = 0.0_C_DOUBLE
     mOld = m
 
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
   ELSE
-    area1 = 0.0_8
+    area1 = 0.0_C_DOUBLE
     mOld = m
 
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
@@ -205,12 +205,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
 
       IF (leftOfMax .EQ. 1) THEN
         zeroBoundL = zeroR
-        zeroBoundR = zeroR * 10.0_8
+        zeroBoundR = zeroR * 10.0_C_DOUBLE
       ELSE
         zeroBoundL = tmax
-        zeroBoundR = zeroR * 20.0_8
+        zeroBoundR = zeroR * 20.0_C_DOUBLE
       END IF
-      zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_8
+      zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
       
       zeroL = zeroR
   
@@ -237,11 +237,11 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   IF (verbose .EQ. 1) WRITE(*,*) "3. INTEGRATE: the ACCELERATION"
   
   ! Initialisation
-  West = 3.0_8
-  Wold = 2.0_8
-  Wold2 = 1.0_8
+  West = 3.0_C_DOUBLE
+  Wold = 2.0_C_DOUBLE
+  Wold2 = 1.0_C_DOUBLE
   itsAcceleration = 0
-  areaA = 0.0_8
+  areaA = 0.0_C_DOUBLE
   convergence = 0
   accMax = 40           ! Maximum number of regions in accelerationl arbitrary
   minAccRegions = 3     ! Minimum number of acceleration regions to use
@@ -259,18 +259,18 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
     IF (leftOfMax .EQ. 1) THEN
       zeroStartPoint = zeroR
       zeroL = zeroR
-      zeroR = zeroR * 20.0_8
+      zeroR = zeroR * 20.0_C_DOUBLE
     ELSE
       IF (flip .EQ. 1) THEN
         ! FLIPPING to other side of tmax
         zeroStartPoint = tmax + (tmax - zero)
         ! That is, start of the other side of tmax
         zeroL = zero
-        zeroR = zeroStartPoint * 20.0_8
+        zeroR = zeroStartPoint * 20.0_C_DOUBLE
       ELSE
         zeroStartPoint = zeroR
         zeroL = zeroR
-        zeroR = zeroR * 10.0_8
+        zeroR = zeroR * 10.0_C_DOUBLE
       END IF
     END IF
 
@@ -336,7 +336,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   
   ! We have the value of the integral in the CDF calculation.
   ! So now work out the CDF
-  funvalue(i) = (-1.0_8/pi) * areaT + 0.5_8
+  funvalue(i) = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
     
   IF (verbose .EQ. 1) THEN
     WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)

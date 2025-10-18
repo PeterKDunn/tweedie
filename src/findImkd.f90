@@ -21,10 +21,10 @@ SUBROUTINE findImkd(i, t, Imkd)
 
   ! --- Calculation (Using F90 constants) ---
   
-  pindex = 1.0_8 / (1.0_8 - Cp)
+  pindex = 1.0_C_DOUBLE / (1.0_C_DOUBLE - Cp)
   
   ! Use DATAN for double precision arc tangent
-  omega = DATAN( ( (1.0_8 - Cp) * t * current_phi) / (current_mu ** (1.0_8 - Cp) ) )
+  omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
   
   ! Final calculation
   Imkd = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
