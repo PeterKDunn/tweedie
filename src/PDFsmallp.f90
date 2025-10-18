@@ -69,6 +69,25 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
       END SUBROUTINE findExactZeros
 
+
+      SUBROUTINE findZeroSmallp(i, t, f, df)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
+        INTEGER(C_INT), INTENT(IN)       :: i
+        REAL(KIND=C_DOUBLE), INTENT(IN)  :: t
+        REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+      END SUBROUTINE findZeroSmallp
+      
+      
+      SUBROUTINE findLambda(i, lambda)
+        USE tweedie_params_mod
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
+        INTEGER(C_INT), INTENT(IN)        :: i
+        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda ! The output value
+        REAL(KIND=C_DOUBLE)               :: current_mu, current_phi
+      END SUBROUTINE findLambda
+
   END INTERFACE
   ! --- END INTERFACES ---
 
@@ -338,7 +357,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
         zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy(i)
 
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-        CALL findZeroSmallp(zero, f, df)
+        CALL findZeroSmallp(i, zero, f, df)
 
         zeroR = zero
         xvec(itsAcceleration + 1) = zeroR
@@ -391,7 +410,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
       
       ! We have the value of the integral in the CDF calculation. 
       ! So now work out the CDF
-      CALL findLambda(lambda)
+      CALL findLambda(i, lambda)
 
       ! The integration returns the conditional CDF for Y | Y > 0.
       ! So we need to find the CDF of Y.
