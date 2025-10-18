@@ -12,31 +12,30 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its
   REAL(C_DOUBLE), INTENT(OUT):: funvalue(N)
   INTEGER(C_INT), INTENT(OUT):: exitstatus, its
   REAL(C_DOUBLE), INTENT(OUT):: relerr
+  
 
-    ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
-    INTERFACE
-        SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
-            IMPLICIT NONE
-            INTEGER, INTENT(IN)                       :: i, exact
-            REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
-            INTEGER, INTENT(OUT)                      :: exitstatus
-            REAL(KIND=8), INTENT(OUT)                 :: relerr
-            INTEGER, INTENT(IN)                       :: verbose
-        END SUBROUTINE PDFbigp
+  ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
+  INTERFACE
+    SUBROUTINE PDFbigp(i, exact, funvalue, exitstatus, relerr, verbose)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN)                       :: i, exact
+      REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+      INTEGER, INTENT(OUT)                      :: exitstatus
+      REAL(KIND=8), INTENT(OUT)                 :: relerr
+      INTEGER, INTENT(IN)                       :: verbose
+    END SUBROUTINE PDFbigp
 
-        SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
-            IMPLICIT NONE
-            INTEGER, INTENT(IN)                       :: i, exact
-            REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
-            INTEGER, INTENT(OUT)                      :: exitstatus
-            REAL(KIND=8), INTENT(OUT)                 :: relerr
-            INTEGER, INTENT(IN)                       :: verbose
-        END SUBROUTINE PDFsmallp
-    END INTERFACE
-    ! -----------------------------------------------
+    SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN)                       :: i, exact
+      REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+      INTEGER, INTENT(OUT)                      :: exitstatus
+      REAL(KIND=8), INTENT(OUT)                 :: relerr
+      INTEGER, INTENT(IN)                       :: verbose
+    END SUBROUTINE PDFsmallp
+  END INTERFACE
 
 
-  ! --- Local variables ---
   INTEGER         :: i
   REAL(C_DOUBLE)  :: aimrerr
   INTEGER         :: verbose

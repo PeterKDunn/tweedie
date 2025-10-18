@@ -5,9 +5,10 @@ SUBROUTINE findLambda(i, lambda)
   IMPLICIT NONE
   
   INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda ! The output value
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda 
   
   REAL(KIND=C_DOUBLE)               :: current_mu, current_phi
+
 
   ! Grab the relevant scalar values for this iteration:
   current_mu   = Cmu(i)   ! Access mu value for index i

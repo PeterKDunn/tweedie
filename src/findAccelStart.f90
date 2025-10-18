@@ -19,13 +19,13 @@ SUBROUTINE findAccelStart(i, tRightMost)
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
   
+  
   pi = 4.0D0 * DATAN(1.0D0)
 
-  IF ((Cp > 1.4d00) .AND. (Cp < 1.6d00)) THEN
+  IF ( (Cp > 1.4d00) .AND. (Cp < 1.6d00) ) THEN
     tRightMost = 1.0d0
   ELSE
-    lRightMostD = ACOS( (current_y / current_mu)**(Cp - 1.0d0) ) / &
-                  (pi * (Cp - 1.0d0) )
+    lRightMostD = ACOS( (current_y / current_mu)**(Cp - 1.0d0) ) / (pi * (Cp - 1.0d0) )
                   
     lRightMost = myfloor(lRightMostD) + 1
 

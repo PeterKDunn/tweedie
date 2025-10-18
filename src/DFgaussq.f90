@@ -542,7 +542,7 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
   
   ! Compute
   DO j = 1, npoints
-    !Adjust abscissae
+    ! Adjust abscissae
     xl = ( b - a ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
     xu = ( a - b ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
 

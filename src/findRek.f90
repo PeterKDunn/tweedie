@@ -4,9 +4,9 @@ SUBROUTINE findRek(i, t, Rek)
 
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)    :: t              ! Input parameter t
+  REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
   INTEGER(C_INT), INTENT(IN)         :: i
-  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek            ! Output result (Real part of k(t))
+  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek
 
   REAL(KIND=C_DOUBLE) :: current_mu, current_phi
   REAL(KIND=C_DOUBLE) :: pi, omega, pindex, front, alpha, tanArg
@@ -17,27 +17,19 @@ SUBROUTINE findRek(i, t, Rek)
   
 
   pi = 4.0D0 * DATAN(1.0D0)
-  
   pindex = (2.0d00 - Cp)
   front = current_mu ** pindex  / ( current_phi * pindex)
-  
   tanArg = (1.0d00 - Cp) * t * current_phi / (current_mu ** (1.0d00 - Cp) )
-           
-  omega = ATAN( tanArg )
+  omega = DATAN( tanArg )
   
-  ! Safety Check (retaining the core math logic, but removing I/O)
+  ! Safety check
   IF ((omega > 0.0d00 ) .OR. (omega < (-pi/2.0d00))) THEN
-     ! Raise an error if omega is out of the valid range
-     ! Since we cannot use R I/O, we must rely on the R wrapper 
-     ! to handle the return of an invalid value, or let a runtime error occur.
-     ! Returning NaN is a robust way to signal the error back to R.
-!     Rek = ACOS(2.0d0) ! Resulting in NaN
+     ! Error!
+     WRITE(*,*) "Error: omga out of bounds"
      RETURN
   END IF
   
   alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
-
-  Rek = front * &
-        ( COS(omega * alpha)/(COS(omega)**alpha) - 1.0d00 )
+  Rek = front * ( DCOS(omega * alpha)/(DCOS(omega)**alpha) - 1.0d00 )
 
 END SUBROUTINE findRek

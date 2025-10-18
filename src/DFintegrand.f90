@@ -17,7 +17,6 @@ CONTAINS
     REAL(KIND=C_DOUBLE)               :: Imk, Rek
     
     
-   ! NOTE: Added INTERFACE blocks to declare C-binding for helper routines
     INTERFACE
       SUBROUTINE findImk(i, t, Imk)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -27,6 +26,7 @@ CONTAINS
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
       END SUBROUTINE findImk
+
       
       SUBROUTINE findRek(i, t, Rek)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -43,8 +43,6 @@ CONTAINS
     current_y    = Cy(i)
     current_mu   = Cmu(i)
 
-    ! The call to findImk and findRek must pass the parameters explicitly.
-    
     ! Check for when t = 0 (t is very close to zero)
     IF (ABS(t) < 1.0d-14) THEN
       ! This should ideally be handled by the integrator (limits), 
@@ -53,7 +51,6 @@ CONTAINS
   
       RETURN
     ELSE
-      ! NOTE: Calls to findImk and findRek MUST include the extra parameters
       CALL findRek(i, t, Rek)
       CALL findImk(i, t, Imk)
       
@@ -62,4 +59,5 @@ CONTAINS
     END IF
     
   END FUNCTION DFintegrand
+
 END MODULE DFintegrand_MOD

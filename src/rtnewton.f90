@@ -5,7 +5,6 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
 
   IMPLICIT NONE
 
-  ! --- INTERFACE: Declaration of the function to be solved (funcd) ---
   INTERFACE
     SUBROUTINE funcd_signature(i, x, f, df)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -16,37 +15,33 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
       REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
     END SUBROUTINE funcd_signature
   END INTERFACE
-  ! --- END INTERFACE ---
 
   PROCEDURE(funcd_signature):: funcd
   
+
   REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
   INTEGER(C_INT), INTENT(IN)       :: i
   
   ! Output (Function result)
   REAL(KIND=8)              :: root
   
-  ! --- Local Variables (FIXED: removed rtnewton and xacc) ---
+  ! --- Local Variables
   INTEGER, PARAMETER  :: MAXITS = 100
   INTEGER             :: j
   
   ! x_current holds the current iteration value, dx is the change
   REAL(KIND=8)        :: dx, df, f, x_current, x_iter_old
   
-  ! --- Newton-Raphson Logic ---
-  WRITE(*,*) "ENTER RTNEWTON: xstart", xstart
+
   x_current = xstart ! Start at the initial guess
   
   DO j = 1, MAXITS
-  WRITE(*,*) "IN RTNEWTON: iteration ", j
     ! Save the old value in case we need to revert
     x_iter_old = x_current
     
     ! Calculate function value (f) and derivative (df)
-!    WRITE(*,*) "IN RTNEWTON, about to call  funcd"
     CALL funcd(i, x_current, f, df) 
-    WRITE(*,*) "IN RTNEWTON, funcd; x, f, df", x_current, f, df
-    
+
     ! Check for convergence before a step
     IF (ABS(f) < xacc) THEN
         EXIT ! Root found (f is close to zero)
@@ -66,7 +61,6 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
     ! Check for bounds violation
     IF ( (x_current < x1) .OR. (x_current > x2) ) THEN
         ! Root is outside bounds, revert to last safe value and exit
-        WRITE(*,*) "!!!! OUT OF BOUDNDS  !!!!!"
         x_current = x_iter_old
         EXIT
     END IF

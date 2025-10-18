@@ -4,9 +4,6 @@ SUBROUTINE findImkM(i, t, f, df, m)
 
   IMPLICIT NONE
 
-  
-  ! --- Interface Declaration ---
-  ! We declare the interface for the subroutine we must call (findImk)
   INTERFACE
     SUBROUTINE findImk(i, t_in, ImkM_out)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -17,6 +14,7 @@ SUBROUTINE findImkM(i, t, f, df, m)
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: ImkM_out
     END SUBROUTINE findImk
   END INTERFACE
+  
   
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
@@ -29,7 +27,6 @@ SUBROUTINE findImkM(i, t, f, df, m)
 
   CALL findImk(i, t, Imk_val)
   f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
-
   CALL findImkd(i, t, df)
   
 END SUBROUTINE findImkM

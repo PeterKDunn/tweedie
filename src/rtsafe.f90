@@ -4,8 +4,6 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   IMPLICIT NONE
   
   INTERFACE
-      ! Define the expected signature of the function pointer passed to rtnewton.
-      ! Assuming the solved function (funcd) is a SUBROUTINE returning f and df.
       SUBROUTINE funcd_signature(i, x, f, df)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -13,21 +11,19 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
         REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
         INTEGER(C_INT), INTENT(IN)         :: i
         REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
-        ! The remaining arguments are implicitly accessible through the module
+
       END SUBROUTINE funcd_signature
   END INTERFACE
   
-  ! Declaration of the procedure argument, linking it to the defined interface.
   PROCEDURE(funcd_signature) :: funcd
  
+
   ! Inputs
   REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
   INTEGER(C_INT), INTENT(IN)       :: i
 
   ! Output (Function result)
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
-  
-  ! --- Local Variables ---
   
   INTEGER, PARAMETER   :: JMAX = 50
   INTEGER              :: j
@@ -46,12 +42,10 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   ! --- Main Loop ---
   
   DO j = 1, JMAX
-    ! CRITICAL FIX: Pass the extra parameters to the function being solved!
     CALL funcd(i, rootTMP, f, df)
     
     ! Check for non-finite derivative (NaN/Inf) OR very small derivative
-    ! PURE FORTRAN FIX: df .NE. df is true if df is NaN or Inf.
-    IF (df .NE. df .OR. DABS(df) < 1.0d-12) THEN
+    IF ( (df .NE. df) .OR. (DABS(df) < 1.0d-12) ) THEN
         ! Fallback: Use bisection if Newton's method is unstable
         rtsafeTMP = (xl + xh) / 2.0_8
         dx = DABS(rtsafeTMP - rootTMP)
@@ -85,6 +79,5 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   END DO
   
   root = rootTMP
-
   
-  END SUBROUTINE rtsafe
+END SUBROUTINE rtsafe

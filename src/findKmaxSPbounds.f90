@@ -4,8 +4,6 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
 
   IMPLICIT NONE
   
-  ! --- F77 Arguments (from original subroutine definition) ---
-  
   ! Inputs
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: startTKmax
   INTEGER(C_INT), INTENT(IN)         :: i
@@ -18,23 +16,19 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   REAL(KIND=C_DOUBLE)    :: oldBoundL, oldBoundR
   LOGICAL         :: keepSearching
   
-  ! External Subroutines/Functions (These were retained but are not strictly necessary 
-  ! if all are in modules, but we keep them here for safe compilation.)
   EXTERNAL findImkd
   
+
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
-  
-  ! --- Core Logic ---
   
   ! FIND the slope of the starting point (SP)
   ! NOTE: findImkd must be called with the parameters from the COMMON block.
   CALL findImkd(i, startTKmax, SPslope)
 
   ! ************** LOWER BOUND
-  
   ! If slope at SP is *positive*, only need to creep to the right
   boundL = startTKmax
   
@@ -42,7 +36,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
     keepSearching = .TRUE.
     DO WHILE (keepSearching)
       ! If slope at SP is negative, take bold steps left to find lower bound
-      boundL = boundL / 2.0d0 ! NOTE: uses d0 for compatibility, but _8 is preferred
+      boundL = boundL / 2.0d0 
       
       CALL findImkd(i, boundL, slope)
       
@@ -67,10 +61,8 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
     END IF
   END DO
   kmaxL = boundL
-  ! Removed write(*,*)
 
   ! ************** UPPER BOUND
-  
   ! Re-evaluate SPslope (redundant but safe)
   CALL findImkd(i, startTKmax, SPslope)
   boundR = startTKmax
