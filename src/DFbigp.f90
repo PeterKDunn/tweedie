@@ -1,4 +1,4 @@
-SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose) 
+SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose) 
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -9,7 +9,7 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
   INTEGER(C_INT), INTENT(IN)                      :: verbose        ! Assuming IN for verbosity flag
   INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
-  REAL(KIND=C_DOUBLE), DIMENSION(*), INTENT(OUT)  :: funvalue       ! Computed result
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalueI       ! Computed result
   REAL(KIND=C_DOUBLE), INTENT(OUT)                :: relerr         ! Estimate of relative error
 
    ! --- INTERFACES: All C-bound routines called by DFbigp:
@@ -336,12 +336,12 @@ SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
   
   ! We have the value of the integral in the CDF calculation.
   ! So now work out the CDF
-  funvalue(i) = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
+  funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
     
   IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
+    WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
     WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
-    WRITE(*,*) funvalue(i), exitstatus, relerr
+    WRITE(*,*) funvalueI, exitstatus, relerr
   END IF
 
   RETURN

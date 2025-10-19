@@ -1,4 +1,3 @@
-
 FUNCTION myfloor(x) RESULT(r_myfloor) 
   USE ISO_C_BINDING, ONLY: C_DOUBLE
   IMPLICIT NONE
@@ -13,7 +12,7 @@ FUNCTION myfloor(x) RESULT(r_myfloor)
   ELSE
     ! For negative numbers:
     ! We must check if it's already an integer before subtracting 1
-    IF (x .EQ. REAL(INT(x), KIND=8)) THEN
+    IF (x .EQ. REAL(INT(x), KIND=C_DOUBLE)) THEN
         r_myfloor = INT(x)  ! If x is -2.0, result is -2
     ELSE
         r_myfloor = INT(x) - 1 ! If x is -2.5, result is -3

@@ -11,5 +11,4 @@ SUBROUTINE twpdf(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its) BIN
 
   ! Call internal Fortran routine
   CALL twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, its)
-  
 END SUBROUTINE twpdf

@@ -282,19 +282,20 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
   its_scalar        <- as.integer(0)
   
   tmp <- .C( "twcdf",
-                   as.integer(N),         # number of observations
-                   as.double(power),      # p
-                   as.double(phi),        # phi
-                   as.double(y),          # y
-                   as.double(mu),         # mu
+             N           = as.integer(N),         # number of observations
+             power       = as.double(power),      # p
+             phi         = as.double(phi),        # phi
+             y           = as.double(y),          # y
+             mu          = as.double(mu),         # mu
                       # THE OUTPUTS:
-                   as.double(rep(0, N)),  # funvalue
-                   as.integer(0),         # exitstatus
-                   as.double(0),          # relerr
-                   as.integer(0),         # its
-                   PACKAGE = "tweedie")
-      cdf <- tmp$funvalue
+             funvalue    = as.double(rep(0, N)),  # funvalue
+             exitstatus  = as.integer(0),         # exitstatus
+             relerr      = as.double(0),          # relerr
+             its         = as.integer(0),         # its
+             PACKAGE     = "tweedie")
+  cdf <- tmp$funvalue
 
+  return(cdf)
 }
 
 

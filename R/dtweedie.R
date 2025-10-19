@@ -5416,60 +5416,60 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
       
       if ( use.method == 2 ) {
         tmp <- .C("twpdf",
-                  as.integer(N),
-                  as.double(power),
-                  as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
-                  as.double(y[i] / mu[i]),            # y
-                  as.double(1),                       # mu
-                  as.integer( exact ),                # exact as an integer
-                  as.integer( verbose ),              # verbose as an integer
+                  N          = as.integer(N),
+                  power      = as.double(power),
+                  phi        = as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
+                  y          = as.double(y[i] / mu[i]),            # y
+                  mu         = as.double(1),                       # mu
+                  exact      = as.integer( exact ),                # exact as an integer
+                  verbose    = as.integer( verbose ),              # verbose as an integer
                            # THE OUTPUTS:
-                  as.double(0),                       # funvalue
-                  as.integer(0),                      # exitstatus
-                  as.double(0),                       # relerr
-                  as.integer(0),                      # its
-                  PACKAGE = "tweedie")
+                  funvalue   = as.double(0),                       # funvalue
+                  exitstatus = as.integer(0),                      # exitstatus
+                  relerr     = as.double(0),                       # relerr
+                  its        = as.integer(0),                      # its
+                  PACKAGE    = "tweedie")
         
-        den <- tmp[[7]]
+        den <- tmp$funvalue
         density[i] <- den * m2
         
       } else {
         if ( use.method == 1 ) {
           tmp <- .C("twpdf",
-                    as.integer(N),
-                    as.double(power),
-                    as.double(phi[i]),      # phi
-                    as.double(y[i]),        # y
-                    as.double(1),           # mu = 1 for PDF
-                    as.integer( exact ),    # exact as an integer
-                    as.integer( verbose ),  # verbose as an integer
+                    N          = as.integer(N),
+                    power      = as.double(power),
+                    phi        = as.double(phi[i]),      # phi
+                    y          = as.double(y[i]),        # y
+                    mu         = as.double(1),           # mu = 1 for PDF
+                    exact      = as.integer( exact ),    # exact as an integer
+                    verbose    = as.integer( verbose ),  # verbose as an integer
                              # THE OUTPUTS:
-                    as.double(0),           # funvalue
-                    as.integer(0),          # exitstatus
-                    as.double(0),           # relerr
-                    as.integer(0),          # its
-                    PACKAGE = "tweedie")
+                    funvalue   = as.double(0),           # funvalue
+                    exitstatus = as.integer(0),          # exitstatus
+                    relerr     = as.double(0),           # relerr
+                    its        = as.integer(0),          # its
+                    PACKAGE    = "tweedie")
           
           den <- tmp[[7]]
           density[i] <- den * m1
           
         } else { # use.method == 3
           tmp <- .C("twpdf",
-                    as.integer(N),
-                    as.double(power),
-                    as.double(phi[i] / (y[i] ^ (2 - power))), # phi
-                    as.double(1),          # y
-                    as.double(1),          # mu
-                    as.integer( exact ),   # exact as an integer
-                    as.integer( verbose ), # verbose as an integer
+                    N          = as.integer(N),
+                    power      = as.double(power),
+                    phi        = as.double(phi[i] / (y[i] ^ (2 - power))), # phi
+                    y          = as.double(1),          # y
+                    mu         = as.double(1),          # mu
+                    exact      = as.integer( exact ),   # exact as an integer
+                    verbose    = as.integer( verbose ), # verbose as an integer
                               # THE OUTPUTS:
-                    as.double(0),          # funvalue
-                    as.integer(0),         # exitstatus
-                    as.double(0),          # relerr
-                    as.integer(0),         # its
-                    PACKAGE = "tweedie")
+                    funvalue   = as.double(0),          # funvalue
+                    exitstatus = as.integer(0),         # exitstatus
+                    relerr     = as.double(0),          # relerr
+                    its        = as.integer(0),         # its
+                    PACKAGE    = "tweedie")
           
-          den <- tmp[[7]]
+          den <- tmp$funvalue
           density[i] <- den * m3
         }
       }

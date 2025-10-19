@@ -1,11 +1,11 @@
-SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose) 
+SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose) 
   USE tweedie_params_mod
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
   INTEGER, INTENT(IN)                      :: i               ! Observation index
-  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue        ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)  :: funvalueI        ! The final computed result
   INTEGER, INTENT(OUT)                     :: exitstatus      ! Output status
   REAL(KIND=8), INTENT(OUT)                :: relerr          ! The final computed result and relative error
   INTEGER, INTENT(INOUT)                   :: verbose         ! Assuming INOUT/IN for verbosity flag
@@ -377,11 +377,11 @@ SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
   WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
       
   ! So the value returned by the integration  
-  funvalue(i) = -areaT/pi + 0.50_C_DOUBLE
+  funvalueI = -areaT/pi + 0.50_C_DOUBLE
   IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
+    WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
     WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"
-    WRITE(*,*) funvalue(i), exitstatus, relerr
+    WRITE(*,*) funvalueI, exitstatus, relerr
   END IF
     
 END SUBROUTINE DFsmallp

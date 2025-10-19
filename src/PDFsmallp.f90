@@ -1,4 +1,4 @@
-SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose) 
+SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose) 
   USE tweedie_params_mod
 
   IMPLICIT NONE
@@ -8,7 +8,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
   INTEGER, INTENT(IN)                      :: i           ! Observation index
   INTEGER, INTENT(INOUT)                   :: verbose     ! Assuming INOUT/IN for verbosity flag
   INTEGER, INTENT(OUT)                     :: exitstatus  ! Output status
-  REAL(KIND=8), DIMENSION(*), INTENT(OUT)  :: funvalue    ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)  :: funvalueI    ! The final computed result and relative error
   REAL(KIND=8), INTENT(OUT)                :: relerr      ! The final computed result and relative error
 
   INTERFACE
@@ -416,11 +416,11 @@ SUBROUTINE PDFsmallp(i, exact, funvalue, exitstatus, relerr, verbose)
 
       ! So the value returned by the integration  
      
-      funvalue(i) = -areaT/pi + 0.50d0 
+      funvalueI = -areaT/pi + 0.50d0 
       IF (verbose .EQ. 1) THEN
-        WRITE(*,*) "FINAL AREA: The cdf value is", funvalue(i)
+        WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
         WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"
-        WRITE(*,*) funvalue(i), exitstatus, relerr
+        WRITE(*,*) funvalueI, exitstatus, relerr
       END IF
     
 END SUBROUTINE PDFsmallp

@@ -14,19 +14,19 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
 
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE DFbigp(i, funvalue, exitstatus, relerr, verbose)
+    SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+      REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
     END SUBROUTINE DFbigp
 
-    SUBROUTINE DFsmallp(i, funvalue, exitstatus, relerr, verbose)
+    SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose)
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=8), DIMENSION(*), INTENT(INOUT) :: funvalue
+      REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
@@ -37,6 +37,8 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Local variables ---
   INTEGER         :: i
   INTEGER         :: verbose
+  REAL(KIND=8)    :: funvalueTMP
+  
 
   ! --- Initialization ---
   Cp = p
@@ -56,10 +58,12 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Loop over N values ---
   DO i = 1, N
     IF (CpSmall) THEN
-      CALL DFsmallp(i, funvalue, exitstatus, relerr, verbose)
+      CALL DFsmallp(i, funvalueTMP, exitstatus, relerr, verbose)
     ELSE
-      CALL DFbigp(i, funvalue, exitstatus, relerr, verbose)
+      CALL DFbigp(i, funvalueTMP, exitstatus, relerr, verbose)
     END IF
+    funvalue(i) = funvalueTMP
+
   END DO
 
 END SUBROUTINE twcdf_main
