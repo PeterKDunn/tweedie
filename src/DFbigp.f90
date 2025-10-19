@@ -2,6 +2,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE rprintf_mod
   
   IMPLICIT NONE
   
@@ -95,36 +96,38 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   epsilon = 1.0_C_DOUBLE
 
  
-  IF (verbose .EQ. 1) WRITE(*,*) " FOR p > 2"
-
+  IF (verbose .EQ. 1) THEN
+    CALL rprintf_double("- Computing for p =", Cp)
+  END IF
+  
   ! --- Find kmax, tmax, mmax ---
   IF (current_y .GE. current_mu) THEN
-    IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
-      
+    IF (verbose .EQ. 1) THEN
+      CALL rprintf_double("  - with y >= mu:", current_y )
+    END IF
+    
     kmax = 0.0_C_DOUBLE
     tmax = 0.0_C_DOUBLE
     mmax = 0
     mfirst = -1
     mOld = 0
 
-    IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
-      
     zeroStartPoint = pi / current_y
     leftOfMax = 0
   ELSE
-    IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
+    IF (verbose .EQ. 1) THEN
+      CALL rprintf_double("  - with < mu:", current_y )
+    END IF
     
     startTKmax = findKmaxSP(i)
-    IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
-
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
 
     IF (verbose .EQ. 1) THEN
-      WRITE(*,*) "** Found(b): kmax =", kmax
-      WRITE(*,*) "             tmax =", tmax
-      WRITE(*,*) "             mmax =", mmax
+      CALL rprintf_double("  - kmax:", kmax )
+      CALL rprintf_double("  - tmax:", tmax )
+      CALL rprintf_int(   "  - mmax:", mmax )
     END IF
-    
+
     leftOfMax = 1
     IF (mmax .EQ. 0) THEN
       mfirst = 0
@@ -134,19 +137,13 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
     ELSE
       mfirst = 1
       mOld = 0
-      zeroStartPoint = pi / (current_mu -current_y)
+      zeroStartPoint = pi / (current_mu - current_y)
       mOld = m
   
       ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
   
     END IF
-  END IF
-  
-  IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "            mfirst =", mfirst
-    WRITE(*,*) "              StPt =", zeroStartPoint
-    WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
   END IF
   
   ! INTEGRATION
@@ -175,8 +172,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   zeroR = zero
 
   CALL DFgaussq(i, zeroL, zeroR, area0)
-  IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
-  IF (verbose .EQ. 1) WRITE(*,*) "    between ", zeroL, zeroR
+  IF (verbose .EQ. 1) THEN
+    CALL rprintf_double("  - Initial area:", area0 )
+    CALL rprintf_double("      between t =", zeroL )
+    CALL rprintf_double("          and t =", zeroR )
+  END IF
 
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
   IF (verbose .EQ. 1) THEN
@@ -187,7 +187,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   itsPreAcc = 0
   IF (mfirst .EQ. -1) THEN
     itsPreAcc = itsPreAcc + 1
-    IF (verbose .EQ. 1) WRITE(*,*) "  > Not using pre-acceleration area"
     area1 = 0.0_C_DOUBLE
     mOld = m
 
@@ -221,7 +220,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
       
       CALL DFgaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
-      IF (verbose .EQ. 1) WRITE(*,*) zeroL, "and ", zeroR, ": ", sum
+      IF (verbose .EQ. 1) THEN
+        CALL rprintf_double("  - Pre-acc area:", area0 )
+        CALL rprintf_int(   "        using m =", m )
+        CALL rprintf_double("      between t =", zeroL )
+        CALL rprintf_double("          and t =", zeroR )
+      END IF
 
       ! Stop condition for pre-acceleration.
       IF (itsPreAcc .GE. 2) stopPreAccelerate = 1

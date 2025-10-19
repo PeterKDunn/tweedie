@@ -2,7 +2,7 @@
 
 # --- 1. Define Fortran Source Files in Compilation Order ---
 # Module files MUST be listed first to generate the .mod files required by other sources.
-MODULE_SRCS = 00tweedie_params.f90 DFintegrand.f90 PDFintegrand.f90
+MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 DFintegrand.f90 PDFintegrand.f90
 
 # Find all other Fortran source files in the directory and filter out the modules
 # to prevent compiling them twice.
@@ -13,6 +13,8 @@ SRCS = $(MODULE_SRCS) $(OTHER_F_SRCS)
 
 # Define the object files based on the source list order (this sets the build order)
 OBJECTS = $(SRCS:.f90=.o)
+# Add the C wrapper
+OBJECTS += Rprintf_wrapper.o
 
 
 # --- 2. Standard R Compilation Variables ---
