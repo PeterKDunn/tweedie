@@ -1,4 +1,4 @@
-SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
+SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -10,26 +10,27 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
   REAL(C_DOUBLE), INTENT(OUT) :: relerr
-  INTEGER(C_INT), INTENT(OUT) :: its
-
+  INTEGER(C_INT), INTENT(OUT) :: Int_Regions
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
+    SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
       REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
+      INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE DFbigp
 
-    SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose)
+    SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
       REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
+      INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE DFsmallp
   END INTERFACE
     ! -----------------------------------------------
@@ -49,7 +50,6 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   verbose = 1
   exitstatus = 1
   relerr = 0.0_C_DOUBLE
-  its = 0
 
   ! --- Determine case: psmall = TRUE means 1 < p < 2 ---
   CpSmall = .FALSE.
@@ -58,9 +58,9 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, its)
   ! --- Loop over N values ---
   DO i = 1, N
     IF (CpSmall) THEN
-      CALL DFsmallp(i, funvalueTMP, exitstatus, relerr, verbose)
+      CALL DFsmallp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
     ELSE
-      CALL DFbigp(i, funvalueTMP, exitstatus, relerr, verbose)
+      CALL DFbigp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
     END IF
     funvalue(i) = funvalueTMP
 

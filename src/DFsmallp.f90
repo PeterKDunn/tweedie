@@ -1,14 +1,15 @@
-SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose) 
+SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions)  
   USE tweedie_params_mod
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER, INTENT(IN)                      :: i               ! Observation index
-  REAL(KIND=8), INTENT(OUT)  :: funvalueI        ! The final computed result
-  INTEGER, INTENT(OUT)                     :: exitstatus      ! Output status
-  REAL(KIND=8), INTENT(OUT)                :: relerr          ! The final computed result and relative error
-  INTEGER, INTENT(INOUT)                   :: verbose         ! Assuming INOUT/IN for verbosity flag
+  INTEGER, INTENT(IN)                 :: i               ! Observation index
+  REAL(KIND=8), INTENT(OUT)           :: funvalueI        ! The final computed result
+  INTEGER, INTENT(OUT)                :: exitstatus      ! Output status
+  REAL(KIND=8), INTENT(OUT)           :: relerr          ! The final computed result and relative error
+  INTEGER, INTENT(INOUT)              :: verbose         ! Assuming INOUT/IN for verbosity flag
+  REAL(KIND=8), INTENT(OUT)           :: count_Integration_Regions
 
   INTERFACE
     FUNCTION findKmaxSP(j)

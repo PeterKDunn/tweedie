@@ -1,4 +1,4 @@
-SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose) 
+SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -7,12 +7,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   IMPLICIT NONE
   
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
-  INTEGER(C_INT), INTENT(IN)                      :: verbose        ! Assuming IN for verbosity flag
-  INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalueI       ! Computed result
-  REAL(KIND=C_DOUBLE), INTENT(OUT)                :: relerr         ! Estimate of relative error
-
+  INTEGER(C_INT), INTENT(IN)        :: i              ! Observation index
+  INTEGER(C_INT), INTENT(IN)        :: verbose        ! Assuming IN for verbosity flag
+  INTEGER(C_INT), INTENT(OUT)       :: exitstatus     ! Output status
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalueI      ! Computed result
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr         ! Estimate of relative error
+  INTEGER(C_INT), INTENT(OUT)       :: count_Integration_Regions ! Num int regions
    ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
     FUNCTION findKmaxSP(j) 
@@ -160,9 +160,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   areaA = 0.0_C_DOUBLE
 
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
-  IF (verbose .EQ. 1) WRITE(*,*) "*******************************"
-  IF (verbose .EQ. 1) WRITE(*,*) "1. INTEGRATE: the INITIAL region"
-  
+  count_Integration_Regions = 1
   zeroBoundL = 0.0_C_DOUBLE  ! Should be tmax???
   zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
 
@@ -173,17 +171,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
 
   CALL DFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) THEN
-    CALL rprintf_double("  - Initial area:", area0 )
+    CALL rprintf_double("  - INITIAL area:", area0 )
     CALL rprintf_double("      between t =", zeroL )
     CALL rprintf_double("          and t =", zeroR )
   END IF
 
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
-  IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "*******************************"
-    WRITE(*,*) "2. INTEGRATE: the PRE-ACCELERATION regions"
-  END IF
-  
   itsPreAcc = 0
   IF (mfirst .EQ. -1) THEN
     itsPreAcc = itsPreAcc + 1
@@ -220,8 +213,9 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
       
       CALL DFgaussq(i, zeroL, zeroR, sum)
       area1 = area1 + sum
+      count_Integration_Regions = count_Integration_Regions + 1
       IF (verbose .EQ. 1) THEN
-        CALL rprintf_double("  - Pre-acc area:", area0 )
+        CALL rprintf_double("  - PRE-ACC area:", area0 )
         CALL rprintf_int(   "        using m =", m )
         CALL rprintf_double("      between t =", zeroL )
         CALL rprintf_double("          and t =", zeroR )
@@ -237,9 +231,8 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   END IF
 
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
-  IF (verbose .EQ. 1) WRITE(*,*) "*******************************"
-  IF (verbose .EQ. 1) WRITE(*,*) "3. INTEGRATE: the ACCELERATION"
-  
+  IF (verbose .EQ. 1) CALL rprintf_double(" - ACCELERATING:", current_y)
+
   ! Initialisation
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
@@ -254,8 +247,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
   xvec(1) = zeroR 
 
   DO WHILE (convergence .EQ. 0)
-    IF (verbose .EQ. 1) WRITE(*,*) "  --------------------- "
-    IF (verbose .EQ. 1) WRITE(*,*) "  Next tail region"
 
     itsAcceleration = itsAcceleration + 1
     
@@ -289,12 +280,19 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
 
     xvec(itsAcceleration + 1) = zeroR
     
-    IF (verbose .EQ. 1) WRITE(*,*) "  - Integrate (m = ", m, "):", zeroL, zeroR
+    IF (verbose .EQ. 1) THEN
+      CALL rprintf_int("  - m =:", m )
+    END IF
 
     CALL DFgaussq(i, zeroL, zeroR, psi)
+    count_Integration_Regions = count_Integration_Regions + 1
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
-    IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
+    IF (verbose .EQ. 1) THEN
+      CALL rprintf_double("  - Accelation area:", psi )
+      CALL rprintf_double("         between t =", zeroL)
+      CALL rprintf_double("             and t =", zeroR)
+    END IF
 
     Wold2 = Wold
     Wold = West
@@ -303,50 +301,35 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose)
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
 
-    IF (verbose .EQ. 1) THEN 
-      WRITE(*,*) "  - iteration", itsAcceleration, ":", West
-      WRITE(*,*) "  - Estimate of tail area:", West
-    END IF
-    
     ! Declare convergence of we have sufficient regions, and relerr estimate is small
     IF ( (itsAcceleration .GE. minAccRegions) .AND. &
          (relerr .LT. aimrerr) ) THEN
-      IF (verbose .EQ. 1) WRITE(*,*) "  Relerr is", relerr
+      IF (verbose .EQ. 1) CALL rprintf_double(   "         rel err =:", zeroL)
       convergence = 1
     END IF
   
     mOld = m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
-    if (verbose .EQ. 1) WRITE(*,*) "--------------------------------"
     ! NOTE: If convergence is NOT TRUE, the loop continues.
   END DO  
-
-  IF (convergence .EQ. 0) THEN
-    IF (verbose .EQ. 1) WRITE(*,*) "  - Computing for p > 2:", Cp
-  END IF
 
   areaA = West
   areaT = area0 + area1 + areaA
   
   IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "SUMMARY:"
-    WRITE(*,*) "  Area0 ", area0
-    WRITE(*,*) "  Area1 ", area1, "(", itsPreAcc, "regions)"
-    WRITE(*,*) "  AreaA ", areaA, "(", itsAcceleration, " its)"
-    WRITE(*,*) "  TOTAL ", areaT
-    WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
+    CALL rprintf_double("* Initial area0: :", area0)
+    CALL rprintf_double("* Pre-acc area1: :", area1)
+    CALL rprintf_double("*     Acc areaA: :", areaA)
+    CALL rprintf_double("***       TOTAL: :", areaT)
   END IF
+  WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
   
   ! We have the value of the integral in the CDF calculation.
   ! So now work out the CDF
   funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
     
-  IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
-    WRITE(*,*) "DFbigp: funvalue, exitstatus, relerr"
-    WRITE(*,*) funvalueI, exitstatus, relerr
-  END IF
+  IF (verbose .EQ. 1)     CALL rprintf_double("***    Fun. value:", funvalueI)
 
   RETURN
 

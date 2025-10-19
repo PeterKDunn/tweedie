@@ -1,15 +1,16 @@
-SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose) 
+SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
   USE tweedie_params_mod
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)               :: exact       ! Exact zeros?
-  INTEGER, INTENT(IN)                      :: i           ! Observation index
-  INTEGER, INTENT(INOUT)                   :: verbose     ! Assuming INOUT/IN for verbosity flag
-  INTEGER, INTENT(OUT)                     :: exitstatus  ! Output status
-  REAL(KIND=8), INTENT(OUT)  :: funvalueI    ! The final computed result and relative error
-  REAL(KIND=8), INTENT(OUT)                :: relerr      ! The final computed result and relative error
+  INTEGER(C_INT), INTENT(IN)          :: exact       ! Exact zeros?
+  INTEGER, INTENT(IN)                 :: i           ! Observation index
+  INTEGER, INTENT(INOUT)              :: verbose     ! Assuming INOUT/IN for verbosity flag
+  INTEGER, INTENT(OUT)                :: exitstatus  ! Output status
+  REAL(KIND=8), INTENT(OUT)           :: funvalueI    ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)           :: relerr      ! The final computed result and relative error
+  REAL(KIND=8), INTENT(OUT)           :: count_Integration_Regions
 
   INTERFACE
       ! Function to find Kmax special point
@@ -254,6 +255,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose)
       zeroL =  0.0d00
       zeroR = zero
       CALL PDFgaussq(i, zeroL, zeroR, area0)
+      count_Integration_Regions = 1
 
       IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
       IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -299,7 +301,8 @@ SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose)
 
         CALL PDFgaussq(i, zeroL, zeroR, sum)
         area1 = area1 + sum
-        
+        count_Integration_Regions = count_Integration_Regions + 1
+
         IF (verbose .EQ. 1) THEN
           WRITE(*,*) "--- Integrate (m = ", m, ") between " 
           WRITE(*,*) zeroL, "and ", zeroR, "; sum: ", sum
@@ -363,6 +366,7 @@ SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose)
 
         CALL PDFgaussq(i, zeroL, zeroR, psi)
         ! psi: area of the latest region
+        count_Integration_Regions = count_Integration_Regions + 1
         wvec(itsAcceleration) = psi
         IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi
 
