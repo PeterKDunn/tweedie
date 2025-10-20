@@ -1,4 +1,4 @@
-SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -7,7 +7,6 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, re
   ! --- Arguments ---
   INTEGER(C_INT), INTENT(IN)  :: N, verbose
   REAL(C_DOUBLE), INTENT(IN)  :: p
-  INTEGER(C_INT), INTENT(IN)  :: exact
   REAL(C_DOUBLE), INTENT(IN)  :: phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
@@ -17,9 +16,9 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, re
 
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE PDFbigp(i, exact, funvalueI, exitstatus, relerr, verbose, Int_Regions)
+    SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
       IMPLICIT NONE
-      INTEGER, INTENT(IN)                       :: i, exact
+      INTEGER, INTENT(IN)                       :: i
       REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
@@ -27,9 +26,9 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, re
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE PDFbigp
 
-    SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose, INt_Regions)
+    SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, INt_Regions)
       IMPLICIT NONE
-      INTEGER, INTENT(IN)                       :: i, exact
+      INTEGER, INTENT(IN)                       :: i
       REAL(KIND=8), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=8), INTENT(OUT)                 :: relerr
@@ -59,9 +58,9 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, re
   ! --- Loop over N ---
   DO i = 1, N
     IF (CpSmall) THEN
-      CALL PDFsmallp(i, exact, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
+      CALL PDFsmallp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
     ELSE
-      CALL PDFbigp(i, exact, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
+      CALL PDFbigp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
     END IF
     funvalue(i) = funvalueTMP
   END DO

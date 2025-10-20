@@ -1,10 +1,9 @@
-SUBROUTINE PDFsmallp(i, exact, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
+SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
   USE tweedie_params_mod
 
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)          :: exact       ! Exact zeros?
   INTEGER, INTENT(IN)                 :: i           ! Observation index
   INTEGER, INTENT(INOUT)              :: verbose     ! Assuming INOUT/IN for verbosity flag
   INTEGER, INTENT(OUT)                :: exitstatus  ! Output status

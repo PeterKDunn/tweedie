@@ -95,7 +95,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   
   ! --- Local Variables ---
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr, epsilon
-  INTEGER               :: m, n, mOld, mmax, mfirst, accMax, j, minAccRegions
+  INTEGER               :: m, mOld, mmax, mfirst, accMax, minAccRegions
   INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
   REAL(KIND=8)          :: pi
   INTEGER               :: itsacceleration, itsPreAcc
@@ -119,6 +119,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   relerr = 1.0_C_DOUBLE
   convergence = 0
   epsilon = 1.0-13_C_DOUBLE
+  mmax = 0
 
   IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
 
@@ -140,16 +141,16 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     leftOfMax = 0
   ELSE
     ! ************** y < MU   **************
-    IF (verbose .EQ. 1) WRITE(*,*) "** y < mu"
+    IF (verbose .EQ. 1) CALL DBLEPR("** y < mu: y  = ", -1, y, 1)
       
     startTKMax = findKmaxSP(i)
-    IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
+    IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, start at: ", -1, StartTKmax, 1)
     
     ! For smallp, sometimes very important to have a good starting point and bounds.
     CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
     startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
       
-    IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
+    IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, start at: ", -1, StartTKmax, 1)
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
 
     leftOfMax = 1
@@ -168,9 +169,9 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     END IF
 
     IF (verbose .EQ. 1) THEN
-      WRITE(*,*) "** Found(b): kmax =", kmax
-      WRITE(*,*) "             tmax =", tmax
-      WRITE(*,*) "             mmax =", mmax
+      CALL DBLEPR("** Found(b): kmax =", -1, kmax, 1)
+      CALL DBLEPR("             tmax =", -1, tmax, 1)
+      CALL INTPR( "             mmax =", -1, mmax, 1)
     END IF
       
   END IF
@@ -223,6 +224,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   zeroL =  0.0_C_DOUBLE
   zeroR = zero
   CALL DFgaussq(i, zeroL, zeroR, area0)
+  count_Integration_Regions = count_Integration_Regions + 1
 
   IF (verbose .EQ. 1) WRITE(*,*) "  - Initial area:", area0
   IF (verbose .EQ. 1) WRITE(*,*) "    between:", zeroL, zeroR
@@ -256,6 +258,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
 
     zeroR = zero
     CALL DFgaussq(i, zeroL, zeroR, sum)
+    count_Integration_Regions = count_Integration_Regions + 1
     area1 = area1 + sum
         
     IF (verbose .EQ. 1) THEN
@@ -330,6 +333,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     IF (verbose .EQ. 1) WRITE(*,*) "    : where m = ", m
 
     CALL DFgaussq(i, zeroL, zeroR, psi)
+    count_Integration_Regions = count_Integration_Regions + 1
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
     IF (verbose .EQ. 1) WRITE(*,*) "  - Area between zeros is:", psi

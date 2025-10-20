@@ -12,7 +12,7 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
   INTEGER(C_INT), INTENT(IN)        :: i
 
   INTEGER                               :: j, npoints
-  REAL(KIND=C_DOUBLE)                   :: w, f, tt, xu, xl, fl, fu
+  REAL(KIND=C_DOUBLE)                   :: xu, xl, fl, fu
   REAL(KIND=C_DOUBLE), DIMENSION(256)   :: absc, weights  
   
   ! ----------------------------------------------------------------

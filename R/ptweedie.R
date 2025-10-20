@@ -51,7 +51,6 @@ cat(">> ptweedie: GOT THIS FAR\n")
     # When y/q is very small, the function should return 0.
     # Sometimes it fails (when *very* small...).
     # This adjustment is made in ptweedie.inversion()
-    cat(">> ptweedie: GOT THIS FAR2\n")    
     f <- ptweedie.inversion(power = power, 
                             mu = mu, 
                             q = y, 
@@ -235,7 +234,6 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
   y <- q
   cdf <- array( dim = length(y) )
   
-  cat("IN PTWEEDIE.INVERSION\n")
   # Error checks
   if ( power < 1) stop("power must be greater than 1.")
   if ( any(phi <= 0) ) stop("phi must be positive.")

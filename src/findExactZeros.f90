@@ -1,6 +1,5 @@
 SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero) 
 
-  USE tweedie_params_mod, ONLY: current_i
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
 

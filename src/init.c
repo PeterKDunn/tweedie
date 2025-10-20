@@ -8,7 +8,7 @@
 extern void twcdf(int *N, double *p, double *phi, double *y, double *mu, double *funvalue, int *exitstatus, double *relerr, int *its);
 
 // twpdf has 10 arguments
-extern void twpdf(int *N, double *p, double *phi, double *y, double *mu, double *exact, double *funvalue, int *exitstatus, double *relerr, int *its);
+extern void twpdf(int *N, double *p, double *phi, double *y, double *mu, double *funvalue, int *exitstatus, double *relerr, int *its);
 
 
 /* --- C Routine Registration Table (R_CMethodDef) --- */
@@ -16,7 +16,7 @@ extern void twpdf(int *N, double *p, double *phi, double *y, double *mu, double 
 static const R_CMethodDef CEntries[] = {
   // R name    C pointer (The BIND(C) name) Arg Count   Argument Types
   {"twcdf", (DL_FUNC) twcdf, 10, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
-  {"twpdf", (DL_FUNC) twpdf, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {"twpdf", (DL_FUNC) twpdf, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT,  R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
   {NULL, NULL, 0, {0}}
 };
 

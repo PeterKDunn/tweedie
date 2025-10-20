@@ -1,4 +1,4 @@
-SUBROUTINE PDFbigp(i, exact, funvalueI, exitstatus, relerr, verbose) 
+SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose) 
   USE PDFintegrand_MOD, ONLY: PDFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -6,7 +6,6 @@ SUBROUTINE PDFbigp(i, exact, funvalueI, exitstatus, relerr, verbose)
   IMPLICIT NONE
   
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER(C_INT), INTENT(IN)                      :: exact          ! Exact zeros?
   INTEGER(C_INT), INTENT(IN)                      :: i              ! Observation index
   INTEGER(C_INT), INTENT(IN)                      :: verbose        ! Assuming IN for verbosity flag
   INTEGER(C_INT), INTENT(OUT)                     :: exitstatus     ! Output status
