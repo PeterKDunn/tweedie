@@ -55,8 +55,9 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
 
     SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER(C_INT), INTENT(IN)      :: nzeros
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+      INTEGER(C_INT), INTENT(IN)        :: nzeros
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200)
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: West
     END SUBROUTINE acceleratenew
 
 
@@ -348,7 +349,6 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
       IF (verbose .EQ. 1) WRITE(*,*) "  Relerr is", relerr
       convergence = 1
     END IF
-    WRITE(*,*) "CONVERGENCE", convergence
     mOld = m
 
     IF (itsAcceleration .EQ. accMax) THEN

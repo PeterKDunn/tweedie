@@ -1,11 +1,11 @@
-SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, exact, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
   IMPLICIT NONE
 
   ! --- Arguments ---
-  INTEGER(C_INT), INTENT(IN)  :: N
+  INTEGER(C_INT), INTENT(IN)  :: N, verbose
   REAL(C_DOUBLE), INTENT(IN)  :: p
   INTEGER(C_INT), INTENT(IN)  :: exact
   REAL(C_DOUBLE), INTENT(IN)  :: phi(N), y(N), mu(N)
@@ -41,7 +41,6 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, Int
 
   INTEGER         :: i
   REAL(C_DOUBLE)  :: aimrerr, funvalueTMP
-  INTEGER         :: verbose
 
   ! --- Initialization ---
   Cp = p
@@ -49,7 +48,6 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, exact, funvalue, exitstatus, relerr, Int
   Cmu = mu
   Cphi = phi
   CN = N
-  verbose = 1
   exitstatus = 1
   relerr = 0.0_C_DOUBLE
   aimrerr = 1.0E-10_C_DOUBLE

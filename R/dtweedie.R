@@ -284,7 +284,7 @@ dtweedie.logw.smallp <- function(y, phi, power){
 
 
 #############################################################################
-dtweedie <- function(y, xi = NULL, mu, phi, power = NULL)
+dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
 {
   #
   # This is a function for determining Tweedie densities.
@@ -5310,7 +5310,7 @@ dtweedie.interp <- function(grid, nx, np, xix.lo, xix.hi,
 
 
 #############################################################################
-dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){ 
+dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose = FALSE, details = FALSE){ 
   # 
   # Peter K Dunn 
   # 06 Aug 2002
@@ -5421,6 +5421,7 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3){
                   phi        = as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
                   y          = as.double(y[i] / mu[i]),            # y
                   mu         = as.double(1),                       # mu
+                  verbose    = as.integer(verbose),                # verbosity
                   exact      = as.integer( exact ),                # exact as an integer
                   verbose    = as.integer( verbose ),              # verbose as an integer
                            # THE OUTPUTS:

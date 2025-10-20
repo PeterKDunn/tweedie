@@ -1,10 +1,12 @@
 #############################################################################
-ptweedie <- function(q, xi = NULL, mu, phi, power = NULL) {
+ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE) {
   # Evaluates the cdf for Tweedie distributions, for given values of:
   #   q (possibly a vector)
   #   mu, the mean 
   #   phi the dispersion parameter
   #   power,  the Tweedie index parameter
+  #   verbose: whether to display what is happening
+  #   details:  whether to returns reports of relerr, regions needed, etc.
   
   # Peter Dunn
   # Created: 01 May 2001
@@ -53,7 +55,9 @@ cat(">> ptweedie: GOT THIS FAR\n")
     f <- ptweedie.inversion(power = power, 
                             mu = mu, 
                             q = y, 
-                            phi = phi)
+                            phi = phi,
+                            verbose = verbose,
+                            details = details)
   }
   
   # For 1<p<2, the two options are the series or inversion.
@@ -92,10 +96,12 @@ cat(">> ptweedie: GOT THIS FAR\n")
                            mu = mu, 
                            phi = phi )
     } else{
-      f <- ptweedie.inversion( power = power, 
-                               q = y, 
-                               mu = mu, 
-                               phi = phi)
+      f <- ptweedie.inversion( power   = power, 
+                               q       = y, 
+                               mu      = mu, 
+                               phi     = phi,
+                               verbose = verbose,
+                               details  = details)
     }
   }
   
@@ -214,7 +220,7 @@ ptweedie.series <- function(q, power, mu, phi) {
 
 
 #############################################################################
-ptweedie.inversion <- function(q, mu, phi,  power ){ 
+ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FALSE ){ 
   # Evaluates the cdf for Tweedie distributions, using Fourier inversion, 
   # for given values of:
   #   q (possibly a vector)
@@ -287,6 +293,7 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
              phi         = as.double(phi),        # phi
              y           = as.double(y),          # y
              mu          = as.double(mu),         # mu
+             verbose     = as.integer(verbose),   # verbosity
                       # THE OUTPUTS:
              funvalue    = as.double(rep(0, N)),  # funvalue
              exitstatus  = as.integer(0),         # exitstatus
@@ -295,7 +302,12 @@ ptweedie.inversion <- function(q, mu, phi,  power ){
              PACKAGE     = "tweedie")
   cdf <- tmp$funvalue
 
-  return(cdf)
+  if (details) {
+    return( list( cdf = cdf,
+                  regions = tmp$its))
+  } else {
+    return(cdf)
+  }
 }
 
 

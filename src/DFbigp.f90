@@ -52,8 +52,10 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
 
     SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
-      INTEGER, INTENT(IN)      :: nzeros
-      REAL(KIND=8), INTENT(IN) :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200), West
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER, INTENT(IN)               :: nzeros
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200)
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: West
     END SUBROUTINE acceleratenew
 
 
@@ -73,11 +75,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   
   REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
   REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=8) :: zeroL, zeroR, area0, area1, areaA, sum
+  REAL(KIND=8) :: zeroL, zeroR, area0, area1, sumA
   REAL(KIND=8) :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
   REAL(KIND=8)              :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
-  REAL(KIND=8), VOLATILE    :: West, Wold, Wold2
-  REAL(KIND=8)              :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=8)    :: West, Wold, Wold2
+  REAL(KIND=8)    :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -93,17 +95,22 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   exitstatus = 0
   relerr = 1.0_C_DOUBLE
   convergence = 0
-  epsilon = 1.0_C_DOUBLE
-
+  epsilon = 1.0E-12_C_DOUBLE
+  Mmatrix = 0.0_8
+  Nmatrix = 0.0_8
+  xvec = 0.0_8
+  wvec = 0.0_8
+  zeroStartPoint = 0.0_C_DOUBLE
  
   IF (verbose .EQ. 1) THEN
-    CALL rprintf_double("- Computing for p =", Cp)
+    CALL rprintf_double("********* Computing for p =", Cp)
   END IF
   
   ! --- Find kmax, tmax, mmax ---
+!write(*,*) "DEBUG: Index i before advanceM is: ", i
   IF (current_y .GE. current_mu) THEN
     IF (verbose .EQ. 1) THEN
-      CALL rprintf_double("  - with y >= mu:", current_y )
+      CALL rprintf_double("  - with y >= mu: y =", current_y )
     END IF
     
     kmax = 0.0_C_DOUBLE
@@ -116,10 +123,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     leftOfMax = 0
   ELSE
     IF (verbose .EQ. 1) THEN
-      CALL rprintf_double("  - with < mu:", current_y )
+      CALL rprintf_double("  - with < mu: y =", current_y )
     END IF
     
     startTKmax = findKmaxSP(i)
+!  WRITE(*,*) "!!! TRACE 1: zeroStartPoint AFTER findKmax:", zeroStartPoint
+ 
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
 
     IF (verbose .EQ. 1) THEN
@@ -132,12 +141,14 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     IF (mmax .EQ. 0) THEN
       mfirst = 0
       mOld = 0
-      zeroStartPoint = tmax + pi/Cy(i)
+      zeroStartPoint = tmax + pi/current_y
+      zeroStartPoint = zeroStartPoint
       leftOfMax = 0
     ELSE
       mfirst = 1
       mOld = 0
       zeroStartPoint = pi / (current_mu - current_y)
+      zeroStartPoint = zeroStartPoint
       mOld = m
   
       ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
@@ -152,28 +163,36 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   !   2. The initial area *before* Sidi acceleration is invoked: area1
   !      (For instance, wait until Im{k(t)} is on the downturn.)
   !   3. The area thereafter, upon which Sidi acceleration is
-  !      applied; the area returned by acceleration is areaA
+  !      applied; the area returned by acceleration is West
 
   ! --- Integration initialization ---
   area0 = 0.0_C_DOUBLE
   area1 = 0.0_C_DOUBLE
-  areaA = 0.0_C_DOUBLE
+  zero  = 0.0_C_DOUBLE
 
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
   count_Integration_Regions = 1
-  zeroBoundL = 0.0_C_DOUBLE  ! Should be tmax???
+  zeroBoundL = tmax ! 0.0_C_DOUBLE  ! Should be tmax???
   zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
-
   m = mfirst
+!      CALL rprintf_double(">> zeroBoundL =", zeroBoundL)
+!    CALL rprintf_double(">> zeroBoundR =", zeroBoundR)
+!    CALL rprintf_double(">> zeroStartPoinyt =", zeroStartPoint)
+!  WRITE(*,*) "!!! TRACE 2: zeroStartPoint AFTER findKmax:", zeroStartPoint
+
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+!    CALL rprintf_double(">> zero =", zero)
+!  WRITE(*,*) "!!! TRACE 3: zeroStartPoint AFTER findKmax:", zeroStartPoint
+
   zeroL = 0.0_C_DOUBLE
   zeroR = zero
 
   CALL DFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) THEN
-    CALL rprintf_double("  - INITIAL area:", area0 )
+    CALL rprintf_double("  * INITIAL area:", area0 )
     CALL rprintf_double("      between t =", zeroL )
     CALL rprintf_double("          and t =", zeroR )
+    CALL rprintf_int(   "        using m =", m)
   END IF
 
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -184,6 +203,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     mOld = m
 
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
+    IF (verbose .EQ. 1) CALL rprintf_double("  - No PRE-ACC area for y:", current_y )
 
   ELSE
     area1 = 0.0_C_DOUBLE
@@ -209,16 +229,15 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
       zeroR = zero
-      IF (verbose .EQ. 1) WRITE(*,*) "--- Integrate (m = ", m, ") between "
-      
-      CALL DFgaussq(i, zeroL, zeroR, sum)
-      area1 = area1 + sum
+
+      CALL DFgaussq(i, zeroL, zeroR, sumA)
+      area1 = area1 + sumA
       count_Integration_Regions = count_Integration_Regions + 1
       IF (verbose .EQ. 1) THEN
-        CALL rprintf_double("  - PRE-ACC area:", area0 )
-        CALL rprintf_int(   "        using m =", m )
+        CALL rprintf_double("  - PRE-ACC area:", sumA )
         CALL rprintf_double("      between t =", zeroL )
         CALL rprintf_double("          and t =", zeroR )
+        CALL rprintf_int(   "        using m =", m )
       END IF
 
       ! Stop condition for pre-acceleration.
@@ -230,15 +249,14 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END DO 
   END IF
 
-  ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
-  IF (verbose .EQ. 1) CALL rprintf_double(" - ACCELERATING:", current_y)
+  ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
+  IF (verbose .EQ. 1) CALL rprintf_double(" - ACCELERATING for y:", current_y)
 
   ! Initialisation
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
   Wold2 = 1.0_C_DOUBLE
   itsAcceleration = 0
-  areaA = 0.0_C_DOUBLE
   convergence = 0
   accMax = 40           ! Maximum number of regions in accelerationl arbitrary
   minAccRegions = 3     ! Minimum number of acceleration regions to use
@@ -288,23 +306,25 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     count_Integration_Regions = count_Integration_Regions + 1
     ! psi: area of the latest region
     wvec(itsAcceleration) = psi
-    IF (verbose .EQ. 1) THEN
-      CALL rprintf_double("  - Accelation area:", psi )
-      CALL rprintf_double("         between t =", zeroL)
-      CALL rprintf_double("             and t =", zeroR)
-    END IF
 
     Wold2 = Wold
     Wold = West
     CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
-    
+
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
+    IF (verbose .EQ. 1) THEN
+      CALL rprintf_double("  - Acceleration area:", psi )
+      CALL rprintf_double("           between t =", zeroL)
+      CALL rprintf_double("               and t =", zeroR)
+      CALL rprintf_int(   "             using m =", m )
+      CALL rprintf_double("        with rel err =", relerr)
+    END IF
 
     ! Declare convergence of we have sufficient regions, and relerr estimate is small
     IF ( (itsAcceleration .GE. minAccRegions) .AND. &
          (relerr .LT. aimrerr) ) THEN
-      IF (verbose .EQ. 1) CALL rprintf_double(   "         rel err =:", zeroL)
+      IF (verbose .EQ. 1) CALL rprintf_double(   "         rel err =:", relerr)
       convergence = 1
     END IF
   
@@ -314,17 +334,15 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     ! NOTE: If convergence is NOT TRUE, the loop continues.
   END DO  
 
-  areaA = West
-  areaT = area0 + area1 + areaA
+  areaT = area0 + area1 + West
   
   IF (verbose .EQ. 1) THEN
     CALL rprintf_double("* Initial area0: :", area0)
     CALL rprintf_double("* Pre-acc area1: :", area1)
-    CALL rprintf_double("*     Acc areaA: :", areaA)
+    CALL rprintf_double("*      Acc West: :", West)
     CALL rprintf_double("***       TOTAL: :", areaT)
   END IF
-  WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
-  
+
   ! We have the value of the integral in the CDF calculation.
   ! So now work out the CDF
   funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE

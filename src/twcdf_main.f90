@@ -1,10 +1,10 @@
-SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)  :: N
+  INTEGER(C_INT), INTENT(IN)  :: N, verbose
   REAL(C_DOUBLE), INTENT(IN)  :: p
   REAL(C_DOUBLE), INTENT(IN)  :: phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
@@ -37,7 +37,6 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, Int_Region
 
   ! --- Local variables ---
   INTEGER         :: i
-  INTEGER         :: verbose
   REAL(KIND=8)    :: funvalueTMP
   
 
@@ -47,7 +46,6 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, funvalue, exitstatus, relerr, Int_Region
   Cmu = mu
   Cphi = phi
   CN = N
-  verbose = 1
   exitstatus = 1
   relerr = 0.0_C_DOUBLE
 

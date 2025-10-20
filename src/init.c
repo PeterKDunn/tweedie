@@ -15,8 +15,8 @@ extern void twpdf(int *N, double *p, double *phi, double *y, double *mu, double 
 /* R will look here for BIND(C) symbols like "twcdf" */
 static const R_CMethodDef CEntries[] = {
   // R name    C pointer (The BIND(C) name) Arg Count   Argument Types
-  {"twcdf", (DL_FUNC) twcdf, 9, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
-  {"twpdf", (DL_FUNC) twpdf, 10, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {"twcdf", (DL_FUNC) twcdf, 10, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {"twpdf", (DL_FUNC) twpdf, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
   {NULL, NULL, 0, {0}}
 };
 

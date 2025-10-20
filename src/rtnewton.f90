@@ -23,25 +23,28 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   INTEGER(C_INT), INTENT(IN)       :: i
   
   ! Output (Function result)
-  REAL(KIND=8)              :: root
+  REAL(KIND=C_DOUBLE)              :: root
   
   ! --- Local Variables
   INTEGER, PARAMETER  :: MAXITS = 100
   INTEGER             :: j
   
   ! x_current holds the current iteration value, dx is the change
-  REAL(KIND=8)        :: dx, df, f, x_current, x_iter_old
+  REAL(KIND=C_DOUBLE)        :: dx, df, f, x_current, x_iter_old
   
 
   x_current = xstart ! Start at the initial guess
   
   DO j = 1, MAXITS
+!  write(*,*) " IN rtnewton; j=",j
+!  write(*,*), "   with x:", x_current
     ! Save the old value in case we need to revert
     x_iter_old = x_current
     
     ! Calculate function value (f) and derivative (df)
     CALL funcd(i, x_current, f, df) 
 
+!  write(*,*), "   with f, df:",f, df 
     ! Check for convergence before a step
     IF (ABS(f) < xacc) THEN
         EXIT ! Root found (f is close to zero)

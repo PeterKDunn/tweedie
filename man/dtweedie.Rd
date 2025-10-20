@@ -15,9 +15,9 @@
 	dtweedie.series(y, power, mu, phi)
 	dtweedie.inversion(y, power, mu, phi, exact = TRUE, method)
 	dtweedie.stable(y, power, mu, phi)
-	ptweedie(q, xi = NULL, mu, phi, power = NULL)
+	ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, report = FALSE)
 	ptweedie.series(q, power, mu, phi)
-	ptweedie.inversion(q, mu, phi, power)
+	ptweedie.inversion(q, mu, phi, power, verbose = FALSE, report = FALSE)
 	qtweedie(p, xi = NULL, mu, phi, power = NULL)
 	rtweedie(n, xi = NULL, mu, phi, power = NULL)
 }
@@ -35,6 +35,8 @@
 	using the inversion method.
 	If \code{method} is \code{NULL} (the default), the optimal method (in terms of relative accuracy) is used, element-by-element of \code{y}.
 	See the Note in the Details section below}
+	\item{verbose}{either \code{TRUE} (show details of what is happening) or \code{FALSE} (the default)}
+	\item{details}{either \code{TRUE} (return details of what is happening) of \code{FALSE} (the default)}
 }
 \value{
 	density (\code{dtweedie}), probability (\code{ptweedie}), quantile (\code{qtweedie}) or random sample (\code{rtweedie}) for the given Tweedie distribution with parameters \code{mu}, \code{phi} and  \code{power}.

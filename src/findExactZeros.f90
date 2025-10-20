@@ -1,4 +1,5 @@
 SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero) 
+
   USE tweedie_params_mod, ONLY: current_i
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
@@ -40,18 +41,22 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
-      INTEGER(C_INT)                    :: i, m
+      INTEGER(C_INT), INTENT(IN)        :: i, m
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     END SUBROUTINE findImkM
 
   END INTERFACE
 
+!        write(*,*) "** IN fundxacteros!!"
   
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
+!        write(*,*) "** IN findexactzeros1, ",  xL, xR
+
   
   CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
+!      write(*,*) "** IN findexactzeros2, ", xZero
 
   CONTAINS 
   
@@ -64,7 +69,9 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
       REAL(C_DOUBLE), INTENT(IN)  :: x
       REAL(C_DOUBLE), INTENT(OUT) :: f, df
      
-      CALL findImkM(i, x, f, df, m) ! Pass the captured 'm' value
+      CALL findImkM(i, x, f, df, m) ! Pass the captured 'm' value]
+!      write(*,*) "** IN findImk_wrapper, x, f and df:", x, f, df
+      
     END SUBROUTINE findImkM_wrapper
 
   
