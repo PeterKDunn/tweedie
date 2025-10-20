@@ -18,7 +18,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     FUNCTION findKmaxSP(j) 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE  
-      REAL(KIND=8)          :: findKmaxSP
+      REAL(KIND=C_DOUBLE)          :: findKmaxSP
       INTEGER, INTENT(IN)   :: j
     END FUNCTION findKmaxSP
 
@@ -47,7 +47,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     SUBROUTINE DFgaussq(i, a, b, area)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       REAL(KIND=C_DOUBLE)             :: area
-      REAL(KIND=8), INTENT(IN)        :: a, b
+      REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
     END SUBROUTINE DFgaussq
 
 
@@ -60,9 +60,10 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
 
     SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER, INTENT(IN)         :: i, m
-      REAL(KIND=8), INTENT(IN)    :: tL, tR
-      REAL(KIND=8), INTENT(OUT)   :: zeroL, zeroR
+      REAL(KIND=C_DOUBLE), INTENT(IN)    :: tL, tR
+      REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
     END SUBROUTINE findExactZeros
 
   END INTERFACE
@@ -73,13 +74,13 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   INTEGER         :: itsAcceleration, itsPreAcc, m, minAccRegions
   INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  REAL(KIND=8) :: kmax, startTKmax, tmax, aimrerr
-  REAL(KIND=8) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=8) :: zeroL, zeroR, area0, area1, sumA
-  REAL(KIND=8) :: current_y, current_mu, current_phi ! Can still using KIND=8 for internal module array access
-  REAL(KIND=8)              :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
-  REAL(KIND=8)    :: West, Wold, Wold2
-  REAL(KIND=8)    :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
+  REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
+  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, sumA
+  REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi ! Can still using KIND=C_DOUBLE for internal module array access
+  REAL(KIND=C_DOUBLE)              :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
+  REAL(KIND=C_DOUBLE)    :: West, Wold, Wold2
+  REAL(KIND=C_DOUBLE)    :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -135,7 +136,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     IF (verbose .EQ. 1) THEN
       CALL DBLEPR("  - kmax:", -1, kmax, 1 )
       CALL DBLEPR("  - tmax:", -1, tmax, 1 )
-      CALL DBLEPR(   "  - mmax:", -1, mmax, 1 )
+      CALL INTPR( "  - mmax:", -1, mmax, 1 )
     END IF
 
     leftOfMax = 1
@@ -176,14 +177,8 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   zeroBoundL = tmax ! 0.0_C_DOUBLE  ! Should be tmax???
   zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
   m = mfirst
-!      CALL rprintf_double(">> zeroBoundL =", zeroBoundL)
-!    CALL rprintf_double(">> zeroBoundR =", zeroBoundR)
-!    CALL rprintf_double(">> zeroStartPoinyt =", zeroStartPoint)
-!  WRITE(*,*) "!!! TRACE 2: zeroStartPoint AFTER findKmax:", zeroStartPoint
 
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-!    CALL rprintf_double(">> zero =", zero)
-!  WRITE(*,*) "!!! TRACE 3: zeroStartPoint AFTER findKmax:", zeroStartPoint
 
   zeroL = 0.0_C_DOUBLE
   zeroR = zero
@@ -348,7 +343,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   ! So now work out the CDF
   funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
     
-  IF (verbose .EQ. 1)     CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
+  IF (verbose .EQ. 1) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
 
   RETURN
 

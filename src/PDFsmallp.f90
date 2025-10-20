@@ -7,28 +7,30 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   INTEGER, INTENT(IN)                 :: i           ! Observation index
   INTEGER, INTENT(INOUT)              :: verbose     ! Assuming INOUT/IN for verbosity flag
   INTEGER, INTENT(OUT)                :: exitstatus  ! Output status
-  REAL(KIND=8), INTENT(OUT)           :: funvalueI    ! The final computed result and relative error
-  REAL(KIND=8), INTENT(OUT)           :: relerr      ! The final computed result and relative error
-  REAL(KIND=8), INTENT(OUT)           :: count_Integration_Regions
+  REAL(KIND=C_DOUBLE), INTENT(OUT)           :: funvalueI    ! The final computed result and relative error
+  REAL(KIND=C_DOUBLE), INTENT(OUT)           :: relerr      ! The final computed result and relative error
+  REAL(KIND=C_DOUBLE), INTENT(OUT)           :: count_Integration_Regions
 
   INTERFACE
       ! Function to find Kmax special point
       FUNCTION findKmaxSP(j)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         IMPLICIT NONE  
-        REAL(KIND=8)         :: findKmaxSP
+        REAL(KIND=C_DOUBLE)         :: findKmaxSP
         INTEGER, INTENT(IN)  :: j
       END FUNCTION findKmaxSP
 
       ! Subroutine to find Kmax and related indices
       SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         IMPLICIT NONE
         INTEGER, INTENT(IN)   :: j
         INTEGER, INTENT(OUT)  :: mfirst, mmax
           
-        REAL(KIND=8), INTENT(OUT) :: kmax, tmax
-        REAL(KIND=8), INTENT(IN)  :: startTKmax
+        REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
+        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax
       END SUBROUTINE findKmax
 
       ! Subroutine to advance the iteration index m
@@ -101,7 +103,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr
   INTEGER               :: m, n, mOld, mmax, mfirst, accMax, j
   INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
-  REAL(KIND=8)          :: pi
+  REAL(KIND=C_DOUBLE)          :: pi
   INTEGER               :: itsacceleration, itsPreAcc
 
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, startTKmax
@@ -209,8 +211,6 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
         END IF
       END IF
-
-      WRITE(*,*) "--- (Deal with returned errors, non-convergence)"
 
       ! INTEGRATION
       ! There are three integration regions:

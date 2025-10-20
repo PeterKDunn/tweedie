@@ -11,7 +11,7 @@ SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
   INTEGER(C_INT), INTENT(INOUT) :: leftOfMax  ! True if on the left side of kmax
   INTEGER(C_INT), INTENT(INOUT) :: flip       ! True if cross from left to right
   
-  REAL(KIND=C_DOUBLE)                  :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
 
 
   ! Grab the relevant scalar values for this iteration:

@@ -1,5 +1,4 @@
 SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
-
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
@@ -11,8 +10,8 @@ SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   
   ! --- Local Variables ---
   INTEGER         :: p, maxSize
-  REAL(KIND=8)    :: denom, tinyDenom, sumw
-  REAL(KIND=8)    :: psi_new, FF_current
+  REAL(KIND=C_DOUBLE)    :: denom, tinyDenom, sumw
+  REAL(KIND=C_DOUBLE)    :: psi_new, FF_current
   
   INTEGER         :: l_nzeros
 

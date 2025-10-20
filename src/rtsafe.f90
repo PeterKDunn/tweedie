@@ -1,5 +1,5 @@
 SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
-  USE tweedie_params_mod
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
@@ -25,10 +25,10 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   ! Output (Function result)
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
   
-  INTEGER, PARAMETER   :: JMAX = 50
-  INTEGER              :: j
-  REAL(KIND=8)         :: f, df, dx, rootTMP
-  REAL(KIND=8)         :: rtsafeTMP, fh, fl, xh, xl
+  INTEGER, PARAMETER    :: JMAX = 50
+  INTEGER               :: j
+  REAL(KIND=C_DOUBLE)   :: f, df, dx, rootTMP
+  REAL(KIND=C_DOUBLE)   :: rtsafeTMP, fh, fl, xh, xl
   
   ! Initialize root and boundaries
   xl = x1
@@ -41,43 +41,34 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xstart, xacc, root)
   
   ! --- Main Loop ---
   
-  DO j = 1, JMAX
+  DO j = 1, JMAX    
+
     CALL funcd(i, rootTMP, f, df)
     
-    ! Check for non-finite derivative (NaN/Inf) OR very small derivative
-    IF ( (df .NE. df) .OR. (DABS(df) < 1.0E-12_C_DOUBLE) ) THEN
-        ! Fallback: Use bisection if Newton's method is unstable
-        rtsafeTMP = (xl + xh) / 2.0_C_DOUBLE
-        dx = DABS(rtsafeTMP - rootTMP)
-        rootTMP = rtsafeTMP
-    ELSE
-        ! Use Newton-Raphson step
-        dx = f / df
-        rtsafeTMP = rootTMP - dx
-        
-        ! Check if Newton step is valid (remains within brackets)
-        IF (((rootTMP - rtsafeTMP) * f) .LT. 0.0_C_DOUBLE) THEN
-            rootTMP = rtsafeTMP
-        ELSE
-            ! Fallback to bisection if step is invalid
-            rtsafeTMP = (xl + xh) / 2.0_C_DOUBLE
-            dx = DABS(rtsafeTMP - rootTMP)
-            rootTMP = rtsafeTMP
-        END IF
+    ! Compute Newton step
+    dx = f / df
+    rtsafeTMP = rootTMP - dx
+    
+    ! Ensure step stays inside bracket
+    IF (rtsafeTMP < xl .OR. rtsafeTMP > xh .OR. DABS(df) < 1.0E-12_C_DOUBLE) THEN
+        rtsafeTMP = (xl + xh)/2.0_C_DOUBLE
     END IF
     
-    ! Check convergence (using the step size from the method used)
-    IF (DABS(dx) < xacc) RETURN 
+    dx = rtsafeTMP - rootTMP
+    rootTMP = rtsafeTMP
     
-    ! Update brackets (bisection logic)
-    IF (f .LT. 0.0_C_DOUBLE) THEN
+    ! Check convergence
+    IF (DABS(dx) < xacc) EXIT
+    
+    ! Update brackets using new f
+    CALL funcd(i, rootTMP, f, df)
+    IF (f < 0.0_C_DOUBLE) THEN
         xl = rootTMP
     ELSE
         xh = rootTMP
     END IF
-    
-  END DO
-  
-  root = rootTMP
+END DO
+root = rootTMP
+
   
 END SUBROUTINE rtsafe

@@ -4,27 +4,29 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   IMPLICIT NONE
 
  ! --- Dummy Arguments, variables passed into the subroutine
-  INTEGER, INTENT(IN)                 :: i               ! Observation index
-  REAL(KIND=8), INTENT(OUT)           :: funvalueI        ! The final computed result
+  INTEGER(C_INT), INTENT(IN)          :: i               ! Observation index
+  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: funvalueI        ! The final computed result
   INTEGER, INTENT(OUT)                :: exitstatus      ! Output status
-  REAL(KIND=8), INTENT(OUT)           :: relerr          ! The final computed result and relative error
-  INTEGER, INTENT(INOUT)              :: verbose         ! Assuming INOUT/IN for verbosity flag
-  REAL(KIND=8), INTENT(OUT)           :: count_Integration_Regions
+  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: relerr          ! The final computed result and relative error
+  INTEGER, INTENT(IN)                 :: verbose         ! verbosity flag
+  INTEGER(C_INT), INTENT(OUT)         :: count_Integration_Regions ! Num int regions
 
   INTERFACE
     FUNCTION findKmaxSP(j)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE  
-      REAL(KIND=8)          :: findKmaxSP
+      REAL(KIND=C_DOUBLE)   :: findKmaxSP
       INTEGER, INTENT(IN)   :: j
     END FUNCTION findKmaxSP
 
 
     SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
-      INTEGER, INTENT(IN)         :: j
-      INTEGER, INTENT(OUT)        :: mfirst, mmax
-      REAL(KIND=8), INTENT(OUT)   :: kmax, tmax
-      REAL(KIND=8), INTENT(IN)    :: startTKmax
+      INTEGER, INTENT(IN)               :: j
+      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax
     END SUBROUTINE findKmax
 
 
@@ -97,13 +99,13 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr, epsilon
   INTEGER               :: m, mOld, mmax, mfirst, accMax, minAccRegions
   INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
-  REAL(KIND=8)          :: pi
+  REAL(KIND=C_DOUBLE)          :: pi
   INTEGER               :: itsacceleration, itsPreAcc
 
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, startTKmax
   REAL(KIND=C_DOUBLE)   :: df, f, finalTP, front, kmaxL, kmaxR
   REAL(KIND=C_DOUBLE)   :: areaT, area0, area1, areaA, sum, psi
-  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi ! Still using KIND=8 for internal module array access
+  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi ! Still using KIND=C_DOUBLE for internal module array access
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -121,7 +123,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   epsilon = 1.0-13_C_DOUBLE
   mmax = 0
 
-  IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
+  IF (verbose .EQ. 1) CALL DBLEPR(" FOR 1 < p < 2: p = ", -1, Cp, 1)
 
   ! FIND kmax, tmax, mmax
   IF (current_y .GE. current_mu) THEN
@@ -135,23 +137,24 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     mfirst = -1
     mOld = 0
 
-    IF (verbose .EQ. 1) WRITE(*,*) "** Im k(t) heads down immediately"
+    IF (verbose .EQ. 1) CALL DBLEPR("** Im k(t) heads down immediately", -1, current_y, 0)
         
-    zeroStartPoint = pi / Cy(i)
+    zeroStartPoint = pi / current_y
     leftOfMax = 0
   ELSE
     ! ************** y < MU   **************
-    IF (verbose .EQ. 1) CALL DBLEPR("** y < mu: y  = ", -1, y, 1)
+    IF (verbose .EQ. 1) CALL DBLEPR("** y < mu: y  = ", -1, current_y, 1)
       
     startTKMax = findKmaxSP(i)
-    IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, start at: ", -1, StartTKmax, 1)
+    IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, starting at: ", -1, StartTKmax, 1)
     
     ! For smallp, sometimes very important to have a good starting point and bounds.
     CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
     startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
       
-    IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, start at: ", -1, StartTKmax, 1)
+  IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, starting (revised) at: ", -1, StartTKmax, 1)
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+  IF (verbose .EQ. 1) CALL DBLEPR("Found kmax: ", -1, kmax, 1)
 
     leftOfMax = 1
     IF ( mmax .EQ. 0) THEN
@@ -369,24 +372,18 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   areaT = area0 + area1 + areaA
       
   IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "SUMMARY:"
-    WRITE(*,*) "  * Area0 ", area0
-    WRITE(*,*) "  * Area1 ", area1, "(", itsPreAcc, "regions)"
-    WRITE(*,*) "  * AreaA ", areaA, "(", itsAcceleration, " its)"
-    WRITE(*,*) "  TOTAL ", areaT
+    CALL DBLEPR("* Initial area0: :", -1, area0, 1)
+    CALL DBLEPR("* Pre-acc area1: :", -1, area1, 1)
+    CALL DBLEPR("*      Acc West: :", -1, West, 1)
+    CALL DBLEPR("***       TOTAL: :", -1, areaT, 1)
   END IF
-    
+   
   ! WHAT TO DO with relerrr? Might have three rel errors: from initila, pre-acc, acc?
   ! Take largest of the three? ADD?
   ! Assume the argest relative error comes from the acceleration.
-  WRITE(*,*) "FIX rel err: |A|.relA + ... + |C|.relC/|A+B+C|"
-      
+
   ! So the value returned by the integration  
   funvalueI = -areaT/pi + 0.50_C_DOUBLE
-  IF (verbose .EQ. 1) THEN
-    WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
-    WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"
-    WRITE(*,*) funvalueI, exitstatus, relerr
-  END IF
+  IF (verbose .EQ. 1) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
     
 END SUBROUTINE DFsmallp

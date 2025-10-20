@@ -68,11 +68,11 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
 
 
   ! Local Variables
-  REAL(KIND=8)        :: pi
+  REAL(KIND=C_DOUBLE)     :: pi
   
   ! Variables used internally
-  REAL(KIND=8)        :: kmaxL, kmaxR, aimrerr
-  REAL(KIND=8)        :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE)     :: kmaxL, kmaxR, aimrerr
+  REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   
   ! --- Initialization ---
   aimrerr = 1.0d-09

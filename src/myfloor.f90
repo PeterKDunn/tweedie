@@ -2,7 +2,7 @@ FUNCTION myfloor(x) RESULT(r_myfloor)
   USE ISO_C_BINDING, ONLY: C_DOUBLE
   IMPLICIT NONE
   
-  REAL(KIND=8), INTENT(IN)   :: x
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
   INTEGER                    :: r_myfloor
 
 

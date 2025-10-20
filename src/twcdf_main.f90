@@ -14,21 +14,25 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
     SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=8), INTENT(INOUT)               :: funvalueI
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
-      REAL(KIND=8), INTENT(OUT)                 :: relerr
+      REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE DFbigp
 
     SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=8), INTENT(INOUT)               :: funvalueI
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)               :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
-      REAL(KIND=8), INTENT(OUT)                 :: relerr
+      REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE DFsmallp
@@ -37,7 +41,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
 
   ! --- Local variables ---
   INTEGER         :: i
-  REAL(KIND=8)    :: funvalueTMP
+  REAL(KIND=C_DOUBLE)    :: funvalueTMP
   
 
   ! --- Initialization ---

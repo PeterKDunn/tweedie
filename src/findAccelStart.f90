@@ -7,7 +7,7 @@ SUBROUTINE findAccelStart(i, tRightMost)
   
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: tRightMost      ! The output starting point for acceleration
   
-  REAL(KIND=8)              :: pi, omegaRM, lRightMostD
+  REAL(KIND=C_DOUBLE)              :: pi, omegaRM, lRightMostD
   INTEGER                   :: lRightMost
   INTEGER(C_INT)            :: i
   REAL(KIND=C_DOUBLE)       :: current_y, current_mu, current_phi
@@ -30,7 +30,7 @@ SUBROUTINE findAccelStart(i, tRightMost)
     lRightMost = myfloor(lRightMostD) + 1
 
     ! Final calculation for tRightMost
-    omegaRM = REAL(lRightMost, KIND=8) * pi * (1.0_C_DOUBLE - Cp)
+    omegaRM = REAL(lRightMost, KIND=C_DOUBLE) * pi * (1.0_C_DOUBLE - Cp)
     tRightMost = DTAN(omegaRM) * current_mu ** (1.0_C_DOUBLE - Cp) / &
                   ( current_phi * (1.0_C_DOUBLE - Cp) )
   END IF
