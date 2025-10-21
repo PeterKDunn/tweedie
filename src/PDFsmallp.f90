@@ -127,21 +127,19 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
   IF (verbose .EQ. 1) WRITE(*,*) " FOR 1 < p < 2"
     ! Initialise the M and N matrices, x and w vectors
-    DO j = 1, 200
-      Mmatrix(1, j) = 0.0d0
-      Mmatrix(2, j) = 0.0d0
-      Nmatrix(1, j) = 0.0d0
-      Nmatrix(2, j) = 0.0d0
-      xvec(j) = 0.d000
-      wvec(j) = 0.0d00
-    END DO
+    Mmatrix = 0.0E0_C_DOUBLE
+    Mmatrix = 0.0E0_C_DOUBLE
+    Nmatrix = 0.0E0_C_DOUBLE
+    Nmatrix = 0.0E0_C_DOUBLE
+    xvec = 0.E0_C_DOUBLE
+    wvec = 0.E0_C_DOUBLE
     
     ! Set up
     pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     exitstatus = 0
-    relerr = 1.0d00
-    epsilon = 1.0d-16
-    aimrerr = 1.0d-14
+    relerr = 1.0E-16_C_DOUBLE
+    epsilon = 1.0E-16_C_DOUBLE
+    aimrerr = 1.0E-14_C_DOUBLE
     convergence = 0
 
     ! FIND kmax, tmax, mmax
@@ -150,8 +148,8 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       ! Im k(t) heads down immediately
 
       IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
-      kmax = 0.0d00
-      tmax = 0.0d00
+      kmax = 0.0E0_C_DOUBLE
+      tmax = 0.0E0_C_DOUBLE
       mmax = 0
       mfirst = -1
       mOld = 0
@@ -170,7 +168,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         ! Sometimes, important to spend some getting a good starting point and bounds.  
         CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
 
-        startTKmax =  (kmaxL + kmaxR) / 2.0d0
+        startTKmax =  (kmaxL + kmaxR) / 2.0E0_C_DOUBLE
       
         leftOfMax = 1
         IF ( mmax .EQ. 0) THEN
@@ -220,22 +218,22 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       !   3. The area thereafter, upon which Sidi acceleration is
       !      applied; the area returned by acceleration is areaA
 
-      area0 = 0.0d00
-      area1 = 0.0d00
-      areaA = 0.0d00
+      area0 = 0.0E0_C_DOUBLE
+      area1 = 0.0E0_C_DOUBLE
+      areaA = 0.0E0_C_DOUBLE
       m = mfirst
     
       ! Find the final turning point of Im/Re k, and start accelerating thereafter      
       WRITE(*,*) "IS this about TPs correct??"
-      finalTP = 0.0d00
+      finalTP = 0.0E0_C_DOUBLE
       IF ( current_y .LT. current_mu ) THEN
         CALL findAccelStart(finalTP)
       END IF
     
       zeroStartPoint = pi / current_y
       ! TRY A NEW ONE!
-      front = current_mu ** (1.0d0 - Cp) / ( current_phi * (1.0d0 - Cp))
-      zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
+      front = current_mu ** (1.0E0_C_DOUBLE - Cp) / ( current_phi * (1.0E0_C_DOUBLE - Cp))
+      zeroStartPoint = front * DTAN( pi * ( 1.0E0_C_DOUBLE - Cp) / Cp )
       WRITE(*,*) "zeroStartPoint", zeroStartPoint
 
       ! 1. INTEGRATE FIRST REGION: area0
@@ -244,14 +242,14 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         WRITE(*,*) "1. INTEGRATE: the INITIAL region"
       END IF 
       zeroBoundL = tmax
-      zeroBoundR = zeroStartPoint + 0.25d0 * pi / current_y
+      zeroBoundR = zeroStartPoint + 0.25E0_C_DOUBLE * pi / current_y
       IF (verbose .EQ. 1) WRITE(*,*) " Bounds zero; ", zeroBoundL, zeroBoundR
       WRITE(*,*) "   m = ", m
 
       ! Now find the right-side zero
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
-      zeroL =  0.0d00
+      zeroL =  0.0E0_C_DOUBLE
       zeroR = zero
       CALL PDFgaussq(i, zeroL, zeroR, area0)
       count_Integration_Regions = 1
@@ -271,7 +269,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       ! after the downturn)
 
       itsPreAcc = 0
-      area1 = 0.0d00
+      area1 = 0.0E0_C_DOUBLE
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
       ! IF (mfirst .EQ. -1 ) THEN
@@ -292,7 +290,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         zeroStartPoint = (itsPreAcc + 1) * pi / current_y
         ! WRITE(*,*)" StartPT:", zeroStartPoint
         zeroBoundL = zeroR
-        zeroBoundR = zeroStartPoint + 0.75d0 * pi / current_y
+        zeroBoundR = zeroStartPoint + 0.75E0_C_DOUBLE * pi / current_y
 
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
@@ -332,12 +330,12 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         WRITE(*,*) "3. INTEGRATE: the ACCELERATION"
       END IF
       
-      Wold = 0.0d00
-      Wold2 = 1.0d00
+      Wold = 0.0E0_C_DOUBLE
+      Wold2 = 1.0E0_C_DOUBLE
 
 
       itsAcceleration = 0
-      areaA = 0.0d00
+      areaA = 0.0E0_C_DOUBLE
       convergence = 0
 
       xvec(1) = zeroR
@@ -353,8 +351,8 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         zeroStartPoint = (n + 1) * pi / current_y
         zeroL = zeroR
           
-        zeroBoundL = zeroStartPoint - 0.35 * pi / current_y
-        zeroBoundR = zeroStartPoint + 0.15d0 * pi / current_y
+        zeroBoundL = zeroStartPoint - 0.35E0_C_DOUBLE * pi / current_y
+        zeroBoundR = zeroStartPoint + 0.15E0_C_DOUBLE * pi / current_y
 
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
         CALL findZeroSmallp(i, zero, f, df)
@@ -419,7 +417,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
       ! So the value returned by the integration  
      
-      funvalueI = -areaT/pi + 0.50d0 
+      funvalueI = -areaT/pi + 0.50E0_C_DOUBLE 
       IF (verbose .EQ. 1) THEN
         WRITE(*,*) "FINAL AREA: The cdf value is", funvalueI
         WRITE(*,*) "DFsmallp: funvalue, exitstatus, relerr"

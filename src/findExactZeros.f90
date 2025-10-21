@@ -47,15 +47,15 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
 
   END INTERFACE
 
-!        write(*,*) "** IN fundxacteros!!"
+!write(*,*) "** IN fundxacteros!!"
   
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
-!        write(*,*) "** IN findexactzeros1, ",  xL, xR
+!write(*,*) "** IN findexactzeros1, ",  xL, xR
 
   
   CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
-!      write(*,*) "** IN findexactzeros2, ", xZero
+!write(*,*) "** IN findexactzeros2, ", xZero
 
   CONTAINS 
   

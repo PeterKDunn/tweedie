@@ -537,14 +537,14 @@ SUBROUTINE PDFgaussq(i, a, b, integral_result)
 
 
   ! Set up initial parameters
-  integral_result = 0.0d0
+  integral_result = 0.0E0_C_DOUBLE
   npoints = 256 ! For 512-pt quadrature: symmetry
   
   ! Compute
   DO j = 1, npoints
     !Adjust abscissae
-    xl = ( b - a ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
-    xu = ( a - b ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
+    xl = ( b - a ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
+    xu = ( a - b ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
 
     ! Evaluate
     fl = PDFintegrand(i, xl)
@@ -552,6 +552,6 @@ SUBROUTINE PDFgaussq(i, a, b, integral_result)
     integral_result = integral_result + weights(j) * ( fl + fu )
   END DO
   
-  integral_result = integral_result * ( b - a ) / 2.0d00
+  integral_result = integral_result * ( b - a ) / 2.0E0_C_DOUBLE
 
 END SUBROUTINE PDFgaussq

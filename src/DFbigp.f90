@@ -46,8 +46,8 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
     SUBROUTINE DFgaussq(i, a, b, area)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      REAL(KIND=C_DOUBLE)             :: area
-      REAL(KIND=C_DOUBLE), INTENT(IN)        :: a, b
+      REAL(KIND=C_DOUBLE), INTENT(OUT)      :: area
+      REAL(KIND=C_DOUBLE), INTENT(IN)       :: a, b
     END SUBROUTINE DFgaussq
 
 
@@ -59,11 +59,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END SUBROUTINE acceleratenew
 
 
-    SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
+    SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER, INTENT(IN)         :: i, m
-      REAL(KIND=C_DOUBLE), INTENT(IN)    :: tL, tR
-      REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
+      INTEGER, INTENT(IN)                 :: i, m
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP
+      REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zero
     END SUBROUTINE findExactZeros
 
   END INTERFACE
@@ -101,7 +101,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   Nmatrix = 0.0_C_DOUBLE
   xvec = 0.0_C_DOUBLE
   wvec = 0.0_C_DOUBLE
-  mmax =- 0
+  mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
  
   IF (verbose .EQ. 1) THEN
@@ -109,7 +109,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   END IF
   
   ! --- Find kmax, tmax, mmax ---
-!write(*,*) "DEBUG: Index i before advanceM is: ", i
   IF (current_y .GE. current_mu) THEN
     IF (verbose .EQ. 1) THEN
       CALL DBLEPR("  - with y >= mu: y =", -1, current_y, 1 )
@@ -125,12 +124,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     leftOfMax = 0
   ELSE
     IF (verbose .EQ. 1) THEN
-      CALL DBLEPR("  - with < mu: y =", -1, current_y, 1 )
+      CALL DBLEPR("  - with y < mu: y =", -1, current_y, 1 )
     END IF
     
     startTKmax = findKmaxSP(i)
-!  WRITE(*,*) "!!! TRACE 1: zeroStartPoint AFTER findKmax:", zeroStartPoint
- 
+
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
 
     IF (verbose .EQ. 1) THEN
@@ -144,7 +142,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
       mfirst = 0
       mOld = 0
       zeroStartPoint = tmax + pi/current_y
-      zeroStartPoint = zeroStartPoint
       leftOfMax = 0
     ELSE
       mfirst = 1

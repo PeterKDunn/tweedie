@@ -16,9 +16,9 @@ SUBROUTINE findRekd(i, t, Redk)
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
   
-  pindex = 1.0d00 / (1.0d00 - Cp)
-  omega = DATAN( ( (1.0d00 - Cp) * t * current_phi) / &
-                 (current_mu ** (1.0d00 - Cp) ) )
+  pindex = 1.0E0_C_DOUBLE / (1.0E0_C_DOUBLE - Cp)
+  omega = DATAN( ( (1.0E0_C_DOUBLE - Cp) * t * current_phi) / &
+                 (current_mu ** (1.0E0_C_DOUBLE - Cp) ) )
   
   Redk = current_mu * &
          DSIN( omega * pindex ) / &

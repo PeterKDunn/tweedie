@@ -17,7 +17,7 @@ SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
 
 
   ! --- Constants ---
-  tinyDenom = 1.0d-16
+  tinyDenom = 1.0E-16_C_DOUBLE
   maxSize = 200 ! Maximum size for the column dimension of M/N
 
   ! --- Initial Setup ---
@@ -45,7 +45,7 @@ SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
     
 
   ! When the new term (psi) is essentially zero.
-  IF (DABS(psi_new) .LT. 1.0d-31) THEN
+  IF (DABS(psi_new) .LT. 1.0E-31_C_DOUBLE) THEN
       West = FF_current
       RETURN
   END IF

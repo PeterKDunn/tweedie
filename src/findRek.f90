@@ -17,19 +17,19 @@ SUBROUTINE findRek(i, t, Rek)
   
 
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-  pindex = (2.0d00 - Cp)
+  pindex = (2.0E0_C_DOUBLE - Cp)
   front = current_mu ** pindex  / ( current_phi * pindex)
-  tanArg = (1.0d00 - Cp) * t * current_phi / (current_mu ** (1.0d00 - Cp) )
+  tanArg = (1.0E0_C_DOUBLE - Cp) * t * current_phi / (current_mu ** (1.0E0_C_DOUBLE - Cp) )
   omega = DATAN( tanArg )
   
   ! Safety check
-  IF ((omega > 0.0d00 ) .OR. (omega < (-pi/2.0d00))) THEN
+  IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-pi/2.0E0_C_DOUBLE))) THEN
      ! Error!
      WRITE(*,*) "Error: omga out of bounds"
      RETURN
   END IF
   
-  alpha = (2.0d00 - Cp)/(1.0d00 - Cp)
-  Rek = front * ( DCOS(omega * alpha)/(DCOS(omega)**alpha) - 1.0d00 )
+  alpha = (2.0E0_C_DOUBLE - Cp)/(1.0E0_C_DOUBLE - Cp)
+  Rek = front * ( DCOS(omega * alpha)/(DCOS(omega)**alpha) - 1.0E0_C_DOUBLE )
 
 END SUBROUTINE findRek

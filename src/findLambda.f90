@@ -15,11 +15,11 @@ SUBROUTINE findLambda(i, lambda)
   current_phi  = Cphi(i)  ! Access phi value for index i
   
 
-  lambda = 0.0d0
+  lambda = 0.0E0_C_DOUBLE
   IF (CpSmall) THEN
     ! The calculation for lambda (used in P(Y=0) = exp(-lambda))
-    lambda = (current_mu ** (2.0d00 - Cp) ) / &
-             (current_phi * (2.0d00 - Cp) )
+    lambda = (current_mu ** (2.0E0_C_DOUBLE - Cp) ) / &
+             (current_phi * (2.0E0_C_DOUBLE - Cp) )
     ! NOTE: No negative sign in front
   END IF
   

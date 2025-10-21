@@ -543,8 +543,8 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
   ! Compute
   DO j = 1, npoints
     ! Adjust abscissae
-    xl = ( b - a ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
-    xu = ( a - b ) / 2.0d00 * absc(j) + ( b + a ) / 2.0d00
+    xl = ( b - a ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
+    xu = ( a - b ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
 
     ! Evaluate
     fl = DFintegrand(i, xl)
@@ -552,6 +552,6 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
     integral_result = integral_result + weights(j) * ( fl + fu )
   END DO
   
-  integral_result = integral_result * ( b - a ) / 2.0d00
+  integral_result = integral_result * ( b - a ) / 2.0E0_C_DOUBLE
 
 END SUBROUTINE DFgaussq

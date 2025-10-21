@@ -32,15 +32,15 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   ! If slope at SP is *positive*, only need to creep to the right
   boundL = startTKmax
   
-  IF (SPslope <= 0.0d0) THEN
+  IF (SPslope .LE. 0.0E0_C_DOUBLE) THEN
     keepSearching = .TRUE.
     DO WHILE (keepSearching)
       ! If slope at SP is negative, take bold steps left to find lower bound
-      boundL = boundL / 2.0d0 
+      boundL = boundL / 2.0E0_C_DOUBLE
       
       CALL findImkd(i, boundL, slope)
       
-      IF (slope > 0.0d0 ) THEN
+      IF (slope .GT. 0.0E0_C_DOUBLE ) THEN
         ! Found a lower bound where the slope is positive
         keepSearching = .FALSE.
       END IF 
@@ -51,10 +51,10 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   keepSearching = .TRUE.
   DO WHILE (keepSearching)
     oldBoundL = boundL
-    boundL = boundL * 1.10d0
+    boundL = boundL * 1.10E0_C_DOUBLE
     CALL findImkd(i, boundL, slope)
 
-    IF (slope < 0.0d0 ) THEN
+    IF (slope .LT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
       keepSearching = .FALSE.
       boundL = oldBoundL
@@ -68,17 +68,17 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   boundR = startTKmax
 
   ! If slope at SP is *negative*, only need to creep to the left
-  IF (SPslope > 0.0d0) THEN
+  IF (SPslope .GT. 0.0E0_C_DOUBLE) THEN
     boundR = startTKmax
     keepSearching = .TRUE.
     
     DO WHILE (keepSearching)
       ! If slope at SP is positive, take bold steps right to find upper bound
-      boundR = boundR * 1.5d0
+      boundR = boundR * 1.5E0_C_DOUBLE
 
       CALL findImkd(i, boundR, slope)
 
-      IF (slope < 0.0d0 ) THEN
+      IF (slope .LT. 0.0E0_C_DOUBLE ) THEN
         ! Found an upper bound where the slope is negative
         keepSearching = .FALSE.
       END IF 
@@ -89,10 +89,10 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   keepSearching = .TRUE.
   DO WHILE (keepSearching)
     oldBoundR = boundR
-    boundR = boundR * 0.90d0
+    boundR = boundR * 0.90E0_C_DOUBLE
     CALL findImkd(i, boundR, slope)
 
-    IF (slope > 0.0d0 ) THEN
+    IF (slope .GT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
       keepSearching = .FALSE.
       boundR = oldBoundR

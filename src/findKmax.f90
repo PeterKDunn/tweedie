@@ -75,7 +75,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   
   ! --- Initialization ---
-  aimrerr = 1.0d-09
+  aimrerr = 1.0E-09_C_DOUBLE
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
   ! Grab the relevant scalar values for this iteration:
@@ -84,16 +84,16 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, startPoint)
   current_phi  = Cphi(i)  ! Access phi value for index i
   
   ! Default boundaries for rtsafe
-  kmaxL = 0.0d00
-  kmaxR = pi / 2.0d00  ! A typical starting point for tan(t) root finding
+  kmaxL = 0.0E0_C_DOUBLE
+  kmaxR = pi / 2.0E0_C_DOUBLE  ! A typical starting point for tan(t) root finding
   
   IF ( CpSmall) THEN
     IF (current_y .GE. current_mu) THEN
       ! Cy >= Cmu and 1 < p < 2
       mmax = 0
       mfirst = 0
-      tmax = 0.0d00
-      kmax = 0.0d00
+      tmax = 0.0E0_C_DOUBLE
+      kmax = 0.0E0_C_DOUBLE
     ELSE
       ! Cy < Cmu and 1 < p < 2
       CALL rtsafe(i,            &

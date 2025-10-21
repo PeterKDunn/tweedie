@@ -44,7 +44,7 @@ CONTAINS
     current_mu   = Cmu(i)
 
     ! Check for when t = 0 (t is very close to zero)
-    IF (ABS(t) < 1.0d-14) THEN
+    IF (ABS(t) < 1.0E-14_C_DOUBLE) THEN
       ! This should ideally be handled by the integrator (limits), 
       ! but returning the analytic limit is safest.
       integrand_result = current_mu - current_y
