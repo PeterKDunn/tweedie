@@ -58,7 +58,8 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER(C_INT), INTENT(IN)        :: nzeros
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200)
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200)
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: Mmatrix(2, 200), Nmatrix(2, 200)
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: West
     END SUBROUTINE acceleratenew
 
@@ -99,7 +100,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, zero, aimrerr, epsilon
   INTEGER               :: m, mOld, mmax, mfirst, accMax, minAccRegions
   INTEGER               :: leftOfMax, flip, convergence, stopPreAccelerate
-  REAL(KIND=C_DOUBLE)          :: pi
+  REAL(KIND=C_DOUBLE)   :: pi
   INTEGER               :: itsacceleration, itsPreAcc
 
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, startTKmax

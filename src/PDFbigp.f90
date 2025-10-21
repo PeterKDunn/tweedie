@@ -104,7 +104,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
   epsilon = 1.0E-12_C_DOUBLE
   
   ! --- Find kmax, tmax, mmax ---
-  IF (Cy(i) .GE. Cmu(i)) THEN
+  IF (current_y .GE. current_mu) THEN
     IF (verbose .EQ. 1) WRITE(*,*) "** y >= mu"
       
     kmax = 0.0_C_DOUBLE

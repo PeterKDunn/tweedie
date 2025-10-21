@@ -200,12 +200,12 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         IF ( mmax .EQ. 0) THEN
           mfirst = 0
           mOld = 0
-          zeroStartPoint = tmax + pi/Cy(i)
+          zeroStartPoint = tmax + pi/current_y
           leftOfMax = 0
         ELSE
           mfirst = 1
           mOld = 0
-          zeroStartPoint = pi / (Cmu(i) - Cy(i))
+          zeroStartPoint = pi / (current_mu - current_y)
           mOld = m
 
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
@@ -228,13 +228,13 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       ! Find the final turning point of Im/Re k, and start accelerating thereafter      
       WRITE(*,*) "IS this about TPs correct??"
       finalTP = 0.0d00
-      IF ( Cy(i) .LT. Cmu(i) ) THEN
+      IF ( current_y .LT. current_mu ) THEN
         CALL findAccelStart(finalTP)
       END IF
     
-      zeroStartPoint = pi / Cy(i)
+      zeroStartPoint = pi / current_y
       ! TRY A NEW ONE!
-      front = Cmu(i) ** (1.0d0 - Cp) / ( Cphi(i) * (1.0d0 - Cp))
+      front = current_mu ** (1.0d0 - Cp) / ( current_phi * (1.0d0 - Cp))
       zeroStartPoint = front * DTAN( pi * ( 1.0d0 - Cp) / Cp )
       WRITE(*,*) "zeroStartPoint", zeroStartPoint
 
@@ -244,7 +244,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         WRITE(*,*) "1. INTEGRATE: the INITIAL region"
       END IF 
       zeroBoundL = tmax
-      zeroBoundR = zeroStartPoint + 0.25d0 * pi / Cy(i)
+      zeroBoundR = zeroStartPoint + 0.25d0 * pi / current_y
       IF (verbose .EQ. 1) WRITE(*,*) " Bounds zero; ", zeroBoundL, zeroBoundR
       WRITE(*,*) "   m = ", m
 
@@ -289,10 +289,10 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         itsPreAcc = itsPreAcc + 1
         zeroL = zeroR
 
-        zeroStartPoint = (itsPreAcc + 1) * pi / Cy(i)
+        zeroStartPoint = (itsPreAcc + 1) * pi / current_y
         ! WRITE(*,*)" StartPT:", zeroStartPoint
         zeroBoundL = zeroR
-        zeroBoundR = zeroStartPoint + 0.75d0 * pi / Cy(i)
+        zeroBoundR = zeroStartPoint + 0.75d0 * pi / current_y
 
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
@@ -350,11 +350,11 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         ! under the acceleration regime
 
         n = itsPreAcc + itsAcceleration 
-        zeroStartPoint = (n + 1) * pi / Cy(i)
+        zeroStartPoint = (n + 1) * pi / current_y
         zeroL = zeroR
           
-        zeroBoundL = zeroStartPoint - 0.35 * pi / Cy(i)
-        zeroBoundR = zeroStartPoint + 0.15d0 * pi / Cy(i)
+        zeroBoundL = zeroStartPoint - 0.35 * pi / current_y
+        zeroBoundR = zeroStartPoint + 0.15d0 * pi / current_y
 
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
         CALL findZeroSmallp(i, zero, f, df)
