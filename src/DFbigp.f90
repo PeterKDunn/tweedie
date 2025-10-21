@@ -97,10 +97,10 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   relerr = 1.0_C_DOUBLE
   convergence = 0
   epsilon = 1.0E-12_C_DOUBLE
-  Mmatrix = 0.0_8
-  Nmatrix = 0.0_8
-  xvec = 0.0_8
-  wvec = 0.0_8
+  Mmatrix = 0.0_C_DOUBLE
+  Nmatrix = 0.0_C_DOUBLE
+  xvec = 0.0_C_DOUBLE
+  wvec = 0.0_C_DOUBLE
   mmax =- 0
   zeroStartPoint = 0.0_C_DOUBLE
  
