@@ -23,14 +23,22 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END FUNCTION findKmaxSP
 
 
-    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
+    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
       INTEGER, INTENT(IN)               :: j
       INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax, kmaxL, kmaxR
     END SUBROUTINE findKmax
+
+    SUBROUTINE findKmaxSPbounds(i, startx, xL, xR)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)       :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
+    END SUBROUTINE findKmaxSPbounds
+
 
       ! 3. Subroutine to advance the iteration index m
     SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
@@ -74,7 +82,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   INTEGER         :: itsAcceleration, itsPreAcc, m, minAccRegions
   INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
+  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr, kmaxL, kmaxR
   REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, sumA
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi ! Can still using KIND=C_DOUBLE for internal module array access
@@ -128,8 +136,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END IF
     
     startTKmax = findKmaxSP(i)
+    ! For smallp, sometimes very important to have a good starting point and bounds.
+    CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
+    startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
 
-    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
 
     IF (verbose .EQ. 1) THEN
       CALL DBLEPR("  - kmax:", -1, kmax, 1 )
@@ -243,8 +254,9 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   END IF
 
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
-  IF (verbose .EQ. 1) CALL rprintf_double(" - ACCELERATING for y:", current_y)
-
+write(*,*) "***0"
+  IF (verbose .EQ. 1) CALL DBLEPR(" - ACCELERATING for y:", current_y)
+write(*,*) "***1"
   ! Initialisation
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
@@ -256,14 +268,16 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   
   ! This will be the very first, left-most value of t used in acceleration
   xvec(1) = zeroR 
+write(*,*) "***2"
 
   DO WHILE (convergence .EQ. 0)
+write(*,*) "***3"
 
     itsAcceleration = itsAcceleration + 1
     
-!!! SUFELY WE ARE ON TEH RIGHT OF TMAX!!!!
+!!! SURELY WE ARE ON THE RIGHT OF TMAX!!!!
     IF (leftOfMax .EQ. 1) THEN
-      zeroStartPoint = zeroR
+      zeroStartPoint = zeroR * 0.99_C_DOUBLE
       zeroL = zeroR
       zeroR = zeroR * 20.0_C_DOUBLE
     ELSE
@@ -271,17 +285,21 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
         ! FLIPPING to other side of tmax
         zeroStartPoint = tmax + (tmax - zero)
         ! That is, start of the other side of tmax
-        zeroL = zero
+        zeroL = zero * 0.99_C_DOUBLE
         zeroR = zeroStartPoint * 20.0_C_DOUBLE
       ELSE
-        zeroStartPoint = zeroR
+        zeroStartPoint = zeroR * 0.99_C_DOUBLE
         zeroL = zeroR
         zeroR = zeroR * 10.0_C_DOUBLE
       END IF
     END IF
+write(*,*) "***4"
+    
 
     ! Find the first exact zero
+write(*,*) "!!! zeroL, zeroR, startPt:", zeroL, zeroR, zeroStartPoint
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
+write(*,*) "!!! zero:", zero
 
     IF (leftOfMax .EQ. 1) THEN
       zeroR = zero
@@ -317,7 +335,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     ! Declare convergence of we have sufficient regions, and relerr estimate is small
     IF ( (itsAcceleration .GE. minAccRegions) .AND. &
          (relerr .LT. aimrerr) ) THEN
-      IF (verbose .EQ. 1) CALL rprintf_double(   "         rel err =:", relerr)
+      IF (verbose .EQ. 1) CALL DBLEPR(   "         rel err =:", relerr)
       convergence = 1
     END IF
   

@@ -23,7 +23,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
       END FUNCTION findKmaxSP
 
 
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax) 
+      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR) 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
@@ -31,7 +31,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
         INTEGER(C_INT), INTENT(OUT) :: mfirst, mmax
           
         REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax
+        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax, kmaxL, kmaxR
       END SUBROUTINE findKmax
 
 
@@ -77,7 +77,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
   INTEGER         :: itsAcceleration, itsPreAcc, m
   INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr
+  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr, kmaxL, kmaxR
   REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, areaA, sum
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi ! Can still using KIND=C_DOUBLE for internal module array access
@@ -121,10 +121,11 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
     
     ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     startTKmax = findKmaxSP(i)
+    CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
 
     IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
-  
-    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax)
+  WRITE(*,*) "FIX THIS"
+    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
     
     IF (verbose .EQ. 1) THEN
       WRITE(*,*) "** Found(b): kmax =", kmax

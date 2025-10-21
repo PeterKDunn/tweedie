@@ -537,7 +537,7 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
 
 
   ! Set up initial parameters
-  integral_result = 0.0d0
+  integral_result = 0.0E0_C_DOUBLE
   npoints = 256 ! For 512-pt quadrature: symmetry
   
   ! Compute

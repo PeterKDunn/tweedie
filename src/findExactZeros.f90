@@ -53,8 +53,8 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
   xacc = 1.0E-13_C_DOUBLE
 !write(*,*) "** IN findexactzeros1, ",  xL, xR
 
-  
-  CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
+!  CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
+  CALL rtsafe(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
 !write(*,*) "** IN findexactzeros2, ", xZero
 
   CONTAINS 

@@ -12,7 +12,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
 
   ! --- Local Variables ---
   REAL(KIND=C_DOUBLE)    :: current_y, current_mu, current_phi
-  REAL(KIND=C_DOUBLE)    :: boundL, boundR, slope, SPslope
+  REAL(KIND=C_DOUBLE)    :: boundL, boundR, slopeL, slopeR, SPslope
   REAL(KIND=C_DOUBLE)    :: oldBoundL, oldBoundR
   LOGICAL         :: keepSearching
   
@@ -38,9 +38,9 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
       ! If slope at SP is negative, take bold steps left to find lower bound
       boundL = boundL / 2.0E0_C_DOUBLE
       
-      CALL findImkd(i, boundL, slope)
+      CALL findImkd(i, boundL, slopeL)
       
-      IF (slope .GT. 0.0E0_C_DOUBLE ) THEN
+      IF (slopeL .GT. 0.0E0_C_DOUBLE ) THEN
         ! Found a lower bound where the slope is positive
         keepSearching = .FALSE.
       END IF 
@@ -52,9 +52,9 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   DO WHILE (keepSearching)
     oldBoundL = boundL
     boundL = boundL * 1.10E0_C_DOUBLE
-    CALL findImkd(i, boundL, slope)
+    CALL findImkd(i, boundL, slopeL)
 
-    IF (slope .LT. 0.0E0_C_DOUBLE ) THEN
+    IF (slopeL .LT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
       keepSearching = .FALSE.
       boundL = oldBoundL
@@ -76,9 +76,9 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
       ! If slope at SP is positive, take bold steps right to find upper bound
       boundR = boundR * 1.5E0_C_DOUBLE
 
-      CALL findImkd(i, boundR, slope)
+      CALL findImkd(i, boundR, slopeR)
 
-      IF (slope .LT. 0.0E0_C_DOUBLE ) THEN
+      IF (slopeR .LT. 0.0E0_C_DOUBLE ) THEN
         ! Found an upper bound where the slope is negative
         keepSearching = .FALSE.
       END IF 
@@ -90,15 +90,14 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   DO WHILE (keepSearching)
     oldBoundR = boundR
     boundR = boundR * 0.90E0_C_DOUBLE
-    CALL findImkd(i, boundR, slope)
+    CALL findImkd(i, boundR, slopeR)
 
-    IF (slope .GT. 0.0E0_C_DOUBLE ) THEN
+    IF (slopeR .GT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
       keepSearching = .FALSE.
       boundR = oldBoundR
     END IF
   END DO
   kmaxR = boundR
-  ! Removed write(*,*)
-  
+
 END SUBROUTINE findKmaxSPbounds

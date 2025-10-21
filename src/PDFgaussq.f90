@@ -542,7 +542,7 @@ SUBROUTINE PDFgaussq(i, a, b, integral_result)
   
   ! Compute
   DO j = 1, npoints
-    !Adjust abscissae
+    ! Adjust abscissae
     xl = ( b - a ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
     xu = ( a - b ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
 

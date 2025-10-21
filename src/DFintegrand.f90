@@ -1,4 +1,5 @@
 MODULE DFintegrand_MOD
+  USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
   

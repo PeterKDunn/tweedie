@@ -26,7 +26,7 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   REAL(KIND=C_DOUBLE)              :: root
   
   ! --- Local Variables
-  INTEGER, PARAMETER  :: MAXITS = 100
+  INTEGER, PARAMETER  :: MAXITS = 5000
   INTEGER             :: j
   
   ! x_current holds the current iteration value, dx is the change
@@ -72,7 +72,9 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
     IF (ABS(dx) < xacc) EXIT
   END DO
   
+  ! If we get here, NO CONVERGENCE
   ! Assign the final root value to the function result
+  write(*,*) "CONVERGENCE NOT OBTINED IN RTNEWTON; t, f, df:", x_current, f, df
   root = x_current
 
 END SUBROUTINE rtnewton

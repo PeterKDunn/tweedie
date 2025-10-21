@@ -1,4 +1,5 @@
 MODULE PDFintegrand_MOD
+  USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
   
@@ -39,7 +40,9 @@ CONTAINS
     END INTERFACE
       
   
-    ! The call to findImk and findRek must pass the parameters explicitly.
+    ! Grab the relevant scalar values for this iteration:
+    current_y    = Cy(i)
+    current_mu   = Cmu(i)
     
     ! Check for when t = 0 (t is very close to zero)
     IF (ABS(t) < 1.0E-14_C_DOUBLE) THEN

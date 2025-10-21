@@ -23,6 +23,10 @@ SUBROUTINE findImk(i, t, Imk)
   front = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
   tanArg = (1.0_C_DOUBLE - Cp) * t * current_phi  / (current_mu ** (1.0_C_DOUBLE - Cp) )
   omega = DATAN( tanArg )
+!write(*,*) "t  (1500)  = ", t
+!write(*,*) "FRONT (-0.2357023)  = ", front
+!write(*,*) "tanArg (-21213.2) = ", tanArg
+!write(*,*) "OMEGA (-1.570749) = ", omega
 
   IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
       (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
@@ -36,6 +40,10 @@ SUBROUTINE findImk(i, t, Imk)
   Imk = front *   &
         DSIN(omega * alpha)/(DCOS(omega) ** alpha) - t * current_y
 
-  RETURN
+!write(*,*) "Imk (30.2101) = ", Imk
+
+!IF ( (t .GT. 1450) .AND. (t .LT. 1550 ) ) STOP
+
+RETURN
 
 END SUBROUTINE findImk
