@@ -64,11 +64,11 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     END SUBROUTINE acceleratenew
 
 
-    SUBROUTINE findExactZeros(i, m, tL, tR, zeroL, zeroR)
+    SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER(C_INT), INTENT(IN)       :: i, m
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: tL, tR
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: zeroL, zeroR
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: tL, tR, zeroSP
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: zero
     END SUBROUTINE findExactZeros
 
 
