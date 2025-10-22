@@ -202,10 +202,10 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
   CALL DFgaussq(i, zeroL, zeroR, area0)
   IF (verbose .EQ. 1) THEN
-    CALL DBLEPR("  * INITIAL area:", -1, area0, 1 )
-    CALL DBLEPR("      between t =", -1, zeroL, 1 )
-    CALL DBLEPR("          and t =", -1, zeroR, 1 )
-    CALL INTPR( "        using m =", -1, m, 1)
+    CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
+    CALL DBLEPR("        between t =", -1, zeroL, 1 )
+    CALL DBLEPR("            and t =", -1, zeroR, 1 )
+    CALL INTPR( "          using m =", -1, m, 1)
   END IF
 
   ! ---------------------------------------------------------
@@ -227,6 +227,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
     stopPreAccelerate = 0
     DO WHILE (stopPreAccelerate .EQ. 0)
+write(*,*) "itsPreAcc", itsPreAcc
       itsPreAcc = itsPreAcc + 1
 
       IF (leftOfMax .EQ. 1) THEN
@@ -239,13 +240,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
       zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
       
       zeroL = zeroR
-  
-write(*,*) "++++ PRE:  zeroStartPoint, zeroL, zeroR", zeroStartPoint, zeroBoundL, zeroBoundR
-CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
-
-write(*,*) "++++ POST: zeroStartPoint, zeroL, zeroR", zeroStartPoint, zeroBoundL, zeroBoundR
+  write(*,*) "A"
+      CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
+  write(*,*) "B"
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-write(*,*) "++++ zero", zero
+  write(*,*) "C"
 
       zeroR = zero
 
@@ -253,14 +252,15 @@ write(*,*) "++++ zero", zero
       area1 = area1 + sumA
       count_Integration_Regions = count_Integration_Regions + 1
       IF (verbose .EQ. 1) THEN
-        CALL DBLEPR("  - PRE-ACC area:", -1, sumA, 1 )
-        CALL DBLEPR("      between t =", -1, zeroL, 1 )
-        CALL DBLEPR("          and t =", -1, zeroR, 1 )
-        CALL INTPR( "        using m =", -1, m, 1 )
+        CALL DBLEPR("  *** PRE-ACC area:", -1, sumA, 1 )
+        CALL DBLEPR("        between t =", -1, zeroL, 1 )
+        CALL DBLEPR("            and t =", -1, zeroR, 1 )
+        CALL INTPR( "          using m =", -1, m, 1 )
       END IF
 
       ! Stop condition for pre-acceleration.
-      IF (itsPreAcc .GE. 2) stopPreAccelerate = 1
+      ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
+      IF ( (itsPreAcc .GE. 2) .AND. (m .GT. mmax) ) stopPreAccelerate = 1
       
       mOld = m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
@@ -270,9 +270,8 @@ write(*,*) "++++ zero", zero
 
   ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
-write(*,*) "***0"
   IF (verbose .EQ. 1) CALL DBLEPR(" - ACCELERATING for y:", -1, current_y, 1)
-write(*,*) "***1"
+
   ! Initialisation of acceleration 
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
@@ -284,46 +283,37 @@ write(*,*) "***1"
   
   ! This will be the very first, left-most value of t used in acceleration
   xvec(1) = zeroR 
-write(*,*) "***2"
 
   DO WHILE (convergence .EQ. 0)
-write(*,*) "***3"
-write(*,*) "zeroR=", zeroR
     itsAcceleration = itsAcceleration + 1
-    
+write(*,*) "Left of max??", leftOfMax
 !!! SURELY WE ARE ON THE RIGHT OF TMAX!!!!
     IF (leftOfMax .EQ. 1) THEN
-write(*,*)"3***a"
       zeroStartPoint = zeroR * 0.99_C_DOUBLE
-      zeroL = zeroR
-      zeroR = zeroR * 2.0_C_DOUBLE
+      zeroBoundL = zeroR
+      zeroBoundR = zeroR * 2.0_C_DOUBLE
     ELSE
       IF (flip .EQ. 1) THEN
-write(*,*)"3***b"
         ! FLIPPING to other side of tmax
-        IF (verbose .EQ. 1) WRITE(*,*) "  - Flipping to other side of tmax"
+        IF (verbose .EQ. 1) CALL DBLEPR("  - Flipping to other side of tmax", -1, tmax, 1)
         zeroStartPoint = tmax + (tmax - zero)
         ! That is, start of the other side of tmax
-        zeroL = zero * 0.99_C_DOUBLE
-        zeroR = zeroStartPoint * 2.0_C_DOUBLE
+        zeroBoundL = zero * 0.99_C_DOUBLE
+        zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
       ELSE
-write(*,*)"3***c"
         zeroStartPoint = zeroR * 0.99_C_DOUBLE
-        zeroL = zeroR
-        zeroR = zeroR * 2.0_C_DOUBLE
+        zeroBoundL = zeroR
+        zeroBoundR = zeroR * 2.0_C_DOUBLE
       END IF
     END IF
-write(*,*) "***4"
-write(*,*) "zeroR=", zeroR
-write(*,*) "zeroL=", zeroL
-    
 
     ! Find the first exact zero
-write(*,*) "!!! zeroL, zeroR, startPt:", zeroL, zeroR, zeroStartPoint
     ! Ensure bounds bracket the zero, and confine to a narrower region if possible
-    CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroL, zeroR)
+write(*,*) "B4:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroBoundL, zeroBoundR
+    CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
+write(*,*) "AFTER :  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroBoundL, zeroBoundR
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
-write(*,*) "!!! zero:", zero
+write(*,*) "AFTER 2:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroL, zeroR
 
     IF (leftOfMax .EQ. 1) THEN
       zeroR = zero
@@ -349,11 +339,11 @@ write(*,*) "!!! zero:", zero
     ! Check for convergence
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
     IF (verbose .EQ. 1) THEN
-      CALL DBLEPR("  - Acceleration area:", -1, psi, 1)
-      CALL DBLEPR("           between t =", -1, zeroL, 1)
-      CALL DBLEPR("               and t =", -1, zeroR, 1)
-      CALL INTPR( "             using m =", -1, m, 1)
-      CALL DBLEPR("        with rel err =", -1, relerr, 1)
+      CALL DBLEPR("  *** Acceleration area:", -1, psi, 1)
+      CALL DBLEPR("             between t =", -1, zeroL, 1)
+      CALL DBLEPR("                 and t =", -1, zeroR, 1)
+      CALL INTPR( "               using m =", -1, m, 1)
+      CALL DBLEPR("          with rel err =", -1, relerr, 1)
     END IF
 
     ! Declare convergence of we have sufficient regions, and relerr estimate is small
