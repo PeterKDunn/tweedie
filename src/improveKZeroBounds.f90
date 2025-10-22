@@ -1,4 +1,4 @@
-SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
+SUBROUTINE improveKZeroBounds(i, m, startTKmax, kmaxL, kmaxR)
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -6,14 +6,14 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   
   ! Inputs
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: startTKmax
-  INTEGER(C_INT), INTENT(IN)         :: i
+  INTEGER(C_INT), INTENT(IN)         :: i, m
   ! Outputs
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: kmaxL, kmaxR
 
   ! --- Local Variables ---
   REAL(KIND=C_DOUBLE)    :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)    :: boundL, boundR, slopeL, slopeR, SPslope
-  REAL(KIND=C_DOUBLE)    :: oldBoundL, oldBoundR
+  REAL(KIND=C_DOUBLE)    :: oldBoundL, oldBoundR, f
   LOGICAL         :: keepSearching
   
   EXTERNAL findImkd
@@ -26,7 +26,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   
   ! FIND the slope of the starting point (SP)
   ! NOTE: findImkd must be called with the parameters from the COMMON block.
-  CALL findImkd(i, startTKmax, SPslope)
+    CALL findImkM(i, boundL, f, slopeL, m)
 
   ! ************** LOWER BOUND
   ! If slope at SP is *positive*, only need to creep to the right
@@ -38,7 +38,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
       ! If slope at SP is negative, take bold steps left to find lower bound
       boundL = boundL / 2.0E0_C_DOUBLE
       
-      CALL findImkd(i, boundL, slopeL)
+    CALL findImkM(i, boundL, f, slopeL, m)
       
       IF (slopeL .GT. 0.0E0_C_DOUBLE ) THEN
         ! Found a lower bound where the slope is positive
@@ -52,7 +52,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   DO WHILE (keepSearching)
     oldBoundL = boundL
     boundL = boundL * 1.10E0_C_DOUBLE
-    CALL findImkd(i, boundL, slopeL)
+    CALL findImkM(i, boundL, f, slopeL, m)
 
     IF (slopeL .LT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
@@ -64,7 +64,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
 
   ! ************** UPPER BOUND
   ! Re-evaluate SPslope (redundant but safe)
-  CALL findImkd(i, startTKmax, SPslope)
+  CALL findImkM(i, boundR, f, slopeR, m)
   boundR = startTKmax
 
   ! If slope at SP is *negative*, only need to creep to the left
@@ -76,7 +76,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
       ! If slope at SP is positive, take bold steps right to find upper bound
       boundR = boundR * 1.5E0_C_DOUBLE
 
-      CALL findImkd(i, boundR, slopeR)
+      CALL findImkM(i, boundR, f, slopeR, m)
 
       IF (slopeR .LT. 0.0E0_C_DOUBLE ) THEN
         ! Found an upper bound where the slope is negative
@@ -90,8 +90,7 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   DO WHILE (keepSearching)
     oldBoundR = boundR
     boundR = boundR * 0.90E0_C_DOUBLE
-    CALL findImkd(i, boundR, slopeR)
-
+    CALL findImkM(i, boundR, f, slopeR, m)
     IF (slopeR .GT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far! Keep previous bound
       keepSearching = .FALSE.
@@ -100,4 +99,4 @@ SUBROUTINE findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
   END DO
   kmaxR = boundR
 
-END SUBROUTINE findKmaxSPbounds
+END SUBROUTINE improveKZeroBounds
