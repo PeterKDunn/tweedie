@@ -1,5 +1,5 @@
 
-      SUBROUTINE findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+      SUBROUTINE improveKmaxSPBounds(startTKmax, kmaxL, kmaxR)
 
 *     For the case 1 < p < 2, and y < mu, finding a good
 *     starting points and good bounds is often crucial

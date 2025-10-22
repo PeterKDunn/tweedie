@@ -82,7 +82,7 @@
         IF (verbose) write(*,*) "Find kmax, start at: ", StartTKmax
         
 *       Sometimes, important to spend some getting a good starting point and bounds.  
-        CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+        CALL improveKmaxSPBounds(startTKmax, kmaxL, kmaxR)
 
         startTKmax =  (kmaxL + kmaxR) / 2.0d0
         

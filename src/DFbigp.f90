@@ -32,12 +32,21 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax, kmaxL, kmaxR
     END SUBROUTINE findKmax
 
-    SUBROUTINE findKmaxSPbounds(i, startx, xL, xR)
+
+    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
+      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
+    END SUBROUTINE improveKZeroBounds
+
+
+    SUBROUTINE improveKmaxSPBounds(i, startx, xL, xR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER(C_INT), INTENT(IN)       :: i
       REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
-    END SUBROUTINE findKmaxSPbounds
+    END SUBROUTINE improveKmaxSPBounds
 
 
       ! 3. Subroutine to advance the iteration index m
@@ -82,13 +91,13 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   INTEGER         :: itsAcceleration, itsPreAcc, m, minAccRegions
   INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
   
-  REAL(KIND=C_DOUBLE) :: kmax, startTKmax, tmax, aimrerr, kmaxL, kmaxR
-  REAL(KIND=C_DOUBLE) :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE) :: zeroL, zeroR, area0, area1, sumA
-  REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi ! Can still using KIND=C_DOUBLE for internal module array access
-  REAL(KIND=C_DOUBLE)              :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
-  REAL(KIND=C_DOUBLE)    :: West, Wold, Wold2
-  REAL(KIND=C_DOUBLE)    :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=C_DOUBLE)   :: kmax, startTKmax, tmax, aimrerr, kmaxL, kmaxR
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
+  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, sumA
+  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
+  REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
+  REAL(KIND=C_DOUBLE)   :: West, Wold, Wold2
+  REAL(KIND=C_DOUBLE)   :: zeroBoundR, zeroBoundL, zeroStartPoint
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -137,7 +146,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     
     startTKmax = findKmaxSP(i)
     ! For smallp, sometimes very important to have a good starting point and bounds.
-    CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
+    CALL improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
     startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
 
     CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
@@ -199,6 +208,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     CALL INTPR( "        using m =", -1, m, 1)
   END IF
 
+  ! ---------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
   itsPreAcc = 0
   IF (mfirst .EQ. -1) THEN
@@ -230,7 +240,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
       
       zeroL = zeroR
   
+write(*,*) "++++ PRE:  zeroStartPoint, zeroL, zeroR", zeroStartPoint, zeroBoundL, zeroBoundR
+CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
+
+write(*,*) "++++ POST: zeroStartPoint, zeroL, zeroR", zeroStartPoint, zeroBoundL, zeroBoundR
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+write(*,*) "++++ zero", zero
 
       zeroR = zero
 
@@ -253,11 +268,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END DO 
   END IF
 
+  ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
 write(*,*) "***0"
-  IF (verbose .EQ. 1) CALL DBLEPR(" - ACCELERATING for y:", current_y)
+  IF (verbose .EQ. 1) CALL DBLEPR(" - ACCELERATING for y:", -1, current_y, 1)
 write(*,*) "***1"
-  ! Initialisation
+  ! Initialisation of acceleration 
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
   Wold2 = 1.0_C_DOUBLE
@@ -272,32 +288,40 @@ write(*,*) "***2"
 
   DO WHILE (convergence .EQ. 0)
 write(*,*) "***3"
-
+write(*,*) "zeroR=", zeroR
     itsAcceleration = itsAcceleration + 1
     
 !!! SURELY WE ARE ON THE RIGHT OF TMAX!!!!
     IF (leftOfMax .EQ. 1) THEN
+write(*,*)"3***a"
       zeroStartPoint = zeroR * 0.99_C_DOUBLE
       zeroL = zeroR
-      zeroR = zeroR * 20.0_C_DOUBLE
+      zeroR = zeroR * 2.0_C_DOUBLE
     ELSE
       IF (flip .EQ. 1) THEN
+write(*,*)"3***b"
         ! FLIPPING to other side of tmax
+        IF (verbose .EQ. 1) WRITE(*,*) "  - Flipping to other side of tmax"
         zeroStartPoint = tmax + (tmax - zero)
         ! That is, start of the other side of tmax
         zeroL = zero * 0.99_C_DOUBLE
-        zeroR = zeroStartPoint * 20.0_C_DOUBLE
+        zeroR = zeroStartPoint * 2.0_C_DOUBLE
       ELSE
+write(*,*)"3***c"
         zeroStartPoint = zeroR * 0.99_C_DOUBLE
         zeroL = zeroR
-        zeroR = zeroR * 10.0_C_DOUBLE
+        zeroR = zeroR * 2.0_C_DOUBLE
       END IF
     END IF
 write(*,*) "***4"
+write(*,*) "zeroR=", zeroR
+write(*,*) "zeroL=", zeroL
     
 
     ! Find the first exact zero
 write(*,*) "!!! zeroL, zeroR, startPt:", zeroL, zeroR, zeroStartPoint
+    ! Ensure bounds bracket the zero, and confine to a narrower region if possible
+    CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroL, zeroR)
     CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
 write(*,*) "!!! zero:", zero
 
@@ -335,7 +359,7 @@ write(*,*) "!!! zero:", zero
     ! Declare convergence of we have sufficient regions, and relerr estimate is small
     IF ( (itsAcceleration .GE. minAccRegions) .AND. &
          (relerr .LT. aimrerr) ) THEN
-      IF (verbose .EQ. 1) CALL DBLEPR(   "         rel err =:", relerr)
+      IF (verbose .EQ. 1) CALL DBLEPR(   "         rel err =:", -1, relerr, 1)
       convergence = 1
     END IF
   

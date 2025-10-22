@@ -121,7 +121,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
     
     ! CRITICAL: findKmaxSP must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
     startTKmax = findKmaxSP(i)
-    CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+    CALL improveKmaxSPBounds(startTKmax, kmaxL, kmaxR)
 
     IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
   WRITE(*,*) "FIX THIS"

@@ -30,12 +30,12 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     END SUBROUTINE findKmax
 
 
-    SUBROUTINE findKmaxSPbounds(i, startx, xL, xR)
+    SUBROUTINE improveKmaxSPBounds(i, startx, xL, xR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER(C_INT), INTENT(IN)       :: i
       REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
-    END SUBROUTINE findKmaxSPbounds
+    END SUBROUTINE improveKmaxSPBounds
 
 
     SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
@@ -150,7 +150,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, starting at: ", -1, StartTKmax, 1)
     
     ! For smallp, sometimes very important to have a good starting point and bounds.
-    CALL findKmaxSPbounds(i, startTKmax, kmaxL, kmaxR)
+    CALL improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
     startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
       
   IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, starting (revised) at: ", -1, StartTKmax, 1)

@@ -166,7 +166,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
       
         ! Sometimes, important to spend some getting a good starting point and bounds.  
-        CALL findKmaxSPbounds(startTKmax, kmaxL, kmaxR)
+        CALL improveKmaxSPBounds(startTKmax, kmaxL, kmaxR)
 
         startTKmax =  (kmaxL + kmaxR) / 2.0E0_C_DOUBLE
       
