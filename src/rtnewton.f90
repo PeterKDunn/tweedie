@@ -1,4 +1,4 @@
-SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
+SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
   ! It includes a line-search safeguard to ensure x remains > 0.
@@ -20,7 +20,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
   PROCEDURE(funcd_signature):: funcd
   
 
-  REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
+  REAL(KIND=C_DOUBLE), INTENT(IN)  :: xstart, xacc
   INTEGER(C_INT), INTENT(IN)        :: i
   
   ! Output (Function result)
@@ -46,14 +46,12 @@ SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
   END IF
   
   DO j = 1, MAXITS
-    WRITE(*,*) " ***** IN rtnewton; j=",j
 
     ! Save the old value, which is guaranteed to be > 0
     x_iter_old = x_current
     
     ! 1. Calculate function value (f) and derivative (df) at the current safe point
     CALL funcd(i, x_current, f, df) 
-    WRITE(*,*) "x, f, df", x_current, f, df
 
     ! 2. Check for convergence based on function value
     IF (ABS(f) .LT. xacc) THEN

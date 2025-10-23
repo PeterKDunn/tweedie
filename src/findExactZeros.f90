@@ -1,16 +1,16 @@
-SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero) 
-  USE tweedie_params_mod, ONLY: Cpsmall
+SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax) 
+  USE tweedie_params_mod
 
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
 
   ! --- Dummy Arguments ---
-  INTEGER(C_INT), INTENT(IN)        :: i, m             ! i: which value; m: the m*pi value to be solving for
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: xL, xR, xStart   ! L and R bounds, and starting point
-  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xZero
+  INTEGER(C_INT), INTENT(IN)        :: i, m, leftOfMax  ! i: which value; m: the m*pi value to be solving for
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: tL, tR, tStart   ! L and R bounds, and starting point
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tZero
   
   ! --- Local Variables
-  REAL(KIND=C_DOUBLE) :: xacc ! Accuracy value
+  REAL(KIND=C_DOUBLE) :: xacc, fL, fR, dfL, dfR, current_y, current_mu, current_phi
 
 
   INTERFACE
@@ -24,12 +24,12 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
     END SUBROUTINE funcd_signature
 
 
-    SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
+    SUBROUTINE rtnewton(i, funcd, xstart,xacc, root)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
       INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
       
       PROCEDURE(funcd_signature) :: funcd
@@ -63,19 +63,33 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
 
 !write(*,*) "** IN fundxacteros!!"
   
+
+  ! Grab the relevant scalar values for this iteration:
+  current_y    = Cy(i)    ! Access y value for index i
+  current_mu   = Cmu(i)   ! Access mu value for index i
+  current_phi  = Cphi(i)  ! Access phi value for index i
+
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
-!write(*,*) "** IN findexactzeros1, ",  xL, xR
+!write(*,*) "** IN findexactzeros1, ",  tL, tR
 
-!  CALL rtnewton(i, findImkM_wrapper, xStart, xL, xR, xacc, xZero)
-  IF (Cpsmall) THEN
-    ! Trickier for small p
-    CALL rtsafe(i, findImkM_wrapper, xstart, xL, xR, xacc, xZero)
-  ELSE
-    ! Newton's method shodl work firn for big p
-    CALL rtnewton(i, findImkM_wrapper, xstart, xL, xR, xacc, xZero)
+  ! Ensure the bounds actually boudn the zero
+  CALL findImkM(i, tL, fL, dfL, m)
+  CALL findImkM(i, tR, fR, dfR, m)
+  
+  IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
+    ! Then bounds do not actually bound teh ero, so try harder
   END IF
-!write(*,*) "** IN findexactzeros2, ", xZero
+  
+!  CALL rtnewton(i, findImkM_wrapper, xStart, xL, xR, xacc, xZero)
+  IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
+    ! Trickier for small p, small y
+    CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
+    CALL rtsafe(i, findImkM_wrapper, tStart, tL, tR, xacc, tZero)
+  ELSE
+    ! Newton's method should work fine for big p
+    CALL rtnewton(i, findImkM_wrapper, tstart, xacc, tZero)
+  END IF
 
   CONTAINS 
   

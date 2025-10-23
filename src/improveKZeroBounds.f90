@@ -24,7 +24,6 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
-write(*,*) "IN improveKZeroBounds"
 
   maxSearch = 10
   ! Set multipier: this adjust the sign depending on whether we are
@@ -35,11 +34,10 @@ write(*,*) "IN improveKZeroBounds"
   ELSE
     multiplier = 1.0E0_C_DOUBLE
   END IF
-write(*,*) "MULTIPLIER", multiplier
+
   ! FIND the function value of the starting point (SP)
   ! NOTE: findImkM must be called with the parameters from the COMMON block.
   CALL findImkM(i, startZero, SPvalue, df, m)
-write(*,*) "startZero, SPvalue", startZero, SPvalue
 
       ! The fn value at the starting point, so we know which way to search
 
@@ -82,10 +80,8 @@ write(*,*) "startZero, SPvalue", startZero, SPvalue
     END IF
     IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
 
-write(*,*) "vakueL, boundL", valueL, boundL
   END DO
   zeroL = boundL
-write(*,*) "GOT LEFT BOUND: ", zeroL
 
   ! ************** UPPER BOUND
   ! SPvaluecomputed above
@@ -109,8 +105,7 @@ write(*,*) "GOT LEFT BOUND: ", zeroL
         keepSearching = .FALSE.
       END IF 
       IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
-write(*,*) "vakueR, boundR", valueR, boundR
-    END DO
+      END DO
   END IF
 
   ! Now creep to the left from boundR (refine the upper bound)
@@ -129,7 +124,7 @@ write(*,*) "vakueR, boundR", valueR, boundR
     IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
   END DO
   zeroR = boundR
-write(*,*) "GOT RIGHT BOUND: ", zeroR
 
+  RETURN
 
 END SUBROUTINE improveKZeroBounds

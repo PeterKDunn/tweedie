@@ -13,7 +13,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
+    SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
       IMPLICIT NONE
@@ -23,19 +23,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
       REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
       INTEGER, INTENT(IN)                       :: verbose
       INTEGER, INTENT(OUT)                      :: Int_Regions
-    END SUBROUTINE DFbigp
-
-    SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)               :: funvalueI
-      INTEGER, INTENT(OUT)                      :: exitstatus
-      REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
-      INTEGER, INTENT(IN)                       :: verbose
-      INTEGER, INTENT(OUT)                      :: Int_Regions
-    END SUBROUTINE DFsmallp
+    END SUBROUTINE DFcompute
   END INTERFACE
     ! -----------------------------------------------
 
@@ -59,13 +47,8 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
 
   ! --- Loop over N values ---
   DO i = 1, N
-    IF (CpSmall) THEN
-      CALL DFsmallp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
-    ELSE
-      CALL DFbigp(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
-    END IF
+    CALL DFcompute(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
     funvalue(i) = funvalueTMP
-
   END DO
 
 END SUBROUTINE twcdf_main

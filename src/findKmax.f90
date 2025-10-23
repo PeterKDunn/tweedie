@@ -46,11 +46,11 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     END SUBROUTINE rtsafe
       
 
-    SUBROUTINE rtnewton(i_in, funcd, xstart, x1, x2, xacc, root) 
+    SUBROUTINE rtnewton(i_in, funcd, xstart, xacc, root) 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       PROCEDURE(funcd_signature) :: funcd 
       INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(IN) :: xstart, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
     END SUBROUTINE rtnewton
       
@@ -83,7 +83,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
 
   ! Local Variables
-  REAL(KIND=C_DOUBLE)     :: pi, omega_Inflection, t_SP
+  REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point
   REAL(KIND=C_DOUBLE)     :: aimrerr, kmaxL, kmaxR, omega_SP, ratio
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   
@@ -110,24 +110,29 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     ! CASE: IF y < mu: trickier, esp. with 1 < p < 2
     ! Good starting point often needed
 !    IF (Cpsmall) THEN
-!      t_SP = findKmaxSP(i)
-!      CALL improveKmaxSPbounds(i, t_SP, kmaxL, kmaxR)
+!      t_Start_Point = findKmaxSP(i)
+!      CALL improveKmaxSPbounds(i, t_Start_Point, kmaxL, kmaxR)
 !    ELSE
-      ratio = current_y / current_mu
-      omega_SP = -1
-      IF (ratio .LT. 0.1_C_DOUBLE) omega_SP = -1.5_C_DOUBLE
-      IF (ratio .GT. 0.9_C_DOUBLE) omega_SP = 0.01_C_DOUBLE
-      
-      t_SP = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
-      kmaxL = t_SP * 0.5_C_DOUBLE
-      kmaxR = t_SP * 2.0_C_DOUBLE
-!    END IF
+    ratio = current_y / current_mu
+
+    omega_SP = -1
+    t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+    IF (ratio .LT. 0.1_C_DOUBLE) THEN
+      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) / current_phi * &
+                 DSQRT( 2 * (1.0_C_DOUBLE - ratio))
+    END IF
+    IF (ratio .GT. 0.9_C_DOUBLE) THEN
+      omega_SP = 0.01_C_DOUBLE
+      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+    END IF
+    
+    kmaxL = 0.0_C_DOUBLE
+    kmaxR = t_Start_Point * 2.0_C_DOUBLE
+
     ! Now find kmax and friends
     CALL rtnewton(i,              &
                   findImkdZero,   &
-                  t_SP,           &
-                  kmaxL,          &
-                  kmaxR,          &
+                  t_Start_Point,  &
                   aimrerr,        &
                   tmax)
 
@@ -136,12 +141,12 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     mmax = myfloor(kmax/pi)
     mfirst = mmax
     
-    leftOfMax = .TRUE.
+    leftOfMax = 1.
     IF (mmax .EQ. 0) THEN
-      leftOfMax = .FALSE.
+      leftOfMax = 0
     END IF
     
-    END IF
+  END IF
 
   RETURN
 

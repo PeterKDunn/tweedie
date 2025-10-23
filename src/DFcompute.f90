@@ -1,4 +1,4 @@
-SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
+SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -15,14 +15,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   INTEGER(C_INT), INTENT(OUT)       :: count_Integration_Regions ! Num int regions
    ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
-    FUNCTION findKmaxSP(j) 
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      IMPLICIT NONE  
-      REAL(KIND=C_DOUBLE)          :: findKmaxSP
-      INTEGER, INTENT(IN)   :: j
-    END FUNCTION findKmaxSP
-
-
     SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, leftOfMax)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
@@ -40,15 +32,6 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END SUBROUTINE improveKZeroBounds
 
 
-    SUBROUTINE improveKmaxSPBounds(i, startx, xL, xR)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER(C_INT), INTENT(IN)       :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
-    END SUBROUTINE improveKmaxSPBounds
-
-
-      ! 3. Subroutine to advance the iteration index m
     SUBROUTINE advanceM(j, m_index, mmax, mOld, leftOfMax, flip) 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER, INTENT(IN)             :: j
@@ -87,11 +70,11 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)  :: mmax, mfirst, mOld, accMax
-  INTEGER         :: itsAcceleration, itsPreAcc, m, minAccRegions
-  INTEGER         :: leftOfMax, flip, convergence, stopPreAccelerate
+  INTEGER         :: its_Acceleration, count_PreAcc_regions, m, min_Acc_Regions
+  INTEGER         :: leftOfMax, flip, convergence_Acc, stop_PreAccelerate
   
-  REAL(KIND=C_DOUBLE)   :: kmax, startTKmax, tmax, aimrerr, kmaxL, kmaxR
-  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
+  REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero, t_Start_Point
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
@@ -111,7 +94,7 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   m = 0
   exitstatus = 0
   relerr = 1.0_C_DOUBLE
-  convergence = 0
+  convergence_Acc = 0
   epsilon = 1.0E-12_C_DOUBLE
   Mmatrix = 0.0_C_DOUBLE
   Nmatrix = 0.0_C_DOUBLE
@@ -147,18 +130,29 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   area1 = 0.0_C_DOUBLE
   zero  = 0.0_C_DOUBLE
 
+  ! ---------------------------------------------------------
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
   count_Integration_Regions = 1
-  zeroBoundL = tmax ! 0.0_C_DOUBLE  ! Should be tmax???
-  zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
+  
+  ! Find starting point for the first zero
   m = mfirst
+  t_Start_Point = tmax + pi / current_y  
+  IF (leftOfMax .EQ. 1) THEN
+    zeroBoundL = 0.0_C_DOUBLE
+    zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
+  ELSE
+    ! Searching to the right of tmax
+    zeroBoundL = tmax
+    zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
+  END IF
 
-  CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-
+  ! Find the zero
   zeroL = 0.0_C_DOUBLE
-  zeroR = zero
+  CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR)
 
+  ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
+
   IF (verbose .EQ. 1) THEN
     CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
     CALL DBLEPR("        between t =", -1, zeroL, 1 )
@@ -166,11 +160,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     CALL INTPR( "          using m =", -1, m, 1)
   END IF
 
+
   ! ---------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
-  itsPreAcc = 0
+  count_PreAcc_regions = 0
   IF (mfirst .EQ. -1) THEN
-    itsPreAcc = itsPreAcc + 1
+    ! count_PreAcc_regions = count_PreAcc_regions + 1
     area1 = 0.0_C_DOUBLE
     mOld = m
 
@@ -183,10 +178,9 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
 
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
 
-    stopPreAccelerate = 0
-    DO WHILE (stopPreAccelerate .EQ. 0)
-write(*,*) "itsPreAcc", itsPreAcc
-      itsPreAcc = itsPreAcc + 1
+    stop_PreAccelerate = 0
+    DO WHILE (stop_PreAccelerate .EQ. 0)
+      count_PreAcc_regions = count_PreAcc_regions + 1
 
       IF (leftOfMax .EQ. 1) THEN
         zeroBoundL = zeroR
@@ -195,15 +189,13 @@ write(*,*) "itsPreAcc", itsPreAcc
         zeroBoundL = tmax
         zeroBoundR = zeroR * 20.0_C_DOUBLE
       END IF
+
       zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
-      
       zeroL = zeroR
-  write(*,*) "A"
+
 !ONLY NEEDED FOR SMALL P
 !CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
-  write(*,*) "B"
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
-  write(*,*) "C"
 
       zeroR = zero
 
@@ -219,13 +211,14 @@ write(*,*) "itsPreAcc", itsPreAcc
 
       ! Stop condition for pre-acceleration.
       ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
-      IF ( (itsPreAcc .GE. 2) .AND. (m .GT. mmax) ) stopPreAccelerate = 1
+      IF ( (count_PreAcc_regions .GE. 2) .AND. (zeroL .GT. tmax) ) stop_PreAccelerate = 1
       
       mOld = m
       CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
     
     END DO 
   END IF
+
 
   ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
@@ -235,67 +228,51 @@ write(*,*) "itsPreAcc", itsPreAcc
   West = 3.0_C_DOUBLE
   Wold = 2.0_C_DOUBLE
   Wold2 = 1.0_C_DOUBLE
-  itsAcceleration = 0
-  convergence = 0
-  accMax = 40           ! Maximum number of regions in accelerationl arbitrary
-  minAccRegions = 3     ! Minimum number of acceleration regions to use
+  its_Acceleration = 0
+  convergence_Acc = 0
+  accMax = 40           ! Maximum number of regions in acceleration; arbitrary
+  min_Acc_Regions = 3     ! Minimum number of acceleration regions to use
   
   ! This will be the very first, left-most value of t used in acceleration
   xvec(1) = zeroR 
 
-  DO WHILE (convergence .EQ. 0)
-    itsAcceleration = itsAcceleration + 1
-write(*,*) "Left of max??", leftOfMax
-!!! SURELY WE ARE ON THE RIGHT OF TMAX!!!!
-    IF (leftOfMax .EQ. 1) THEN
-      zeroStartPoint = zeroR * 0.99_C_DOUBLE
-      zeroBoundL = zeroR
+  DO WHILE (convergence_Acc .EQ. 0)
+    its_Acceleration = its_Acceleration + 1
+
+    zeroL = zeroR
+
+    IF (flip .EQ. 1) THEN
+      ! FLIPPING to other side of tmax
+      IF (verbose .EQ. 1) CALL DBLEPR("  - Flipping to other side of tmax", -1, tmax, 1)
+      zeroStartPoint = tmax + (tmax - zeroR)
+      ! That is, start of the other side of tmax
+      zeroBoundL = zeroR 
+      zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
+    ELSE
+      zeroStartPoint = zeroR 
+      zeroBoundL = zeroR * 0.99_C_DOUBLE
       zeroBoundR = zeroR * 2.0_C_DOUBLE
-    ELSE
-      IF (flip .EQ. 1) THEN
-        ! FLIPPING to other side of tmax
-        IF (verbose .EQ. 1) CALL DBLEPR("  - Flipping to other side of tmax", -1, tmax, 1)
-        zeroStartPoint = tmax + (tmax - zero)
-        ! That is, start of the other side of tmax
-        zeroBoundL = zero * 0.99_C_DOUBLE
-        zeroBoundR = zeroStartPoint * 2.0_C_DOUBLE
-      ELSE
-        zeroStartPoint = zeroR * 0.99_C_DOUBLE
-        zeroBoundL = zeroR
-        zeroBoundR = zeroR * 2.0_C_DOUBLE
-      END IF
     END IF
 
-    ! Find the first exact zero
-    ! Ensure bounds bracket the zero, and confine to a narrower region if possible
-write(*,*) "B4:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroBoundL, zeroBoundR
-    CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
-write(*,*) "AFTER :  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroBoundL, zeroBoundR
-    CALL findExactZeros(i, m, zeroL, zeroR, zeroStartPoint, zero)
-write(*,*) "AFTER 2:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroL, zeroR
+    ! Find the exact zero
+    CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
 
-    IF (leftOfMax .EQ. 1) THEN
-      zeroR = zero
-    ELSE
-      zeroR = zero
-    END IF
+    zeroR = zero
 
-    xvec(itsAcceleration + 1) = zeroR
+    xvec(its_Acceleration + 1) = zeroR
     
-    IF (verbose .EQ. 1) THEN
-      CALL INTPR("  - m =:", -1, m, 1 )
-    END IF
-
+    IF (verbose .EQ. 1) CALL INTPR("  - m =:", -1, m, 1 )
+    
     CALL DFgaussq(i, zeroL, zeroR, psi)
     count_Integration_Regions = count_Integration_Regions + 1
     ! psi: area of the latest region
-    wvec(itsAcceleration) = psi
 
+    wvec(its_Acceleration) = psi
     Wold2 = Wold
     Wold = West
-    CALL acceleratenew(xvec, wvec, itsAcceleration, Mmatrix, Nmatrix, West)
+    CALL acceleratenew(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
 
-    ! Check for convergence
+    ! Check for convergence_Acc
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
     IF (verbose .EQ. 1) THEN
       CALL DBLEPR("  *** Acceleration area:", -1, psi, 1)
@@ -305,17 +282,17 @@ write(*,*) "AFTER 2:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroL, zer
       CALL DBLEPR("          with rel err =", -1, relerr, 1)
     END IF
 
-    ! Declare convergence of we have sufficient regions, and relerr estimate is small
-    IF ( (itsAcceleration .GE. minAccRegions) .AND. &
+    ! Declare convergence_Acc of we have sufficient regions, and relerr estimate is small
+    IF ( (its_Acceleration .GE. min_Acc_Regions) .AND. &
          (relerr .LT. aimrerr) ) THEN
       IF (verbose .EQ. 1) CALL DBLEPR(   "         rel err =:", -1, relerr, 1)
-      convergence = 1
+      convergence_Acc = 1
     END IF
-  
+
     mOld = m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-    
-    ! NOTE: If convergence is NOT TRUE, the loop continues.
+
+    ! NOTE: If convergence_Acc is NOT TRUE, the loop continues.
   END DO  
 
   areaT = area0 + area1 + West
@@ -335,5 +312,5 @@ write(*,*) "AFTER 2:  zeroStartPoint, zeroL, zeroR",  zeroStartPoint, zeroL, zer
 
   RETURN
 
-END SUBROUTINE DFbigp
+END SUBROUTINE DFcompute
 

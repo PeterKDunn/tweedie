@@ -57,7 +57,6 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   END IF
 
 ! At this point, we guarantee: fl < 0 and fh > 0.
-WRITE(*,*) "STARTING:: x", xstart
 
 
   DO j = 1, JMAX    
@@ -119,10 +118,9 @@ WRITE(*,*) "STARTING:: x", xstart
       
       ! Check for bracket width convergence (recommended)
       IF (DABS(xh - xl) < xacc) EXIT
-WRITE(*,*) "j, x, f, df", j, rootTMP, f, df
 
   END DO
 root = rootTMP
-STOP
+
   
 END SUBROUTINE rtsafe
