@@ -20,13 +20,12 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     END FUNCTION findKmaxSP
 
 
-    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, leftOfMax)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
       INTEGER, INTENT(IN)               :: j
-      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
+      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax, leftOfMax
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax, kmaxL, kmaxR
     END SUBROUTINE findKmax
 
 
@@ -154,7 +153,7 @@ SUBROUTINE DFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integration
     startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
       
   IF (verbose .EQ. 1) CALL DBLEPR("Find kmax, starting (revised) at: ", -1, StartTKmax, 1)
-    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+    CALL findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   IF (verbose .EQ. 1) CALL DBLEPR("Found kmax: ", -1, kmax, 1)
 
     leftOfMax = 1

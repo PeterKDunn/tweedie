@@ -7,10 +7,9 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
 
   INTEGER(C_INT), INTENT(IN)    :: i
   REAL(KIND=C_DOUBLE)           :: tsmall, tlarge, abs1mp
-  REAL(KIND=C_DOUBLE)                  :: omegaInf, slope, pi
+  REAL(KIND=C_DOUBLE)           :: omegaInf, slope, pi
 
   REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
-
 
   INTERFACE
     SUBROUTINE findImkd(i, t, Imkd)
@@ -37,11 +36,14 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
   ! The SP should be the FIRST of these whose slope is NEGATIVE
 
   IF (CpSmall .AND. (current_y < current_mu) ) THEN
+    ! CASE: 1 < p < 2, AND y < mu
+
     ! Try small-t approximation
     tsmall = DSQRT(2.0_C_DOUBLE * (current_mu - current_y)/current_mu) * &
              current_mu**(1.0_C_DOUBLE - Cp) / current_phi
     findKmaxSP = tsmall
   ELSE
+    ! This should be the CASE: p > 2, AND y < mu
     omegaInf = (pi / 2.0_C_DOUBLE) * &
                (1.0_C_DOUBLE - Cp)/(2.0_C_DOUBLE*Cp - 1.0_C_DOUBLE)
     tsmall = current_mu**(1.0_C_DOUBLE - Cp) / ( (1.0_C_DOUBLE - Cp)) * &

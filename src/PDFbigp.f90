@@ -23,7 +23,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
       END FUNCTION findKmaxSP
 
 
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR) 
+      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst) 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
@@ -31,7 +31,6 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
         INTEGER(C_INT), INTENT(OUT) :: mfirst, mmax
           
         REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax, kmaxL, kmaxR
       END SUBROUTINE findKmax
 
 
@@ -125,7 +124,7 @@ SUBROUTINE PDFbigp(i, funvalueI, exitstatus, relerr, verbose)
 
     IF (verbose .EQ. 1) WRITE(*,*) "Starting t for finding kmax: ", startTKmax
   WRITE(*,*) "FIX THIS"
-    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+    CALL findKmax(i, kmax, tmax, mmax, mfirst)
     
     IF (verbose .EQ. 1) THEN
       WRITE(*,*) "** Found(b): kmax =", kmax

@@ -23,13 +23,12 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
     END FUNCTION findKmaxSP
 
 
-    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, leftOfMax)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
       INTEGER, INTENT(IN)               :: j
-      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
+      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax, leftOfMax
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startTKmax, kmaxL, kmaxR
     END SUBROUTINE findKmax
 
 
@@ -126,56 +125,15 @@ SUBROUTINE DFbigp(i, funvalueI, exitstatus, relerr, verbose, count_Integration_R
   END IF
   
   ! --- Find kmax, tmax, mmax ---
-  IF (current_y .GE. current_mu) THEN
-    IF (verbose .EQ. 1) THEN
-      CALL DBLEPR("  - with y >= mu: y =", -1, current_y, 1 )
-    END IF
-    
-    kmax = 0.0_C_DOUBLE
-    tmax = 0.0_C_DOUBLE
-    mmax = 0
-    mfirst = -1
-    mOld = 0
+  CALL findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
-    zeroStartPoint = pi / current_y
-    leftOfMax = 0
-  ELSE
-    IF (verbose .EQ. 1) THEN
-      CALL DBLEPR("  - with y < mu: y =", -1, current_y, 1 )
-    END IF
-    
-    startTKmax = findKmaxSP(i)
-    ! For smallp, sometimes very important to have a good starting point and bounds.
-    CALL improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
-    startTKmax =  (kmaxL + kmaxR) / 2.0_C_DOUBLE
-
-    CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
-
-    IF (verbose .EQ. 1) THEN
-      CALL DBLEPR("  - kmax:", -1, kmax, 1 )
-      CALL DBLEPR("  - tmax:", -1, tmax, 1 )
-      CALL INTPR( "  - mmax:", -1, mmax, 1 )
-    END IF
-
-    leftOfMax = 1
-    IF (mmax .EQ. 0) THEN
-      mfirst = 0
-      mOld = 0
-      zeroStartPoint = tmax + pi/current_y
-      leftOfMax = 0
-    ELSE
-      mfirst = 1
-      mOld = 0
-      zeroStartPoint = pi / (current_mu - current_y)
-      zeroStartPoint = zeroStartPoint
-      mOld = m
-  
-      ! CRITICAL: advanceM must accept parameters Cp, Cy, Cmu, Cphi, pSmall, m
-      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-  
-    END IF
+  IF (verbose .EQ. 1) THEN
+    CALL DBLEPR("  -        kmax:", -1, kmax, 1 )
+    CALL DBLEPR("  -        tmax:", -1, tmax, 1 )
+    CALL INTPR( "  -        mmax:", -1, mmax, 1 )
+    CALL INTPR( "  - left of max:", -1, leftOfMax, 1 )
   END IF
-  
+
   ! INTEGRATION
   ! There are three integration regions:
   !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
@@ -241,7 +199,8 @@ write(*,*) "itsPreAcc", itsPreAcc
       
       zeroL = zeroR
   write(*,*) "A"
-      CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
+!ONLY NEEDED FOR SMALL P
+!CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
   write(*,*) "B"
       CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
   write(*,*) "C"

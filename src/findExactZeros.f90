@@ -1,4 +1,5 @@
 SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero) 
+  USE tweedie_params_mod, ONLY: Cpsmall
 
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
@@ -23,7 +24,7 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
     END SUBROUTINE funcd_signature
 
 
-    SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
+    SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
@@ -34,6 +35,19 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
       PROCEDURE(funcd_signature) :: funcd
       
     END SUBROUTINE rtnewton
+
+
+    SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
+      IMPLICIT NONE
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
+      
+      PROCEDURE(funcd_signature) :: funcd
+      
+    END SUBROUTINE rtsafe
 
 
     SUBROUTINE findImkM(i, t, f, df, m)
@@ -53,8 +67,14 @@ SUBROUTINE findExactZeros(i, m, xL, xR, xStart, xZero)
   xacc = 1.0E-13_C_DOUBLE
 !write(*,*) "** IN findexactzeros1, ",  xL, xR
 
-!  CALL rtnewton(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
-  CALL rtsafe(i, findImkM_wrapper, xL, xR, xStart, xacc, xZero)
+!  CALL rtnewton(i, findImkM_wrapper, xStart, xL, xR, xacc, xZero)
+  IF (Cpsmall) THEN
+    ! Trickier for small p
+    CALL rtsafe(i, findImkM_wrapper, xstart, xL, xR, xacc, xZero)
+  ELSE
+    ! Newton's method shodl work firn for big p
+    CALL rtnewton(i, findImkM_wrapper, xstart, xL, xR, xacc, xZero)
+  END IF
 !write(*,*) "** IN findexactzeros2, ", xZero
 
   CONTAINS 

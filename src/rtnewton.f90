@@ -1,6 +1,7 @@
-SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
+SUBROUTINE rtnewton(i, funcd, xstart, x1, x2, xacc, root)
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
+  ! It includes a line-search safeguard to ensure x remains > 0.
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
@@ -20,7 +21,7 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   
 
   REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
-  INTEGER(C_INT), INTENT(IN)       :: i
+  INTEGER(C_INT), INTENT(IN)        :: i
   
   ! Output (Function result)
   REAL(KIND=C_DOUBLE)              :: root
@@ -29,52 +30,79 @@ SUBROUTINE rtnewton(i, funcd, x1, x2, xstart, xacc, root)
   INTEGER, PARAMETER  :: MAXITS = 5000
   INTEGER             :: j
   
-  ! x_current holds the current iteration value, dx is the change
-  REAL(KIND=C_DOUBLE)        :: dx, df, f, x_current, x_iter_old
+  ! x_current holds the final accepted value, x_iter_old is the last safe value.
+  ! x_new holds the proposed step value.
+  REAL(KIND=C_DOUBLE)      :: dx, df, f
+  REAL(KIND=C_DOUBLE)      :: x_current, x_iter_old, factor, x_new
   
+  ! Initialize starting guess
+  x_current = xstart
 
-  x_current = xstart ! Start at the initial guess
+  ! Check initial boundary condition
+  IF (x_current <= 0.0_C_DOUBLE) THEN
+      WRITE(*,*) "RTNEWTON ERROR: Initial guess (xstart) is not positive."
+      root = HUGE(1.0_C_DOUBLE)
+      RETURN
+  END IF
   
   DO j = 1, MAXITS
-!  write(*,*) " IN rtnewton; j=",j
-!  write(*,*), "   with x:", x_current
-    ! Save the old value in case we need to revert
+    WRITE(*,*) " ***** IN rtnewton; j=",j
+
+    ! Save the old value, which is guaranteed to be > 0
     x_iter_old = x_current
     
-    ! Calculate function value (f) and derivative (df)
+    ! 1. Calculate function value (f) and derivative (df) at the current safe point
     CALL funcd(i, x_current, f, df) 
+    WRITE(*,*) "x, f, df", x_current, f, df
 
-!  write(*,*), "   with f, df:",f, df 
-    ! Check for convergence before a step
-    IF (ABS(f) < xacc) THEN
+    ! 2. Check for convergence based on function value
+    IF (ABS(f) .LT. xacc) THEN
         EXIT ! Root found (f is close to zero)
     END IF
     
-    IF (ABS(df) < xacc) THEN
-      ! Derivative is near zero: Newton-Raphson fails. 
-      ! Revert to last safe value and exit to force error/fallback (if required)
-      x_current = x_iter_old
+    ! 3. Check for near-zero derivative (Newton-Raphson failure)
+    IF (ABS(df) .LT. 1.0E-12_C_DOUBLE) THEN ! Use a non-zero tolerance here
+      WRITE(*,*) "RTNEWTON ERROR: Derivative near zero."
       EXIT
     END IF
     
-    ! Newton-Raphson Step: dx = f/f'
+    ! 4. Newton-Raphson Step: dx = f/f'
     dx = f / df
-    x_current = x_current - dx
     
-    ! Check for bounds violation
-    IF ( (x_current < x1) .OR. (x_current > x2) ) THEN
-        ! Root is outside bounds, revert to last safe value and exit
+    ! 5. Initialize step fraction and proposed new value
+    factor = 1.0_C_DOUBLE
+    x_new = x_iter_old - dx ! Full step proposal
+    
+    ! 6. Safeguard Check: Step Halving (Line Search) to ensure x_new > 0
+    DO WHILE (x_new <= 0.0_C_DOUBLE .AND. factor > 1.0E-6_C_DOUBLE)
+        ! If it violates the boundary, halve the step size
+        factor = factor / 2.0_C_DOUBLE
+        ! Re-calculate step based on the last safe value (x_iter_old)
+        x_new = x_iter_old - factor * dx
+    END DO  
+    
+    ! 7. Check for catastrophic failure near zero
+    IF (x_new <= 0.0_C_DOUBLE) THEN
+        WRITE(*,*) "RTNEWTON ERROR: Step halving failed to find positive x."
+        ! If we can't step forward even a tiny bit, assume the root is effectively 0 or failed.
         x_current = x_iter_old
         EXIT
     END IF
-    
-    ! Check for step convergence (step size is small)
-    IF (ABS(dx) < xacc) EXIT
+
+    ! 8. Update the current root estimate with the safe step
+    x_current = x_new
+
+    ! 9. Check for step convergence (step size is small)
+    ! We use the difference between the new and old value for robustness.
+    IF (ABS(x_current - x_iter_old) < xacc) EXIT
   END DO
   
-  ! If we get here, NO CONVERGENCE
-  ! Assign the final root value to the function result
-  write(*,*) "CONVERGENCE NOT OBTINED IN RTNEWTON; t, f, df:", x_current, f, df
+  ! If we get here, NO CONVERGENCE after MAXITS
+  IF (j .GE. MAXITS) THEN
+    WRITE(*,*) "CONVERGENCE NOT OBTINED IN RTNEWTON after", MAXITS, "iterations"
+  END IF
+
+  ! Assign the final root value
   root = x_current
 
 END SUBROUTINE rtnewton

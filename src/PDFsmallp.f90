@@ -22,7 +22,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       END FUNCTION findKmaxSP
 
       ! Subroutine to find Kmax and related indices
-      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+      SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
         IMPLICIT NONE
@@ -30,7 +30,6 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
         INTEGER, INTENT(OUT)  :: mfirst, mmax
           
         REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax, tmax
-        REAL(KIND=C_DOUBLE), INTENT(IN)  :: startTKmax, kmaxL, kmaxR
       END SUBROUTINE findKmax
 
       ! Subroutine to advance the iteration index m
@@ -186,7 +185,7 @@ SUBROUTINE PDFsmallp(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
         END IF
         IF (verbose .EQ. 1) WRITE(*,*) "Find kmax, start at: ", StartTKmax
-          CALL findKmax(i, kmax, tmax, mmax, mfirst, startTKmax, kmaxL, kmaxR)
+          CALL findKmax(i, kmax, tmax, mmax, mfirst)
 
         IF (verbose .EQ. 1) THEN
           WRITE(*,*) "** Found(b): kmax =", kmax
