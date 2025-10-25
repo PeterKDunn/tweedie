@@ -1,4 +1,4 @@
-SUBROUTINE improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
+SUBROUTINE improveKmaxSPBounds(i, startTKmax, tmaxL, tmaxR)
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -8,7 +8,7 @@ SUBROUTINE improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: startTKmax
   INTEGER(C_INT), INTENT(IN)         :: i
   ! Outputs
-  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: kmaxL, kmaxR
+  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: tmaxL, tmaxR
 
   ! --- Local Variables ---
   REAL(KIND=C_DOUBLE)    :: current_y, current_mu, current_phi
@@ -60,7 +60,7 @@ SUBROUTINE improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
       boundL = oldBoundL
     END IF
   END DO
-  kmaxL = boundL
+  tmaxL = boundL
 
   ! ************** UPPER BOUND
   ! Re-evaluate SPslope (redundant but safe)
@@ -98,6 +98,6 @@ SUBROUTINE improveKmaxSPBounds(i, startTKmax, kmaxL, kmaxR)
       boundR = oldBoundR
     END IF
   END DO
-  kmaxR = boundR
+  tmaxR = boundR
 
 END SUBROUTINE improveKmaxSPBounds
