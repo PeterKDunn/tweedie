@@ -84,7 +84,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
   ! Local Variables
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point
-  REAL(KIND=C_DOUBLE)     :: aimrerr, kmaxL, kmaxR, omega_SP, ratio
+  REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, omega_SP, ratio
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   
   
@@ -122,12 +122,12 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                  DSQRT( 2 * (1.0_C_DOUBLE - ratio))
     END IF
     IF (ratio .GT. 0.9_C_DOUBLE) THEN
-      omega_SP = 0.01_C_DOUBLE
+      omega_SP = -0.01_C_DOUBLE
       t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     END IF
     
-    kmaxL = 0.0_C_DOUBLE
-    kmaxR = t_Start_Point * 2.0_C_DOUBLE
+    tmaxL = 0.0_C_DOUBLE
+    tmaxR = t_Start_Point * 2.0_C_DOUBLE
 
     ! Now find kmax and friends
     CALL rtnewton(i,              &
