@@ -1,4 +1,4 @@
-SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integration_Regions) 
+SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -8,7 +8,6 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   
  ! --- Dummy Arguments, variables passed into the subroutine
   INTEGER(C_INT), INTENT(IN)        :: i              ! Observation index
-  INTEGER(C_INT), INTENT(IN)        :: verbose        ! Assuming IN for verbosity flag
   INTEGER(C_INT), INTENT(OUT)       :: exitstatus     ! Output status
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalueI      ! Computed result
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr         ! Estimate of relative error
@@ -103,14 +102,14 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
  
-  IF (verbose .EQ. 1) THEN
+  IF (Cverbose) THEN
     CALL DBLEPR("********* Computing for p =", -1, Cp, 1)
   END IF
   
   ! --- Find kmax, tmax, mmax ---
   CALL findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
-  IF (verbose .EQ. 1) THEN
+  IF (Cverbose) THEN
     CALL DBLEPR("  -        kmax:", -1, kmax, 1 )
     CALL DBLEPR("  -        tmax:", -1, tmax, 1 )
     CALL INTPR( "  -        mmax:", -1, mmax, 1 )
@@ -153,7 +152,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
 
-  IF (verbose .EQ. 1) THEN
+  IF (Cverbose) THEN
     CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
     CALL DBLEPR("        between t =", -1, zeroL, 1 )
     CALL DBLEPR("            and t =", -1, zeroR, 1 )
@@ -170,7 +169,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
     mOld = m
 
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
-    IF (verbose .EQ. 1) CALL DBLEPR("  - No PRE-ACC area for y:", -1, current_y, 1 )
+    IF (Cverbose) CALL DBLEPR("  - No PRE-ACC area for y:", -1, current_y, 1 )
 
   ELSE
     area1 = 0.0_C_DOUBLE
@@ -202,7 +201,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
       CALL DFgaussq(i, zeroL, zeroR, sumA)
       area1 = area1 + sumA
       count_Integration_Regions = count_Integration_Regions + 1
-      IF (verbose .EQ. 1) THEN
+      IF (Cverbose) THEN
         CALL DBLEPR("  *** PRE-ACC area:", -1, sumA, 1 )
         CALL DBLEPR("        between t =", -1, zeroL, 1 )
         CALL DBLEPR("            and t =", -1, zeroR, 1 )
@@ -222,7 +221,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
   ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
-  IF (verbose .EQ. 1) CALL DBLEPR(" - ACCELERATING for y:", -1, current_y, 1)
+  IF (Cverbose) CALL DBLEPR(" - ACCELERATING for y:", -1, current_y, 1)
 
   ! Initialisation of acceleration 
   West = 3.0_C_DOUBLE
@@ -243,7 +242,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
     IF (flip .EQ. 1) THEN
       ! FLIPPING to other side of tmax
-      IF (verbose .EQ. 1) CALL DBLEPR("  - Flipping to other side of tmax", -1, tmax, 1)
+      IF (Cverbose) CALL DBLEPR("  - Flipping to other side of tmax", -1, tmax, 1)
       zeroStartPoint = tmax + (tmax - zeroR)
       ! That is, start of the other side of tmax
       zeroBoundL = zeroR 
@@ -261,7 +260,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
     xvec(its_Acceleration + 1) = zeroR
     
-    IF (verbose .EQ. 1) CALL INTPR("  - m =:", -1, m, 1 )
+    IF (Cverbose) CALL INTPR("  - m =:", -1, m, 1 )
     
     CALL DFgaussq(i, zeroL, zeroR, psi)
     count_Integration_Regions = count_Integration_Regions + 1
@@ -274,7 +273,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
     ! Check for convergence_Acc
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
-    IF (verbose .EQ. 1) THEN
+    IF (Cverbose) THEN
       CALL DBLEPR("  *** Acceleration area:", -1, psi, 1)
       CALL DBLEPR("             between t =", -1, zeroL, 1)
       CALL DBLEPR("                 and t =", -1, zeroR, 1)
@@ -285,7 +284,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
     ! Declare convergence_Acc of we have sufficient regions, and relerr estimate is small
     IF ( (its_Acceleration .GE. min_Acc_Regions) .AND. &
          (relerr .LT. aimrerr) ) THEN
-      IF (verbose .EQ. 1) CALL DBLEPR(   "         rel err =:", -1, relerr, 1)
+      IF (Cverbose) CALL DBLEPR(   "         rel err =:", -1, relerr, 1)
       convergence_Acc = 1
     END IF
 
@@ -297,7 +296,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
 
   areaT = area0 + area1 + West
   
-  IF (verbose .EQ. 1) THEN
+  IF (Cverbose) THEN
     CALL DBLEPR("* Initial area0: :", -1, area0, 1)
     CALL DBLEPR("* Pre-acc area1: :", -1, area1, 1)
     CALL DBLEPR("*      Acc West: :", -1, West, 1)
@@ -308,7 +307,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, count_Integratio
   ! So now work out the CDF
   funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
     
-  IF (verbose .EQ. 1) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
+  IF (Cverbose) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
 
   RETURN
 

@@ -13,23 +13,22 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, verbose, Int_Regions)
+    SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, Int_Regions)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)               :: funvalueI
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)        :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
-      REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
-      INTEGER, INTENT(IN)                       :: verbose
+      REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE DFcompute
   END INTERFACE
     ! -----------------------------------------------
 
   ! --- Local variables ---
-  INTEGER         :: i
-  REAL(KIND=C_DOUBLE)    :: funvalueTMP
+  INTEGER               :: i
+  REAL(KIND=C_DOUBLE)   :: funvalueTMP
   
 
   ! --- Initialization ---
@@ -38,8 +37,15 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
   Cmu = mu
   Cphi = phi
   CN = N
+  IF (verbose .EQ. 1) THEN
+    Cverbose = .TRUE.
+  ELSE
+    Cverbose = .FALSE.
+  END IF
+
   exitstatus = 1
   relerr = 0.0_C_DOUBLE
+
 
   ! --- Determine case: psmall = TRUE means 1 < p < 2 ---
   CpSmall = .FALSE.
@@ -47,7 +53,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
 
   ! --- Loop over N values ---
   DO i = 1, N
-    CALL DFcompute(i, funvalueTMP, exitstatus, relerr, verbose, Int_Regions)
+    CALL DFcompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
     funvalue(i) = funvalueTMP
   END DO
 

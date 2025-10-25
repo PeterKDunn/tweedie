@@ -7,7 +7,7 @@ MODULE tweedie_params_mod
   ! Global Parameters
   REAL(KIND=C_DOUBLE), ALLOCATABLE :: Cmu(:), Cphi(:), Cy(:) 
   REAL(KIND=C_DOUBLE)   :: Cp
-  LOGICAL(C_BOOL)       :: CpSmall
+  LOGICAL(C_BOOL)       :: CpSmall, Cverbose
   INTEGER(C_INT)        :: CN, current_i
   
 END MODULE tweedie_params_mod
