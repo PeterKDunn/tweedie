@@ -1,126 +1,124 @@
 SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
   IMPLICIT NONE
-  
+
   INTERFACE
       SUBROUTINE funcd_signature(i, x, f, df)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
         IMPLICIT NONE
-        REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
         INTEGER(C_INT), INTENT(IN)         :: i
+        REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
         REAL(KIND=C_DOUBLE), INTENT(OUT)   :: f, df
-
       END SUBROUTINE funcd_signature
   END INTERFACE
-  
+
   PROCEDURE(funcd_signature) :: funcd
- 
 
   INTEGER(C_INT), INTENT(IN)       :: i
   REAL(KIND=C_DOUBLE), INTENT(IN)  :: x1, x2, xstart, xacc
   REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
-  
+
   INTEGER, PARAMETER    :: JMAX = 500
   INTEGER               :: j
-  REAL(KIND=C_DOUBLE)   :: f, df, dx, rootTMP
-  REAL(KIND=C_DOUBLE)   :: rtsafeTMP, fh, fl, xh, xl
-  
-  ! Initialize root and boundaries
+  REAL(KIND=C_DOUBLE)   :: f, df, fl, fh
+  REAL(KIND=C_DOUBLE)   :: xl, xh, dx, rtsafeTMP
+  REAL(KIND=C_DOUBLE)   :: fold, testtol
+  REAL(KIND=C_DOUBLE)   :: halfbracket, maxstep
+
+  ! Initialize
   xl = x1
   xh = x2
-  rootTMP = xstart
-  
-  ! Get function values at boundaries
-  CALL funcd(i, xl, fl, df)
-  CALL funcd(i, xh, fh, df)
-  
-  ! --- Main Loop ---
-  
-  IF (fl * fh > 0.0_C_DOUBLE) THEN
-      ! Error: The bounds do not bracket a root. 
-      ! This should halt execution or return an error flag.
-      WRITE(*,*) "RTSAFE ERROR: ROOT NOT BRACKETED BY X1 AND X2"
-      WRITE(*,*) "RTSAFE ERROR: xl, xh", xl, xh
-      WRITE(*,*) "RTSAFE ERROR: fl, fh", fl, fh
-      root = HUGE(1.0_C_DOUBLE) ! Return a clear error value
-      RETURN 
-  ELSE IF (fl > 0.0_C_DOUBLE) THEN
-      ! If fl is positive, swap xl and xh (and fl and fh) to ensure fl < 0
-      rootTMP = xl
-      xl = xh
-      xh = rootTMP
-      rootTMP = fl
-      fl = fh
-      fh = rootTMP
+  rtsafeTMP = xstart
+
+  ! If xstart is outside the bracket, use midpoint
+  IF ( (rtsafeTMP .LT. MIN(x1, x2) ) .OR.  &
+       (rtsafeTMP .GT. MAX(x1, x2)) ) THEN
+      rtsafeTMP = 0.5_C_DOUBLE * (x1 + x2)
   END IF
 
-! At this point, we guarantee: fl < 0 and fh > 0.
+  ! Evaluate function at endpoints
+  CALL funcd(i, xl, fl, df)
+  CALL funcd(i, xh, fh, df)
 
+  ! Check bracketing
+  IF (fl * fh .GT. 0.0_C_DOUBLE) THEN
+      WRITE(*,*) "RTSAFE ERROR: ROOT NOT BRACKETED BY X1 AND X2"
+      WRITE(*,*) "  xl, xh = ", xl, xh
+      WRITE(*,*) "  fl, fh = ", fl, fh
+      root = HUGE(1.0_C_DOUBLE)
+      RETURN
+  END IF
 
-  DO j = 1, JMAX    
-      ! 1. Evaluate function and derivative at current estimate (rootTMP)
-      CALL funcd(i, rootTMP, f, df)
-      
-      ! Check for convergence based on function value (recommended)
-      IF (DABS(f) < xacc) EXIT 
+  ! Ensure fl < 0 < fh (swap if necessary)
+  IF (fl .GT. 0.0_C_DOUBLE) THEN
+      ! swap xl <-> xh and fl <-> fh using temporaries (no separate subroutine)
+      dx = xl
+      xl = xh
+      xh = dx
+      dx = fl
+      fl = fh
+      fh = dx
+  END IF
 
-      ! 2. Compute proposed Newton step
-      ! This is ONLY the proposed value, not yet the accepted value
-      dx = f / df
-      rtsafeTMP = rootTMP - dx
-      
-      ! -----------------------------------------------------------
-      ! 3. SAFEGUARD CHECK: DECIDE BETWEEN NEWTON AND BISECTION
-      ! -----------------------------------------------------------
-      
-      ! Check 1: Is the derivative flat (ABS(df) is NOT too small)? AND
-      ! Check 2: Does the Newton step stay within the current, shrinking bracket [xl, xh]?
-! -----------------------------------------------------------
-      ! 3. SAFEGUARD CHECK: DECIDE BETWEEN NEWTON AND BISECTION
-      ! -----------------------------------------------------------
-      
-      ! Use Newton Step if it lands within the CURRENT safe bracket AND the derivative is not flat.
-      IF (rtsafeTMP > xl .AND. rtsafeTMP < xh .AND. DABS(df) > 1.0E-12_C_DOUBLE) THEN
-          ! Newton Step is SAFE and accepted.
-      ELSE
-          ! Newton Step is rejected (overshot the bracket OR derivative is flat).
-          ! Fallback to Bisection Step
-          rtsafeTMP = (xl + xh) / 2.0_C_DOUBLE
-      END IF      
-      ! -----------------------------------------------------------
-      ! 4. Update the root and check step size convergence
-      ! -----------------------------------------------------------
-      
-      ! The step size is the difference between the new accepted value and the old value
-      dx = rtsafeTMP - rootTMP 
-      rootTMP = rtsafeTMP
-      
-      ! Check convergence based on step size
-      IF (DABS(dx) < xacc) EXIT
-      
-      ! -----------------------------------------------------------
-      ! 5. SHRINK BRACKET: Update bounds based on the sign of f
-      ! -----------------------------------------------------------
-      
-      ! Re-evaluate f at the newly accepted rootTMP to update the brackets correctly
-      ! (We must re-evaluate because the initial funcd call was at the old rootTMP)
-      CALL funcd(i, rootTMP, f, df) 
-      
-      ! Shrink the bracket [xl, xh] based on the sign of f at rootTMP
-      ! This requires that the function was initially bracketed with f(xl)*f(xh) < 0
-      IF (f < 0.0_C_DOUBLE) THEN
-          xl = rootTMP
-      ELSE
-          xh = rootTMP
+  ! Main loop
+  DO j = 1, JMAX
+      ! Evaluate function and derivative at current estimate
+      CALL funcd(i, rtsafeTMP, f, df)
+
+      ! Convergence on function value
+      IF (ABS(f) .LT. xacc) THEN
+          root = rtsafeTMP
+          RETURN
       END IF
-      
-      ! Check for bracket width convergence (recommended)
-      IF (DABS(xh - xl) < xacc) EXIT
+
+      ! Compute half-bracket width & limit for step
+      halfbracket = 0.5_C_DOUBLE * (xh - xl)
+      maxstep = MAX(ABS(rtsafeTMP), 1.0_C_DOUBLE) * xacc  ! relative related scale
+
+      ! Decide whether to use Newton step or bisection:
+      ! - if df is too small (relative), or Newton would step outside bracket,
+      !   or Newton step would be unreasonably large -> use bisection (midpoint)
+      IF (ABS(df) .LT. (1.0E-16_C_DOUBLE * (1.0_C_DOUBLE + ABS(f))) ) THEN
+          ! derivative effectively zero -> midpoint
+          rtsafeTMP = 0.5_C_DOUBLE * (xl + xh)
+      ELSE
+          ! proposed Newton step
+          dx = f / df
+          ! Limit Newton step so it does not exceed half the bracket
+          IF (ABS(dx) .GT. halfbracket) THEN
+              dx = SIGN(halfbracket, dx)
+          END IF
+          rtsafeTMP = rtsafeTMP - dx
+          ! if Newton step jumps outside bracket, fall back to midpoint
+          IF ( (rtsafeTMP .LE. xl) .OR. &
+               (rtsafeTMP .GE. xh) ) THEN
+              rtsafeTMP = 0.5_C_DOUBLE * (xl + xh)
+          END IF
+      END IF
+
+      ! Evaluate function at accepted point once
+      CALL funcd(i, rtsafeTMP, f, df)
+
+      ! Shrink the bracket using the new f
+      IF (f .LT. 0.0_C_DOUBLE) THEN
+          xl = rtsafeTMP
+          fl = f
+      ELSE
+          xh = rtsafeTMP
+          fh = f
+      END IF
+
+      ! Convergence based on interval width (relative) or absolute small step
+      testtol = xacc * (1.0_C_DOUBLE + ABS(rtsafeTMP))
+      IF ((xh - xl) .LE. testtol) THEN
+          root = rtsafeTMP
+          RETURN
+      END IF
 
   END DO
-root = rootTMP
 
-  
+  ! If we exit loop without returning, max iterations reached -> return last estimate
+  WRITE(*,*) "RTSAFE WARNING: maximum iterations reached without full convergence."
+  root = rtsafeTMP
+
 END SUBROUTINE rtsafe
