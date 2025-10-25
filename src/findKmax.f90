@@ -14,9 +14,18 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     FUNCTION findKmaxSP(j) 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE  
-      REAL(KIND=C_DOUBLE)          :: findKmaxSP
+      REAL(KIND=C_DOUBLE)   :: findKmaxSP
       INTEGER, INTENT(IN)   :: j
     END FUNCTION findKmaxSP
+
+
+    SUBROUTINE improveKmaxSPbounds(i, startT, tmaxL, tmaxR)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      IMPLICIT NONE  
+      REAL(KIND=C_DOUBLE), INTENT(IN)       :: startT
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)    :: tmaxL, tmaxR
+      INTEGER, INTENT(IN)                   :: i
+    END SUBROUTINE improveKmaxSPbounds
 
 
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
@@ -114,6 +123,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 !      CALL improveKmaxSPbounds(i, t_Start_Point, kmaxL, kmaxR)
 !    ELSE
     ratio = current_y / current_mu
+WRITE(*,*) "RATIO:", ratio
 
     omega_SP = -1
     t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
@@ -126,16 +136,28 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     END IF
     
-    tmaxL = 0.0_C_DOUBLE
-    tmaxR = t_Start_Point * 2.0_C_DOUBLE
-
     ! Now find kmax and friends
-    CALL rtnewton(i,              &
-                  findImkdZero,   &
-                  t_Start_Point,  &
-                  aimrerr,        &
-                  tmax)
+    IF ( current_y < current_mu ) THEN
+      tmaxL = 0.0_C_DOUBLE
+      tmaxR = t_Start_Point * 2.0_C_DOUBLE
+WRITE(*,*) "STATS1:", t_Start_Point, tmaxL, tmaxR
+      CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
+WRITE(*,*) "STATS2: ", t_Start_Point, tmaxL, tmaxR
 
+      CALL rtsafe(i,                &
+                    findImkdZero,   &
+                    t_Start_Point,  &
+                    tmaxL,          &
+                    tmaxR,          &
+                    aimrerr,        &
+                    tmax)
+    ELSE
+      CALL rtnewton(i,              &
+                    findImkdZero,   &
+                    t_Start_Point,  &
+                    aimrerr,        &
+                    tmax)
+    END IF
     ! Find kmax, mmax
     CALL findImk(i, tmax, kmax)
     mmax = myfloor(kmax/pi)
