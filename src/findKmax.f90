@@ -1,4 +1,5 @@
-SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax) 
+SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
+
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -123,7 +124,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 !      CALL improveKmaxSPbounds(i, t_Start_Point, kmaxL, kmaxR)
 !    ELSE
     ratio = current_y / current_mu
-WRITE(*,*) "RATIO:", ratio
 
     omega_SP = -1
     t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
@@ -140,9 +140,7 @@ WRITE(*,*) "RATIO:", ratio
     IF ( current_y < current_mu ) THEN
       tmaxL = 0.0_C_DOUBLE
       tmaxR = t_Start_Point * 2.0_C_DOUBLE
-WRITE(*,*) "STATS1:", t_Start_Point, tmaxL, tmaxR
       CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
-WRITE(*,*) "STATS2: ", t_Start_Point, tmaxL, tmaxR
 
       CALL rtsafe(i,                &
                     findImkdZero,   &
