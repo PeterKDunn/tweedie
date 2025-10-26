@@ -1,96 +1,120 @@
 SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN)          :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(200), wvec(200)  
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 200), Nmatrix(2, 200)  
+  INTEGER, INTENT(IN)                 :: nzeros
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(200), wvec(200)
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2,200), Nmatrix(2,200)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
-  
-  ! --- Local Variables ---
-  INTEGER         :: p, maxSize
-  REAL(KIND=C_DOUBLE)    :: denom, tinyDenom, sumw
-  REAL(KIND=C_DOUBLE)    :: psi_new, FF_current
-  
-  INTEGER         :: l_nzeros
 
+  ! --- Local variables ---
+  INTEGER :: p, l_nzeros, maxSize
+  REAL(KIND=C_DOUBLE) :: denom, psi_new, FF_current, sumw
+  REAL(KIND=C_DOUBLE) :: tinyDenom, scale_denom
+  REAL(KIND=C_DOUBLE) :: inv_x_i, inv_x_l
+  REAL(KIND=C_DOUBLE) :: s, maxinv, invx
+  REAL(KIND=C_DOUBLE), PARAMETER :: SAFETY_SCALE = 1.0D-12
+  REAL(KIND=C_DOUBLE), PARAMETER :: HUGE_LIMIT   = 1.0D300
+  REAL(KIND=C_DOUBLE) :: xscaled(200)
 
-  ! --- Constants ---
-  tinyDenom = 1.0E-16_C_DOUBLE
-  maxSize = 200 ! Maximum size for the column dimension of M/N
+  ! --- Constants and initialization ---
+  maxSize  = 200
+  l_nzeros = MIN(nzeros, maxSize)
 
-  ! --- Initial Setup ---
-  l_nzeros = nzeros
   IF (l_nzeros .LE. 0) THEN
-      West = 0.0d00
-      RETURN
-  END IF
-    
-  IF (l_nzeros .GT. maxSize) THEN
-      l_nzeros = maxSize  
+     West = 0.0D0
+     RETURN
   END IF
 
-  ! The new term (psi) is the last element of wvec
-  ! NOTE: If nzeros > 200, this index may still be out of bounds, but the loop below
-  ! handles the clamped size. This logic assumes wvec is at least size 'nzeros' (input).
-  psi_new = wvec(nzeros)
-    
-  ! Calculate the actual cumulative sum W_l (FF_current)
-  sumw = 0.0d00
-  DO p = 1, nzeros ! Use original nzeros here to calculate the full sum
-      sumw = sumw + wvec(p)
-  ENDDO
-  FF_current = sumw  
-    
+  ! --- Rescaling step to improve numerical conditioning ---
+  maxinv = 0.0D0
+  DO p = 1, l_nzeros
+     IF (xvec(p) .EQ. 0.0D0) THEN
+        West = 0.0D0
+        RETURN
+     END IF
+     invx = DABS(1.0D0 / xvec(p))
+     IF (invx > maxinv) maxinv = invx
+  END DO
+  s = MAX(1.0D0, 1.0D0 / maxinv)
 
-  ! When the new term (psi) is essentially zero.
-  IF (DABS(psi_new) .LT. 1.0E-31_C_DOUBLE) THEN
-      West = FF_current
-      RETURN
-  END IF
-
-  ! Column 1 in M/N matrices
-  Mmatrix(2, 1) = FF_current / psi_new  
-  Nmatrix(2, 1) = 1.0d00 / psi_new
-    
-  ! Build the recurrence table row (p=2 to l_nzeros)
-  DO p = 2, l_nzeros ! IMPORTANT: Use the clamped local variable
-      
-    ! Denominator corresponds to 1/x_{l+1-i} - 1/x_l
-    ! Here, l_nzeros acts as 'l'
-    denom = 1.0d00 / xvec(l_nzeros + 1 - p) - 1.0d00 / xvec(l_nzeros)
-        
-    IF (DABS(denom) .LT. tinyDenom) THEN
-      ! Denominator too small -> fall back to the raw sum
-      West = FF_current  
-      RETURN
-    END IF
-        
-    ! Mmatrix(2, p) = ( Mmatrix(1, p-1) - Mmatrix(2, p-1) ) / denom
-    Mmatrix(2, p) = ( Mmatrix(1, p - 1) - Mmatrix(2, p - 1) ) / denom
-    Nmatrix(2, p) = ( Nmatrix(1, p - 1) - Nmatrix(2, p - 1) ) / denom
-        
+  DO p = 1, l_nzeros
+     xscaled(p) = xvec(p) / s
   END DO
 
-  ! Final accelerated estimate (Highest order, column l_nzeros)
-  IF (l_nzeros .GT. 1) THEN ! IMPORTANT: Use the clamped local variable
-    IF (DABS(Nmatrix(2, l_nzeros)) .LT. tinyDenom) THEN
-      West = FF_current
+  ! --- Core algorithm starts here (same as before) ---
+
+  psi_new = wvec(nzeros)
+
+  sumw = 0.0D0
+  DO p = 1, nzeros
+     sumw = sumw + wvec(p)
+  END DO
+  FF_current = sumw
+
+  IF (DABS(psi_new) .LT. 1.0D-31) THEN
+     West = FF_current
+     RETURN
+  END IF
+
+  Mmatrix(2, 1) = FF_current / psi_new
+  Nmatrix(2, 1) = 1.0D0 / psi_new
+
+  DO p = 2, l_nzeros
+     inv_x_l = 1.0D0 / xscaled(l_nzeros)
+     inv_x_i = 1.0D0 / xscaled(l_nzeros + 1 - p)
+     denom   = inv_x_i - inv_x_l
+     scale_denom = MAX(DABS(inv_x_i), DABS(inv_x_l), 1.0D0)
+     tinyDenom   = SAFETY_SCALE * scale_denom
+
+     IF ( (.NOT.(denom .EQ. denom)) .OR.  & 
+          (DABS(denom) .LT. tinyDenom) ) THEN
+        West = FF_current
+        RETURN
+     END IF
+
+     Mmatrix(2, p) = (Mmatrix(1, p - 1) - Mmatrix(2, p - 1)) / denom
+     Nmatrix(2, p) = (Nmatrix(1, p - 1) - Nmatrix(2, p - 1)) / denom
+
+     IF (.NOT.(Mmatrix(2, p) .EQ. Mmatrix(2, p)) .OR. &
+         .NOT.(Nmatrix(2, p) .EQ. Nmatrix(2, p))) THEN
+        West = FF_current
+        RETURN
+     END IF
+
+     IF ( (DABS(Mmatrix(2, p)) .GT. HUGE_LIMIT) .OR.  &
+          (DABS(Nmatrix(2, p)) .GT. HUGE_LIMIT) ) THEN
+        West = FF_current
+        RETURN
+     END IF
+  END DO
+
+  ! --- Final estimate ---
+  ! Final accelerated estimate
+  IF (l_nzeros > 1) THEN
+    IF (.NOT.(Nmatrix(2, l_nzeros) .EQ. Nmatrix(2, l_nzeros))) THEN
+       ! NaN detected, use previous column
+       West = Mmatrix(2, l_nzeros - 1) / Nmatrix(2, l_nzeros - 1)
+       RETURN
+    END IF
+    IF (DABS(Nmatrix(2, l_nzeros)) .LT. tinyDenom .OR. &
+        DABS(Mmatrix(2, l_nzeros)) .GT. 1.0D300) THEN
+       ! unstable last column: use lower order
+       West = Mmatrix(2, l_nzeros-1) / Nmatrix(2, l_nzeros - 1)
+       RETURN
     ELSE
-      ! The highest order estimate is M(2, l_nzeros) / N(2, l_nzeros)
-      West = Mmatrix(2, l_nzeros) / Nmatrix(2, l_nzeros)
+       West = Mmatrix(2, l_nzeros) / Nmatrix(2, l_nzeros)
     END IF
   ELSE
     West = FF_current
   END IF
 
-  ! Update the Old Row (Copy Row 2 to Row 1 for the next iteration)
-  DO p = 1, l_nzeros ! IMPORTANT: Use the clamped local variable
-    Mmatrix(1, p) = Mmatrix(2, p)
-    Nmatrix(1, p) = Nmatrix(2, p)
-  END DO
-    
-  RETURN
 
+  ! --- Copy row 2 to row 1 ---
+  DO p = 1, l_nzeros
+     Mmatrix(1, p) = Mmatrix(2, p)
+     Nmatrix(1, p) = Nmatrix(2, p)
+  END DO
+
+  RETURN
 END SUBROUTINE acceleratenew

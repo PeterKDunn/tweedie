@@ -57,9 +57,9 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     END SUBROUTINE acceleratenew
 
 
-    SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero)
+    SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero, leftOfMax)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER, INTENT(IN)                 :: i, m
+      INTEGER, INTENT(IN)                 :: i, m, leftOfMax
       REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zero
     END SUBROUTINE findExactZeros
@@ -115,6 +115,8 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     CALL INTPR( "  -        mmax:", -1, mmax, 1 )
     CALL INTPR( "  - left of max:", -1, leftOfMax, 1 )
   END IF
+  
+  write(*,*) "HERE"
 
   ! INTEGRATION
   ! There are three integration regions:
@@ -128,11 +130,14 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
   area0 = 0.0_C_DOUBLE
   area1 = 0.0_C_DOUBLE
   zero  = 0.0_C_DOUBLE
+  
+  write(*,*) "HERE"
 
   ! ---------------------------------------------------------
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
   count_Integration_Regions = 1
-  
+  write(*,*) "HERE2"
+
   ! Find starting point for the first zero
   m = mfirst
   t_Start_Point = tmax + pi / current_y  
@@ -144,10 +149,12 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     zeroBoundL = tmax
     zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
   END IF
+  write(*,*) "HERE3"
 
   ! Find the zero
   zeroL = 0.0_C_DOUBLE
-  CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR)
+  CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
+  write(*,*) "HERE4"
 
   ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
@@ -194,7 +201,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
 
 !ONLY NEEDED FOR SMALL P
 !CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
-      CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+      CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
 
       zeroR = zero
 
@@ -217,7 +224,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     
     END DO 
   END IF
-
+  
 
   ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
@@ -254,7 +261,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     END IF
 
     ! Find the exact zero
-    CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero)
+    CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
 
     zeroR = zero
 
@@ -272,7 +279,9 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     CALL acceleratenew(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
 
     ! Check for convergence_Acc
+write(*,*) "W, Wold, Wold2", West, Wold, Wold2
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
+write(*,*) "relerr TOP, BOT:", (DABS(West - Wold) + DABS(West - Wold2)) , (DABS(West) + epsilon)
     IF (Cverbose) THEN
       CALL DBLEPR("  *** Acceleration area:", -1, psi, 1)
       CALL DBLEPR("             between t =", -1, zeroL, 1)
@@ -287,6 +296,8 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
       IF (Cverbose) CALL DBLEPR(   "         rel err =:", -1, relerr, 1)
       convergence_Acc = 1
     END IF
+    
+!    IF (its_Acceleration .GT. 87) STOP
 
     mOld = m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
