@@ -1,4 +1,6 @@
 SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
+  ! Finds the value of Kmax, Tmax, and Mmax.
+  ! Also return the first value of m (mfirst) amd whether this is to the left of the max (leftOfMax).
 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -106,6 +108,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   ! --- Initialization ---
   aimrerr = 1.0E-09_C_DOUBLE
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+  
 
   ! Find starting points
   IF (current_y .GE. current_mu) THEN
@@ -136,7 +139,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     END IF
     
-    ! Now find kmax and friends
+    ! Now find kmax and tmax
     IF ( current_y < current_mu ) THEN
       tmaxL = 0.0_C_DOUBLE
       tmaxR = t_Start_Point * 2.0_C_DOUBLE
@@ -156,18 +159,28 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                     aimrerr,        &
                     tmax)
     END IF
-    ! Find kmax, mmax
+    
+    
+    ! Find mmax, which depends on whether we are working with the PDF or the CDF.
+    ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
+    ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
+    !       the CDF has integrand zeros at Im k(t) =        m pi/y.
     CALL findImk(i, tmax, kmax)
-    mmax = myfloor(kmax/pi)
+    
+    IF (Cpdf) THEN
+      mmax = myfloor(2.0_C_DOUBLE * kmax / pi)
+    ELSE
+      mmax = myfloor(kmax / pi)
+    END IF
     mfirst = mmax
     
-    leftOfMax = 1.
+    leftOfMax = 1
     IF (mmax .EQ. 0) THEN
       leftOfMax = 0
     END IF
     
   END IF
-
+  
   RETURN
 
 END SUBROUTINE findKmax

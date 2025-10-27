@@ -26,7 +26,17 @@ SUBROUTINE findImkM(i, t, f, df, m)
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
   CALL findImk(i, t, Imk_val)
-  f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
+  
+  ! The expression depends on whether we are working with the PDF or the CDF.
+  ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
+  ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
+  !       the CDF has integrand zeros at Im k(t) =        m pi/y.
+  
+  IF (Cpdf) THEN
+    f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi - pi/2.0_C_DOUBLE
+  ELSE
+    f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
+  END IF
   CALL findImkd(i, t, df)
   
 END SUBROUTINE findImkM

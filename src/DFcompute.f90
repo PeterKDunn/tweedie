@@ -101,7 +101,13 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
   wvec = 0.0_C_DOUBLE
   mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
- 
+  
+WRITE(*,*) "Y, MU, PHi, P"
+WRITE(*,*) current_y
+WRITE(*,*) current_mu
+WRITE(*,*) current_phi
+WRITE(*,*) Cp
+
   IF (Cverbose) THEN
     CALL DBLEPR("********* Computing for p =", -1, Cp, 1)
   END IF
@@ -150,7 +156,8 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
   ! Find the zero
   zeroL = 0.0_C_DOUBLE
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
-
+WRITE(*,*) "--------------(DFcompute)-----------------------------------------"
+WRITE(*,*) "M = ", m, zeroR, t_Start_Point, zeroBoundL, zeroBoundR
   ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
 
@@ -219,7 +226,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     
     END DO 
   END IF
-  
+
 
   ! ----------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: West ---
@@ -290,7 +297,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
       convergence_Acc = 1
     END IF
     
-    IF (its_Acceleration .GT. 2) STOP
+!    IF (its_Acceleration .GT. 2) STOP
 
     mOld = m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)

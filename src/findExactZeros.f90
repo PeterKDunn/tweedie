@@ -73,7 +73,17 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   xacc = 1.0E-13_C_DOUBLE
 !write(*,*) "** IN findexactzeros1, ",  tL, tR
 
-  ! Ensure the bounds actually boudn the zero
+
+
+  ! Find mmax. which depends on whether we are working with the PDF or the CDF.
+  ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
+  ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
+  !       the CDF has integrand zeros at Im k(t) =        m pi/y.
+
+
+
+
+  ! Ensure the bounds actually bound the zero
   CALL findImkM(i, tL, fL, dfL, m)
   CALL findImkM(i, tR, fR, dfR, m)
   
