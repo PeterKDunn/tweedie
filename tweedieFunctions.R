@@ -94,3 +94,20 @@ igrand <- function(p, mu, phi, y, t){
 }
 
 
+
+
+
+igrandPDF <- function(p, mu, phi, y, t){
+  rk <- k(p = p,
+          mu = mu, 
+          phi = phi, 
+          y = y, 
+          t = t)
+#  cat("t, Rek, Imk", t, rk$Real, rk$Imag, "\n")
+  igrand <- exp( rk$Real ) * cos(rk$Imag)
+#  if ( p < 2 ) {
+#    igrand <- igrand - ( exp(rk$Real) * sin(rk$Imag - t*y) ) / t
+#  }
+  return(igrand)
+}
+
