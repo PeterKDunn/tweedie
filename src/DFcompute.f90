@@ -116,7 +116,6 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     CALL INTPR( "  - left of max:", -1, leftOfMax, 1 )
   END IF
   
-  write(*,*) "HERE"
 
   ! INTEGRATION
   ! There are three integration regions:
@@ -131,12 +130,10 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
   area1 = 0.0_C_DOUBLE
   zero  = 0.0_C_DOUBLE
   
-  write(*,*) "HERE"
 
   ! ---------------------------------------------------------
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
   count_Integration_Regions = 1
-  write(*,*) "HERE2"
 
   ! Find starting point for the first zero
   m = mfirst
@@ -149,12 +146,10 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     zeroBoundL = tmax
     zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
   END IF
-  write(*,*) "HERE3"
 
   ! Find the zero
   zeroL = 0.0_C_DOUBLE
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
-  write(*,*) "HERE4"
 
   ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
@@ -279,9 +274,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     CALL acceleratenew(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
 
     ! Check for convergence_Acc
-write(*,*) "W, Wold, Wold2", West, Wold, Wold2
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
-write(*,*) "relerr TOP, BOT:", (DABS(West - Wold) + DABS(West - Wold2)) , (DABS(West) + epsilon)
     IF (Cverbose) THEN
       CALL DBLEPR("  *** Acceleration area:", -1, psi, 1)
       CALL DBLEPR("             between t =", -1, zeroL, 1)

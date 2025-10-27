@@ -31,8 +31,8 @@ SUBROUTINE findImk(i, t, Imk)
   IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
       (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
     write(*,*) "ERROR (FindImk): Omega out of range:", omega
-    write(*,*) "Argument: ", tanArg
-    write(*,*) "       t: ", t
+!    write(*,*) "Argument: ", tanArg
+!    write(*,*) "       t: ", t
     STOP
   END IF
   alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)
