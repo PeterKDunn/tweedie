@@ -290,7 +290,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
       convergence_Acc = 1
     END IF
     
-!    IF (its_Acceleration .GT. 87) STOP
+    IF (its_Acceleration .GT. 2) STOP
 
     mOld = m
     CALL advanceM(i, m, mmax, mOld, leftOfMax, flip)
@@ -309,8 +309,20 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
 
   ! We have the value of the integral in the CDF calculation.
   ! So now work out the CDF
-  funvalueI = (-1.0_C_DOUBLE/pi) * areaT + 0.5_C_DOUBLE
-    
+  
+  WRITE(*,*) "IN DFcompute: Cpdf = ", Cpdf  
+  IF (Cpdf) THEN
+!    CALL findLambda(i, lambda)
+
+    ! The integration returns the conditional CDF for Y | Y > 0.
+    !  So we need to find the CDF of Y.
+    ! That also means adding P(Y=0) 
+    ! So the value returned by the integration  
+     
+    funvalueI = -areaT/pi + 0.5E0_C_DOUBLE 
+  ELSE
+    funvalueI = -areaT/pi + 0.5E0_C_DOUBLE
+  END IF  
   IF (Cverbose) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
 
   RETURN

@@ -55,8 +55,13 @@ CONTAINS
       CALL findRek(i, t, Rek)
       CALL findImk(i, t, Imk)
       
-      integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
-
+!      WRITE(*,*) "Cpdf=", Cpdf
+      IF (Cpdf) THEN
+!      write(*,*) "PDF integrand!"
+        integrand_result = DEXP( Rek ) * DCOS( Imk )
+      ELSE
+        integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
+      END IF
     END IF
     
   END FUNCTION DFintegrand

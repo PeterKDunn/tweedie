@@ -1,4 +1,4 @@
-dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose = FALSE, details = FALSE){ 
+dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, details = FALSE){ 
   # 
   # Peter K Dunn 
   # 06 Aug 2002
@@ -35,8 +35,7 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose 
   N <- length(y)
   density <- y
   its <- y
-  verbose <- FALSE
-  
+
   if ( is.null(method)){
     method <- array( dim = N)
   } else {
@@ -51,9 +50,9 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose 
     # We choose Method 3 if no other is requested.
     #
     # The methods are documented in Dunn and Smyth (2008):
-    # Method 1: Evaluate a: compute a(y, phi) = f(y; 1, phi)
-    # Method 2: Rescale the mean to 1
-    # Method 3: Rescale y to 1 and evaluate b.
+    # - Method 1: Evaluate a: compute a(y, phi) = f(y; 1, phi)
+    # - Method 2: Rescale the mean to 1
+    # - Method 3: Rescale y to 1 and evaluate b.
     
     if ( y[i] <= 0 ) {
       if ( (power > 1) & (power < 2) ) {
@@ -103,35 +102,33 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose 
       # NOTE: FOR ALL  METHODS, WE HAVE mu=1
       
       if ( use.method == 2 ) {
-        tmp <- .C("twpdf",
+        tmp <- .C("twcdf",
                   N          = as.integer(N),
                   power      = as.double(power),
                   phi        = as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
                   y          = as.double(y[i] / mu[i]),            # y
                   mu         = as.double(1),                       # mu
                   verbose    = as.integer(verbose),                # verbosity
-                  exact      = as.integer( exact ),                # exact as an integer
-                  verbose    = as.integer( verbose ),              # verbose as an integer
+                  pdf        = as.integer(1),                      # 1: TRUE. This is the PDF
                   # THE OUTPUTS:
                   funvalue   = as.double(0),                       # funvalue
                   exitstatus = as.integer(0),                      # exitstatus
                   relerr     = as.double(0),                       # relerr
                   its        = as.integer(0),                      # its
                   PACKAGE    = "tweedie")
-        
         den <- tmp$funvalue
         density[i] <- den * m2
         
       } else {
         if ( use.method == 1 ) {
-          tmp <- .C("twpdf",
+          tmp <- .C("twcdf",
                     N          = as.integer(N),
                     power      = as.double(power),
                     phi        = as.double(phi[i]),      # phi
                     y          = as.double(y[i]),        # y
                     mu         = as.double(1),           # mu = 1 for PDF
-                    exact      = as.integer( exact ),    # exact as an integer
                     verbose    = as.integer( verbose ),  # verbose as an integer
+                    pdf        = as.integer(1),          # 1: TRUE. This is the PDF
                     # THE OUTPUTS:
                     funvalue   = as.double(0),           # funvalue
                     exitstatus = as.integer(0),          # exitstatus
@@ -143,14 +140,14 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose 
           density[i] <- den * m1
           
         } else { # use.method == 3
-          tmp <- .C("twpdf",
+          tmp <- .C("twcdf",
                     N          = as.integer(N),
                     power      = as.double(power),
                     phi        = as.double(phi[i] / (y[i] ^ (2 - power))), # phi
                     y          = as.double(1),          # y
                     mu         = as.double(1),          # mu
-                    exact      = as.integer( exact ),   # exact as an integer
                     verbose    = as.integer( verbose ), # verbose as an integer
+                    pdf        = as.integer(1),         # 1: TRUE. This is the PDF
                     # THE OUTPUTS:
                     funvalue   = as.double(0),          # funvalue
                     exitstatus = as.integer(0),         # exitstatus
@@ -165,7 +162,12 @@ dtweedie.inversion <- function(y, power, mu, phi, exact=TRUE, method=3, verbose 
     }
   }
   
-  density
+  if (details) {
+    return( list( density = den,
+                  regions = tmp$its))
+  } else {
+    return(density)
+  }
   
 }
 

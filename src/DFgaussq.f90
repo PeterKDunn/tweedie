@@ -1,5 +1,4 @@
 SUBROUTINE DFgaussq(i, a, b, integral_result) 
-  USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   USE DFintegrand_MOD, ONLY: DFintegrand
   

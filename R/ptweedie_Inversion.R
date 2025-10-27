@@ -70,6 +70,7 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
              y           = as.double(y),          # y
              mu          = as.double(mu),         # mu
              verbose     = as.integer(verbose),   # verbosity
+             pdf         = as.integer(0),         # 0: FALSE. This is the CDF not PDF
              # THE OUTPUTS:
              funvalue    = as.double(rep(0, N)),  # funvalue
              exitstatus  = as.integer(0),         # exitstatus
