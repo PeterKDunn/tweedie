@@ -1,10 +1,10 @@
-SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)  :: N, verbose
+  INTEGER(C_INT), INTENT(IN)  :: N, verbose, pdf
   REAL(C_DOUBLE), INTENT(IN)  :: p
   REAL(C_DOUBLE), INTENT(IN)  :: phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
@@ -37,9 +37,18 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
   Cmu = mu
   Cphi = phi
   CN = N
+  IF (pdf .EQ. 0) THEN
+    ! Coputing the DF
+    Cpdf = .FALSE.
+  ELSE
+    ! Computing the PDF
+    Cpdf = .TRUE.
+  END IF
   IF (verbose .EQ. 1) THEN
+    ! Verbose feedback
     Cverbose = .TRUE.
   ELSE
+    ! Minimal feedback
     Cverbose = .FALSE.
   END IF
 
@@ -53,6 +62,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
 
   ! --- Loop over N values ---
   DO i = 1, N
+WRITE(*,*) "Cverbose, PDF", Cverbose, pdf
     CALL DFcompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
     funvalue(i) = funvalueTMP
   END DO

@@ -21,9 +21,9 @@ SUBROUTINE twpdf_main(N, p, phi, y, mu, verbose, funvalue, exitstatus, relerr, I
 
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)               :: funvalueI
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)        :: funvalueI
       INTEGER, INTENT(OUT)                      :: exitstatus
-      REAL(KIND=C_DOUBLE), INTENT(OUT)                 :: relerr
+      REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(IN)                       :: verbose
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE PDFbigp
