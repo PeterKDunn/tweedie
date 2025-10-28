@@ -7,7 +7,7 @@ mu <- 1
 phi <- 2.2200000000000002 
 p <- 3
 # y <- 0.01
-t <- seq(0, 15,
+t <- seq(0, 10,
          length = 1000)
 ########################################################################
 
@@ -69,6 +69,8 @@ zs <- c(10.2, 214.8, 404.7, 540.2, 659.9, 771.1, 876.8, 978.4, 1077.1)
 ############################################################################3
 
 par( mfrow=c(3,2))
+
+###  PLOT 1
 plot(kvals$Imag ~ t,
      main = expression( bold(Imaginary~part~of~italic(k)*(italic(t)))),
      xlab = expression(Values~of~italic(t)),
@@ -92,11 +94,11 @@ axis(side = 4,
 #       lty = 2)
 
 
-
-plot(sin(kvals$Imag) ~ t,
+###  PLOT 2
+plot(cos(kvals$Imag) ~ t,
      main = "sin(Im k)",
      xlab = expression(Values~of~italic(t)),
-     ylab = "sin(Im k)",
+     ylab = "cos(Im k)",
      las = 1,
      lwd = 2,
      type = "l")
@@ -111,7 +113,7 @@ abline(v = 0.03,
 
 
 
-
+###  PLOT 3
 plot(kvals$Real ~ t,
      main = "Real part of k(t)",
      xlab = expression(Values~of~italic(t)),
@@ -124,7 +126,7 @@ abline(h = 0,
        col="grey")
 
 
-
+###  PLOT 4
 plot( exp(kvals$Real) * cos(kvals$Imag) ~ t,
      main = "Integrand",
      xlab = expression(Values~of~italic(t)),
@@ -146,6 +148,7 @@ lines(x = t,
 
 
 
+###  PLOT 5
 plot( kd1~ t,
      main = "Derivative k'(t)",
      xlab = expression(Values~of~italic(t)),
@@ -162,7 +165,7 @@ lines(x = t,
       col = "grey")
 
 
-
+###  PLOT 6
 plot(kd2 ~ t,
      main = "Second deriv k''(t)",
      xlab = expression(Values~of~italic(t)),
@@ -180,7 +183,7 @@ lines(x = t,
 
 
 
-
+##################################
 if ( p < 2 ){
   cat("lambda = ", lambda, " and P(Y=0) = exp(-lambda) = ", exp(-lambda), "\n") 
 }
