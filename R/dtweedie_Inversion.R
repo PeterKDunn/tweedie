@@ -127,7 +127,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
 						funvalue   = as.double(rep(0, NFortran)),                       # funvalue
 						exitstatus = as.integer(0),                      # exitstatus
 						relerr     = as.double(0),                       # relerr
-						its        = as.integer(0),                      # its
+						its        = as.integer(rep(0, NFortran)),                      # its
 						PACKAGE    = "tweedie")
 			den <- tmp$funvalue
 			density[yFortran] <- den * m2
@@ -146,7 +146,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
 						funvalue   = as.double(rep(0, NFortran)),           # funvalue
 						exitstatus = as.integer(0),          # exitstatus
 						relerr     = as.double(0),           # relerr
-						its        = as.integer(0),          # its
+						its        = as.integer(rep(0, NFortran)),          # its
 						PACKAGE    = "tweedie")
 				
 				den <- tmp[[7]]
@@ -165,7 +165,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
 						funvalue   = as.double(rep(0, NFortran)),          # funvalue
 						exitstatus = as.integer(0),         # exitstatus
 						relerr     = as.double(0),          # relerr
-						its        = as.integer(0),         # its
+						its        = as.integer(rep(0, NFortran)),         # its
 						PACKAGE    = "tweedie")
 				
 				den <- tmp$funvalue

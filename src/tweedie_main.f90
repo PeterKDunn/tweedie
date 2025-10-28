@@ -10,11 +10,12 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
   REAL(C_DOUBLE), INTENT(OUT) :: relerr
-  INTEGER(C_INT), INTENT(OUT) :: Int_Regions
+  INTEGER(C_INT), INTENT(OUT) :: Int_Regions(N)
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
     SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, Int_Regions)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE tweedie_params_mod
       
       IMPLICIT NONE
       INTEGER, INTENT(IN)                       :: i
@@ -27,7 +28,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
     ! -----------------------------------------------
 
   ! --- Local variables ---
-  INTEGER               :: i
+  INTEGER               :: i, Int_RegionsTMP
   REAL(KIND=C_DOUBLE)   :: funvalueTMP
   
 
@@ -62,8 +63,9 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   ! --- Loop over N values ---
   DO i = 1, N
-    CALL IntegralCompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
+    CALL IntegralCompute(i, funvalueTMP, exitstatus, relerr, Int_RegionsTMP)
     funvalue(i) = funvalueTMP
+    Int_Regions(i) = Int_RegionsTMP
   END DO
 
 END SUBROUTINE twcomputation_main

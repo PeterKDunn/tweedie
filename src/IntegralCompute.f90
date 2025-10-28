@@ -99,6 +99,7 @@ SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_R
   Nmatrix = 0.0_C_DOUBLE
   xvec = 0.0_C_DOUBLE
   wvec = 0.0_C_DOUBLE
+  count_Integration_Regions = 0_C_INT
   mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
   
