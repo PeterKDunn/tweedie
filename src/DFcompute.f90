@@ -1,4 +1,4 @@
-SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
+SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
   USE DFintegrand_MOD, ONLY: DFintegrand
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -319,5 +319,5 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
 
   RETURN
 
-END SUBROUTINE DFcompute
+END SUBROUTINE IntegralCompute
 

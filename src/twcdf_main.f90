@@ -13,7 +13,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, rele
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, Int_Regions)
+    SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, Int_Regions)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
       IMPLICIT NONE
@@ -22,7 +22,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, rele
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(OUT)                      :: Int_Regions
-    END SUBROUTINE DFcompute
+    END SUBROUTINE IntegralCompute
   END INTERFACE
     ! -----------------------------------------------
 
@@ -62,7 +62,7 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, rele
 
   ! --- Loop over N values ---
   DO i = 1, N
-    CALL DFcompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
+    CALL IntegralCompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
     funvalue(i) = funvalueTMP
   END DO
 
