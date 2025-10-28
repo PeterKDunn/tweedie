@@ -102,12 +102,6 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
   mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
   
-WRITE(*,*) "Y, MU, PHi, P"
-WRITE(*,*) current_y
-WRITE(*,*) current_mu
-WRITE(*,*) current_phi
-WRITE(*,*) Cp
-
   IF (Cverbose) THEN
     CALL DBLEPR("********* Computing for p =", -1, Cp, 1)
   END IF
@@ -156,8 +150,7 @@ WRITE(*,*) Cp
   ! Find the zero
   zeroL = 0.0_C_DOUBLE
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
-WRITE(*,*) "--------------(DFcompute)-----------------------------------------"
-WRITE(*,*) "M = ", m, zeroR, t_Start_Point, zeroBoundL, zeroBoundR
+
   ! Find the area
   CALL DFgaussq(i, zeroL, zeroR, area0)
 
@@ -314,19 +307,11 @@ WRITE(*,*) "M = ", m, zeroR, t_Start_Point, zeroBoundL, zeroBoundR
     CALL DBLEPR("***       TOTAL: :", -1, areaT, 1)
   END IF
 
-  ! We have the value of the integral in the CDF calculation.
-  ! So now work out the CDF
+  ! We have the value of the integral in the PDF/CDF calculation.
+  ! So now work out the actualy PDF/CDF
   
-  WRITE(*,*) "IN DFcompute: Cpdf = ", Cpdf  
   IF (Cpdf) THEN
-!    CALL findLambda(i, lambda)
-
-    ! The integration returns the conditional CDF for Y | Y > 0.
-    !  So we need to find the CDF of Y.
-    ! That also means adding P(Y=0) 
-    ! So the value returned by the integration  
-     
-    funvalueI = -areaT/pi + 0.5E0_C_DOUBLE 
+    funvalueI = areaT/pi 
   ELSE
     funvalueI = -areaT/pi + 0.5E0_C_DOUBLE
   END IF  

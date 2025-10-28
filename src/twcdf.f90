@@ -11,7 +11,6 @@ SUBROUTINE twcdf(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, i
 
 
   ! Call internal Fortran routine
-WRITE(*,*) "verbose:", verbose
   CALL twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, its)
 
 END SUBROUTINE twcdf

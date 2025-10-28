@@ -62,7 +62,6 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, rele
 
   ! --- Loop over N values ---
   DO i = 1, N
-WRITE(*,*) "Cverbose, PDF", Cverbose, pdf
     CALL DFcompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
     funvalue(i) = funvalueTMP
   END DO

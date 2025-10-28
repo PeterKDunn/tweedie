@@ -156,7 +156,6 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
                     PACKAGE    = "tweedie")
           
           den <- tmp$funvalue
-          cat("den, m3:", den, m3, "\n")
           density[i] <- den * m3
         }
       }
