@@ -29,13 +29,13 @@ FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all
 .PHONY: all
 all: $(SHLIB)
 
-twcomputation.o: IntegralCompute.o
+twcomputation.o: ComputeTwIntegral.o
 
 # Rule to explicitly create the Integrands_mod.mod file
 GaussQuadratureq.o: Integrands_mod.mod
 Integrands_mod.mod: Integrands.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
-IntegralCompute.o: Integrands.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o GaussQuadratureq.o rtnewton.o rtsafe.o
+ComputeTwIntegral.o: Integrands.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o GaussQuadratureq.o rtnewton.o rtsafe.o
 
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib

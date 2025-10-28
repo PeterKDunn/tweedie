@@ -13,7 +13,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions
   ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
   INTERFACE
-    SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, Int_Regions)
+    SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, Int_Regions)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
       IMPLICIT NONE
@@ -22,7 +22,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(OUT)                      :: Int_Regions
-    END SUBROUTINE IntegralCompute
+    END SUBROUTINE ComputeTwIntegral
   END INTERFACE
     ! -----------------------------------------------
 
@@ -62,7 +62,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   ! --- Loop over N values ---
   DO i = 1, N
-    CALL IntegralCompute(i, funvalueTMP, exitstatus, relerr, Int_Regions)
+    CALL ComputeTwIntegral(i, funvalueTMP, exitstatus, relerr, Int_Regions)
     funvalue(i) = funvalueTMP
   END DO
 
