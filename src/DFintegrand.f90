@@ -15,7 +15,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t                ! The internal variable for integration
     REAL(KIND=C_DOUBLE)               :: integrand_result ! The result of the function
     REAL(KIND=C_DOUBLE)               :: current_y, current_mu
-    REAL(KIND=C_DOUBLE)               :: Imk, Rek
+    REAL(KIND=C_DOUBLE)               :: Imk, Rek, lambda
     
     
     INTERFACE
@@ -37,6 +37,15 @@ CONTAINS
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
       END SUBROUTINE findRek
+      
+      
+      SUBROUTINE findLambda(i, lambda)
+        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+        
+        IMPLICIT NONE
+        INTEGER(C_INT), INTENT(IN)        :: i
+        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda
+      END SUBROUTINE findLambda
     END INTERFACE
       
   
@@ -58,7 +67,12 @@ CONTAINS
 !      WRITE(*,*) "Cpdf=", Cpdf
       IF (Cpdf) THEN
 !      write(*,*) "PDF integrand!"
-        integrand_result = DEXP( Rek ) * DCOS( Imk )
+        IF (CpSmall) THEN
+          CALL findLambda(i, lambda)
+          integrand_result = DEXP( Rek ) * DCOS( Imk ) - DEXP( -lambda ) * DCOS(t * current_y )
+        ELSE
+          integrand_result = DEXP( Rek ) * DCOS( Imk )
+        END IF
       ELSE
         integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
       END IF
