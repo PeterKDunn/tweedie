@@ -61,8 +61,6 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
 
   END INTERFACE
 
-!write(*,*) "** IN fundxacteros!!"
-  
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -71,17 +69,11 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
 
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
-!write(*,*) "** IN findexactzeros1, ",  tL, tR
-
-
 
   ! Find mmax. which depends on whether we are working with the PDF or the CDF.
   ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
   ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
   !       the CDF has integrand zeros at Im k(t) =        m pi/y.
-
-
-
 
   ! Ensure the bounds actually bound the zero
   CALL findImkM(i, tL, fL, dfL, m)
@@ -90,8 +82,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
     ! Then bounds do not actually bound teh ero, so try harder
   END IF
-  
-!  CALL rtnewton(i, findImkM_wrapper, xStart, xL, xR, xacc, xZero)
+
   IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! Trickier for small p, small y
     CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
@@ -113,8 +104,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
       REAL(C_DOUBLE), INTENT(OUT) :: f, df
      
       CALL findImkM(i, x, f, df, m) ! Pass the captured 'm' value]
-!      write(*,*) "** IN findImk_wrapper, x, f and df:", x, f, df
-      
+
     END SUBROUTINE findImkM_wrapper
 
   

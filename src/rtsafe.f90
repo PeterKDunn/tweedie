@@ -43,8 +43,6 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   ! Check bracketing
   IF (fl * fh .GT. 0.0_C_DOUBLE) THEN
       WRITE(*,*) "RTSAFE ERROR: ROOT NOT BRACKETED BY X1 AND X2"
-      WRITE(*,*) "  xl, xh = ", xl, xh
-      WRITE(*,*) "  fl, fh = ", fl, fh
       root = HUGE(1.0_C_DOUBLE)
       RETURN
   END IF

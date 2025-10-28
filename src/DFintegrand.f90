@@ -64,9 +64,7 @@ CONTAINS
       CALL findRek(i, t, Rek)
       CALL findImk(i, t, Imk)
       
-!      WRITE(*,*) "Cpdf=", Cpdf
       IF (Cpdf) THEN
-!      write(*,*) "PDF integrand!"
         IF (CpSmall) THEN
           CALL findLambda(i, lambda)
           integrand_result = DEXP( Rek ) * DCOS( Imk ) - DEXP( -lambda ) * DCOS(t * current_y )

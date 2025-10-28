@@ -98,8 +98,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   ! If we get here, NO CONVERGENCE after MAXITS
   IF (j .GE. MAXITS) THEN
     WRITE(*,*) "CONVERGENCE NOT OBTINED IN RTNEWTON after", MAXITS, "iterations"
-    WRITE(*,*) " - Have f, df = ", f, df
-    
+
   END IF
 
   ! Assign the final root value
