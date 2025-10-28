@@ -1,4 +1,4 @@
-SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
+SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
 
@@ -117,4 +117,4 @@ SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   END DO
 
   RETURN
-END SUBROUTINE acceleratenew
+END SUBROUTINE accelerate

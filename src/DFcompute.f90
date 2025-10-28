@@ -49,12 +49,12 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     END SUBROUTINE DFgaussq
 
 
-    SUBROUTINE acceleratenew(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
+    SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER, INTENT(IN)               :: nzeros
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200)
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: West
-    END SUBROUTINE acceleratenew
+    END SUBROUTINE accelerate
 
 
     SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero, leftOfMax)
@@ -271,7 +271,7 @@ SUBROUTINE DFcompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions
     wvec(its_Acceleration) = psi
     Wold2 = Wold
     Wold = West
-    CALL acceleratenew(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
+    CALL accelerate(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
 
     ! Check for convergence_Acc
     relerr = (DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
