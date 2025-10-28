@@ -2,6 +2,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
   ! It includes a line-search safeguard to ensure x remains > 0.
+  USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
@@ -40,7 +41,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
 
   ! Check initial boundary condition
   IF (x_current <= 0.0_C_DOUBLE) THEN
-      WRITE(*,*) "RTNEWTON ERROR: Initial guess (xstart) is not positive."
+      IF (Cverbose) WRITE(*,*) "RTNEWTON ERROR: Initial guess (xstart) is not positive."
       root = HUGE(1.0_C_DOUBLE)
       RETURN
   END IF
@@ -60,7 +61,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
     
     ! 3. Check for near-zero derivative (Newton-Raphson failure)
     IF (ABS(df) .LT. 1.0E-12_C_DOUBLE) THEN ! Use a non-zero tolerance here
-      WRITE(*,*) "RTNEWTON ERROR: Derivative near zero."
+      IF (Cverbose) WRITE(*,*) "RTNEWTON ERROR: Derivative near zero."
       EXIT
     END IF
     
@@ -81,7 +82,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
     
     ! 7. Check for catastrophic failure near zero
     IF (x_new <= 0.0_C_DOUBLE) THEN
-        WRITE(*,*) "RTNEWTON ERROR: Step halving failed to find positive x."
+        IF (Cverbose) WRITE(*,*) "RTNEWTON ERROR: Step halving failed to find positive x."
         ! If we can't step forward even a tiny bit, assume the root is effectively 0 or failed.
         x_current = x_iter_old
         EXIT
@@ -97,7 +98,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   
   ! If we get here, NO CONVERGENCE after MAXITS
   IF (j .GE. MAXITS) THEN
-    WRITE(*,*) "CONVERGENCE NOT OBTINED IN RTNEWTON after", MAXITS, "iterations"
+    IF (Cverbose) WRITE(*,*) "CONVERGENCE NOT OBTAINED IN RTNEWTON after", MAXITS, "iterations"
 
   END IF
 
