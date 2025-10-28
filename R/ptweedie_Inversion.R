@@ -63,7 +63,7 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
   relerr_scalar     <- as.double(0.0)
   its_scalar        <- as.integer(0)
   
-  tmp <- .C( "twcdf",
+  tmp <- .C( "twcomputation",
              N           = as.integer(N),         # number of observations
              power       = as.double(power),      # p
              phi         = as.double(phi),        # phi

@@ -13,7 +13,7 @@
 \alias{check_Inputs}
 \alias{sort_Notation}
 \alias{twpdf}
-\alias{twcdf}
+\alias{twcomputation}
 \alias{special_Cases_CDF}
 \alias{dtweedie_Fortran}
 \alias{dtweedie_Inversion_Report}
@@ -41,7 +41,7 @@
 	dtweedie.series.smallp(power, y, mu, phi)
 	stored.grids(power)
 	twpdf(p, phi, y, mu, exact, verbose, funvalue, exitstatus, relerr, its )
-	twcdf(p, phi, y, mu,                 funvalue, exitstatus, relerr, its )
+	twcomputation(p, phi, y, mu,                 funvalue, exitstatus, relerr, its )
 }
 
 \arguments{

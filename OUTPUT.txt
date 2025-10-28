@@ -2,7 +2,7 @@
  **              mu:    1.0000000000000000     
  **               p:    1.5000000000000000     
  **              phi:    4.0000000000000000     
- About to call DFsmallp from twcdf
+ About to call DFsmallp from twcomputation
   FOR 1 < p < 2
  ** y >= mu
  ** y < mu
@@ -4862,5 +4862,5 @@
   0.69050924032095440                0   0.0000000000000000                1
  ::::::: exp(-lamnbda)  0.60653065971263342     
  REINSTATE fixes for machine accuracy temp off
- IN twcdf: funvalue, exitstatus, relerr, exacti
+ IN twcomputation: funvalue, exitstatus, relerr, exacti
   0.69050924032095440                0   0.0000000000000000                1

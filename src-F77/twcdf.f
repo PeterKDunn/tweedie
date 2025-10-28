@@ -1,5 +1,5 @@
 
-      SUBROUTINE twcdf(p, phi, y, mu,
+      SUBROUTINE twcomputation(p, phi, y, mu,
      &                 funvalue, exitstatus, relerr, its )
 
 *     Calculates the DF of the log-likelihood function of a
@@ -70,10 +70,10 @@
       write(*,*) "**              phi: ", phi
 
       IF ( psmall ) THEN
-        write(*,*) "About to call DFsmallp from twcdf"
+        write(*,*) "About to call DFsmallp from twcomputation"
         CALL DFsmallp(funvalue, exitstatus, relerr, verbose)
       ELSE
-        write(*,*) "About to call DFbigp from twcdf"
+        write(*,*) "About to call DFbigp from twcomputation"
         CALL DFbigp(funvalue, exitstatus, relerr, verbose)
       ENDIF
       
@@ -84,7 +84,7 @@
       ELSE
 *        IF (funvalue .LT. 0.0d00) funvalue = 0.0d00
       ENDIF
-      write(*,*) "IN twcdf: funvalue, exitstatus, relerr"
+      write(*,*) "IN twcomputation: funvalue, exitstatus, relerr"
       write(*,*) funvalue, exitstatus, relerr
 
 

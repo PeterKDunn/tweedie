@@ -10,7 +10,7 @@
 ** DF-only routines
 ******************************************************************
 
-      subroutine twcdf(p, phi, y, mu, exact,
+      subroutine twcomputation(p, phi, y, mu, exact,
      &              funvalue, exitstatus, relerr, its )
 
 *     Calculates the DF of the log-likelihood function of a 

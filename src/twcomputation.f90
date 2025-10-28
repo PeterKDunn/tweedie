@@ -1,4 +1,4 @@
-SUBROUTINE twcdf(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, its) BIND(C, name="twcdf")
+SUBROUTINE twcomputation(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, its) BIND(C, name="twcomputation")
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 !  USE tweedie_params_mod
 
@@ -11,6 +11,6 @@ SUBROUTINE twcdf(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, i
 
 
   ! Call internal Fortran routine
-  CALL twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, its)
+  CALL twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, its)
 
-END SUBROUTINE twcdf
+END SUBROUTINE twcomputation

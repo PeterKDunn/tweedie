@@ -50,7 +50,7 @@ ptweedie.inversion2 <- function(q, mu, phi,  power ){
     } else {
       
       #   cat(power,phi[i], y[i], mu[i], as.integer(exact),"\n")
-      tmp <- .Fortran( "twcdf2",
+      tmp <- .Fortran( "twcomputation2",
                        as.double(power),
                        as.double(phi[i]),
                        as.double(y[i]),

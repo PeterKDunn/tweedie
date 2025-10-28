@@ -29,7 +29,7 @@ FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all
 .PHONY: all
 all: $(SHLIB)
 
-twcdf.o: IntegralCompute.o
+twcomputation.o: IntegralCompute.o
 
 # Rule to explicitly create the Integrands_mod.mod file
 GaussQuadratureq.o: Integrands_mod.mod

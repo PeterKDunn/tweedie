@@ -102,7 +102,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
       # NOTE: FOR ALL  METHODS, WE HAVE mu=1
       
       if ( use.method == 2 ) {
-        tmp <- .C("twcdf",
+        tmp <- .C("twcomputation",
                   N          = as.integer(N),
                   power      = as.double(power),
                   phi        = as.double(phi[i] / (mu[i] ^ (2 - power)) ), # phi
@@ -121,7 +121,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
         
       } else {
         if ( use.method == 1 ) {
-          tmp <- .C("twcdf",
+          tmp <- .C("twcomputation",
                     N          = as.integer(N),
                     power      = as.double(power),
                     phi        = as.double(phi[i]),      # phi
@@ -140,7 +140,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, det
           density[i] <- den * m1
           
         } else { # use.method == 3
-          tmp <- .C("twcdf",
+          tmp <- .C("twcomputation",
                     N          = as.integer(N),
                     power      = as.double(power),
                     phi        = as.double(phi[i] / (y[i] ^ (2 - power))), # phi

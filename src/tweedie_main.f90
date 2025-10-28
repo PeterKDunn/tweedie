@@ -1,4 +1,4 @@
-SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -66,4 +66,4 @@ SUBROUTINE twcdf_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, rele
     funvalue(i) = funvalueTMP
   END DO
 
-END SUBROUTINE twcdf_main
+END SUBROUTINE twcomputation_main

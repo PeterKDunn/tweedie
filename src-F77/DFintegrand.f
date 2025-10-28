@@ -1,4 +1,4 @@
-      DOUBLE PRECISION FUNCTION DFintegrand(t)
+      DOUBLE PRECISION FUNCTION Integrands(t)
 
 *     A function to be numerically integrated in the DF.
 *     Note that
@@ -23,19 +23,19 @@
 *     Check for when t = 0, which should never actually happen 
       IF (DABS(t) .LT. 1.0d-14) THEN
 *        IF ( t .EQ. 0.0d00 ) THEN
-         DFintegrand = Cmu - Cy
+         Integrands = Cmu - Cy
          write(*,*) "!!!!! DFint: should never happen: t = 0 !!!!!"
          STOP
       ELSE
         CALL findImk(t, Imk)
         CALL findRek(t, Rek)
         
-        DFintegrand = DEXP( Rek ) * DSIN( Imk ) / t
+        Integrands = DEXP( Rek ) * DSIN( Imk ) / t
 
       ENDIF
 *          write(*,*) " "
 *         write(*,*) "t", t
-*         write(*,*) "DFintegrand", DFintegrand
+*         write(*,*) "Integrands", Integrands
 *         write(*,*) "Imk", Imk
 *         write(*,*) "DSIN(Imk)", DSIN(Imk)
 *         write(*,*) "Rek/t", Rek/t

@@ -13,7 +13,7 @@
       DOUBLE PRECISION Cp, Cy, Cmu, Cphi
       DOUBLE PRECISION findKmaxSP, startTKMax, front
       DOUBLE PRECISION zeroStartPoint, area0, area1, areaA
-      DOUBLE PRECISION zeroBoundL, zeroBoundR, DFintegrand, psi
+      DOUBLE PRECISION zeroBoundL, zeroBoundR, Integrands, psi
       DOUBLE PRECISION Wold, Wold2, areaT, epsilon
       DOUBLE PRECISION West, xvec(300), wvec(300), lambda
       DOUBLE PRECISION Mmatrix(2, 200), Nmatrix(2, 200)
@@ -22,7 +22,7 @@
       INTEGER itsPreAcc, accMax, itsAcceleration
       LOGICAL  convergence, flip, leftOfMax
       LOGICAL pSmall, stopPreAccelerate, verbose
-      EXTERNAL findKmaxSP, DFintegrand
+      EXTERNAL findKmaxSP, Integrands
       COMMON /params/ Cp, Cy, Cmu, Cphi, pSmall
       COMMON /mparam/ m 
 
@@ -176,7 +176,7 @@
       zeroL =  0.0d00
       zeroR = zero
 
-      CALL gaussq( DFintegrand, area0, zeroL, zeroR)
+      CALL gaussq( Integrands, area0, zeroL, zeroR)
       IF (verbose) write(*,*) "  - Initial area:", area0
       IF (verbose) write(*,*) "    between:", zeroL, zeroR
 
@@ -220,7 +220,7 @@
 
           zeroR = zero
 
-          CALL gaussq( DFintegrand, sum, zeroL, zeroR)
+          CALL gaussq( Integrands, sum, zeroL, zeroR)
           area1 = area1 + sum
           
           IF (verbose) THEN
@@ -286,7 +286,7 @@
         xvec(itsAcceleration + 1) = zeroR
         IF (verbose) write(*,*) "  - Integrate between:", zeroL, zeroR
 
-        CALL gaussq( DFintegrand, psi, zeroL, zeroR)
+        CALL gaussq( Integrands, psi, zeroL, zeroR)
 *       psi: area of the latest region
         wvec(itsAcceleration) = psi
         IF (verbose) write(*,*) "  - Area between zeros is:", psi
