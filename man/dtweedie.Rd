@@ -13,7 +13,7 @@
 \usage{
 	dtweedie(y, xi = NULL, mu, phi, power = NULL)
 	dtweedie.series(y, power, mu, phi)
-	dtweedie.inversion(y, power, mu, phi, method, verbose - FALSE, details = FALSE)
+	dtweedie.inversion(y, power, mu, phi, method, verbose = FALSE, details = FALSE)
 	dtweedie.stable(y, power, mu, phi)
 	ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
 	ptweedie.series(q, power, mu, phi)
@@ -69,17 +69,22 @@
     
     \code{ptweedie} returns either the computed series solution or inversion solution.
 }
-    
-\section{Note}{The \code{method}s changed from version 1.4 to 1.5 (methods 1 and 2 swapped).
-    The methods are defined in Dunn and Smyth (2008), and are now consistent with that use in these functions.
+
+\section{Note}{
+  The \code{method}s changed from version 1.4 to 1.5 (methods 1 and 2 swapped).
+  The methods are defined in Dunn and Smyth (2008), and are now consistent with the use in these functions.
+}
+\section{Note}{
+  \code{dtweedie} and \code{ptweedie} are the only function meant for users, though the others do have uses in some circumstances.
+  Consequently, minimal checks on the function inputs are performed in (for example) \code{dtweedie.inversion}; all checks on the function inputs are performed in \code{dtweedie} and \code{ptweedie} only.)
 }
 \author{Peter Dunn (\email{pdunn2@usc.edu.au})}
 \references{
-   Dunn, P. K. and Smyth, G. K. (2008).
-   Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
-   \emph{Statistics and Computing}, 
-   \bold{18}, 73--86.
-   \doi{10.1007/s11222-007-9039-6}
+  Dunn, P. K. and Smyth, G. K. (2008).
+  Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+  \emph{Statistics and Computing}, 
+  \bold{18}, 73--86.
+  \doi{10.1007/s11222-007-9039-6}
 
 	Dunn, Peter K and Smyth, Gordon K (2005).
 	Series evaluation of Tweedie exponential dispersion model densities
