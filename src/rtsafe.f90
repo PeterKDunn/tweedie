@@ -22,7 +22,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   INTEGER               :: j
   REAL(KIND=C_DOUBLE)   :: f, df, fl, fh
   REAL(KIND=C_DOUBLE)   :: xl, xh, dx, rtsafeTMP
-  REAL(KIND=C_DOUBLE)   :: fold, testtol
+  REAL(KIND=C_DOUBLE)   :: testtol
   REAL(KIND=C_DOUBLE)   :: halfbracket, maxstep
 
   ! Initialize
