@@ -2,7 +2,7 @@
 
 # --- 1. Define Fortran Source Files in Compilation Order ---
 # Module files MUST be listed first to generate the .mod files required by other sources.
-MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 DFintegrand.f90 
+MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 Integrands.f90 
 
 # Find all other Fortran source files in the directory and filter out the modules
 # to prevent compiling them twice.
@@ -31,11 +31,11 @@ all: $(SHLIB)
 
 twcdf.o: IntegralCompute.o
 
-# Rule to explicitly create the dfintegrand_mod.mod file
-GaussQuadratureq.o: dfintegrand_mod.mod
-dfintegrand_mod.mod: DFintegrand.f90
+# Rule to explicitly create the Integrands_mod.mod file
+GaussQuadratureq.o: Integrands_mod.mod
+Integrands_mod.mod: Integrands.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
-IntegralCompute.o: DFintegrand.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o GaussQuadratureq.o rtnewton.o rtsafe.o
+IntegralCompute.o: Integrands.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o GaussQuadratureq.o rtnewton.o rtsafe.o
 
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib

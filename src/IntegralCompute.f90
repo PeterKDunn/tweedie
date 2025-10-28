@@ -1,5 +1,5 @@
 SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
-  USE DFintegrand_MOD, ONLY: DFintegrand
+  USE Integrands_MOD, ONLY: Integrands
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   USE rprintf_mod

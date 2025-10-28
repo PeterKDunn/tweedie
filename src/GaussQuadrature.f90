@@ -1,6 +1,6 @@
 SUBROUTINE GaussQuadratureq(i, a, b, integral_result) 
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  USE DFintegrand_MOD, ONLY: DFintegrand
+  USE Integrands_MOD, ONLY: Integrands
   
   IMPLICIT NONE
   
@@ -546,8 +546,8 @@ SUBROUTINE GaussQuadratureq(i, a, b, integral_result)
     xu = ( a - b ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
 
     ! Evaluate
-    fl = DFintegrand(i, xl)
-    fu = DFintegrand(i, xu)
+    fl = Integrands(i, xl)
+    fu = Integrands(i, xu)
     integral_result = integral_result + weights(j) * ( fl + fu )
   END DO
   

@@ -1,10 +1,10 @@
-MODULE DFintegrand_MOD
+MODULE Integrands_MOD
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   IMPLICIT NONE
   
 CONTAINS
-  FUNCTION DFintegrand(i, t) RESULT(integrand_result)  BIND(C, NAME='dfintegrand')
+  FUNCTION Integrands(i, t) RESULT(integrand_result)  BIND(C, NAME='Integrands')
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -76,6 +76,6 @@ CONTAINS
       END IF
     END IF
     
-  END FUNCTION DFintegrand
+  END FUNCTION Integrands
 
-END MODULE DFintegrand_MOD
+END MODULE Integrands_MOD
