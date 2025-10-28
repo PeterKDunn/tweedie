@@ -2,7 +2,7 @@
 
 # --- 1. Define Fortran Source Files in Compilation Order ---
 # Module files MUST be listed first to generate the .mod files required by other sources.
-MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 DFintegrand.f90 PDFintegrand.f90
+MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 DFintegrand.f90 
 
 # Find all other Fortran source files in the directory and filter out the modules
 # to prevent compiling them twice.
@@ -23,26 +23,19 @@ FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all
 
 
 # --- 3. Custom GNU Make Dependency Rules ---
-# These rules ensure that dependent files (like PDFgaussq.o) wait for the
+# These rules ensure that dependent files (like DFgaussq.o) wait for the
 # module file (.mod) to be created before they compile.
 
 .PHONY: all
 all: $(SHLIB)
 
-twpdf.o: PDFsmallp.o PDFbigp.o
 twcdf.o: DFcompute.o
-
-# Rule to explicitly create the pdfintegrand_mod.mod file
-PDFgaussq.o: pdfintegrand_mod.mod
-pdfintegrand_mod.mod: PDFintegrand.f90
-	$(FC) $(FFLAGS) -c $< -o $@
 
 # Rule to explicitly create the dfintegrand_mod.mod file
 DFgaussq.o: dfintegrand_mod.mod
 dfintegrand_mod.mod: DFintegrand.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
-PDFbigp.o: PDFintegrand.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o PDFgaussq.o
 DFcompute.o: DFintegrand.o findImk.o findImkd.o findImkdd.o findRek.o findRekd.o acceleratenew.o DFgaussq.o rtnewton.o rtsafe.o
 
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib
