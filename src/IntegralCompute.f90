@@ -42,11 +42,11 @@ SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_R
     END SUBROUTINE advanceM
       
 
-    SUBROUTINE DFgaussq(i, a, b, area)
+    SUBROUTINE GaussQuadratureq(i, a, b, area)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       REAL(KIND=C_DOUBLE), INTENT(OUT)      :: area
       REAL(KIND=C_DOUBLE), INTENT(IN)       :: a, b
-    END SUBROUTINE DFgaussq
+    END SUBROUTINE GaussQuadratureq
 
 
     SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
@@ -152,7 +152,7 @@ SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_R
   CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
 
   ! Find the area
-  CALL DFgaussq(i, zeroL, zeroR, area0)
+  CALL GaussQuadratureq(i, zeroL, zeroR, area0)
 
   IF (Cverbose) THEN
     CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
@@ -200,7 +200,7 @@ SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_R
 
       zeroR = zero
 
-      CALL DFgaussq(i, zeroL, zeroR, sumA)
+      CALL GaussQuadratureq(i, zeroL, zeroR, sumA)
       area1 = area1 + sumA
       count_Integration_Regions = count_Integration_Regions + 1
       IF (Cverbose) THEN
@@ -264,7 +264,7 @@ SUBROUTINE IntegralCompute(i, funvalueI, exitstatus, relerr, count_Integration_R
     
     IF (Cverbose) CALL INTPR("  - m =:", -1, m, 1 )
     
-    CALL DFgaussq(i, zeroL, zeroR, psi)
+    CALL GaussQuadratureq(i, zeroL, zeroR, psi)
     count_Integration_Regions = count_Integration_Regions + 1
     ! psi: area of the latest region
 

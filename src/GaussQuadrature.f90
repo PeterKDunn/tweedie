@@ -1,4 +1,4 @@
-SUBROUTINE DFgaussq(i, a, b, integral_result) 
+SUBROUTINE GaussQuadratureq(i, a, b, integral_result) 
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   USE DFintegrand_MOD, ONLY: DFintegrand
   
@@ -553,4 +553,4 @@ SUBROUTINE DFgaussq(i, a, b, integral_result)
   
   integral_result = integral_result * ( b - a ) / 2.0E0_C_DOUBLE
 
-END SUBROUTINE DFgaussq
+END SUBROUTINE GaussQuadratureq
