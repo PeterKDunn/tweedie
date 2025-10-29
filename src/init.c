@@ -9,10 +9,9 @@ extern void twcomputation(int *N, double *p, double *phi, double *y, double *mu,
 /* --- C Routine Registration Table (R_CMethodDef) --- */
 /* R will look here for BIND(C) symbols like "twcomputation" */
 static const R_CMethodDef CEntries[] = {
-  // R name    C pointer (The BIND(C) name) Arg Count   Argument Types
-  {"twcomputation", (DL_FUNC) twcomputation, 10, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {"twcomputation", (DL_FUNC) twcomputation, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
+  {NULL, NULL, 0, {0}}
 };
-
 
 /* --- Fortran Routine Registration Table (R_FortranMethodDef) --- */
 /* This table is empty now, as BIND(C) routines go in CEntries */
