@@ -80,7 +80,7 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
                funvalue    = as.double(rep(0, N)),  # funvalue
                exitstatus  = as.integer(0),         # exitstatus
                relerr      = as.double(0),          # relerr
-               its         = as.integer(0),         # its
+               its         = as.integer(rep(0, NFortran)),         # its
                PACKAGE     = "tweedie")
     cdf <- tmp$funvalue
 

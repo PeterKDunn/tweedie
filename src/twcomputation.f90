@@ -6,7 +6,7 @@ SUBROUTINE twcomputation(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, r
   INTEGER(C_INT), INTENT(IN)  :: N, verbose, pdf
   REAL(C_DOUBLE), INTENT(IN)  :: p, phi(N), y(N), mu(N)
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N), relerr
-  INTEGER(C_INT), INTENT(OUT) :: exitstatus, its
+  INTEGER(C_INT), INTENT(OUT) :: exitstatus, its(N)
 
 
   ! Call internal Fortran routine

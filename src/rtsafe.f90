@@ -2,6 +2,8 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   ! This function implements the Newton-Raphson method for finding a root of the
   ! function 'funcd' between bounds x1 and x2, starting at xstart. It includes 
   ! a line-search safeguard to ensure x remains within specified bounds (x1 and x2).
+
+  USE tweedie_params_mod, ONLY: Cverbose
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
@@ -48,7 +50,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
 
   ! Check bracketing
   IF ( (fl * fh) .GT. 0.0_C_DOUBLE) THEN
-      WRITE(*,*) "RTSAFE ERROR: Root not bracketed by x1 and x2"
+      IF (Cverbose) WRITE(*,*) "RTSAFE ERROR: Root not bracketed by x1 and x2"
       root = HUGE(1.0_C_DOUBLE)
       RETURN
   END IF
@@ -122,7 +124,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   END DO
 
   ! If we exit loop without returning, max iterations reached -> return last estimate
-  WRITE(*,*) "RTSAFE WARNING: maximum iterations reached without full convergence."
+  IF (Cverbose) WRITE(*,*) "RTSAFE WARNING: maximum iterations reached without full convergence."
   root = rtsafeTMP
 
 END SUBROUTINE rtsafe
