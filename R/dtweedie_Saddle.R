@@ -1,4 +1,4 @@
-dtweedie.saddle <- function(y, xi=NULL, mu, phi, eps=1/6, power=NULL) {
+dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #
   # Peter K Dunn
   # 09 Jan 2002
