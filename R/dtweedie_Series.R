@@ -1,12 +1,7 @@
 dtweedie.series <- function(y, power, mu, phi){ 
-  #
-  # Peter K Dunn
-  # 09 Jan 2002
-  #
+  # Evaluates the Tweedie density using a series expansion
+
   
-  #
-  # Error traps
-  #
   
   if ( power < 1) stop("power must be between 1 and 2.")
   if ( any(phi <= 0) ) stop("phi must be positive.")
@@ -39,7 +34,8 @@ dtweedie.series <- function(y, power, mu, phi){
     
     if ( (power == 1) ){
       density <- dpois(x = y / phi, 
-                       lambda = mu / phi ) / phi  # Using identity: f(y; mu, phi) = c f(cy; c mu, c phi) for p=1.  Now set c = 1/phi
+                       lambda = mu / phi ) / phi 
+        # Using identity: f(y; mu, phi) = c f(cy; c mu, c phi) for p=1.  Now set c = 1/phi
       if ( !all(phi == 1)){
         warnings("The density computations when phi=1 may be subject to errors using floating-point arithmetic\n")
       }
