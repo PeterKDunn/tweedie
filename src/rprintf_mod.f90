@@ -1,4 +1,5 @@
 MODULE rprintf_mod
+  ! For printing at the R console from within FORTRAN
   IMPLICIT NONE
 
   INTERFACE

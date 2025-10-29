@@ -1,9 +1,10 @@
 FUNCTION myfloor(x) RESULT(r_myfloor) 
+  ! A floor function, for my purposes.
   USE ISO_C_BINDING, ONLY: C_DOUBLE
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-  INTEGER                    :: r_myfloor
+  INTEGER                           :: r_myfloor
 
 
   IF (x .GE. 0.0_C_DOUBLE) THEN

@@ -1,4 +1,5 @@
 SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
+  ! Calls FORTRAN to compute the integral; set up common parameters
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -11,9 +12,10 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
   REAL(C_DOUBLE), INTENT(OUT) :: relerr
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions
-  ! --- EXPLICIT INTERFACES FOR INTERNAL CALLS ---
+
   INTERFACE
     SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, Int_Regions)
+      ! Computes the integral in the PDF or CDF expression
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
       IMPLICIT NONE
@@ -24,7 +26,6 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE ComputeTwIntegral
   END INTERFACE
-    ! -----------------------------------------------
 
   ! --- Local variables ---
   INTEGER               :: i
@@ -37,8 +38,9 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   Cmu = mu
   Cphi = phi
   CN = N
+
   IF (pdf .EQ. 0) THEN
-    ! Coputing the DF
+    ! Computing the CDF
     Cpdf = .FALSE.
   ELSE
     ! Computing the PDF
@@ -56,7 +58,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   relerr = 0.0_C_DOUBLE
 
 
-  ! --- Determine case: psmall = TRUE means 1 < p < 2 ---
+  ! --- Determine case: pSmall = TRUE means 1 < p < 2 ---
   CpSmall = .FALSE.
   IF ( (p > 1.0_C_DOUBLE) .AND. (p < 2.0_C_DOUBLE) ) CpSmall = .TRUE.
 

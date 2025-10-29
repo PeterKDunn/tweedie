@@ -1,5 +1,5 @@
 SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
-
+  ! Determine the next value of m, for solving the zeros of the integrand
   USE tweedie_params_mod, ONLY: Cy, Cmu, Cphi
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -43,7 +43,6 @@ SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
       m = m - 1 
       leftOfMax = 0
     END IF
-    
   END IF
 
 END SUBROUTINE advanceM

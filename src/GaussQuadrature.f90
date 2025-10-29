@@ -1,11 +1,9 @@
 SUBROUTINE GaussQuadratureq(i, a, b, integral_result) 
+  ! Perform Gaussian quadrature (512 points) to evaluate integral
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   USE Integrands_MOD, ONLY: Integrands
   
   IMPLICIT NONE
-  
-
-  ! Arguments
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: a, b      ! Integration limits
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: integral_result
   INTEGER(C_INT), INTENT(IN)        :: i

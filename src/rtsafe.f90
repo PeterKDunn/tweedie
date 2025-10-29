@@ -1,10 +1,16 @@
 SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
+  ! This function implements the Newton-Raphson method for finding a root of the
+  ! function 'funcd' between bounds x1 and x2, starting at xstart. It includes 
+  ! a line-search safeguard to ensure x remains within specified bounds (x1 and x2).
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
   IMPLICIT NONE
 
   INTERFACE
       SUBROUTINE funcd_signature(i, x, f, df)
+      ! Template for the function for which roots are sought.
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
         IMPLICIT NONE
         INTEGER(C_INT), INTENT(IN)         :: i
         REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
@@ -41,15 +47,15 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   CALL funcd(i, xh, fh, df)
 
   ! Check bracketing
-  IF (fl * fh .GT. 0.0_C_DOUBLE) THEN
-      WRITE(*,*) "RTSAFE ERROR: ROOT NOT BRACKETED BY X1 AND X2"
+  IF ( (fl * fh) .GT. 0.0_C_DOUBLE) THEN
+      WRITE(*,*) "RTSAFE ERROR: Root not bracketed by x1 and x2"
       root = HUGE(1.0_C_DOUBLE)
       RETURN
   END IF
 
   ! Ensure fl < 0 < fh (swap if necessary)
   IF (fl .GT. 0.0_C_DOUBLE) THEN
-      ! swap xl <-> xh and fl <-> fh using temporaries (no separate subroutine)
+      ! swap xl <-> xh and fl <-> fh using temporaries
       dx = xl
       xl = xh
       xh = dx
@@ -75,7 +81,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
 
       ! Decide whether to use Newton step or bisection:
       ! - if df is too small (relative), or Newton would step outside bracket,
-      !   or Newton step would be unreasonably large -> use bisection (midpoint)
+      !   or Newton step would be unreasonably large, THEN use bisection (midpoint)
       IF (ABS(df) .LT. (1.0E-16_C_DOUBLE * (1.0_C_DOUBLE + ABS(f))) ) THEN
           ! derivative effectively zero -> midpoint
           rtsafeTMP = 0.5_C_DOUBLE * (xl + xh)

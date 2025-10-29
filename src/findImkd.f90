@@ -1,10 +1,10 @@
 SUBROUTINE findImkd(i, t, Imkd) 
+  ! Evaluate Im k'(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
-  ! Arguments
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
@@ -19,14 +19,10 @@ SUBROUTINE findImkd(i, t, Imkd)
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
 
-  ! --- Calculation (Using F90 constants) ---
-  
+
   pindex = 1.0_C_DOUBLE / (1.0_C_DOUBLE - Cp)
-  
-  ! Use DATAN for double precision arc tangent
   omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
   
-  ! Final calculation
   Imkd = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
 
 END SUBROUTINE findImkd

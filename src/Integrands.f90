@@ -5,6 +5,7 @@ MODULE Integrands_MOD
   
 CONTAINS
   FUNCTION Integrands(i, t) RESULT(integrand_result)  BIND(C, NAME='Integrands')
+    ! Function to return the integrand values
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -20,6 +21,7 @@ CONTAINS
     
     INTERFACE
       SUBROUTINE findImk(i, t, Imk)
+        ! Find Im k(t)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
         IMPLICIT NONE
@@ -30,6 +32,7 @@ CONTAINS
 
       
       SUBROUTINE findRek(i, t, Rek)
+        ! Find Re k(t)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
         IMPLICIT NONE
@@ -40,6 +43,7 @@ CONTAINS
       
       
       SUBROUTINE findLambda(i, lambda)
+       ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
@@ -52,6 +56,7 @@ CONTAINS
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
     current_mu   = Cmu(i)
+
 
     ! Check for when t = 0 (t is very close to zero)
     IF (ABS(t) .LT. 1.0E-14_C_DOUBLE) THEN

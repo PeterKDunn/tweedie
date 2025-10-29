@@ -1,4 +1,5 @@
 SUBROUTINE findImkdd(i, t, Imkdd)
+  ! Evaluate Im k''(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -17,6 +18,7 @@ SUBROUTINE findImkdd(i, t, Imkdd)
   ! Grab the relevant scalar values for this iteration:
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
+
 
   pindex = Cp / (1.0_C_DOUBLE - Cp)
   front = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))

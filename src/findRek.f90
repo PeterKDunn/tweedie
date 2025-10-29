@@ -1,9 +1,9 @@
 SUBROUTINE findRek(i, t, Rek)
+  ! Find the value of Re k(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
-  
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
   INTEGER(C_INT), INTENT(IN)         :: i
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek
@@ -25,7 +25,7 @@ SUBROUTINE findRek(i, t, Rek)
   ! Safety check
   IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-pi/2.0E0_C_DOUBLE))) THEN
      ! Error!
-     WRITE(*,*) "Error: omga out of bounds"
+     WRITE(*,*) "ERROR: omega out of bounds"
      RETURN
   END IF
   

@@ -15,6 +15,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   
   INTERFACE
     FUNCTION findKmaxSP(j) 
+      ! Find a starting point for find Kmax
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE  
       REAL(KIND=C_DOUBLE)   :: findKmaxSP
@@ -23,6 +24,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
 
     SUBROUTINE improveKmaxSPbounds(i, startT, tmaxL, tmaxR)
+      ! Crudely improve the starting point for finding Kmax, as
+      ! sometimes the starting point can be critical for timely convergence
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE  
       REAL(KIND=C_DOUBLE), INTENT(IN)       :: startT
@@ -32,6 +35,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
 
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
+      ! Crudely improve the bounds for find the zeros of the integrand 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax
       REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
@@ -40,7 +44,9 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     
     
     SUBROUTINE funcd_signature(i_in, t, f, df) BIND(C)
+      ! Template for the function for which zeros are sought
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      
       IMPLICIT NONE
       INTEGER(C_INT), INTENT(IN) :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN) :: t
@@ -49,35 +55,42 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
 
     SUBROUTINE rtsafe(i_in, funcd, xstart, x1, x2, xacc, root) 
+      ! Find zeros using (moodified) Newton's method with bisection
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       PROCEDURE(funcd_signature) :: funcd 
     
-      INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: x1, x2, xstart, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
+      INTEGER(C_INT), INTENT(IN)        :: i_in
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
     END SUBROUTINE rtsafe
       
 
     SUBROUTINE rtnewton(i_in, funcd, xstart, xacc, root) 
+      ! Find zeros using (moodified) Newton's method
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      PROCEDURE(funcd_signature) :: funcd 
-      INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: xstart, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: root
+      PROCEDURE(funcd_signature)        :: funcd
+      
+      INTEGER(C_INT), INTENT(IN)        :: i_in
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
     END SUBROUTINE rtnewton
       
 
     SUBROUTINE findImkdZero(i_in, t, f, df) 
+      ! Evaluate Im k'(t)  and  Im k''(t)  for solving for Kmax (i.e., Im k'(t) = 0)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      
       IMPLICIT NONE
-      INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
+      INTEGER(C_INT), INTENT(IN)        :: i_in
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     END SUBROUTINE findImkdZero
       
 
     SUBROUTINE findImk(i_in, t_in, kmax_out) 
+      ! Find Im k(t)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
       IMPLICIT NONE
       INTEGER(C_INT), INTENT(IN) :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN) :: t_in
@@ -86,7 +99,9 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       
 
     INTEGER(C_INT) FUNCTION myfloor(x) 
+      ! A floor function for my purposes
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(IN) :: x
     END FUNCTION myfloor
@@ -94,7 +109,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   END INTERFACE
 
 
-  ! Local Variables
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point
   REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, omega_SP, ratio
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
@@ -108,7 +122,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   ! --- Initialization ---
   aimrerr = 1.0E-09_C_DOUBLE
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-  
 
   ! Find starting points
   IF (current_y .GE. current_mu) THEN
@@ -122,21 +135,19 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   ELSE
     ! CASE: IF y < mu: trickier, esp. with 1 < p < 2
     ! Good starting point often needed
-!    IF (Cpsmall) THEN
-!      t_Start_Point = findKmaxSP(i)
-!      CALL improveKmaxSPbounds(i, t_Start_Point, kmaxL, kmaxR)
-!    ELSE
     ratio = current_y / current_mu
 
     omega_SP = -1
-    t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+    t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
+                    ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     IF (ratio .LT. 0.1_C_DOUBLE) THEN
-      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) / current_phi * &
-                 DSQRT( 2 * (1.0_C_DOUBLE - ratio))
+      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) / current_phi *    &
+                      DSQRT( 2 * (1.0_C_DOUBLE - ratio))
     END IF
     IF (ratio .GT. 0.9_C_DOUBLE) THEN
       omega_SP = -0.01_C_DOUBLE
-      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) / ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
+                      ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     END IF
     
     ! Now find kmax and tmax
@@ -159,8 +170,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                     aimrerr,        &
                     tmax)
     END IF
-    
-    
+
     ! Find mmax, which depends on whether we are working with the PDF or the CDF.
     ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
     ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
@@ -178,7 +188,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     IF (mmax .EQ. 0) THEN
       leftOfMax = 0
     END IF
-    
   END IF
   
   RETURN

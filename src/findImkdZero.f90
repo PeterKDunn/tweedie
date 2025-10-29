@@ -1,11 +1,12 @@
-
 SUBROUTINE findImkdZero(i, t, f, df) 
+  ! Evaluate Im k'(t)  and  Im k''(t)  for solving for Kmax (i.e., Im k'(t) = 0)
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   INTERFACE
     SUBROUTINE findImkd(i, t, Imkd)
+      ! Evaluate Im k'(t)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
@@ -16,6 +17,7 @@ SUBROUTINE findImkdZero(i, t, f, df)
 
     
     SUBROUTINE findImkdd(i, t, Imddk)
+      ! Evaluate Im k''(t)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
