@@ -9,95 +9,58 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   #   verbose     : the verbosity of the output
   #   details     : whether to return details of the algorithm
   
-  # Peter K Dunn 
-  # Created: 08 Feb 2000 
-  # Last edit: 28 Oct 2025
+  ### NOTE: No checking of inputs
   
-  
-  ### BEGIN CHECKS
-  if ( length(mu) > 1) {
-    if ( length(mu) != length(y) ) {
-      stop("mu must be scalar, or the same length as y.")
-    }
-  } else {
-    mu <- array( dim = length(y), mu )
-    # A vector of all mu's
-  }
-  if ( length(phi) > 1) {
-    if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as y.")
-  } else {
-    phi <- array( dim = length(y), phi )
-    # A vector of all phi's
-  }
-  save.method <- method
-  if ( !is.null(method)){
-    if ( length(method) > 1 ) {
-      method <- save.method <- method[1]
-    }
-    if ( !(method %in% c(1, 2, 3)) ) stop("method must be 1, 2 or 3 (or left empty).")
-  }
-  ### END CHECKS
-  
-
-  ### BEGIN SET UP  
-  N <- length(y)
-  density <- y
-  its <- y
+  ### BEGIN SET UP
+  N <- as.integer( length(y) )
+  density <- as.double(rep(0, N))
   pSmall  <- ifelse( (power > 1) & (power < 2), TRUE, FALSE )
 
+  # Initialise
+  exitstatus_scalar <- as.integer(0)
+  relerr_scalar     <- as.double(0.0)
+  its_scalar        <- as.integer(0)
+  ### END SET UP
+  
+  
+  # Establish which method to use
   if ( is.null(method)){
     method <- array( dim = N)
   } else {
     method <- array( method, 
                      dim = N)
   }
-  ### END SET UP
-  
-  
-  
   # There are three approaches ('method'), each a product of a simple bit
 	# and a complicated bit computed in FORTRAN
-  # We choose Method 3 if no other is requested.
   #
   # The methods are documented in Dunn and Smyth (2008):
   # - Method 1: Evaluate a(): compute a(y, phi) = f(y; 1, phi)
   # - Method 2: Rescale the mean to 1
   # - Method 3: Rescale y to 1 and evaluate b().
+  # If no method is explicitly requested, find the notional "optimal" method for each i.
   
-  
-  if ( length(y0) > 0){
-    if (pSmall) {
-      lambda <- mu[y0]^(2 - power) / ( phi[y0] * (2 - power) )
-      cdf[ y0 ] <- exp( -lambda )
-    } else {
-      cdf[ y0 ] <- rep(0,
-                       length(y0) )
-    }
-  }
-  NFortran <- N - length(y0)
 
- 
- 
  	### BEGIN ESTABLISH METHOD
-	m2 <- 1 / mu[yFortran]
+	m2 <- 1 / mu
     
-  theta <- ( mu[yFortran] ^ (1 - power) - 1 ) / ( 1 - power )
+  theta <- ( mu ^ (1 - power) - 1 ) / ( 1 - power )
   if ( ( abs(power - 2 ) ) < 1.0e-07 ){
-    kappa <- log(mu[yFortran]) + (2 - power) * ( log(mu[yFortran]) ^ 2 ) / 2
+    kappa <- log(mu) + (2 - power) * ( log(mu) ^ 2 ) / 2
   } else {
-    kappa <- ( mu[yFortran] ^ (2 - power) - 1 ) / (2 - power)
+    kappa <- ( mu ^ (2 - power) - 1 ) / (2 - power)
   }
-  m1 <- exp( (y[yFortran] * theta - kappa ) / phi[yFortran] )
+  m1 <- exp( (y * theta - kappa ) / phi )
     
-  dev <- tweedie.dev(y = y[yFortran], 
-                     mu = mu[yFortran],
+  dev <- tweedie.dev(y = y, 
+                     mu = mu,
                      power = power )
-  m3 <- exp( -dev/(2 * phi[yFortran]) ) / y[yFortran]
+  m3 <- exp( -dev/(2 * phi) ) / y
     
   min.method <- min( m1, m2, m3 )
     
-  # Now if no method requested, find the notional "optimal"
-  if ( is.null(method[yFortran]) ) {
+  # If no method is explicitly requested, find the notional "optimal" method for each i.
+  use.method <- array( 3L, length = length(y) )
+  if ( is.null(method) ) {
     if ( min.method == m1 ){
       use.method <- 1
     } else {
@@ -108,10 +71,21 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
       }
     }
   } else {
-    use.method <- method[yFortran]
+    use.method <- method
   }
   ## END ESTABLISH METHOD
     
+  
+  ### BEGIN COMPUTE
+
+  
+  ### END COMPUTE
+  
+  
+  
+  
+  
+  if (FALSE) {
     
     
   # Now use the method
@@ -177,6 +151,12 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 			}
     }
   }
+}
+  
+  
+  
+  
+  
   
   if (details) {
     return( list( density = den,
