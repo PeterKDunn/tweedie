@@ -1,15 +1,14 @@
 ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FALSE ){ 
-  # Evaluates the cdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
-  #   q (possibly a vector)
-  #   mu, the mean 
-  #   phi the dispersion parameter
-  #   power,  the Tweedie index parameter
+  # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
+  #
+  #   q           : the values at which to compute the DF (possibly a vector)
+  #   power       : the Tweedie index parameter
+  #   mu          : the mean (possibly a vector)
+  #   phi         : the dispersion parameter (possibly a vector)
+  #   verbose     : the verbosity of the output
+  #   details     : whether to return details of the algorithm
   
-  # Peter K Dunn 
-  # Created: 08 Feb 2000 
-  # Last edit: 28 Oct 2025
-  
-  
+
   ### BEGIN CHECKS
   y <- q
   if ( length(mu) > 1) {
@@ -61,40 +60,30 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
 #  if (length(need_Fortran) == 0) {
 #    return(cdf)
 #  }
-
-  y0 <- which(y == 0)
-  yFortran <- which( y > 0)
-  # NOTE: NO checks for negative values, e.g.
   
-  if ( length(y0) > 0){
-    if (pSmall) {
-      lambda <- mu[y0]^(2 - power) / ( phi[y0] * (2 - power) )
-      cdf[ y0 ] <- exp( -lambda )
-    } else {
-      cdf[ y0 ] <- rep(0,
-                       length(y0) )
-    }
-  }
-  NFortran <- N - length(y0)
+  
+  cat("IN INVERSION q:", q)
+  cat("IN INVERSION mu:", mu)
+  cat("IN INVERSION phi:", phi)
+  cat("IN INVERSION power:", power)
+  
 
-  if (NFortran > 0){
     tmp <- .C( "twcomputation",
-               N           = as.integer(NFortran),         # number of observations
+               N           = as.integer(N),         # number of observations
                power       = as.double(power),      # p
-               phi         = as.double(phi[yFortran]),        # phi
-               y           = as.double(y[yFortran]),          # y
-               mu          = as.double(mu[yFortran]),         # mu
+               phi         = as.double(phi),        # phi
+               y           = as.double(y),          # y
+               mu          = as.double(mu),         # mu
                verbose     = as.integer(verbose),   # verbosity
                pdf         = as.integer(0),         # 0: FALSE. This is the CDF not PDF
                # THE OUTPUTS:
-               funvalue    = as.double(rep(0, NFortran)),  # funvalue
+               funvalue    = as.double(rep(0, N)),  # funvalue
                exitstatus  = as.integer(0),         # exitstatus
                relerr      = as.double(0),          # relerr
                its         = as.integer(0),         # its
                PACKAGE     = "tweedie")
-    cdf[yFortran] <- tmp$funvalue
-  }
-  
+    cdf <- tmp$funvalue
+
   if (details) {
     return( list( cdf = cdf,
                   regions = tmp$its))
