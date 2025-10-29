@@ -1,9 +1,13 @@
-dtweedie.inversion <- function(y, power, mu, phi, method=3, verbose = FALSE, details = FALSE){ 
+dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
-  #   y (possibly a vector)
-  #   mu, the mean 
-  #   phi the dispersion parameter
-  #   power,  the Tweedie index parameter
+  #
+  #   y           : the values at which to compute the density (possibly a vector)
+  #   power       : the Tweedie index parameter
+  #   mu          : the mean (possibly a vector)
+  #   phi         : the dispersion parameter (possibly a vector)
+  #   method      : the method of evaluation used (as explained in Dunn & Smyth, 2008)
+  #   verbose     : the verbosity of the output
+  #   details     : whether to return details of the algorithm
   
   # Peter K Dunn 
   # Created: 08 Feb 2000 
