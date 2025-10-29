@@ -4,9 +4,8 @@
 #include <R_ext/Rdynload.h>
 
 /* --- Forward declarations for BIND(C) Fortran Subroutines --- */
-// twcomputation has 9 arguments
-extern void twcomputation(int *N, double *p, double *phi, double *y, double *mu, double *funvalue, int *exitstatus, double *relerr, int *its);
-
+// twcomputation has 11 arguments
+extern void twcomputation(int *N, double *p, double *phi, double *y, double *mu, int *verbose, int *pdf, double *funvalue, int *exitstatus, double *relerr, int *its);
 /* --- C Routine Registration Table (R_CMethodDef) --- */
 /* R will look here for BIND(C) symbols like "twcomputation" */
 static const R_CMethodDef CEntries[] = {
