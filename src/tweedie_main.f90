@@ -11,7 +11,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
   REAL(C_DOUBLE), INTENT(OUT) :: relerr
-  INTEGER(C_INT), INTENT(OUT) :: Int_Regions
+  INTEGER(C_INT), INTENT(OUT) :: Int_Regions(N)
 
   INTERFACE
     SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, Int_Regions)
@@ -65,7 +65,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   ! --- Loop over N values ---
   DO i = 1, N
-    CALL ComputeTwIntegral(i, funvalueTMP, exitstatus, relerr, Int_Regions)
+    CALL ComputeTwIntegral(i, funvalueTMP, exitstatus, relerr, Int_RegionsTMP)
     funvalue(i) = funvalueTMP
     Int_Regions(i) = Int_RegionsTMP
   END DO
