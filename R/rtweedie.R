@@ -2,25 +2,14 @@
 #############################################################################
 rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
-  # Sort out the xi/power notation
-  if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")
-  xi.notation <- TRUE
-  if ( is.null(power) ) {
-    power <- xi
-  } else {
-    xi.notation <- FALSE
-  }
-  if ( is.null(xi) ) {
-    xi.notation <- FALSE
-    xi <- power
-  }
-  if ( xi != power ) {
-    cat("Different values for xi and power given; the value of xi used.\n")
-    power <- xi
-  }
-  index.par       <- ifelse( xi.notation, "xi", "p")
-  index.par.long  <- ifelse( xi.notation, "xi", "power")
+  out <- sort_Notation(xi = NULL, power = NULL)
+  xi <- out$xi
+  power <- out$power
+  xi.notation <- out$xi.notation
+  index.par <- out$index.par
+  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
+
   # Error checks
   if ( any(power < 1) )  stop( paste(index.par.long, "must be greater than 1.\n") )
   if ( any(phi <= 0) ) stop("phi must be positive.")
