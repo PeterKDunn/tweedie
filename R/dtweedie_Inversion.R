@@ -126,7 +126,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 						y          = as.double(y[yFortran] / mu[yFortran]),            # y
 						mu         = as.double(rep(1, NFortran)),                       # mu
 						verbose    = as.integer(verbose),                # verbosity
-						pdf        = as.integer(1),                      # 1: TRUE. This is the PDF
+						pdf        = as.integer(1),                      # 1: TRUE, as this is the PDF
 						# THE OUTPUTS:
 						funvalue   = as.double(rep(0, NFortran)),                       # funvalue
 						exitstatus = as.integer(0),                      # exitstatus
@@ -145,7 +145,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 						y          = as.double(y[yFortran]),        # y
 						mu         = as.double(rep(1, NFortran)),           # mu = 1 for PDF
 						verbose    = as.integer( verbose ),  # verbose as an integer
-						pdf        = as.integer(1),          # 1: TRUE. This is the PDF
+						pdf        = as.integer(1),          # 1: TRUE, as this is the PDF
 						# THE OUTPUTS:
 						funvalue   = as.double(rep(0, NFortran)),           # funvalue
 						exitstatus = as.integer(0),          # exitstatus
@@ -164,7 +164,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 						y          = as.double(rep(1, NFortran)),          # y
 						mu         = as.double(rep(1, NFortran)),          # mu
 						verbose    = as.integer( verbose ), # verbose as an integer
-						pdf        = as.integer(1),         # 1: TRUE. This is the PDF
+						pdf        = as.integer(1),         # 1: TRUE, as this is the PDF
 						# THE OUTPUTS:
 						funvalue   = as.double(rep(0, NFortran)),          # funvalue
 						exitstatus = as.integer(0),         # exitstatus
