@@ -10,7 +10,8 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   #   details     : whether to return details of the algorithm
   
   ### NOTE: No checking of inputs
-  
+  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
+
   ### BEGIN SET UP
   N <- as.integer( length(y) )
   density <- as.double(rep(0, N))

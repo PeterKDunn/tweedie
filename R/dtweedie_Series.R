@@ -1,7 +1,5 @@
 dtweedie.series <- function(y, power, mu, phi){ 
   # Evaluates the Tweedie density using a series expansion
-
-  
   
   if ( power < 1) stop("power must be between 1 and 2.")
   if ( any(phi <= 0) ) stop("phi must be positive.")

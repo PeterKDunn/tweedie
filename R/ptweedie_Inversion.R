@@ -10,6 +10,7 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
   
 
   ### NOTE: No checking of inputs
+  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
   
   ### BEGIN SET UP
   N <- as.integer( length(q) )
