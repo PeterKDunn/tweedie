@@ -1,42 +1,41 @@
 qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   
-  out <- sort_Notation(xi = NULL, power = NULL)
+  ### BEGIN preliminary work
+  
+  # SORT OUT THE NOTATION (i.e., xi VS power)
+  if (verbose) cat("- Checking notation\n")
+  out <- sort_Notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
   xi.notation <- out$xi.notation
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
-  
-  
 
-  # Error checks
-  if ( any(power < 1) )   stop( paste(index.par.long, "must be greater than 1.\n") )
-  if ( any(phi <= 0) )    stop("phi must be positive.")
-  if ( any(p < 0) )       stop("p must be between zero and one.\n")
-  if ( any(p > 1) )       stop("p must be between zero and one.\n")
-  if ( any(mu <= 0) )     stop("mu must be positive.\n")
-  if ( length(mu) > 1) {
-    if ( length(mu) != length(p) ) stop("mu must be scalar, or the same length as p.\n")
-  } else {
-    mu <- array( dim = length(p), mu )
-    # A vector of all mu's
-  }
-  if ( length(phi) > 1) {
-    if ( length(phi) != length(p) ) stop("phi must be scalar, or the same length as p.\n")
-  } else {
-    phi <- array( dim = length(p), phi )
-    # A vector of all phi's
-  }
-  # Now, if mu is a vector, make power correct length
-  if ( length(power) == 1 ) {
-    if ( length(mu) > 1 ) {
-      power <- rep( power, length(mu) ) 
-    }
-  }
   
-  #
-  # End error checks
-  #
+  # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
+  if (verbose) cat("- Checking, resizing inputs\n")
+  out <- check_Inputs(p, mu, phi, power)
+  mu <- out$mu
+  phi <- out$phi
+  f <- array(0,
+             dim = length(q) )
+  if (details) regions <- array(0, dim = length(q))
+  
+  
+  # IDENTIFY SPECIAL CASES
+  if (verbose) cat("- Checking for special cases\n")
+  out <- special_Cases(p, mu, phi, power)
+  f <- out$f
+  special_p_Cases <- out$special_p_Cases
+  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
+  special_y_Cases <- out$special_y_Cases
+  if (verbose & any(special_y_Cases)) cat("  - Special cases for first input found\n")
+  
+  ### END preliminary work
+  
+  
+  
+  
   
   len <- length(p) 
   

@@ -1,21 +1,26 @@
-dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
-{
-  #
-  # This is a function for determining Tweedie densities.
+dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){
+
+  # Evaluates the density for Tweedie distributions, for given values of:
+  #   y (possibly a vector)
+  #   mu, the mean 
+  #   phi the dispersion parameter
+  #   power,  the Tweedie index parameter
+  #   verbose: whether to display what is happening
+  #   details:  whether to returns reports of relerr, regions needed, etc.
+
   # Two methods are employed:  cgf inversion (type=1)
   # and series evaluation (type=2 if 1<p<2; type=3 if p>2)).
+  #
   # This function uses bivariate interpolation to accurately
   # approximate the inversion in conjunction with the series.
   #
   #
-  # FIRST, establish whether the series or the cgf
-  # # inversion is the better method.
-  #
+  # FIRST, establish whether the series or the cgf inversion is the better method.
   
   #
   # Here is a summary of what happens:
   #
-  #   p                          |  Whats happpens
+  #   p                          |  What happpens
   # -----------------------------+-------------------
   #  1 -> p.lowest (=1.3)        |  Use series A
   #  p.lowest (=1.3) -> p=2      |  Use series A if
@@ -33,43 +38,39 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   #                              | Saddlepoint approximation if xix<= 0.03 (NEEDS FIXING)
   #
   
-  # Sort out the xi/power notation
-  if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")
-  xi.notation <- TRUE
-  if ( is.null(power) ) {
-    power <- xi
-  } else {
-    xi.notation <- FALSE
-  }
-  if ( is.null(xi) ) {
-    xi.notation <- FALSE
-    xi <- power
-  }
-  if ( xi != power ) {
-    cat("Different values for xi and power given; the value of xi used.\n")
-    power <- xi
-  }
-  index.par       <- ifelse( xi.notation, "xi", "p")
-  index.par.long  <- ifelse( xi.notation, "xi", "power")
+  ### BEGIN preliminary work
+  
+  # SORT OUT THE NOTATION (i.e., xi VS power)
+  if (verbose) cat("- Checking notation\n")
+  out <- sort_Notation(xi = xi, power = power)
+  xi <- out$xi
+  power <- out$power
+  xi.notation <- out$xi.notation
+  index.par <- out$index.par
+  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
   
-  # Error checks
-  if ( any(power < 1) )  stop( paste(index.par.long, "must be greater than 1.\n") )
-  if ( any(phi <= 0) ) stop("phi must be positive.")
-  if ( any(y < 0) ) stop("y must be a non-negative vector.\n")
-  if ( any(mu <= 0) ) stop("mu must be positive.\n")
-  if ( length(mu) > 1) {
-    if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as y.\n")
-  } else {
-    mu <- array( dim = length(y), mu )
-    # A vector of all mu's
-  }
-  if ( length(phi) > 1) {
-    if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as y.\n")
-  } else {
-    phi <- array( dim = length(y), phi )
-    # A vector of all phi's
-  }
+  # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
+  if (verbose) cat("- Checking, resizing inputs\n")
+  out <- check_Inputs(y, mu, phi, power)
+  mu <- out$mu
+  phi <- out$phi
+  f <- array(0,
+             dim = length(q) )
+  if (details) regions <- array(0, dim = length(q))
+  
+  
+  # IDENTIFY SPECIAL CASES
+  if (verbose) cat("- Checking for special cases\n")
+  out <- special_Cases(y, mu, phi, power)
+  f <- out$f
+  special_p_Cases <- out$special_p_Cases
+  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
+  special_y_Cases <- out$special_y_Cases
+  if (verbose & any(special_y_Cases)) cat("  - Special cases for first input found\n")
+  
+  ### END preliminary work
+  
   
   density <- y
   

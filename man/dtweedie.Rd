@@ -29,27 +29,27 @@
   \item{power}{a synonym for \eqn{\xi}{xi}}
 	\item{mu}{the mean}
 	\item{phi}{the dispersion}
-	\item{exact}{logical flag; if \code{TRUE} (the default), exact zeros are used with the \eqn{W}{W}-algorithm of Sidi (1982); if \code{FALSE}, approximate (asymptotic) zeros are used in place of exact zeros.
-	Using asymptotic zeros requires less computation but is often less accurate; using exact zeros can be slower but generally improves accuracy.}
 	\item{method}{either \code{1}, \code{2} or \code{3}, determining which of three methods to use to compute the density
 	using the inversion method.
 	If \code{method} is \code{NULL} (the default), the optimal method (in terms of relative accuracy) is used, element-by-element of \code{y}.
 	See the Note in the Details section below}
 	\item{verbose}{either \code{TRUE} (show details of what is happening) or \code{FALSE} (the default)}
-	\item{details}{either \code{TRUE} (return details of what is happening) of \code{FALSE} (the default)}
+	\item{details}{either \code{TRUE} (return details of the computation) or \code{FALSE} (the default)}
 }
 \value{
 	density (\code{dtweedie}), probability (\code{ptweedie}), quantile (\code{qtweedie}) or random sample (\code{rtweedie}) for the given Tweedie distribution with parameters \code{mu}, \code{phi} and  \code{power}.
+	
+	When \code{details = TRUE}, information about the computation is returned: \code{density} (for the density) or \code{cdf} for the distribution function; \code{regions} (the number of integrations regions used); and (for the density) \code{method} (which method is used, as described in Dunn and Smyth, 2008). 
 }
 \details{
     The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{EDM}s), famous for their role in generalized linear models.
-    The Tweedie distributions are the \acronym{EDM}s with a variance of the form \eqn{\mbox{var}[Y]=\phi\mu^p}{var(Y) = phi * mu^power} where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
+    The Tweedie distributions are the \acronym{EDM}s with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var(Y) = phi * mu^power} where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
     \bold{This function only evaluates for \eqn{p}{power} greater than or equal to one.}
     Special cases include the normal (\eqn{p = 0}{power = 0}), Poisson (\eqn{p = 1}{power = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}{power = 2}) and inverse Gaussian (\eqn{p = 3}{power = 3}) distributions.
     For other values of  \code{power}, the distributions are still defined but cannot be written in closed form, and hence evaluation is very difficult.
 
-    When \eqn{1<p<2}{1 < power < 2}, the distribution are continuous for \eqn{Y}{Y} greater than zero, with a positive mass at \eqn{Y = 0}{Y = 0}.
-    For \eqn{p>2}{power > 2}, the distributions are continuous for \eqn{Y}{Y} greater than zero.
+    When \eqn{1 < p < 2}{1 < power < 2}, the distribution are continuous for \eqn{Y}{Y} greater than zero, with a positive mass at \eqn{Y = 0}{Y = 0}.
+    For \eqn{p > 2}{power > 2}, the distributions are continuous for \eqn{Y}{Y} greater than zero.
 
     This function evaluates the density or cumulative probability using one of two methods, depending on the combination of parameters. 
     One method is the evaluation of an infinite series.
@@ -57,10 +57,10 @@
     
     The function \code{dtweedie.inversion} evaluates the density using a Fourier series technique; \code{ptweedie.inversion} does likewise for the cumulative probabilities. 
     The actual code is contained in an external FORTRAN program. 
-    Different code is used for \eqn{p>2}{power > 2} and for \eqn{1<p<2}{1 < power < 2}. 
+    Different code is used for \eqn{p > 2}{power > 2} and for \eqn{1 < p < 2}{1 < power < 2}. 
     
     The function \code{dtweedie.series} evaluates the density using a series expansion; a different series expansion is used for \eqn{p>2}{power > 2} and for \eqn{1<p<2}{1 < power < 2}.
-    The function \code{ptweedie.series} does likewise for the cumulative probabilities but only for \eqn{1<p<2}{1 < power < 2}. 
+    The function \code{ptweedie.series} does likewise for the cumulative probabilities but only for \eqn{1 < p < 2}{1 < power < 2}. 
     
     The function \code{dtweedie.stable} exploits the link between the stable distribution (Nolan, 1997) and Tweedie distributions, as discussed in Jorgensen, Chapter 4.
     These are computed using Nolan's algorithm as implemented in the  \code{stabledist}  package (which is therefore required to use the \code{dtweedie.stable} function).

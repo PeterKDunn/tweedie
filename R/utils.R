@@ -45,12 +45,19 @@ sort_Notation <- function(xi = NULL, power = NULL){
 
 ################################################################################
 
-check_Inputs <- function(y, mu, phi, power){
+check_Inputs <- function(y, mu, phi, power, random_Numbers = FALSE){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
+
+  # Since rtweedie(n, ...) does not have a first input as a vector, 
+  # unlike [dpq]tweedie, flag this case and treat separately
+  vector_Length <- ifelse(random_Numbers, 
+                          max( length(mu), length(phi) ),
+                          length(y))
   
   inputs_Error <- FALSE
   
+  ### CHECKING VALUES ARE OK
   # Checking the input values: power
   if ( any(power < 1) )  {
     stop( "The Tweedie index parameter must be greater than 1.\n")
@@ -70,31 +77,36 @@ check_Inputs <- function(y, mu, phi, power){
   }
   
   
-  # Checking the length of  mu
-  if ( length(mu) > 1) {
-    # If  mu  not a scalar, check it is the same length as  y
-    if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as the first input.\n")
-    inputs_Error <- TRUE
-    
+  ### CHECKING LENGTHS ARE OK
+  if (random_Numbers) {
+    mu  <- rep_len(mu, n)
+    phi <- rep_len(phi, n)
   } else {
-    # If  mu  is a scalar, force it to be the same same length as  y
-    mu <- array( dim = length(y), mu )
-    # A vector of all mu's
-  }
-  
-  
-  # Checking the length of  phi
-  if ( length(phi) > 1) {
-    # If  phi  not a scalar, check it is the same length as  y
-    if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as the first input.\n")
-    inputs_Error <- TRUE
+    # Checking the length of  mu
+    if ( length(mu) > 1) {
+      # If  mu  not a scalar, check it is the same length as  y
+      if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as the first input.\n")
+      inputs_Error <- TRUE
+      
+    } else {
+      # If  mu  is a scalar, force it to be the same same length as  y
+      mu <- array( dim = length(y), mu )
+      # A vector of all mu's
+    }
     
-  } else {
-    # If  phi  is a scalar, force it to be the same same length as  y
-    phi <- array( dim = length(y), phi )
-    # A vector of all phi's
+    
+    # Checking the length of  phi
+    if ( length(phi) > 1) {
+      # If  phi  not a scalar, check it is the same length as  y
+      if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as the first input.\n")
+      inputs_Error <- TRUE
+      
+    } else {
+      # If  phi  is a scalar, force it to be the same same length as  y
+      phi <- array( dim = length(y), phi )
+      # A vector of all phi's
+    }
   }
-  
   
   # NOTE: The length of xi/power should have been checked in sort_Notation(), 
   #        so does not need checking here again.

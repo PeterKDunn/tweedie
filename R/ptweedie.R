@@ -1,5 +1,5 @@
-#############################################################################
 ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE) {
+
   # Evaluates the cdf for Tweedie distributions, for given values of:
   #   q (possibly a vector)
   #   mu, the mean 
@@ -8,9 +8,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   #   verbose: whether to display what is happening
   #   details:  whether to returns reports of relerr, regions needed, etc.
   
-  # Peter Dunn
-  # Created: 01 May 2001
-  # Last edit: 16 Sep 2025
+
+  ### BEGIN preliminary work
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
   if (verbose) cat("- Checking notation\n")
@@ -41,6 +40,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   special_y_Cases <- out$special_y_Cases
   if (verbose & any(special_y_Cases)) cat("  - Special cases for first input found\n")
   
+  ### END preliminary work
+
 
   if ( !special_p_Cases ) {
     # NO special p cases
@@ -48,10 +49,10 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       # For p > 2 the only option is the inversion
       if (verbose) cat("- With p > 2: use inversion")
 
-      f_TMP <- ptweedie.inversion(power = power, 
-                                  q = q[!special_y_Cases], 
-                                  mu = mu[!special_y_Cases], 
-                                  phi = phi[!special_y_Cases],
+      f_TMP <- ptweedie.inversion(power   = power,
+                                  q       = q[!special_y_Cases],
+                                  mu      = mu[!special_y_Cases],
+                                  phi     = phi[!special_y_Cases],
                                   verbose = verbose,
                                   details = details)
       if (details) {
@@ -108,7 +109,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       } else{
         if (verbose) cat("- With 1 < p < 2: use inversion")
         
-        f_TMP <- ptweedie.inversion( power   = power, 
+        f_TMP <- ptweedie.inversion( power  = power,
                                     q       = q[!special_y_Cases], 
                                     mu      = mu[!special_y_Cases], 
                                     phi     = phi[!special_y_Cases],
