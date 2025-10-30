@@ -16,7 +16,7 @@
 	dtweedie.inversion(y, power, mu, phi, method, verbose = FALSE, details = FALSE)
 	dtweedie.stable(y, power, mu, phi)
 	ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
-	ptweedie.series(q, power, mu, phi)
+	ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 	ptweedie.inversion(q, mu, phi, power, verbose = FALSE, details = FALSE)
 	qtweedie(p, xi = NULL, mu, phi, power = NULL)
 	rtweedie(n, xi = NULL, mu, phi, power = NULL)

@@ -1,4 +1,5 @@
-ptweedie.series <- function(q, power, mu, phi) {
+ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
+
   # Evaluates the cdf for Tweedie distributions, using the infinite series 
   # expansion (i.e., just for 1 < p < 2), for given values of:
   #   q (possibly a vector)
@@ -6,41 +7,19 @@ ptweedie.series <- function(q, power, mu, phi) {
   #   phi the dispersion parameter
   #   power,  the Tweedie index parameter
   
-  # Peter K Dunn 
-  # Created: 14 March 2000 
-  # Last edit: 16 Sep 2025
+  ### NOTE: No checking of inputs
+  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
   
-  y <- q
-  
-  # Error checks
-  if ( power < 1) stop("power must be between 1 and 2.\n")
-  if ( power > 2) stop("power must be between 1 and 2.\n")
-  if ( any(phi <= 0)) stop("phi must be positive.\n")
-  if ( any(y < 0) ) stop("y must be a non-negative vector.\n")
-  if ( any(mu <= 0) ) stop("mu must be positive.\n")
-  if ( length(mu) > 1) {
-    if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as y.\n")
-  } else {
-    mu <- array( dim = length(y), mu )
-  }
-  if ( length(phi) > 1) {
-    if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as y.\n")
-  } else {
-    phi <- array( dim = length(y), phi )
-  }
-  
-  
-  # Set up
-  p <- power
-  lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
-  tau <- phi * (p - 1) * mu ^ ( p - 1 )
-  alpha <- (2 - p) / (1 - p)
-  
-  
-  # Now find the limits on N, the summation index
-  # First the *lower* limit on N
-  
+  ### NOTE: Same number of iterations used for each value of q, if vector inputs are given
+
+  # SET UP
+  lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
+  tau    <- phi * (power - 1) * mu ^ ( power - 1 )
+  alpha  <- (2 - power) / (1 - power)
   drop <- 39
+
+  # FIND THE LIMITS ON N, the summation index
+  # The *lower* limit on N
   lambda <- max(lambda )
   logfmax <-  -log(lambda)/2
   estlogf <- logfmax
@@ -50,43 +29,36 @@ ptweedie.series <- function(q, power, mu, phi) {
     N <- max(1, N - 2)
     estlogf <- -lambda + N * ( log(lambda) - log(N) + 1 ) - log(N)/2
   }
-  
   lo.N <- max(1, floor(N) )
   
   
-  # Now for the *upper* limit on N
-  
-  lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
+  # The *upper* limit on N
   lambda <- min( lambda )
   logfmax <-  -log(lambda) / 2
   estlogf <- logfmax
-  
   N <- max( lambda )
   
   while ( estlogf > (logfmax - drop) ) {
     N <- N + 1
     estlogf <- -lambda + N * ( log(lambda) - log(N) + 1 ) - log(N)/2
   }
-  
   hi.N <- max( ceiling(N) )
+  if (verbose) cat("Summing over", lo.N, "to", hi.N, "\n")
   
+  # EVALUATE between limits of N
+  cdf <- array( dim = length(q), 0 )
   
-  # Now evaluate between limits of N
-  
-  cdf <- array( dim = length(y), 0 )
-  
-  lambda <- mu ^ (2 - p) / ( phi * (2 - p) )
-  tau <- phi * (p - 1) * mu ^ ( p - 1 )
-  alpha <- (2 - p) / (1 - p)
+  lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
+  tau    <- phi * (power - 1) * mu ^ ( power - 1 )
+  alpha  <- (2 - power) / (1 - power)
   
   
   for (N in (lo.N : hi.N)) {
-    
     # Poisson density
     pois.den <- dpois( N, lambda)
     
     # Incomplete gamma
-    incgamma.den <- pchisq(2 * y / tau, 
+    incgamma.den <- pchisq(2 * q / tau, 
                            -2 * alpha * N )
     
     # What we want
@@ -97,7 +69,12 @@ ptweedie.series <- function(q, power, mu, phi) {
   cdf <- cdf + exp( -lambda )
   its <- hi.N - lo.N + 1
   
-  cdf
+  if (details) {
+    return( list( cdf = cdf,
+                  iterations = its) )
+  } else {
+    return(cdf)
+  }
   
 }
 
