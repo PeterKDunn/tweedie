@@ -84,6 +84,8 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
     ! Then bounds do not actually bound the zero
     IF (Cverbose) WRITE(*,*) "Bounds do not bracket the zero."
+    IF (Cverbose) WRITE(*,*) "- Bounds:", tL, tR
+    IF (Cverbose) WRITE(*,*) "- Values:", fL, fR
   END IF
 
   IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
