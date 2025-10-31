@@ -134,7 +134,7 @@ special_Cases <- function(y, mu, phi, power){
   #   - y == 0
   #   In this case, special_y_Cases is a vector, and is TRUE when appropriate
   
-  
+cat("IN SPECIAL CASES\n")
   f <- array( 0, 
               dim = length(y) )
   special_p_Cases <- FALSE        # TRUE if special cases are defined by special values of p
@@ -156,25 +156,27 @@ special_Cases <- function(y, mu, phi, power){
                   q = y )
     }
     if ( power == 1) {
-      f <- ppois(q = y, 
+      f <- ppois(y, 
                  lambda = mu / phi )
     }
   } else {
     # Special cases BASED ON THE VALUES OF y (when y <= 0)
     special_y_Cases <- (y <= 0)
     if (any(special_y_Cases)) {
-
+cat("Speical y cases\n")
       # NEGATIVE VALUES
       y_Negative <- (y < 0)
       if (any(y_Negative) ) f[y_Negative] <- 0
-
-      # ZERO VALUES
       y_Zero <- (y == 0)
       if (any(y_Zero)) {
+cat("Speical y = 0 cases\n")
+        
         if ( (power > 0) & (power < 2) ) {
           f[y_Zero] <- exp( find_Lambda(mu[y_Zero], phi[y_Zero], power) )
         } else {
+          cat("Speical y cases 2\n")
           f[y_Zero] <- 0  
+          cat("Speical y cases 3\n")
         }
       }
     }
