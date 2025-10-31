@@ -182,11 +182,20 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     ELSE
       mmax = myfloor(kmax / pi)
     END IF
-    mfirst = mmax
-    
-    leftOfMax = 1
-    IF (mmax .EQ. 0) THEN
-      leftOfMax = 0
+
+    ! Establish the first value of m to use, and whether the first zero is to the left of kmax
+    IF (mmax .GT. 0) THEN
+      mfirst = 0
+      leftOfMax = 1
+    ELSE
+      IF (mmax .EQ. 0 ) THEN
+        mfirst = 0
+        leftOfMax = 0
+      ELSE
+        ! That is, mmax is LESS THAN 0
+        mfirst = -1
+        leftOfMax = 0
+      ENDIF 
     END IF
   END IF
   
