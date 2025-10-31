@@ -16,7 +16,8 @@ ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FA
   N <- as.integer( length(q) )
   cdf <- as.double(rep(0, N))
   pSmall  <- ifelse( (power > 1) & (power < 2),
-                     TRUE, FALSE )
+                     TRUE, 
+                     FALSE )
 
   # Initialise
   exitstatus_scalar <- as.integer(0)
