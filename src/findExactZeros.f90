@@ -80,7 +80,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   ! Ensure the bounds actually bound the zero
   CALL findImkM(i, tL, fL, dfL, m)
   CALL findImkM(i, tR, fR, dfR, m)
-  
+
   IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
     ! Then bounds do not actually bound the zero
     IF (Cverbose) WRITE(*,*) "Bounds to not bracket the zero."

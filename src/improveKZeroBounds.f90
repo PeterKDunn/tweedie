@@ -47,6 +47,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   IF ( (multiplier * SPvalue) .LE. 0.0E0_C_DOUBLE) THEN
 
     itsSearch = itsSearch + 1
+
     keepSearching = .TRUE.
     DO WHILE (keepSearching)
       ! - If fn value at SP is negative, take bold steps left to find lower bound
@@ -81,6 +82,9 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   END DO
   zeroL = boundL
 
+
+
+
   ! UPPER BOUND
   ! - SPvaluecomputed above
   boundR = startZero
@@ -111,6 +115,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   keepSearching = .TRUE.
   DO WHILE (keepSearching)
     itsSearch = itsSearch + 1
+
     oldBoundR = boundR
     boundR = boundR * 0.90E0_C_DOUBLE
     CALL findImkM(i, boundR, valueR, df, m)
