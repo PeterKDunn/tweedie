@@ -188,7 +188,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
       IF (leftOfMax .EQ. 1) THEN
         zeroBoundL = zeroR
-        zeroBoundR = zeroR * 10.0_C_DOUBLE
+        zeroBoundR = tmax
       ELSE
         zeroBoundL = tmax
         zeroBoundR = zeroR * 20.0_C_DOUBLE
