@@ -117,7 +117,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     CALL INTPR( "  - left of max:", -1, leftOfMax, 1 )
   END IF
   
-
   ! INTEGRATION
   ! There are three integration regions:
   !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
@@ -130,7 +129,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   area0 = 0.0_C_DOUBLE
   area1 = 0.0_C_DOUBLE
   zero  = 0.0_C_DOUBLE
-  
+
 
   ! ---------------------------------------------------------
   ! --- 1. INTEGRATE FIRST REGION: area0 ---
@@ -139,6 +138,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! Find starting point for the first zero
   m = mfirst
   t_Start_Point = tmax + pi / current_y  
+
   IF (leftOfMax .EQ. 1) THEN
     zeroBoundL = 0.0_C_DOUBLE
     zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
