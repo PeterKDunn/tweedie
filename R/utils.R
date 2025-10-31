@@ -33,7 +33,7 @@ sort_Notation <- function(xi = NULL, power = NULL){
     index.par <- "xi"
     index.par.long <- "xi"
   }
-  
+
   return( list(xi = xi, 
                power = power, 
                xi.notation = xi.notation, 
@@ -56,26 +56,26 @@ check_Inputs <- function(y, mu, phi, power, random_Numbers = FALSE){
                           length(y))
   
   inputs_Error <- FALSE
-  
+
   ### CHECKING VALUES ARE OK
   # Checking the input values: power
   if ( any(power < 1) )  {
     stop( "The Tweedie index parameter must be greater than 1.\n")
     inputs_Error <- TRUE
   }
-  
+
   # Checking the input values: phi
   if ( any(phi <= 0) ) {
     stop("phi must be positive.")
     inputs_Error <- TRUE
   }
-  
+
   # Checking the input values: mu
   if ( any(mu <= 0) ) {
     stop("mu must be positive.\n")
     inputs_Error <- TRUE
   }
-  
+
   
   ### CHECKING LENGTHS ARE OK
   if (random_Numbers) {
@@ -134,13 +134,12 @@ special_Cases <- function(y, mu, phi, power){
   #   - y == 0
   #   In this case, special_y_Cases is a vector, and is TRUE when appropriate
   
-cat("IN SPECIAL CASES\n")
   f <- array( 0, 
               dim = length(y) )
-  special_p_Cases <- FALSE        # TRUE if special cases are defined by special values of p
-  special_y_Cases <- rep(FALSE,   # TRUE where special cases are defined by special values of y
+  special_p_Cases <- FALSE        # TRUE if special cases are defined by special values of p: SCALAR
+  special_y_Cases <- rep(FALSE,   # TRUE where special cases are defined by special values of y: VECTOR
                          length(y) )
-  
+
   # Special cases BASED ON VALUE OF p
   if ( (power == 0 ) | (power == 1) | (power== 2) ){
     # Special cases based on the value of p  
@@ -163,20 +162,16 @@ cat("IN SPECIAL CASES\n")
     # Special cases BASED ON THE VALUES OF y (when y <= 0)
     special_y_Cases <- (y <= 0)
     if (any(special_y_Cases)) {
-cat("Speical y cases\n")
       # NEGATIVE VALUES
       y_Negative <- (y < 0)
       if (any(y_Negative) ) f[y_Negative] <- 0
       y_Zero <- (y == 0)
       if (any(y_Zero)) {
-cat("Speical y = 0 cases\n")
-        
+
         if ( (power > 0) & (power < 2) ) {
           f[y_Zero] <- exp( find_Lambda(mu[y_Zero], phi[y_Zero], power) )
         } else {
-          cat("Speical y cases 2\n")
           f[y_Zero] <- 0  
-          cat("Speical y cases 3\n")
         }
       }
     }
