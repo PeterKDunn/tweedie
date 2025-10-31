@@ -111,10 +111,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   CALL findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
   IF (Cverbose) THEN
-    CALL DBLEPR("  -        kmax:", -1, kmax, 1 )
-    CALL DBLEPR("  -        tmax:", -1, tmax, 1 )
-    CALL INTPR( "  -        mmax:", -1, mmax, 1 )
-    CALL INTPR( "  - left of max:", -1, leftOfMax, 1 )
+    CALL DBLEPR("  -          kmax:", -1, kmax, 1 )
+    CALL DBLEPR("  -          tmax:", -1, tmax, 1 )
+    CALL INTPR( "  -          mmax:", -1, mmax, 1 )
+    CALL INTPR( "  -   left of max:", -1, leftOfMax, 1 )
+    CALL INTPR( "  - first m-value:", -1, mfirst, 1 )
   END IF
   
   ! INTEGRATION
@@ -140,8 +141,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   IF (leftOfMax .EQ. 1) THEN
     t_Start_Point = pi / current_y  
-    zeroBoundL = 0.0_C_DOUBLE
-    zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
+    zeroBoundL = t_Start_Point / 100.0_C_DOUBLE
+    zeroBoundR = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
   ELSE
     ! Searching to the right of tmax
     t_Start_Point = tmax + pi / current_y  
