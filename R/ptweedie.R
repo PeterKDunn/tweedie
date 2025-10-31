@@ -20,7 +20,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
-  
+  if (verbose) cat("- Checking, resizing inputs\n")
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_Inputs(q, mu, phi, power)
@@ -131,7 +131,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
     }  
   }
 
-cat("ptweedie: abiout to apply sanity fixes\n")  
   # Sanity fixes
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
