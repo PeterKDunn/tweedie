@@ -100,6 +100,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   ! If we get here, NO CONVERGENCE after MAXITS
   IF (j .GE. MAXITS) THEN
     IF (Cverbose) WRITE(*,*) "CONVERGENCE NOT OBTAINED IN RTNEWTON after", MAXITS, "iterations"
+    IF (Cverbose) WRITE(*,*) "- Function value:", f, "at", x_current
 
   END IF
 
