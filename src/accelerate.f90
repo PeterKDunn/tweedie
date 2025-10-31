@@ -4,8 +4,8 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN)                 :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(200), wvec(200)
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2,200), Nmatrix(2,200)
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(201), wvec(201)
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 201), Nmatrix(2, 201)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
 
   ! --- Local variables ---
@@ -16,7 +16,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE)             :: s, maxinv, invx
   REAL(KIND=C_DOUBLE), PARAMETER  :: SAFETY_SCALE = 1.0D-12
   REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
-  REAL(KIND=C_DOUBLE)             :: xscaled(200)
+  REAL(KIND=C_DOUBLE)             :: xscaled(201)
 
   ! --- Constants; initialization ---
   maxSize  = 200
