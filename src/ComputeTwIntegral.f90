@@ -52,7 +52,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER, INTENT(IN)               :: nzeros
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(200), wvec(200), Mmatrix(2, 200), Nmatrix(2, 200)
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xvec(201), wvec(201), Mmatrix(2, 201), Nmatrix(2, 201)
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: West
     END SUBROUTINE accelerate
 
@@ -76,7 +76,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero, t_Start_Point
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-  REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 200), Nmatrix(2, 200), xvec(200), wvec(200)
+  REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 201), Nmatrix(2, 201), xvec(201), wvec(201)
   REAL(KIND=C_DOUBLE)   :: West, Wold, Wold2
   REAL(KIND=C_DOUBLE)   :: zeroBoundR, zeroBoundL, zeroStartPoint
   
@@ -137,13 +137,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! Find starting point for the first zero
   m = mfirst
-  t_Start_Point = tmax + pi / current_y  
 
   IF (leftOfMax .EQ. 1) THEN
+    t_Start_Point = pi / current_y  
     zeroBoundL = 0.0_C_DOUBLE
     zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
   ELSE
     ! Searching to the right of tmax
+    t_Start_Point = tmax + pi / current_y  
     zeroBoundL = tmax
     zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
   END IF
@@ -232,7 +233,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   Wold2 = 1.0_C_DOUBLE
   its_Acceleration = 0
   convergence_Acc = 0
-  accMax = 40           ! Maximum number of regions in acceleration; arbitrary
+  accMax = 140           ! Maximum number of regions in acceleration; arbitrary
   min_Acc_Regions = 3     ! Minimum number of acceleration regions to use
   
   ! This will be the very first, left-most value of t used in acceleration
@@ -258,6 +259,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
     ! Find the exact zero
     CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
+
+  IF (its_Acceleration .GE. 200) THEN
+      IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping.", -1, 0, 1)
+      convergence_Acc = 1
+      EXIT
+    END IF
 
     zeroR = zero
 
