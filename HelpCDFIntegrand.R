@@ -2,11 +2,11 @@ source("tweedieFunctions.R")
 
 ########################################################################
 ## TMP
-y <- 0.1501502
+y <- 0.085085085
 mu <- 1
 phi <- 1
 p <- 4.5
-t <- seq(0, 500,
+t <- seq(0, 400,
          length = 1000)
 ########################################################################
 
@@ -77,8 +77,8 @@ plot(kvals$Imag ~ t,
      type = "l")
 abline(h = 0, 
        col="grey")
-abline(v = 0.03, 
-       col="grey")
+#abline(v = 0.03, 
+#       col="grey")
 abline(h = (-14:14)*pi, 
        col="grey")
 axis(side = 4, 
@@ -101,8 +101,8 @@ plot(sin(kvals$Imag) ~ t,
      type = "l")
 abline(h = 0, 
        col="grey")
-abline(v = 0.03, 
-       col="grey")
+#abline(v = 0.03, 
+#       col="grey")
 #abline(v = zs,
 #       col = "grey",
 #       lty = 2)
