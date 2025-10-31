@@ -185,7 +185,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
     ! Establish the first value of m to use, and whether the first zero is to the left of kmax
     IF (mmax .GT. 0) THEN
-      mfirst = 0
+      mfirst = 1
       leftOfMax = 1
     ELSE
       IF (mmax .EQ. 0 ) THEN
