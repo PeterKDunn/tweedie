@@ -12,6 +12,10 @@ ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
   
   ### NOTE: Same number of iterations used for each value of q, if vector inputs are given
 
+cat(">>>>>>>>> power, mu, phi", power, mu, phi, "\n")  
+cat(">>>>>>>>> q", q, "\n")  
+  
+  
   # SET UP
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
   tau    <- phi * (power - 1) * mu ^ ( power - 1 )

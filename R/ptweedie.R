@@ -32,40 +32,45 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
 
   # IDENTIFY SPECIAL CASES
+  special_y_Cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
   out <- special_Cases(q, mu, phi, power)
-  f <- out$f
   special_p_Cases <- out$special_p_Cases
-  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
   special_y_Cases <- out$special_y_Cases
-  if (verbose & any(special_y_Cases)) cat("  - Special cases for first input found\n")
-  
+  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
+  if ( any(special_y_Cases) ) {
+    special_y_Cases <- out$special_y_Cases  
+    if (verbose) cat("  - Special cases for first input found\n")
+    f <- out$f
+  }
+
   ### END preliminary work
 
 
   if ( !special_p_Cases ) {
-    # NO special p cases
+    # NOT special p case
+    
     if ( power > 2 ) {
       # For p > 2 the only option is the inversion
-      if (verbose) cat("- With p > 2: use inversion")
-
-      f_TMP <- ptweedie.inversion(power   = power,
-                                  q       = q[!special_y_Cases],
-                                  mu      = mu[!special_y_Cases],
-                                  phi     = phi[!special_y_Cases],
-                                  verbose = verbose,
-                                  details = details)
-      if (details) {
-        f[!special_y_Cases] <- f_TMP$cdf
-        regions[!special_y_Cases] <- f_TMP$regions
-      } else {
-        f[!special_y_Cases] <- f_TMP
+      if ( any(!special_y_Cases)) { 
+        if (verbose) cat("- With p > 2: use inversion\n")
+  
+        f_TMP <- ptweedie.inversion(power   = power,
+                                    q       = q[!special_y_Cases],
+                                    mu      = mu[!special_y_Cases],
+                                    phi     = phi[!special_y_Cases],
+                                    verbose = verbose,
+                                    details = details)
+        if (details) {
+          f[!special_y_Cases] <- f_TMP$cdf
+          regions[!special_y_Cases] <- f_TMP$regions
+        } else {
+          f[!special_y_Cases] <- f_TMP
+        }
       }
     } else {
-      # NOT a special-p case
-      # There still may be some special-y cases
-      
-      # For 1<p<2, the two options are the series or inversion.
+      # CASE 1 < p < 2
+      # For 1 < p < 2, the two options are the series or inversion.
       # We avoid the series when p is near one, otherwise it is fine.
       
       # A few caveats.  Gustaov noted this case:
@@ -92,24 +97,25 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       ### REVISED CODE:
       ### The choice of  1.999 is arbitrary.  Probably needs serious attention to decide properly
       ### Changed early 2017; thanks to Gustavo Lacerda
-      if ( power < 1.999) { 
-        #### XXXXXXXXXXXXXXXXXXXXXXXXX This is arbitrary, and needs a closer look
-        if (verbose) cat("- With 1 < p < 2: use series")
+      #if ( power < 1.999) { 
+      #  #### XXXXXXXXXXXXXXXXXXXXXXXXX This is arbitrary, and needs a closer look
+      #  if (verbose) cat("- With 1 < p < 2: use series")
+      #  
+      #  f_TMP <- ptweedie.series(power = power, 
+      #                           q     = y[!special_y_Cases], 
+      #                           mu    = mu[!special_y_Cases], 
+      #                           phi   = phi[!special_y_Cases] )
+      #  if (details) {
+      #    f[!special_y_Cases] <- f_TMP$cdf
+      #    regions[!special_y_Cases] <- f_TMP$regions
+      #  } else {
+      #    f[!special_y_Cases] <- f_TMP
+      #  }
+      #} else{
         
-        f_TMP <- ptweedie.series(power = power, 
-                                 q     = q[!special_y_Cases], 
-                                 mu    = mu[!special_y_Cases], 
-                                 phi   = phi[!special_y_Cases] )
-        if (details) {
-          f[!special_y_Cases] <- f_TMP$cdf
-          regions[!special_y_Cases] <- f_TMP$regions
-        } else {
-          f[!special_y_Cases] <- f_TMP
-        }
-      } else{
-        if (verbose) cat("- With 1 < p < 2: use inversion")
-        
-        f_TMP <- ptweedie.inversion( power  = power,
+      if ( any(!special_y_Cases)) {
+        if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
+        f_TMP <- ptweedie.inversion(power   = power,
                                     q       = q[!special_y_Cases], 
                                     mu      = mu[!special_y_Cases], 
                                     phi     = phi[!special_y_Cases],
@@ -122,13 +128,13 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
           f[!special_y_Cases] <- f_TMP
         }
       }
-    }
+    }  
   }
-  
-  
+
+cat("ptweedie: abiout to apply sanity fixes\n")  
   # Sanity fixes
-  f[ f < 0 ] <- 0
-  f[ f > 1 ] < 1
+  f[ f < 0 ] <- rep(0, sum(f < 0) )
+  f[ f > 1 ] <- rep(1, sum(f > 1) )
 
   if (details) {
     return(list(f = f,

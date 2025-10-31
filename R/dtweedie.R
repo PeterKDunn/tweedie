@@ -61,13 +61,17 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
   
   # IDENTIFY SPECIAL CASES
+  special_y_Cases <- rep(FALSE, length(y))
   if (verbose) cat("- Checking for special cases\n")
   out <- special_Cases(y, mu, phi, power)
-  f <- out$f
   special_p_Cases <- out$special_p_Cases
-  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
   special_y_Cases <- out$special_y_Cases
-  if (verbose & any(special_y_Cases)) cat("  - Special cases for first input found\n")
+  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
+  if ( any(special_y_Cases) ) {
+    special_y_Cases <- out$special_y_Cases  
+    if (verbose) cat("  - Special cases for first input found\n")
+    f <- out$f
+  }
   
   ### END preliminary work
   
