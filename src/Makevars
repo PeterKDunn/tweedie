@@ -19,7 +19,7 @@ OBJECTS += Rprintf_wrapper.o
 
 # --- 2. Standard R Compilation Variables ---
 # Define FFLAGS and use the standard SHLIB_FFLAGS
-FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all
+FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all 
 
 
 # --- 3. Custom GNU Make Dependency Rules ---
