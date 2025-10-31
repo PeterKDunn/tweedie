@@ -169,7 +169,7 @@ special_Cases <- function(y, mu, phi, power){
       if (any(y_Zero)) {
 
         if ( (power > 0) & (power < 2) ) {
-          f[y_Zero] <- exp( find_Lambda(mu[y_Zero], phi[y_Zero], power) )
+          f[y_Zero] <- exp( -find_Lambda(mu[y_Zero], phi[y_Zero], power) )
         } else {
           f[y_Zero] <- 0  
         }
