@@ -93,7 +93,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
     END IF
   END DO
 
-  WRITE (*,*) "Perhaps non-convergence (rtsafe): exceeding maximum iterations"
+  IF (Cverbose) WRITE (*,*) "Perhaps non-convergence (rtsafe): exceeding maximum iterations"
   RETURN
 
 END SUBROUTINE rtsafe
