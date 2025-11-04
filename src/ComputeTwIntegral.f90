@@ -139,6 +139,7 @@ WRITE(*,*) "Initial region area:", area0, "between 0 and", zeroR, "(right m = ",
 WRITE(*,*) "   "
 
   count_Integration_Regions = 1
+WRITE(*,*) "A: count regions:", count_Integration_Regions
 
 
 !  CALL findWhereAccelerationStarts()
@@ -166,7 +167,7 @@ END IF
 
 
 
-
+WRITE(*,*) "B: count regions:", count_Integration_Regions
 
 
 
@@ -175,6 +176,7 @@ END IF
   IF ( converged_Pre) THEN
     WRITE(*,*) "No acceleration needed: CONVERGENCE already detected"
     areaA = 0.0_C_DOUBLE
+    count_Acc_regions = 0
   ELSE
     IF (Cverbose) CALL DBLEPR(" - ACCELERATING for y:", -1, current_y, 1)
     zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
@@ -192,6 +194,7 @@ END IF
   ! --- WIND THINGS UP ---
   count_Integration_Regions = count_Integration_Regions + count_Acc_regions
   areaT = area0 + area1 + areaA
+WRITE(*,*) "C: count regions:", count_Integration_Regions
 
   IF (Cverbose) THEN
     CALL DBLEPR("* Initial area0: ", -1, area0, 1)
