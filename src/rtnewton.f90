@@ -26,8 +26,8 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE)               :: root
   
-  ! --- Local Variables
-  INTEGER, PARAMETER  :: MAXITS = 5000
+  ! --- Local Variable
+  INTEGER, PARAMETER  :: MAXITS = 200
   INTEGER             :: j
   
   ! x_current:  the final accepted value.
@@ -49,7 +49,6 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   DO j = 1, MAXITS
     ! Save the old value, which is guaranteed to be > 0
     x_iter_old = x_current
-    
     ! Calculate function value (f) and derivative (df) at the current safe point
     CALL funcd(i, x_current, f, df) 
 

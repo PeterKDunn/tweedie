@@ -132,6 +132,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   }
 
   # Sanity fixes
+  
+  cat(f)
+  
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
 

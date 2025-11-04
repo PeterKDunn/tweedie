@@ -10,7 +10,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tZero
   
   ! --- Local Variables
-  REAL(KIND=C_DOUBLE) :: xacc, fL, fR, dfL, dfR
+  REAL(KIND=C_DOUBLE) :: xacc, fL, fR, dfL, dfR, tstart_update
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
 
 
@@ -52,7 +52,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
     END SUBROUTINE rtsafe
 
 
-    SUBROUTINE findImkM(i, t, f, df, m)
+    SUBROUTINE evaluateImkM(i, t, f, df, m)
       ! Evaluate  Im k(t) - m * pi (CDF) - pi/2  or  Im k(t) - m * pi (CDF)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -60,7 +60,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
       INTEGER(C_INT), INTENT(IN)        :: i, m
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE findImkM
+    END SUBROUTINE evaluateImkM
   END INTERFACE
 
 
@@ -78,29 +78,57 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   !       the CDF has integrand zeros at Im k(t) =        m * pi/y.
 
   ! Ensure the bounds actually bound the zero
-  CALL findImkM(i, tL, fL, dfL, m)
-  CALL findImkM(i, tR, fR, dfR, m)
+!WRITE(*,*) "IN: fEZ"
+!WRITE(*,*) "II  - m:", m
+!WRITE(*,*) "II  - y, etc:", current_y, current_mu, current_phi, Cp
+  CALL evaluateImkM(i, tL, fL, dfL, m)
+  CALL evaluateImkM(i, tR, fR, dfR, m)
+!WRITE(*,*) "feZ LEFT:  - Bounds:", tL, fL, dfL, m
+!WRITE(*,*) "fEZ RIGHT: - Values:", tR, fR, dfR, m
 
   IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
-    ! Then bounds do not actually bound the zero
-    IF (Cverbose) WRITE(*,*) "Bounds do not bracket the zero."
-    IF (Cverbose) WRITE(*,*) "- Bounds:", tL, tR
-    IF (Cverbose) WRITE(*,*) "- Values:", fL, fR
+    ! Then bounds do not bound the zero
+    IF (Cverbose) WRITE(*,*) "Bounds do not bracket the zero (findExactZeros)."
+    IF (Cverbose) WRITE(*,*) "  - Bounds:", tL, tR
+    IF (Cverbose) WRITE(*,*) "  - Values:", fL, fR
   END IF
 
-  IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
-    ! Trickier for small p, small y
+  ! For robustness, use rtsafe when the  distance between zeros 
+  ! is expected to be small (i.e., in the tail).
+  IF ( m .LE. -3 ) THEN ! Use rtsafe whenever m islarge and negative
+!WRITE(*,*) ">> RTSAFE 1; with bounds", tL, tR
+    CALL rtsafe(i, evaluateImkM_wrapper, tStart, tL, tR, xacc, tZero)
+  ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
+    ! When small p and small y, fight harder for good starting bounds
+!WRITE(*,*) ">> RTSAFE 2"
     CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
-    CALL rtsafe(i, findImkM_wrapper, tStart, tL, tR, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tStart, tL, tR, xacc, tZero)
   ELSE
-    ! Newton's method should work fine for big p
-    CALL rtnewton(i, findImkM_wrapper, tstart, xacc, tZero)
+    ! Default to rtnewton for "easy" cases (e.g., initial zeros)
+!WRITE(*,*) ">> NEWTON"
+    tstart_update = (tL + tR) / 2.0_C_DOUBLE
+    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
   END IF
+
+
+!  IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
+!    ! Trickier for small p, small y
+!    CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
+!WRITE(*,*) "  - fEZ Better Bounds:", tL, tR
+!    CALL rtsafe(i, evaluateImkM_wrapper, tStart, tL, tR, xacc, tZero)
+!WRITE(*,*) "  - fEZ tzero:", tZero
+!  ELSE
+    ! Newton's method should work fine for big p
+!    tstart_update = (tL + tR) / 2.0_C_DOUBLE
+!    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
+!  END IF
+  
+!WRITE(*,*) "OUT: fEZ"
 
   CONTAINS 
   
     ! Define the wrapper subroutine
-    SUBROUTINE findImkM_wrapper(i, x, f, df)
+    SUBROUTINE evaluateImkM_wrapper(i, x, f, df)
       ! Evaluate  Im k(t) - m * pi (CDF) - pi/2  or  Im k(t) - m * pi (CDF)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       ! Has access to variable  m  from the containing function/outer scope
@@ -109,9 +137,9 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
       REAL(C_DOUBLE), INTENT(IN)  :: x
       REAL(C_DOUBLE), INTENT(OUT) :: f, df
      
-      CALL findImkM(i, x, f, df, m) ! Pass the captured 'm' value]
+      CALL evaluateImkM(i, x, f, df, m) ! Pass the captured 'm' value]
 
-    END SUBROUTINE findImkM_wrapper
+    END SUBROUTINE evaluateImkM_wrapper
 
   
 END SUBROUTINE findExactZeros

@@ -1,4 +1,4 @@
-SUBROUTINE findImkd(i, t, Imkd) 
+SUBROUTINE evaluateImkd(i, t, Imkd) 
   ! Evaluate Im k'(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -25,4 +25,4 @@ SUBROUTINE findImkd(i, t, Imkd)
   
   Imkd = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
 
-END SUBROUTINE findImkd
+END SUBROUTINE evaluateImkd

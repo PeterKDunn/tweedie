@@ -1,4 +1,4 @@
-SUBROUTINE findImk(i, t, Imk) 
+SUBROUTINE evaluateImk(i, t, Imk) 
   ! Evaluate Im k(t)
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -27,7 +27,7 @@ SUBROUTINE findImk(i, t, Imk)
 
   IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
       (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
-      WRITE(*,*) "ERROR (FindImk): Omega out of range:", omega
+      WRITE(*,*) "ERROR (evaluateImk): Omega out of range:", omega
     STOP
   END IF
   alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)
@@ -37,4 +37,4 @@ SUBROUTINE findImk(i, t, Imk)
 
   RETURN
 
-END SUBROUTINE findImk
+END SUBROUTINE evaluateImk

@@ -15,7 +15,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   INTEGER(C_INT)          :: maxSearch, itsSearch
   LOGICAL                 :: keepSearching
   
-  EXTERNAL findImkM
+  EXTERNAL evaluateImkM
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -36,7 +36,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   END IF
 
   ! FIND the function value of the starting point (SP)
-  CALL findImkM(i, startZero, SPvalue, df, m)
+  CALL evaluateImkM(i, startZero, SPvalue, df, m)
     ! The fn value at the starting point, so we know which way to search
 
   ! LOWER BOUND
@@ -53,7 +53,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
       ! - If fn value at SP is negative, take bold steps left to find lower bound
       boundL = boundL / 1.50E0_C_DOUBLE
       
-    CALL findImkM(i, boundL, valueL, df, m)
+    CALL evaluateImkM(i, boundL, valueL, df, m)
       
       IF ( (multiplier * valueL) .GT. 0.0E0_C_DOUBLE ) THEN
         ! - Found a lower bound where the fn value is positive
@@ -70,7 +70,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
 
     oldBoundL = boundL
     boundL = boundL * 1.10E0_C_DOUBLE
-    CALL findImkM(i, boundL, valueL, df, m)
+    CALL evaluateImkM(i, boundL, valueL, df, m)
 
     IF ( (multiplier * valueL) .LT. 0.0E0_C_DOUBLE ) THEN
       ! - Gone too far, so keep previous bound
@@ -100,7 +100,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
       ! - If fn value at SP is positive, take bold steps right to find upper bound
       boundR = boundR * 1.5E0_C_DOUBLE
 
-      CALL findImkM(i, boundR, valueR, df, m)
+      CALL evaluateImkM(i, boundR, valueR, df, m)
 
       IF ( (multiplier * valueR) .LT. 0.0E0_C_DOUBLE ) THEN
         ! - Found an upper bound where the fn value is negative
@@ -118,7 +118,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
 
     oldBoundR = boundR
     boundR = boundR * 0.90E0_C_DOUBLE
-    CALL findImkM(i, boundR, valueR, df, m)
+    CALL evaluateImkM(i, boundR, valueR, df, m)
     IF ( (multiplier * valueR).GT. 0.0E0_C_DOUBLE ) THEN
       ! Gone too far, so keep previous bound
       keepSearching = .FALSE.

@@ -1,4 +1,4 @@
-SUBROUTINE findImkdd(i, t, Imkdd)
+SUBROUTINE evaluateImkdd(i, t, Imkdd)
   ! Evaluate Im k''(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -26,4 +26,4 @@ SUBROUTINE findImkdd(i, t, Imkdd)
 
   Imkdd = front * (DSIN(omega * pindex) / (DCOS(omega) ** pindex) )
 
-END SUBROUTINE findImkdd
+END SUBROUTINE evaluateImkdd

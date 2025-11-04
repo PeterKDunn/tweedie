@@ -1,4 +1,4 @@
-SUBROUTINE findRekd(i, t, Redk)
+SUBROUTINE evaluateRekd(i, t, Redk)
   ! Find the value of Re k'(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -25,4 +25,4 @@ SUBROUTINE findRekd(i, t, Redk)
          DSIN( omega * pindex ) / &
          (DCOS(omega)**pindex)
   
-END SUBROUTINE findRekd
+END SUBROUTINE evaluateRekd

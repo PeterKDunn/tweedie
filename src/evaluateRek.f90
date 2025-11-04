@@ -1,4 +1,4 @@
-SUBROUTINE findRek(i, t, Rek)
+SUBROUTINE evaluateRek(i, t, Rek)
   ! Find the value of Re k(t)
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -32,4 +32,4 @@ SUBROUTINE findRek(i, t, Rek)
   alpha = (2.0E0_C_DOUBLE - Cp)/(1.0E0_C_DOUBLE - Cp)
   Rek = front * ( DCOS(omega * alpha)/(DCOS(omega)**alpha) - 1.0E0_C_DOUBLE )
 
-END SUBROUTINE findRek
+END SUBROUTINE evaluateRek

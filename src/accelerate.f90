@@ -4,8 +4,8 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN)                 :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(201), wvec(201)
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 201), Nmatrix(2, 201)
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(501), wvec(501)
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 501), Nmatrix(2, 501)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
 
   ! --- Local variables ---
@@ -16,24 +16,16 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE)             :: s, maxinv, invx
   REAL(KIND=C_DOUBLE), PARAMETER  :: SAFETY_SCALE = 1.0D-12
   REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
-  REAL(KIND=C_DOUBLE)             :: xscaled(201)
+  REAL(KIND=C_DOUBLE)             :: xscaled(501)
 
   ! --- Constants; initialization ---
   maxSize  = 200
   l_nzeros = MIN(nzeros, maxSize)
-
-  IF (l_nzeros .LE. 0) THEN
-     West = 0.0D0
-     RETURN
-  END IF
+  
 
   ! --- Rescaling, to improve numerical conditioning ---
   maxinv = 0.0D0
   DO p = 1, l_nzeros
-     IF (xvec(p) .EQ. 0.0E0_C_DOUBLE) THEN
-        West = 0.0E0_C_DOUBLE
-        RETURN
-     END IF
      invx = DABS(1.0E0_C_DOUBLE / xvec(p))
      IF (invx .GT. maxinv) maxinv = invx
   END DO
@@ -55,6 +47,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
 
   IF (DABS(psi_new) .LT. 1.0E-31_C_DOUBLE) THEN
      West = FF_current
+!      WRITE(*,*) "CCCCCCCCCCCCCCCCCCCCCCCCC"
      RETURN
   END IF
 
@@ -88,6 +81,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
      IF ( (DABS(Mmatrix(2, p)) .GT. HUGE_LIMIT) .OR.    &
           (DABS(Nmatrix(2, p)) .GT. HUGE_LIMIT) ) THEN
         West = FF_current
+!      WRITE(*,*) "DDDDDDDDDDDDDDDDDDDDDDDDDD"
         RETURN
      END IF
   END DO
@@ -99,6 +93,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
     IF (.NOT.(Nmatrix(2, l_nzeros) .EQ. Nmatrix(2, l_nzeros))) THEN
        ! NaN detected, use previous column
        West = Mmatrix(2, l_nzeros - 1) / Nmatrix(2, l_nzeros - 1)
+!      WRITE(*,*) "EEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
        RETURN
     END IF
     IF (DABS(Nmatrix(2, l_nzeros)) .LT. tinyDenom .OR. &
@@ -112,13 +107,14 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   ELSE
     West = FF_current
   END IF
-
+  
 
   ! --- Copy row 2 to row 1 ---
   DO p = 1, l_nzeros
      Mmatrix(1, p) = Mmatrix(2, p)
      Nmatrix(1, p) = Nmatrix(2, p)
   END DO
+! WRITE(*,*) "WELL THEN: WEST = ", West
 
   RETURN
 END SUBROUTINE accelerate

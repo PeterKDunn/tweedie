@@ -23,17 +23,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     END FUNCTION findKmaxSP
 
 
-    SUBROUTINE improveKmaxSPbounds(i, startT, tmaxL, tmaxR)
-      ! Crudely improve the starting point for finding Kmax, as
-      ! sometimes the starting point can be critical for timely convergence
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      IMPLICIT NONE  
-      REAL(KIND=C_DOUBLE), INTENT(IN)       :: startT
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)    :: tmaxL, tmaxR
-      INTEGER, INTENT(IN)                   :: i
-    END SUBROUTINE improveKmaxSPbounds
-
-
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
       ! Crudely improve the bounds for find the zeros of the integrand 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -76,7 +65,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     END SUBROUTINE rtnewton
       
 
-    SUBROUTINE findImkdZero(i_in, t, f, df) 
+    SUBROUTINE evaluateImkdZero(i_in, t, f, df) 
       ! Evaluate Im k'(t)  and  Im k''(t)  for solving for Kmax (i.e., Im k'(t) = 0)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       
@@ -84,10 +73,10 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       INTEGER(C_INT), INTENT(IN)        :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE findImkdZero
+    END SUBROUTINE evaluateImkdZero
       
 
-    SUBROUTINE findImk(i_in, t_in, kmax_out) 
+    SUBROUTINE evaluateImk(i_in, t_in, kmax_out) 
       ! Find Im k(t)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -95,7 +84,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       INTEGER(C_INT), INTENT(IN) :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN) :: t_in
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax_out
-    END SUBROUTINE findImk
+    END SUBROUTINE evaluateImk
       
 
     INTEGER(C_INT) FUNCTION myfloor(x) 
@@ -109,7 +98,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   END INTERFACE
 
 
-  REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point
+  REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
   REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, omega_SP, ratio
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   
@@ -124,8 +113,14 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
   ! Find starting points
-  IF (current_y .GE. current_mu) THEN
-    ! CASE: IF y >= mu, and Im k(t) heads down
+  WRITE(*,*) " - Finding bounds and starting point for kmax"
+  CALL evaluateImkd(i, 0.0_C_DOUBLE, slope_At_Zero)
+  IF (Cverbose) WRITE(*,*) "   - Slope at t = 0: ", slope_At_Zero 
+
+  IF (slope_At_Zero .LE. 0.0_C_DOUBLE) THEN
+    IF (Cverbose) WRITE(*,*) "   - Im k(t) heads downwards immediately"
+    ! Im k(t) initially heads downwards
+    ! This includes the case 'IF y >= mu'
     ! Nothing to do; easy-peasy:
     mmax = 0
     mfirst = -1
@@ -133,10 +128,12 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     tmax = 0.0_C_DOUBLE
     leftOfMax = 0
   ELSE
-    ! CASE: IF y < mu: trickier, esp. with 1 < p < 2
+    ! CASE: IF slope is initially UPWARDS: trickier, esp. with 1 < p < 2
     ! Good starting point often needed
+    IF (Cverbose) WRITE(*,*) "   - Im k(t) initially tends upwards"
+    
     ratio = current_y / current_mu
-
+  
     omega_SP = -1
     t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
                     ( ( 1.0_C_DOUBLE - Cp) * current_phi)
@@ -149,33 +146,41 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
                       ( ( 1.0_C_DOUBLE - Cp) * current_phi)
     END IF
-    
+    IF (Cverbose) WRITE(*,*) "   - Start point for kmax: t =", t_Start_Point
+      
     ! Now find kmax and tmax
-    IF ( current_y < current_mu ) THEN
-      tmaxL = 0.0_C_DOUBLE
-      tmaxR = t_Start_Point * 2.0_C_DOUBLE
-      CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
-
-      CALL rtsafe(i,                &
-                    findImkdZero,   &
-                    t_Start_Point,  &
-                    tmaxL,          &
-                    tmaxR,          &
-                    aimrerr,        &
-                    tmax)
+    IF (Cpsmall) THEN
+        tmaxL = 0.0_C_DOUBLE       ! Since Left bound can be zero
+        tmaxR = t_Start_Point * 2.0_C_DOUBLE
+        IF (Cverbose) WRITE(*,*) "   - Initial bounds on kmax: t =", tmaxL, tmaxR
+  
+        CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
+      ! Crudely improve the bounds that bracket the starting point for finding Kmax.
+          CALL rtsafe(i,                &
+                      evaluateImkdZero,   &
+                      t_Start_Point,  &
+                      tmaxL,          &
+                      tmaxR,          &
+                      aimrerr,        &
+                      tmax)
     ELSE
-      CALL rtnewton(i,              &
-                    findImkdZero,   &
-                    t_Start_Point,  &
-                    aimrerr,        &
-                    tmax)
+      ! p > 2
+      IF (Cverbose) WRITE(*,*) "   - No bounds, so using RTNEWTON"
+        t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
+                        ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+        CALL rtnewton(i,              &
+                      evaluateImkdZero,   &
+                      t_Start_Point,  &
+                      aimrerr,        &
+                      tmax)
     END IF
+    IF (Cverbose) WRITE(*,*) "    - SUCCESSS: kmax found at t =",tmax 
 
     ! Find mmax, which depends on whether we are working with the PDF or the CDF.
     ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
     ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
     !       the CDF has integrand zeros at Im k(t) =        m pi/y.
-    CALL findImk(i, tmax, kmax)
+    CALL evaluateImk(i, tmax, kmax)
     
     IF (Cpdf) THEN
       mmax = myfloor(2.0_C_DOUBLE * kmax / pi)
@@ -198,7 +203,135 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       ENDIF 
     END IF
   END IF
-  
-  RETURN
+
+  CONTAINS
+    
+    SUBROUTINE improveKmaxSPBounds(i, startTKmax, tmaxL, tmaxR)
+      ! Crudely improve the bounds that bracket the starting point for finding Kmax.
+      ! Sometime a decent starting point is crucial for timely convergence.
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+    
+      IMPLICIT NONE
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: startTKmax
+      INTEGER(C_INT), INTENT(IN)          :: i
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: tmaxL, tmaxR
+    
+      ! --- Local Variables ---
+      REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
+      REAL(KIND=C_DOUBLE)     :: boundL, boundR, slopeL, slopeR, SPslope
+      REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR
+      INTEGER(C_INT)          :: max_Search, search_Its
+      LOGICAL                 :: keep_Searching
+      
+      EXTERNAL evaluateImkd
+      
+    
+      ! Grab the relevant scalar values for this iteration:
+      current_y    = Cy(i)    ! Access y value for index i
+      current_mu   = Cmu(i)   ! Access mu value for index i
+      current_phi  = Cphi(i)  ! Access phi value for index i
+    
+      max_Search = 10
+      
+      !!!!! LOWER BOUND
+      !   - If slope at SP is *positive* (which it should be), only need to creep to the right
+      boundL = tmaxL
+      boundR = tmaxR
+
+      CALL evaluateImkd(i, boundL, slopeL)
+      CALL evaluateImk(i, boundL, Imk_value)
+      
+      ! Slope at starting point should always be positive if we are here:
+      ! if the slope is negative, Im k(t) heads down and m = -1, -2, ...
+
+      ! - Now creep to the right from boundL (refine the lower bound)
+      keep_Searching = .TRUE.
+      DO WHILE (keep_Searching)
+        oldBoundL = boundL
+        boundL = (boundL + 1.0E-2_C_DOUBLE) * 1.250E0_C_DOUBLE
+        CALL evaluateImkd(i, boundL, slopeL)
+        CALL evaluateImk(i, boundL, Imk_value)
+        
+        IF (Cverbose) WRITE(*,*) "    - Improved bounds:", boundL, boundR
+        IF (Cverbose) WRITE(*,*) "      with values of Im k(t):", slopeL, "(", slopeR, ")"
+
+        IF ( (slopeL .LT. 0.0E0_C_DOUBLE ) .OR.   &
+             (Imk_value .LT. 0.0_C_DOUBLE) ) THEN
+          ! - Gone too far, so keep previous bound
+          keep_Searching = .FALSE.
+          boundL = oldBoundL
+        END IF
+      END DO
+      tmaxL = boundL
+      IF (Cverbose) WRITE(*,*) "      - Happy with improved lower bound"
+
+
+
+      !!!!! UPPER BOUND
+      
+      ! If the improved lower bouond is LARGER than the original upper bound... FIX! 
+      IF (tmaxL .GT. boundR) boundR = tmaxL * 2.0_C_DOUBLE 
+      
+      ! Find the slope at boundR the starting point (SP)
+      CALL evaluateImkd(i, boundR, slopeR)
+      
+      ! Find the value if kmax at the starting point (SP)
+      CALL evaluateImk(i, boundR, Imk_value)
+
+      ! A valid upper bound:
+      ! - must have a negative SLOPE (must be negative)i.e., heading down), *AND*
+      ! - must have a positive vale of kmax (or we may have a local maximum only) 
+    
+      search_Its = 0
+      ! - If slope at SP is *positive*, and kmax positive, need bold steps to the right
+      IF ( (slopeR .GT. 0.0E0_C_DOUBLE) .AND.  &
+           (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
+        boundR = startTKmax
+        keep_Searching = .TRUE.
+        
+        DO WHILE (keep_Searching)
+          ! - If slope at SP is positive, take bold steps right to find upper bound
+          search_Its = search_Its + 1
+          boundR = (boundR + 0.1_C_DOUBLE) * 2.0E0_C_DOUBLE
+    
+          CALL evaluateImkd(i, boundR, slopeR)
+          CALL evaluateImk(i, boundR, Imk_value)
+        IF (Cverbose) WRITE(*,*) "    - Improved bounds:", boundL, boundR
+        IF (Cverbose) WRITE(*,*) "      with values of Im k(t):", slopeL, slopeR
+    
+          IF ( (slopeR .LT. 0.0E0_C_DOUBLE ) .AND.  &
+               (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
+            ! - Found an upper bound where the slope is negative, and kmax is positive
+            keep_Searching = .FALSE.
+          END IF 
+          IF ( search_Its .GT. max_Search) keep_Searching = .FALSE.
+        END DO
+      END IF
+      IF (Cverbose) WRITE(*,*) "      - Happy with improved *bold* upper bound"
+    
+      ! - Now creep to the left from boundR (refine the upper bound)
+      keep_Searching = .TRUE.
+      DO WHILE (keep_Searching)
+        oldBoundR = boundR
+        boundR = boundR * 0.90E0_C_DOUBLE
+        CALL evaluateImkd(i, boundR, slopeR)
+        CALL evaluateImk(i, boundR, Imk_value)
+    
+        IF (Cverbose) WRITE(*,*) "    - Improved bounds:", boundL, boundR
+        IF (Cverbose) WRITE(*,*) "      with values of Im k(t):", slopeL, slopeR
+
+
+        IF ( (slopeR .GT. 0.0E0_C_DOUBLE) .AND.   &
+             (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
+          ! - Gone too far, so keep previous bound
+          keep_Searching = .FALSE.
+          boundR = oldBoundR
+        END IF
+      END DO
+      tmaxR = boundR
+      IF (Cverbose) WRITE(*,*) "      - Happy with improved upper bound"
+
+    END SUBROUTINE improveKmaxSPBounds
+
 
 END SUBROUTINE findKmax

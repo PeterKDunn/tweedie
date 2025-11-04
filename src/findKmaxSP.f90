@@ -11,7 +11,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
   REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
 
   INTERFACE
-    SUBROUTINE findImkd(i, t, Imkd)
+    SUBROUTINE evaluateImkd(i, t, Imkd)
       ! Find Im k'(t)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -19,7 +19,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
       REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
       INTEGER(C_INT), INTENT(IN)         :: i
       REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Imkd
-    END SUBROUTINE findImkd
+    END SUBROUTINE evaluateImkd
   END INTERFACE
   
 
@@ -50,7 +50,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
     tsmall = current_mu**(1.0_C_DOUBLE - Cp) / ( (1.0_C_DOUBLE - Cp)) * &
              DTAN(omegaInf)
     
-    CALL findImkd(i, tsmall, slope)
+    CALL evaluateImkd(i, tsmall, slope)
     
     IF (slope .LE. 0.0_C_DOUBLE) THEN
       findKmaxSP = tsmall
@@ -62,7 +62,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
   tlarge = (current_mu / current_y)**(Cp - 1.0_C_DOUBLE) * &
             current_mu**(1.0_C_DOUBLE - Cp) / (current_phi * abs1mp)
 
-  CALL findImkd(i, tlarge, slope)
+  CALL evaluateImkd(i, tlarge, slope)
 
   IF (slope .LE. 0.0_C_DOUBLE) THEN
     findKmaxSP = tlarge

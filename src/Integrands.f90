@@ -20,7 +20,7 @@ CONTAINS
     
     
     INTERFACE
-      SUBROUTINE findImk(i, t, Imk)
+      SUBROUTINE evaluateImk(i, t, Imk)
         ! Find Im k(t)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -28,10 +28,10 @@ CONTAINS
         INTEGER(C_INT), INTENT(IN)          :: i
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
-      END SUBROUTINE findImk
+      END SUBROUTINE evaluateImk
 
       
-      SUBROUTINE findRek(i, t, Rek)
+      SUBROUTINE evaluateRek(i, t, Rek)
         ! Find Re k(t)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
@@ -39,17 +39,18 @@ CONTAINS
         INTEGER(C_INT), INTENT(IN)          :: i
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
-      END SUBROUTINE findRek
+      END SUBROUTINE evaluateRek
       
       
-      SUBROUTINE findLambda(i, lambda)
+      SUBROUTINE evaluateLambda(i, lambda)
        ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
         INTEGER(C_INT), INTENT(IN)        :: i
         REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda
-      END SUBROUTINE findLambda
+      END SUBROUTINE evaluateLambda
+      
     END INTERFACE
       
   
@@ -66,12 +67,12 @@ CONTAINS
   
       RETURN
     ELSE
-      CALL findRek(i, t, Rek)
-      CALL findImk(i, t, Imk)
+      CALL evaluateRek(i, t, Rek)
+      CALL evaluateImk(i, t, Imk)
       
       IF (Cpdf) THEN
         IF (CpSmall) THEN
-          CALL findLambda(i, lambda)
+          CALL evaluateLambda(i, lambda)
           integrand_result = DEXP( Rek ) * DCOS( Imk ) - DEXP( -lambda ) * DCOS(t * current_y )
         ELSE
           integrand_result = DEXP( Rek ) * DCOS( Imk )

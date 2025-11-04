@@ -1,4 +1,4 @@
-SUBROUTINE findLambda(i, lambda)
+SUBROUTINE evaluateLambda(i, lambda)
   ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
   USE tweedie_params_mod, ONLY: Cmu, Cphi, Cp, CpSmall
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -23,4 +23,4 @@ SUBROUTINE findLambda(i, lambda)
     ! NOTE: No negative sign in front
   END IF
   
-END SUBROUTINE findLambda
+END SUBROUTINE evaluateLambda
