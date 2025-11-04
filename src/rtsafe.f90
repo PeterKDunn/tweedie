@@ -1,4 +1,4 @@
-SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
+SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
  ! Adapted from NUMERICAL RECIPES Sect. 9.4
 !  FUNCTION rtsafe(funcd, x1, x2, xacc)
 
@@ -22,7 +22,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   PROCEDURE(funcd_signature) :: funcd
 
   INTEGER(C_INT), INTENT(IN)        :: i
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc, xstart
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
 
   INTEGER(C_INT)                    :: MAXIT, j
@@ -66,7 +66,7 @@ SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
   CALL funcd(i, root, f, df)
     
   DO j = 1, MAXIT ! Loop over allowed iterations.
-    IF ( ( (root - xh) * df - f) *( (root - xl) * df - f) .GT. 0.0_C_DOUBLE     & 
+    IF ( ( (root - xh) * df - f) * ( (root - xl) * df - f) .GT. 0.0_C_DOUBLE    & 
          .OR.                                                                   &
          DABS(2.0_C_DOUBLE * f) .GT. DABS(dxold * df) ) THEN
       ! Bisect if Newton out of range,

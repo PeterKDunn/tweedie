@@ -43,13 +43,13 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     END SUBROUTINE funcd_signature
 
 
-    SUBROUTINE rtsafe(i_in, funcd, xstart, x1, x2, xacc, root) 
+    SUBROUTINE rtsafe(i_in, funcd, x1, x2, xacc, root) 
       ! Find zeros using (moodified) Newton's method with bisection
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       PROCEDURE(funcd_signature) :: funcd 
     
       INTEGER(C_INT), INTENT(IN)        :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
     END SUBROUTINE rtsafe
       
@@ -158,7 +158,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       ! Crudely improve the bounds that bracket the starting point for finding Kmax.
           CALL rtsafe(i,                &
                       evaluateImkdZero,   &
-                      t_Start_Point,  &
                       tmaxL,          &
                       tmaxR,          &
                       aimrerr,        &
@@ -218,7 +217,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     
       ! --- Local Variables ---
       REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
-      REAL(KIND=C_DOUBLE)     :: boundL, boundR, slopeL, slopeR, SPslope
+      REAL(KIND=C_DOUBLE)     :: boundL, boundR, slopeL, slopeR
       REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR
       INTEGER(C_INT)          :: max_Search, search_Its
       LOGICAL                 :: keep_Searching

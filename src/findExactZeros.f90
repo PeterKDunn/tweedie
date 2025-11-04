@@ -39,13 +39,13 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
     END SUBROUTINE rtnewton
 
 
-    SUBROUTINE rtsafe(i, funcd, xstart, x1, x2, xacc, root)
+    SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
       ! Find zeros using (moodified) Newton's method with bisection
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
       INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xstart, xacc
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
       
       PROCEDURE(funcd_signature) :: funcd
@@ -96,13 +96,12 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
   ! For robustness, use rtsafe when the  distance between zeros 
   ! is expected to be small (i.e., in the tail).
   IF ( m .LE. -3 ) THEN ! Use rtsafe whenever m islarge and negative
-!WRITE(*,*) ">> RTSAFE 1; with bounds", tL, tR
-    CALL rtsafe(i, evaluateImkM_wrapper, tStart, tL, tR, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
   ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! When small p and small y, fight harder for good starting bounds
 !WRITE(*,*) ">> RTSAFE 2"
     CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
-    CALL rtsafe(i, evaluateImkM_wrapper, tStart, tL, tR, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
 !WRITE(*,*) ">> NEWTON"

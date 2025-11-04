@@ -58,18 +58,18 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)    :: its_Acceleration, count_PreAcc_regions, count_Acc_Regions
-  INTEGER(C_INT)    :: m, min_Acc_Regions, preAccMax
-  INTEGER(C_INT)    :: leftOfMax, flip_To_Other_Side, convergence_Acc, stop_PreAccelerate
+  INTEGER(C_INT)    :: count_PreAcc_regions, count_Acc_Regions
+  INTEGER(C_INT)    :: m, min_Acc_Regions
+  INTEGER(C_INT)    :: leftOfMax, flip_To_Other_Side, convergence_Acc
   LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre
   
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero, t_Start_Point
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 501), Nmatrix(2, 501), xvec(501), wvec(501)
-  REAL(KIND=C_DOUBLE)   :: West, Wold, Wold2, TMP, Wvector(3)
-  REAL(KIND=C_DOUBLE)   :: zeroBoundR, zeroBoundL, zeroStartPoint
+  REAL(KIND=C_DOUBLE)   :: TMP
+  REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -139,7 +139,6 @@ WRITE(*,*) "Initial region area:", area0, "between 0 and", zeroR, "(right m = ",
 WRITE(*,*) "   "
 
   count_Integration_Regions = 1
-WRITE(*,*) "A: count regions:", count_Integration_Regions
 
 
 !  CALL findWhereAccelerationStarts()
@@ -167,7 +166,6 @@ END IF
 
 
 
-WRITE(*,*) "B: count regions:", count_Integration_Regions
 
 
 
@@ -194,7 +192,6 @@ WRITE(*,*) "B: count regions:", count_Integration_Regions
   ! --- WIND THINGS UP ---
   count_Integration_Regions = count_Integration_Regions + count_Acc_regions
   areaT = area0 + area1 + areaA
-WRITE(*,*) "C: count regions:", count_Integration_Regions
 
   IF (Cverbose) THEN
     CALL DBLEPR("* Initial area0: ", -1, area0, 1)
@@ -281,7 +278,7 @@ WRITE(*,*) "C: count regions:", count_Integration_Regions
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area0, zeroR
       INTEGER(C_INT), INTENT(IN)          :: m
       INTEGER(C_INT), INTENT(INOUT)       :: leftOfMax
-      REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBounbdL, zeroBoundR
+      REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: pi
 
 
@@ -344,7 +341,7 @@ WRITE(*,*) "C: count regions:", count_Integration_Regions
       LOGICAL(C_BOOL), INTENT(OUT)        :: converged_Pre
 
       INTEGER(C_INT)                      :: mOld
-      REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
+      REAL(KIND=C_DOUBLE)                 :: zeroL, zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: pi, area1Old, tolerance, sumAOld
       LOGICAL(C_BOOL)                     :: stop_PreAccelerate
 
@@ -352,6 +349,7 @@ WRITE(*,*) "C: count regions:", count_Integration_Regions
       pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
       converged_Pre = .FALSE.
       tolerance = 1.0E-12_C_DOUBLE
+      sumAOld = 0.0_C_DOUBLE
       
       count_PreAcc_regions = 0  ! Count how many pre-acc regions are evaluated
 
@@ -449,8 +447,8 @@ WRITE(*,*) "- Between ", zeroL, zeroR, "pre-accelerate area: ", sumA,"(based on 
       INTEGER(C_INT), INTENT(OUT)         :: its_Acceleration
 
       INTEGER(C_INT)                      :: mOld
-      REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroBoundL, zeroBoundR
-      REAL(KIND=C_DOUBLE)                 :: pi, West, Wold, Wold2
+      REAL(KIND=C_DOUBLE)                 :: zeroBoundL, zeroBoundR
+      REAL(KIND=C_DOUBLE)                 :: West, Wold, Wold2
       LOGICAL(C_BOOL)                     :: keep_Accelerating, converged_Accelerating
 
       ! Initialisation of acceleration 
