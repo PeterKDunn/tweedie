@@ -1,11 +1,11 @@
 SUBROUTINE evaluateImk(i, t, Imk) 
   ! Evaluate Im k(t)
+  
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
-      
-  ! Arguments
+  
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
   INTEGER(C_INT), INTENT(IN)          :: i
@@ -27,7 +27,7 @@ SUBROUTINE evaluateImk(i, t, Imk)
 
   IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
       (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
-      WRITE(*,*) "ERROR (evaluateImk): Omega out of range:", omega
+      CALL DBLEPR("ERROR (evaluateImk): Omega out of range:", -1, omega, 1)
     STOP
   END IF
   alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)

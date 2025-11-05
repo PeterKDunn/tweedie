@@ -1,10 +1,12 @@
 SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   ! Improve the bounds that bracket the zero of Im k(t).
   ! A decent starting point is sometimes crucial to timely convergence.
+  
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
+  
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: startZero
   INTEGER(C_INT), INTENT(IN)         :: i, m, leftOfMax
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
@@ -86,7 +88,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
 
 
   ! UPPER BOUND
-  ! - SPvaluecomputed above
+  ! - SPvalue computed above
   boundR = startZero
 
   itsSearch = 0

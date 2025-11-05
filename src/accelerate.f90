@@ -1,14 +1,15 @@
 SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
-  ! Accelerate the convergence of the infinite integral
+  ! Accelerate the convergence of the infinite integral., the tail area
+  
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  
   IMPLICIT NONE
-
+  
   INTEGER, INTENT(IN)                 :: nzeros
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(501), wvec(501)
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 501), Nmatrix(2, 501)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
 
-  ! --- Local variables ---
   INTEGER                         :: p, l_nzeros, maxSize
   REAL(KIND=C_DOUBLE)             :: denom, psi_new, FF_current, sumw
   REAL(KIND=C_DOUBLE)             :: tinyDenom, scale_denom
@@ -18,13 +19,13 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
   REAL(KIND=C_DOUBLE)             :: xscaled(501)
 
-  ! --- Constants; initialization ---
+  ! Constants; initialization
   maxSize  = 200
   l_nzeros = MIN(nzeros, maxSize)
   
 
-  ! --- Rescaling, to improve numerical conditioning ---
-  maxinv = 0.0D0
+  ! Rescaling, to improve numerical conditioning
+  maxinv = 0.0E0_C_DOUBLE
   DO p = 1, l_nzeros
      invx = DABS(1.0E0_C_DOUBLE / xvec(p))
      IF (invx .GT. maxinv) maxinv = invx
@@ -36,10 +37,10 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   END DO
 
 
-  ! --- BEGIN: Main algorithm ---
+  ! BEGIN: Main algorithm
   psi_new = wvec(nzeros)
-
   sumw = 0.0E0_C_DOUBLE
+
   DO p = 1, nzeros
      sumw = sumw + wvec(p)
   END DO
@@ -47,10 +48,10 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
 
   IF (DABS(psi_new) .LT. 1.0E-31_C_DOUBLE) THEN
      West = FF_current
-!      WRITE(*,*) "CCCCCCCCCCCCCCCCCCCCCCCCC"
      RETURN
   END IF
 
+  ! Compute N, M matrices entries
   Mmatrix(2, 1) = FF_current / psi_new
   Nmatrix(2, 1) = 1.0E0_C_DOUBLE / psi_new
 
@@ -69,6 +70,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
         RETURN
      END IF
 
+    ! Update N, M matrices entries
      Mmatrix(2, p) = (Mmatrix(1, p - 1) - Mmatrix(2, p - 1)) / denom
      Nmatrix(2, p) = (Nmatrix(1, p - 1) - Nmatrix(2, p - 1)) / denom
 
@@ -81,11 +83,10 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
      IF ( (DABS(Mmatrix(2, p)) .GT. HUGE_LIMIT) .OR.    &
           (DABS(Nmatrix(2, p)) .GT. HUGE_LIMIT) ) THEN
         West = FF_current
-!      WRITE(*,*) "DDDDDDDDDDDDDDDDDDDDDDDDDD"
         RETURN
      END IF
   END DO
-  ! --- END: Main algorithm ---
+  ! END: Main algorithm 
 
 
   ! Final accelerated estimate
@@ -93,7 +94,6 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
     IF (.NOT.(Nmatrix(2, l_nzeros) .EQ. Nmatrix(2, l_nzeros))) THEN
        ! NaN detected, use previous column
        West = Mmatrix(2, l_nzeros - 1) / Nmatrix(2, l_nzeros - 1)
-!      WRITE(*,*) "EEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
        RETURN
     END IF
     IF (DABS(Nmatrix(2, l_nzeros)) .LT. tinyDenom .OR. &
@@ -108,13 +108,13 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
     West = FF_current
   END IF
   
-
-  ! --- Copy row 2 to row 1 ---
+  
+  ! Copy row 2 to row 1
   DO p = 1, l_nzeros
      Mmatrix(1, p) = Mmatrix(2, p)
      Nmatrix(1, p) = Nmatrix(2, p)
   END DO
-! WRITE(*,*) "WELL THEN: WEST = ", West
 
   RETURN
+
 END SUBROUTINE accelerate

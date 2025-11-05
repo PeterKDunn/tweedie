@@ -1,9 +1,11 @@
 REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i) 
   ! Find the starting point for finding Kmax
+  
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
+  
   INTEGER(C_INT), INTENT(IN)    :: i
   REAL(KIND=C_DOUBLE)           :: tsmall, tlarge, abs1mp
   REAL(KIND=C_DOUBLE)           :: omegaInf, slope, pi
@@ -13,9 +15,11 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
   INTERFACE
     SUBROUTINE evaluateImkd(i, t, Imkd)
       ! Find Im k'(t)
+  
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
       IMPLICIT NONE
+  
       REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
       INTEGER(C_INT), INTENT(IN)         :: i
       REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Imkd

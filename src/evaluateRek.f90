@@ -1,15 +1,18 @@
 SUBROUTINE evaluateRek(i, t, Rek)
   ! Find the value of Re k(t)
+  
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
+
   REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
   INTEGER(C_INT), INTENT(IN)         :: i
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek
 
   REAL(KIND=C_DOUBLE) :: current_mu, current_phi
   REAL(KIND=C_DOUBLE) :: pi, omega, pindex, front, alpha, tanArg
+
   
   ! Grab the relevant scalar values for this iteration:
   current_mu   = Cmu(i)   ! Access mu value for index i
@@ -25,7 +28,7 @@ SUBROUTINE evaluateRek(i, t, Rek)
   ! Safety check
   IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-pi/2.0E0_C_DOUBLE))) THEN
      ! Error!
-     WRITE(*,*) "ERROR: omega out of bounds"
+      CALL DBLEPR("ERROR (evaluateRek): Omega out of range:", -1, omega, 1)
      RETURN
   END IF
   

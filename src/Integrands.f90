@@ -1,30 +1,35 @@
 MODULE Integrands_MOD
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  
   IMPLICIT NONE
   
 CONTAINS
+
   FUNCTION Integrands(i, t) RESULT(integrand_result)  BIND(C, NAME='Integrands')
     ! Function to return the integrand values
+
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
     IMPLICIT NONE
     
-    ! Arguments (Inputs)
     INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t                ! The internal variable for integration
+
     REAL(KIND=C_DOUBLE)               :: integrand_result ! The result of the function
     REAL(KIND=C_DOUBLE)               :: current_y, current_mu
     REAL(KIND=C_DOUBLE)               :: Imk, Rek, lambda
     
     
     INTERFACE
+    
       SUBROUTINE evaluateImk(i, t, Imk)
         ! Find Im k(t)
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
         IMPLICIT NONE
+
         INTEGER(C_INT), INTENT(IN)          :: i
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
@@ -36,6 +41,7 @@ CONTAINS
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
         IMPLICIT NONE
+
         INTEGER(C_INT), INTENT(IN)          :: i
         REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
         REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
@@ -47,6 +53,7 @@ CONTAINS
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         
         IMPLICIT NONE
+
         INTEGER(C_INT), INTENT(IN)        :: i
         REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda
       END SUBROUTINE evaluateLambda

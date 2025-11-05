@@ -1,14 +1,16 @@
 SUBROUTINE findAccelStart(i, tRightMost) 
   ! Find the value of t for when to invoke the acceleration algorithm 
+  
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tRightMost     ! The output starting point for acceleration
+  INTEGER(C_INT), INTENT(IN)        :: i
+
   REAL(KIND=C_DOUBLE)               :: pi, omegaRM, lRightMostD
-  INTEGER                           :: lRightMost
-  INTEGER(C_INT)                    :: i
+  INTEGER(C_INT)                    :: lRightMost
   REAL(KIND=C_DOUBLE)               :: current_y, current_mu, current_phi
   
   INTEGER, EXTERNAL :: myfloor

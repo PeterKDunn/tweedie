@@ -1,5 +1,6 @@
 SUBROUTINE evaluateImkd(i, t, Imkd) 
   ! Evaluate Im k'(t)
+  
   USE tweedie_params_mod, ONLY: Cp, Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
 
@@ -9,7 +10,6 @@ SUBROUTINE evaluateImkd(i, t, Imkd)
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
   
-  ! Local Variables
   REAL(KIND=C_DOUBLE) :: omega, pindex
   REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
 

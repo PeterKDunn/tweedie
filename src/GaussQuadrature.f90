@@ -1,15 +1,18 @@
-SUBROUTINE GaussQuadratureq(i, a, b, integral_result) 
-  ! Perform 512-pt Gaussian-Legemdre quadrature to evaluate integral
+SUBROUTINE GaussQuadrature(i, a, b, integral_result) 
+  ! Perform 512-pt Gaussian-Legendre quadrature to evaluate integrals
+  
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   USE Integrands_MOD, ONLY: Integrands
   
   IMPLICIT NONE
+  
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: a, b      ! Integration limits
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: integral_result
   INTEGER(C_INT), INTENT(IN)        :: i
 
-  INTEGER                               :: j, npoints
-  REAL(KIND=C_DOUBLE)                   :: xu, xl, fl, fu
+  INTEGER                                        :: j, npoints
+  REAL(KIND=C_DOUBLE)                            :: xu, xl, fl, fu
+  
   REAL(KIND=C_DOUBLE), PARAMETER, DIMENSION(256) :: absc = &
     (/ 0.003064962185159399599837515282D00, &
        0.009194771386432905660446301965D00, &
@@ -543,9 +546,9 @@ SUBROUTINE GaussQuadratureq(i, a, b, integral_result)
     ! Evaluate
     fl = Integrands(i, xl)
     fu = Integrands(i, xu)
-    integral_result = integral_result + weights(j) * ( fl + fu )
+    integral_result = integral_result + weights(j) * (fl + fu)
   END DO
   
-  integral_result = integral_result * ( b - a ) / 2.0E0_C_DOUBLE
+  integral_result = integral_result * (b - a) / 2.0E0_C_DOUBLE
 
-END SUBROUTINE GaussQuadratureq
+END SUBROUTINE GaussQuadrature

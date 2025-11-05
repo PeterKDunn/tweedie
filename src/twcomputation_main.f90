@@ -12,10 +12,15 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   INTEGER(C_INT), INTENT(OUT) :: exitstatus
   REAL(C_DOUBLE), INTENT(OUT) :: relerr
   INTEGER(C_INT), INTENT(OUT) :: Int_Regions(N)
+  
+  INTEGER               :: i, Int_RegionsTMP
+  REAL(KIND=C_DOUBLE)   :: funvalueTMP
 
   INTERFACE
+  
     SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, Int_Regions)
       ! Computes the integral in the PDF or CDF expression
+
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       USE tweedie_params_mod
       
@@ -26,44 +31,39 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
       REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(OUT)                      :: Int_Regions
     END SUBROUTINE ComputeTwIntegral
+
   END INTERFACE
 
-  ! --- Local variables ---
-  INTEGER               :: i, Int_RegionsTMP
-  REAL(KIND=C_DOUBLE)   :: funvalueTMP
-  
 
-  ! --- Initialization ---
+  ! Initialization
   Cp = p
   Cy = y
   Cmu = mu
   Cphi = phi
   CN = N
 
-  IF (pdf .EQ. 0) THEN
-    ! Computing the CDF
-    Cpdf = .FALSE.
+  IF (pdf .EQ. 0) THEN 
+    Cpdf = .FALSE.        ! Computing the CDF
   ELSE
-    ! Computing the PDF
-    Cpdf = .TRUE.
+    Cpdf = .TRUE.         ! Computing the PDF
   END IF
+  
   IF (verbose .EQ. 1) THEN
-    ! Verbose feedback
-    Cverbose = .TRUE.
+    Cverbose = .TRUE.     ! Verbose feedback
   ELSE
-    ! Minimal feedback
-    Cverbose = .FALSE.
+    Cverbose = .FALSE.    ! Minimal feedback
   END IF
 
   exitstatus = 1
   relerr = 0.0_C_DOUBLE
 
 
-  ! --- Determine case: pSmall = TRUE means 1 < p < 2 ---
+  ! Determine case: pSmall = TRUE means 1 < p < 2
   CpSmall = .FALSE.
   IF ( (p > 1.0_C_DOUBLE) .AND. (p < 2.0_C_DOUBLE) ) CpSmall = .TRUE.
 
-  ! --- Loop over N values ---
+
+  ! Loop over N values
   DO i = 1, N
     CALL ComputeTwIntegral(i, funvalueTMP, exitstatus, relerr, Int_RegionsTMP)
     funvalue(i) = funvalueTMP
