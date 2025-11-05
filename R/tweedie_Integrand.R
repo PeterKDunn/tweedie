@@ -15,7 +15,7 @@ tweedie_Integrand <- function(y, power, mu, phi, t, type = "PDF", yLimits = NULL
   # END: Define function to be used
 
   
-  kvals <- k(p = p, 
+  kvals <- k(p = power, 
              mu = mu, 
              phi = phi,
              y = y, 
@@ -117,5 +117,8 @@ tweedie_Integrand <- function(y, power, mu, phi, t, type = "PDF", yLimits = NULL
         y = -envelope,
         lty = 2,
         col = "grey")
+  
+  return(list(Real = k_Real,
+              Imag = k_Imag))
   
 }

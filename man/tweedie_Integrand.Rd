@@ -13,7 +13,8 @@
 	\item{yLimits}{the \eqn{y}{y}-limits to use when plotting the integrand; the default is \code{NULL} which uses R defaults.}
 }
 \value{
-	The side-effect is to produce a \eqn{2\times2}{2x2} grid of plots.
+  a list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively.
+	The main purpose of teh function is the side-effect of producing a \eqn{2\times2}{2x2} grid of plots.
 	The first is the imaginary parts of \eqn{k(t)}{k(t)}.
 	The second is \eqn{\sin\Im k(t)}{sinIm[k(t)]}.
 	The third is the real part of \eqn{\Re k(t)}{Re[k(t)]}
