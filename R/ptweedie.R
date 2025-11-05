@@ -37,6 +37,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   out <- special_Cases(q, mu, phi, power)
   special_p_Cases <- out$special_p_Cases
   special_y_Cases <- out$special_y_Cases
+  
   if (verbose & special_p_Cases) cat("  - Special case for p used\n")
   if ( any(special_y_Cases) ) {
     special_y_Cases <- out$special_y_Cases  
@@ -132,9 +133,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   }
 
   # Sanity fixes
-  
-  cat(f)
-  
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
 

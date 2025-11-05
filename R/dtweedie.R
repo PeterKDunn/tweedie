@@ -55,8 +55,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   out <- check_Inputs(y, mu, phi, power)
   mu <- out$mu
   phi <- out$phi
-  f <- array(0,
-             dim = length(q) )
+  density <- array(0,
+                   dim = length(q) )
   if (details) regions <- array(0, dim = length(q))
   
   
@@ -66,17 +66,18 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   out <- special_Cases(y, mu, phi, power)
   special_p_Cases <- out$special_p_Cases
   special_y_Cases <- out$special_y_Cases
+
   if (verbose & special_p_Cases) cat("  - Special case for p used\n")
   if ( any(special_y_Cases) ) {
     special_y_Cases <- out$special_y_Cases  
     if (verbose) cat("  - Special cases for first input found\n")
-    f <- out$f
+#    density[special_y_Cases] <- out$f[special_y_Cases]
+    density <- out$f
   }
-  
+
   ### END preliminary work
   
   
-  density <- y
   
   # Special Cases
   if ( power == 3 ){

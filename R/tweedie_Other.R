@@ -1,5 +1,3 @@
-
-#############################################################################
 tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
                             data, weights, offset, fit.glm = FALSE, 
                             do.smooth = TRUE, do.plot = FALSE, 

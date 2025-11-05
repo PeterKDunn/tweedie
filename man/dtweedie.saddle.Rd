@@ -12,7 +12,8 @@
 	\item{eps}{the offset in computing the variance function.
 	           The default is \code{eps = 1/6} (as suggested by Nelder and Pregibon, 1987).}
 	}
-	\value{saddlepoint (approximate) density for the given Tweedie distribution with parameters \code{mu}, \code{phi}	and 	\code{power}.
+\value{
+ saddlepoint (approximate) density for the given Tweedie distribution with parameters \code{mu}, \code{phi}	and 	\code{power}.
 }
 \details{
     The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{EDM}s), famous for their role in generalized linear models.

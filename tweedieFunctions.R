@@ -7,8 +7,6 @@ kappa <- function(mu, p){
   return(k)
 }
 
-
-
 theta <- function(mu, p){
   if (p == 1) {
     theta <- (mu^(1 - p) - 1) / (1 - p)  
@@ -79,7 +77,7 @@ kdashdashdash <- function(p, mu, phi, y, t){
 
 
 
-igrand <- function(p, mu, phi, y, t){
+igrandCDF <- function(p, mu, phi, y, t){
   rk <- k(p = p,
           mu = mu, 
           phi = phi, 
@@ -92,9 +90,6 @@ igrand <- function(p, mu, phi, y, t){
   }
   return(igrand)
 }
-
-
-
 
 
 igrandPDF <- function(p, mu, phi, y, t){

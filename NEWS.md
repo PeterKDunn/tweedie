@@ -1,17 +1,19 @@
 tweedie 3.0 (Release date: ??)
+==============
 
 Changes:
 
-* All code moved from FORTRAN77 to FORTRAN90
-* separated FORTRAN code into different files for easier debugging
-* PDF and CDF computations consolidated, reducing the amount of code substantially
-* Improvements to teh acceleration algorithm and root-finding algorithms, so should work better for more cases
-* Added  ptweedie.inversion  to the man page for  dtweedie
-* Tidied the man pages
-* Changes some function names (e.g,  tweedie.convert()  to  tweedie_Convert())
-* Separated R functions into separate files depending on purpose (e.g., dtweedie.R  and  ptweedie.R)
-* Moved the  tweedie_Extra  files into the main package
-* dtweedie.igrand()  renamed  tweedie_Igrand(),  and now also can plot the integrand for the DF
+* All code moved from FORTRAN77 to FORTRAN90. ALmost no FORTRAN code remains form version < 3.
+* PDF and CDF computations consolidated, reducing the amount of code substantially.
+* Separated FORTRAN code into different files for easier debugging.
+* Improvements to the acceleration algorithm and root-finding algorithms, so should work better for more cases.
+* Added verbose (shows what's happening behind the scenes) and details (reports on the fitting) as options for many user-facing R functions.
+* Added  ptweedie.inversion()  to the man page for  dtweedie.
+* Tidied the man pages.
+* Changes some function names (e.g,  tweedie.convert()  to  tweedie_Convert()).
+* Separated R functions into separate files depending on purpose (e.g., dtweedie.R  and  ptweedie.R).
+* Moved the  tweedie_Extra  files into the main package.
+* dtweedie.igrand()  renamed  tweedie_Igrand(),  and now also can plot the integrand for the DF.
 
 
 tweedie 2.3.5 (Release date: 2022-08-17)
