@@ -45,21 +45,49 @@ sort_Notation <- function(xi = NULL, power = NULL){
 
 ################################################################################
 
-check_Inputs <- function(y, mu, phi, power, random_Numbers = FALSE){
+check_Inputs <- function(y, mu, phi, power, type = FALSE){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
 
   # Since rtweedie(n, ...) does not have a first input as a vector, 
   # unlike [dpq]tweedie, flag this case and treat separately
-  vector_Length <- ifelse(random_Numbers, 
+  vector_Length <- ifelse(type == "random", 
                           max( length(mu), length(phi) ),
                           length(y))
   
   inputs_Error <- FALSE
 
   ### CHECKING VALUES ARE OK
+  # Checking the input values for qtweedie
+  if ( type == "quantile" ) {
+    if ( any(y < 0 ) | any(y > 1) ) {
+      stop("quantiles must be between 0 and 1.\n")
+      inputs_Error <- TRUE
+    }
+  }
+
+  
+  ### CHECKING VALUES ARE OK
+  # Checking the input values: n for rtweedie
+  if ( type == "quantile" ) {
+    if ( any(y > 1 ) ) {
+      stop("quantiles must be between 0 and 1.\n")
+      inputs_Error <- TRUE
+    }
+  }
+
+  
+  ### CHECKING VALUES ARE OK
+  # Checking the input values: n for rtweedie
+  if ( type == "random" ) {
+    if ( y <= 0 ) {
+      stop("n must be a positive integer.\n")
+      inputs_Error <- TRUE
+    }
+  }
+  
   # Checking the input values: power
-  if ( any(power < 1) )  {
+  if ( any(power < 1 ) ) {
     stop( "The Tweedie index parameter must be greater than 1.\n")
     inputs_Error <- TRUE
   }
@@ -76,11 +104,13 @@ check_Inputs <- function(y, mu, phi, power, random_Numbers = FALSE){
     inputs_Error <- TRUE
   }
 
+
+  
   
   ### CHECKING LENGTHS ARE OK
-  if (random_Numbers) {
-    mu  <- rep_len(mu, n)
-    phi <- rep_len(phi, n)
+  if (type == "random") {
+    mu  <- rep_len(mu, y)
+    phi <- rep_len(phi, y)
   } else {
     # Checking the length of  mu
     if ( length(mu) > 1) {
@@ -121,8 +151,8 @@ check_Inputs <- function(y, mu, phi, power, random_Numbers = FALSE){
 
 ################################################################################
 
-special_Cases <- function(y, mu, phi, power){
-  # Special cass may be one of two types:
+special_Cases <- function(y, mu, phi, power, type = "PDF"){
+  # Special cases may be one of two types:
   # - based on the value of p:
   #   - p = 0: use Normal distribution
   #   - p = 1: use Poisson distribution
@@ -144,19 +174,63 @@ special_Cases <- function(y, mu, phi, power){
   if ( (power == 0 ) | (power == 1) | (power== 2) ){
     # Special cases based on the value of p  
     special_p_Cases = TRUE
+    
+    # CASE: gamma (p=2)
     if ( power == 2 ) {
-      f <- pgamma( rate = 1 / (phi * mu), 
-                   shape = 1 / phi, 
-                   q = y )
+      if (type == "PDF") {
+        f <- dgamma( rate = 1 / (phi * mu), 
+                     shape = 1 / phi, 
+                     q = y )
+        return(f)
+      } else {
+        f <- pgamma( rate = 1 / (phi * mu), 
+                     shape = 1 / phi, 
+                     q = y )
+        return(f)
+      }
     }
+    
+    # CASE: inverse Gaussian (p=3)
+    if ( power == 3) {
+      if (type == "PDF") {
+        f <- statmod::dinvgauss(x = y, 
+                                mean = mu, 
+                                dispersion = phi)
+        return(f)
+      } else {
+        f <- statmod::pinvgauss(x = y, 
+                                mean = mu, 
+                                dispersion = phi)
+        return(f)
+      }
+    }
+
+    # CASE: Normal (p=0)
     if ( power == 0) {
-      f <- pnorm( mean = mu, 
-                  sd = sqrt(phi),
-                  q = y )
+      if (type == "PDF") {
+        f <- pnorm( mean = mu, 
+                    sd = sqrt(phi),
+                    q = y )
+        return(f)
+      } else {
+        f <- pnorm( mean = mu, 
+                    sd = sqrt(phi),
+                    q = y )
+        return(f)
+      }
     }
+    
+    # CASE: Poisson (p=1)
     if ( power == 1) {
-      f <- ppois(y, 
-                 lambda = mu / phi )
+      if (type == "PDF"){
+        f <- dpois(y, 
+                   lambda = mu / phi )
+        return(f)
+      } else {
+        f <- ppois(y, 
+                   lambda = mu / phi )
+        return(f)
+      }
     }
   } else {
     # Special cases BASED ON THE VALUES OF y (when y <= 0)
@@ -181,6 +255,7 @@ special_Cases <- function(y, mu, phi, power){
                special_p_Cases = special_p_Cases,    # scalar
                special_y_Cases = special_y_Cases) )  # vector
 }
+
 
 
 ################################################################################
