@@ -3,7 +3,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
-  if (verbose) cat("- Checking notation\n")
   out <- sort_Notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
@@ -13,25 +12,21 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
 
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  if (verbose) cat("- Checking, resizing inputs\n")
-  out <- check_Inputs(p, mu, phi, power)
+  out <- check_Inputs(p, mu, phi, power,
+                      type = "quantile")
   mu <- out$mu
   phi <- out$phi
   f <- array(0,
-             dim = length(q) )
-  if (details) regions <- array(0, dim = length(q))
-  
+             dim = length(p) )
+
   
   # IDENTIFY SPECIAL CASES
-  special_y_Cases <- rep(FALSE, length(y))
-  if (verbose) cat("- Checking for special cases\n")
-  out <- special_Cases(q, mu, phi, power)
+  special_y_Cases <- rep(FALSE, length(p))
+  out <- special_Cases(p, mu, phi, power)
   special_p_Cases <- out$special_p_Cases
   special_y_Cases <- out$special_y_Cases
-  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
   if ( any(special_y_Cases) ) {
     special_y_Cases <- out$special_y_Cases  
-    if (verbose) cat("  - Special cases for first input found\n")
     f <- out$f
   }
   
@@ -58,8 +53,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
     mu.1 <- mu.vec[i]
     phi.1 <- phi.vec[i]
     p.1 <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
-    pwr <- power[i]  # This is the Tweedie power, xi
-    
+    pwr <- power     # This is the Tweedie power, xi
     prob <- p.1 # Rename p to avoid confusion with  pwr: This is the  qtweedie()  input p (a probability)
     
     if ( pwr < 2 ) {
@@ -115,8 +109,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
                  phi = phi.1, 
                  pwr = pwr,
                  p.given = prob)
-      
-      #      cat("*** Start   =",start,"; pt =",pt,"\n")
       
       if ( pt == 0 ) ans2[i] <- start
       

@@ -34,7 +34,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   # IDENTIFY SPECIAL CASES
   special_y_Cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
-  out <- special_Cases(q, mu, phi, power)
+  out <- special_Cases(q, mu, phi, power, 
+                       type = "CDF")
   special_p_Cases <- out$special_p_Cases
   special_y_Cases <- out$special_y_Cases
   
@@ -49,7 +50,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
 
 
   if ( !special_p_Cases ) {
-    # NOT special p case
+    # NOT special p case; ONLY special y cases 
     
     if ( power > 2 ) {
       # For p > 2 the only option is the inversion
@@ -133,6 +134,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   }
 
   # Sanity fixes
+  f <- as.vector(f)
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
 
