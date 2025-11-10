@@ -3,7 +3,7 @@ sort_Notation <- function(xi = NULL, power = NULL){
   # so output presented appropriately
   
   if ( length(xi) > 1) stop(" The Tweedie index parameter (xi) must be a single value.")
-  if ( length(power) > 1) stop(" The Tweedie index paramerer (power) must be a single value.")
+  if ( length(power) > 1) stop(" The Tweedie index parameter (power) must be a single value.")
   
   if ( is.null(xi) & is.null(power) ) stop("The Tweedie index parameter (xi) must be given.")
   
