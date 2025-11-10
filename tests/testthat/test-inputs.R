@@ -16,6 +16,58 @@ test_that("Negative y-values return 0 for DF", {
 
 
 
+test_that("Unequal-size input vectors", {
+  
+  expect_error(  
+    ptweedie(c(0, 1, 4), mu = c(1, 3), phi = 1, power = 3.5),
+    "mu must be scalar, or the same length as the first input."
+  )
+  
+  expect_error(  
+    ptweedie(c(0, 1, 4), mu = 1, phi = c(1, 2), power = 3.5),
+    "phi must be scalar, or the same length as the first input."
+  )
+  
+  expect_error(
+    ptweedie(c(0, 1, 4), mu = 1, phi = 2, power = c(1.5, 3.5) ),
+    "The Tweedie index parameter \\(power\\) must be a single value."
+  )
+  
+  expect_message(
+    ptweedie(1, mu = 1, phi = 1, power = 1.5, xi = 1.2),
+    "Both  xi  and  power  are given; using the given value of  xi"
+  )
+
+  expect_error(
+    ptweedie(c(0, 1, 4), mu = 1, phi = 2, xi = c(1.5, 3.5) ),
+    "The Tweedie index parameter \\(xi\\) must be a single value."
+  )
+  
+  expect_error(  
+    dtweedie(c(0, 1, 4), mu = c(1, 3), phi = 1, power = 3.5),
+    "mu must be scalar, or the same length as the first input."
+  )
+  
+  expect_error(  
+    dtweedie(c(0, 1, 4), mu = 1, phi = c(1, 2), power = 3.5),
+    "phi must be scalar, or the same length as the first input."
+  )
+  
+  expect_error(
+    dtweedie(c(0, 1, 4), mu = 1, phi = 2, power = c(1.5, 3.5) ),
+    "The Tweedie index parameter \\(power\\) must be a single value."
+  )
+  expect_error(
+    dtweedie(c(0, 1, 4), mu = 1, phi = 2, xi = c(1.5, 3.5) ),
+    "The Tweedie index parameter \\(xi\\) must be a single value."
+  )
+  
+  expect_message(
+    dtweedie(1, mu = 1, phi = 1, power = 1.5, xi = 1.2),
+    "Both  xi  and  power  are given; using the given value of  xi"
+  )
+})
+
 
 test_that("Invalid parameters cause error in dtweedie", {
   # 1. Test for bad mu value (mu <= 0)
