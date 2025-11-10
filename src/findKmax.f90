@@ -104,16 +104,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax_out
     END SUBROUTINE evaluateImk
       
-
-    INTEGER(C_INT) FUNCTION myfloor(x) 
-      ! A floor function for my purposes
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: x
-    END FUNCTION myfloor
-      
   END INTERFACE
 
 
@@ -189,9 +179,9 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     CALL evaluateImk(i, tmax, kmax)
     
     IF (Cpdf) THEN
-      mmax = myfloor(2.0_C_DOUBLE * kmax / pi)
+      mmax = FLOOR(2.0_C_DOUBLE * kmax / pi)
     ELSE
-      mmax = myfloor(kmax / pi)
+      mmax = FLOOR(kmax / pi)
     END IF
 
     ! Establish the first value of m to use, and whether the first zero is to the left of kmax

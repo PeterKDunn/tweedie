@@ -31,7 +31,6 @@ SUBROUTINE findAccelStart(i, tmax, tStartAcc)
   ! So find the vale of t correspinding toi the number of inflections in Im k(t) only,
   ! and tRightMost is the maximum of t_max and this inflection value.
 
-
   ! Check the Im k(t) criterion
   n_max = FLOOR( Cp / (2.0_C_DOUBLE * (Cp - 1.0_C_DOUBLE) ) ) ! The maximum number of TPs
   t_nmax = current_mu ** (1.0_C_DOUBLE - Cp) / ( current_phi * (1.0_C_DOUBLE - Cp)) *  &
@@ -40,18 +39,5 @@ SUBROUTINE findAccelStart(i, tmax, tStartAcc)
   ! which is never smaller than the largest inflection pint of Re k(t).
   
   tStartAcc = MAX(tmax, t_nmax)
-
-!  IF ( (Cp > 1.4_C_DOUBLE) .AND. (Cp < 1.6_C_DOUBLE) ) THEN
-!    tRightMost = 1.0_C_DOUBLE
-!  ELSE
-!    lRightMostD = DACOS( (current_y / current_mu)**(Cp - 1.0_C_DOUBLE) ) /   &
-!                  (pi * (Cp - 1.0_C_DOUBLE) )
-!    lRightMost = myfloor(lRightMostD) + 1
-!
-!    ! Final calculation for tRightMost
-!    omegaRM = REAL(lRightMost, KIND=C_DOUBLE) * pi * (1.0_C_DOUBLE - Cp)
-!    tRightMost = DTAN(omegaRM) * current_mu ** (1.0_C_DOUBLE - Cp) /   &
-!                  ( current_phi * (1.0_C_DOUBLE - Cp) )
-!  END IF
   
 END SUBROUTINE findAccelStart
