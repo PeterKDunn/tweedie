@@ -21,7 +21,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   INTEGER(C_INT)    :: m, min_Acc_Regions
   INTEGER(C_INT)    :: leftOfMax, flip_To_Other_Side, convergence_Acc
   LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre
-  REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
+  REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr, tStartAcc
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
@@ -142,12 +142,18 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
 
-  !  CALL findWhereAccelerationStarts()
+  ! Find where to start accelerating
+  IF (Cp .GT. 2.0_C_DOUBLE) THEN
+    tStartAcc = 0.0_C_DOUBLE
+  ELSE
+    CALL findAccelStart(i, tmax, tStartAcc)
+  END IF
+  IF (Cverbose) CALL DBLEPR(" Start accelerating after:", -1, tStartAcc, 1)
 
-  ! Integrate (note: m is advanced in the SUBROUTINE)
+
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-  CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
+  CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax, tStartAcc,        & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
 
@@ -310,14 +316,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                               & ! INPUTS
+    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,  tStartAcc,                  & ! INPUTS
                                      area1, zeroR, count_PreAcc_regions, converged_Pre)                  ! OUTPUTS
       ! Integration of the region *after* the initial, but *before* acceleration is invoked.
-      ! Potentially, everything converges in this step (without needing acceleration).
+      ! Potentially, everything converges in this step (without ever needing acceleration).
       
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area1, zeroR
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax, tStartAcc
       INTEGER(C_INT)                      :: mfirst
       INTEGER(C_INT), INTENT(INOUT)       :: m, leftOfMax
       INTEGER(C_INT), INTENT(OUT)         :: count_PreAcc_regions
@@ -329,7 +335,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       LOGICAL(C_BOOL)                     :: stop_PreAccelerate
 
 
-!      pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
       converged_Pre = .FALSE.       ! .TRUE. if it seems the integration has converged
       tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
       sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
@@ -385,7 +390,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     
           ! Stop condition for pre-acceleration.
           ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
-          IF ( (count_PreAcc_regions .GE. 2) .AND. (zeroL .GT. tmax) ) THEN
+          IF ( (count_PreAcc_regions .GE. 2) .AND. (zeroL .GT. tStartAcc) ) THEN
             stop_PreAccelerate = .TRUE.
           END IF
          
