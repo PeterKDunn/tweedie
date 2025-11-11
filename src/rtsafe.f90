@@ -1,4 +1,4 @@
-SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
+SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root, rtsafe_Converged)
   ! Adapted from NUMERICAL RECIPES Sect. 9.4
   ! Uses a combination of Newton-Raphson and bisection, find the root of a function bracketed
   ! between x1 and x2. The root is refined until its accuracy is known within plus/minus xacc. 
@@ -7,13 +7,14 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
   ! both the function value and the first derivative of the function.
 
   USE tweedie_params_mod, ONLY: Cverbose
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
 
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
+  LOGICAL(C_BOOL), INTENT(OUT)      :: rtsafe_Converged
 
   INTEGER(C_INT)                    :: MAXIT, j
   REAL(KIND=C_DOUBLE)               :: df, dx, dxold, f, fh, fl, temp, xh, xl
@@ -38,6 +39,8 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
   PROCEDURE(funcd_signature) :: funcd
 
 
+  rtsafe_Converged = .TRUE.
+
   call funcd(i, x1, fl, df)
   call funcd(i, x2, fh, df)
   
@@ -45,7 +48,8 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
        .OR.                                                &
        (fl .LT. 0.0_C_DOUBLE) .AND. (fh .LT. 0.0_C_DOUBLE) ) THEN
     IF (Cverbose) CALL DBLEPR("ERROR (rtsafe): Root not bracketed: ", -1, x2, 1)
-    STOP
+    rtsafe_Converged = .FALSE.
+!    STOP
   END IF
 
   IF (fl .EQ. 0.0_C_DOUBLE) THEN
@@ -96,7 +100,8 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
     END IF
   END DO
 
-  IF (Cverbose) CALL INTPR(" ERROR (rtsafe): Maxmimum number of iteratioins reached:", -1, MAXIT, 1)
+  rtsafe_Converged = .FALSE.
+  IF (Cverbose) CALL INTPR(" ERROR (rtsafe): Maximum number of iteratoins reached:", -1, MAXIT, 1)
   
   RETURN
 

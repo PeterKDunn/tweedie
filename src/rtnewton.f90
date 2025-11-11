@@ -1,4 +1,4 @@
-SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
+SUBROUTINE rtnewton(i, funcd, xstart, xacc, root, root_Found)
   ! This function implements the Newton-Raphson method for finding a root
   ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
   ! It includes a line-search safeguard to ensure x remains > 0.
@@ -7,13 +7,14 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   ! both the function value and the first derivative of the function.
   
   USE tweedie_params_mod, ONLY: Cverbose
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE)               :: root
+  LOGICAL(C_BOOL), INTENT(OUT)      :: root_Found
   
   INTEGER, PARAMETER        :: MAXITS = 200
   INTEGER                   :: j
@@ -25,7 +26,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
     SUBROUTINE funcd_signature(i, x, f, df)
       ! Template for the function for which roots are sought.
 
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
       IMPLICIT NONE
 
@@ -42,12 +43,14 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   
   ! Initialize starting guess
   x_current = xstart
-
+  root_Found = .TRUE.
+  
   ! Check initial boundary condition
   IF (x_current .LE. 0.0_C_DOUBLE) THEN
-      IF (Cverbose) CALL DBLEPR("ERROR (rtnewton): Initial guess is not positive:", -1, xstart, 1)
-      root = HUGE(1.0_C_DOUBLE)
-      RETURN
+    IF (Cverbose) CALL DBLEPR("ERROR (rtnewton): Initial guess is not positive:", -1, xstart, 1)
+    root = HUGE(1.0_C_DOUBLE)
+    root_Found = .FALSE.
+    RETURN
   END IF
   
   DO j = 1, MAXITS
@@ -103,6 +106,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   
   ! If we get here, NO CONVERGENCE after MAXITS
   IF (j .GE. MAXITS) THEN
+    root_Found = .FALSE.
     IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergece after iterations:", -1, MAXITS, 1)
     IF (Cverbose) CALL DBLEPR("  Function value is:", -1, f, 1)
     IF (Cverbose) CALL DBLEPR("  at x:", -1, x_current, 1)

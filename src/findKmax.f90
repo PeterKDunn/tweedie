@@ -14,6 +14,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
   REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, omega_SP, ratio
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
+  LOGICAL(C_BOOL)         :: root_Found
   
 
   INTERFACE
@@ -29,20 +30,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       INTEGER, INTENT(IN)   :: j
     END FUNCTION findKmaxSP
 
-
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
-      ! Crudely improve the bounds for find the zeros of the integrand 
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      
-      IMPLICIT NONE  
-      
-      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax
-      
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
-    END SUBROUTINE improveKZeroBounds
-    
     
     SUBROUTINE funcd_signature(i_in, t, f, df) BIND(C)
       ! Template for the function for which zeros are sought
@@ -57,27 +44,29 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     END SUBROUTINE funcd_signature
 
 
-    SUBROUTINE rtsafe(i_in, funcd, x1, x2, xacc, root) 
+    SUBROUTINE rtsafe(i_in, funcd, x1, x2, xacc, root, root_Found) 
       ! Find zeros using (moodified) Newton's method with bisection
       
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
       PROCEDURE(funcd_signature) :: funcd 
     
       INTEGER(C_INT), INTENT(IN)        :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
+      LOGICAL(C_BOOL), INTENT(OUT)      :: root_Found
     END SUBROUTINE rtsafe
       
 
-    SUBROUTINE rtnewton(i_in, funcd, xstart, xacc, root) 
+    SUBROUTINE rtnewton(i_in, funcd, xstart, xacc, root, root_Found) 
       ! Find zeros using (moodified) Newton's method
       
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
       PROCEDURE(funcd_signature)        :: funcd
       
       INTEGER(C_INT), INTENT(IN)        :: i_in
       REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
+      LOGICAL(C_BOOL), INTENT(OUT)      :: root_Found
     END SUBROUTINE rtnewton
       
 
@@ -160,7 +149,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                   tmaxL,          &
                   tmaxR,          &
                   aimrerr,        &
-                  tmax)
+                  tmax,           &
+                  root_Found)
     ELSE
       ! p > 2
       t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
@@ -169,7 +159,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                     evaluateImkdZero,   &
                     t_Start_Point,  &
                     aimrerr,        &
-                    tmax)
+                    tmax,           &
+                    root_Found)
     END IF
 
     ! Find mmax, which depends on whether we are working with the PDF or the CDF.
