@@ -178,14 +178,14 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
     # CASE: gamma (p=2)
     if ( power == 2 ) {
       if (type == "PDF") {
-        f <- dgamma( rate = 1 / (phi * mu), 
-                     shape = 1 / phi, 
-                     q = y )
+        f <- dgamma( q = y, 
+                     rate = 1 / (phi * mu), 
+                     shape = 1 / phi )
         return(f)
       } else {
-        f <- pgamma( rate = 1 / (phi * mu), 
-                     shape = 1 / phi, 
-                     q = y )
+        f <- pgamma( q = y,
+                     rate = 1 / (phi * mu), 
+                     shape = 1 / phi )
         return(f)
       }
     }
