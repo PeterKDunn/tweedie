@@ -40,10 +40,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     END SUBROUTINE findKmax
 
 
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
+    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, startx, xL, xR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
+      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax, mmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx, tmax
       REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
     END SUBROUTINE improveKZeroBounds
     
@@ -63,10 +63,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     END SUBROUTINE accelerate
 
 
-    SUBROUTINE findExactZeros(i, m, tL, tR, zeroSP, zero, leftOfMax)
+    SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, zeroSP, zero, leftOfMax)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER, INTENT(IN)                 :: i, m, leftOfMax
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP
+      INTEGER, INTENT(IN)                 :: i, m, leftOfMax, mmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP, tmax
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zero
     END SUBROUTINE findExactZeros
 
@@ -81,6 +81,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   IF (Cverbose) THEN
     CALL DBLEPR("*** Computing for p =", -1, Cp, 1)
     CALL DBLEPR("*** Computing for y =", -1, current_y, 1)
+    CALL DBLEPR("*** Computing for mu =", -1, current_mu, 1)
+    CALL DBLEPR("*** Computing for phi =", -1, current_phi, 1)
   END IF
 
 
@@ -116,6 +118,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
   END IF
   
+  m = mfirst
+  
   ! INTEGRATION
   ! Three integration regions:
   !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
@@ -134,7 +138,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   IF (Cverbose) THEN
     CALL DBLEPR("Initial region area:", -1, area0, 1)
     CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
-    CALL INTPR( "      using right m:", -1, mfirst, 1)
+    CALL INTPR( "      using right m:", -1, m, 1)
   END IF
 
 
@@ -146,7 +150,9 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! Integrate (note: m is advanced in the SUBROUTINE)
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
+WRITE(*,*) "HERE m=", m
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
+WRITE(*,*) "ADVANCED M TO", m
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
@@ -290,22 +296,29 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         zeroBoundL = tmax
         zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
       END IF
+
+      IF ( (t_Start_Point .GT. zeroBoundR) .OR. (t_Start_Point .LT. zeroBoundL) ) Then
+        t_Start_Point = (zeroBoundL + zeroBoundR) / 2.0_c_DOUBLE
+      END IF
     
       ! Find the zero
       zeroL = 0.0_C_DOUBLE
-      CALL findExactZeros(i, mfirst, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
+WRITE(*,*) "FINDING EXACT ZERO:", zeroBoundL, zeroBoundR, t_Start_Point
+
+      CALL findExactZeros(i, mfirst, mmax, tmax, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
+WRITE(*,*)" FOUND AT", zeroR
       CALL evaluateImk(i, zeroR, TMP)
 
       ! Find the area
       CALL GaussQuadrature(i, zeroL, zeroR, area0)
-      
+WRITE(*,*) "AREA:", area0
       IF (Cverbose) THEN
         CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
         CALL DBLEPR("         between t:", -1, 0.0_C_DOUBLE, 1 )
         CALL DBLEPR("             and t:", -1, zeroR, 1 )
         CALL INTPR( "   using (right) m:", -1, m, 1)
       END IF
-
+WRITE(*,*) "RETURNING"
       END SUBROUTINE integrateFirstRegion
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -334,7 +347,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
       sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
       count_PreAcc_regions = 0      ! Count how many pre-acc regions are evaluated
-
+WRITE(*,*) "ABOUT TO PRE-ACC"
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
         mOld = m
@@ -346,8 +359,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         area1Old = 10.0_C_DOUBLE
         mOld = m
     
-        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-
+!        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
+WRITE(*,*) " AVANCING M AGAIN??? m = ", m
         stop_PreAccelerate = .FALSE.
         DO WHILE ( .NOT.(stop_PreAccelerate ) )
           count_PreAcc_regions = count_PreAcc_regions + 1
@@ -368,9 +381,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           zeroL = zeroR
     
           ! ONLY NEEDED FOR SMALL P???
-          CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, zeroBoundL, zeroBoundR)
-          CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
-
+WRITE(*,*) "FINDING EXACT ZERO 1:", zeroBoundL, zeroBoundR, zeroStartPoint
+          CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
+          zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
+WRITE(*,*) "FINDING EXACT ZERO 2:", zeroBoundL, zeroBoundR, zeroStartPoint
+          CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
+          zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
+WRITE(*,*) "FINDING EXACT ZERO 3:", zeroBoundL, zeroBoundR, zeroStartPoint
+WRITE(*,*) "  "
           zeroR = zero
     
           IF (count_Integration_Regions .GT. 1) THEN
@@ -466,7 +484,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         END IF
 
         ! Find the exact zero
-        CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
+        CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
         IF (its_Acceleration .GE. accMax) THEN
           IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
           convergence_Acc = 1

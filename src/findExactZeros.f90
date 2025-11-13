@@ -1,4 +1,4 @@
-SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax) 
+SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax) 
   ! Find the exact zeros of the integrand
   
   USE tweedie_params_mod
@@ -6,8 +6,8 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)        :: i, m, leftOfMax  
-  REAL(KIND=C_DOUBLE), INTENT(IN)   :: tL, tR, tStart   
+  INTEGER(C_INT), INTENT(IN)        :: i, m, leftOfMax, mmax
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: tL, tR, tStart, tmax
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tZero
   
   REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update
@@ -102,7 +102,7 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, leftOfMax)
     CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
   ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! When small p and small y, fight harder for good starting bounds
-    CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
+    CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, tStart, tL, tR)
     CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)

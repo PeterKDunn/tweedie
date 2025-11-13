@@ -1,4 +1,4 @@
-SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
+SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, startZero, zeroL, zeroR)
   ! Improve the bounds that bracket the zero of Im k(t).
   ! A decent starting point is sometimes crucial to timely convergence.
   
@@ -7,8 +7,8 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
 
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)    :: startZero
-  INTEGER(C_INT), INTENT(IN)         :: i, m, leftOfMax
+  REAL(KIND=C_DOUBLE), INTENT(IN)    :: startZero, tmax
+  INTEGER(C_INT), INTENT(IN)         :: i, m, leftOfMax, mmax
   REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
 
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
@@ -26,7 +26,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   current_phi  = Cphi(i)  ! Access phi value for index i
 
 
-  maxSearch = 10  ! Donlt spend too long, so set limit
+  maxSearch = 10  ! Don't spend too long, so set limit
 
   ! Set multipier: this adjust the sign depending on whether we are
   ! left of the max (so left bound is negative) or to the right of
@@ -39,35 +39,54 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
 
   ! FIND the function value of the starting point (SP)
   CALL evaluateImkM(i, startZero, SPvalue, df, m)
-    ! The fn value at the starting point, so we know which way to search
+  CALL evaluateImkM(i, zeroL, valueL, df, m)
+  CALL evaluateImkM(i, zeroR, valueR, df, m)
+
+WRITE(*,*) ">> ENTER >>> improveZRB: startZero:", startZero
+WRITE(*,*) "   ENTER >>> improveZRB: bounds:", zeroL, zeroR, m
+WRITE(*,*) "   SLOPE:", SPvalue
+  ! The fn value at the starting point, so we know which way to search
 
   ! LOWER BOUND
   ! - If fn value at SP is *positive*, only need to creep to the right
   boundL = startZero
+  boundR = zeroR
   itsSearch = 0
-  
+WRITE(*,*) "WHICH WAY TO LOOK?"
+WRITE(*,*) " LEFT bound, value:", zeroL, valueL
+WRITE(*,*) " RIGHT bound, value", zeroR, valueR
+WRITE(*,*) " with tmax:", tmax
   IF ( (multiplier * SPvalue) .LE. 0.0E0_C_DOUBLE) THEN
-
     itsSearch = itsSearch + 1
-
     keepSearching = .TRUE.
     DO WHILE (keepSearching)
       ! - If fn value at SP is negative, take bold steps left to find lower bound
+WRITE(*,*) "JUMP LOWER BOUND:", boundL, valueL
       boundL = boundL / 1.50E0_C_DOUBLE
       
-    CALL evaluateImkM(i, boundL, valueL, df, m)
-      
+      CALL evaluateImkM(i, boundL, valueL, df, m)
+
       IF ( (multiplier * valueL) .GT. 0.0E0_C_DOUBLE ) THEN
-        ! - Found a lower bound where the fn value is positive
+          ! - Found a lower bound where the fn value is positive
         keepSearching = .FALSE.
+!        boundL = oldBoundL
       END IF 
+      
+      ! Need to take care near mmax!
+      IF ( (m .EQ. mmax) .AND. (boundL .GT. tmax) ) THEN 
+        keepSearching = .FALSE.
+      END IF  
+      
+      IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
     END DO
   END IF
+WRITE(*,*) "FINISHED JUMPING LOW: :", boundL, valueL
 
   ! - Now creep to the right from boundL (refine the lower bound)
   keepSearching = .TRUE.
   itsSearch = 0
   DO WHILE (keepSearching)
+WRITE(*,*) "CREEP LOWER:", boundL, valueL
     itsSearch = itsSearch + 1
 
     oldBoundL = boundL
@@ -79,10 +98,18 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
       keepSearching = .FALSE.
       boundL = oldBoundL
     END IF
+
+    ! Need to take care near mmax!
+    IF ( (m .EQ. mmax) .AND. (boundL .GT. tmax) ) THEN 
+      keepSearching = .FALSE.
+      boundL = oldBoundL
+    END IF  
+
     IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
 
   END DO
   zeroL = boundL
+WRITE(*,*) "FINISHED CFREEPING LOW: :", boundL, valueL
 
 
 
@@ -95,40 +122,56 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   ! - If fn value at SP is *negative*, only need to creep to the left
   IF ( (multiplier * SPvalue) .GT. 0.0E0_C_DOUBLE) THEN
     itsSearch = itsSearch + 1
-    boundR = startZero
     keepSearching = .TRUE.
-    
     DO WHILE (keepSearching)
+WRITE(*,*) "RIGHT: JUMP", boundR, valueR
       ! - If fn value at SP is positive, take bold steps right to find upper bound
       boundR = boundR * 1.5E0_C_DOUBLE
 
       CALL evaluateImkM(i, boundR, valueR, df, m)
 
-      IF ( (multiplier * valueR) .LT. 0.0E0_C_DOUBLE ) THEN
+      IF ( (multiplier * valueR) .GT. 0.0E0_C_DOUBLE ) THEN
         ! - Found an upper bound where the fn value is negative
         keepSearching = .FALSE.
       END IF 
+
+      ! Need to take care near mmax!
+      IF ( (m .EQ. mmax) .AND. (boundR .LT. tmax) ) THEN 
+        keepSearching = .FALSE.
+      END IF  
+
       IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
-      END DO
+    END DO
   END IF
+WRITE(*,*) "FINISHED JUMPING HI: :", boundR, valueR
+
 
   ! - Now creep to the left from boundR (refine the upper bound)
   itsSearch = 0
   keepSearching = .TRUE.
   DO WHILE (keepSearching)
+WRITE(*,*) "RIGHT CREEP", boundR, valueR
     itsSearch = itsSearch + 1
 
     oldBoundR = boundR
     boundR = boundR * 0.90E0_C_DOUBLE
     CALL evaluateImkM(i, boundR, valueR, df, m)
-    IF ( (multiplier * valueR).GT. 0.0E0_C_DOUBLE ) THEN
-      ! Gone too far, so keep previous bound
+    IF ( (multiplier * valueR) .GT. 0.0E0_C_DOUBLE ) THEN
+        ! - Found a lower bound where the fn value is positive
       keepSearching = .FALSE.
       boundR = oldBoundR
-    END IF
+    END IF 
+
+    ! Need to take care near mmax!
+    IF ( (m .EQ. mmax) .AND. (boundR .LT. tmax) ) THEN 
+      keepSearching = .FALSE.
+      boundR = oldBoundR
+    END IF  
+
     IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
   END DO
   zeroR = boundR
+WRITE(*,*) "FINISHED CEEP HI: :", boundR, valueR
 
   RETURN
 
