@@ -9,12 +9,14 @@
   \item{power}{a synonym for \eqn{\xi}{xi}; the Tweedie power-index on the variance}
 	\item{mu}{the mean}
 	\item{phi}{the dispersion}
-	\item{type}{either \code{"PDF"} (the default) for the (probability) density function, or \code{"CDF"} for the (cumulative) distribution function.}
+	\item{t}{the values of the variable over which to integrat; the default is \code{t = seq(0, 5, length = 1000)}}
+	\item{type}{either \code{"PDF"} (the default) for the (probability) density function, or \code{"CDF"} for the (cumulative) distribution function}
+	\item{whichPlots}{which combination of the four plots (described below) are produced; by default, all four are produced (i.e., \code{whichPlots = 1:4})}
 	\item{yLimits}{the \eqn{y}{y}-limits to use when plotting the integrand; the default is \code{NULL} which uses R defaults.}
 }
 \value{
-  a list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively.
-	The main purpose of teh function is the side-effect of producing a \eqn{2\times2}{2x2} grid of plots.
+  a list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively, plu sthe values of the integrand as \code{IG} .
+	The main purpose of the function is the side-effect of producing a \eqn{2\times2}{2x2} grid of plots.
 	The first is the imaginary parts of \eqn{k(t)}{k(t)}.
 	The second is \eqn{\sin\Im k(t)}{sinIm[k(t)]}.
 	The third is the real part of \eqn{\Re k(t)}{Re[k(t)]}
