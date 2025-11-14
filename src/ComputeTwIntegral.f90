@@ -88,7 +88,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! --- Initialization ---
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-  aimrerr = 1.0E-10_C_DOUBLE ! 1.0E-12_C_DOUBLE
+  aimrerr = 1.0E-12_C_DOUBLE ! 1.0E-12_C_DOUBLE
   mOld = 0
   m = 0
   exitstatus = 0
@@ -150,9 +150,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! Integrate (note: m is advanced in the SUBROUTINE)
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
-WRITE(*,*) "HERE m=", m
+
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-WRITE(*,*) "ADVANCED M TO", m
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
@@ -303,27 +302,24 @@ WRITE(*,*) "ADVANCED M TO", m
     
       ! Find the zero
       zeroL = 0.0_C_DOUBLE
-WRITE(*,*) "FINDING EXACT ZERO:", zeroBoundL, zeroBoundR, t_Start_Point
 
       CALL findExactZeros(i, mfirst, mmax, tmax, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
-WRITE(*,*)" FOUND AT", zeroR
       CALL evaluateImk(i, zeroR, TMP)
 
       ! Find the area
       CALL GaussQuadrature(i, zeroL, zeroR, area0)
-WRITE(*,*) "AREA:", area0
       IF (Cverbose) THEN
         CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
         CALL DBLEPR("         between t:", -1, 0.0_C_DOUBLE, 1 )
         CALL DBLEPR("             and t:", -1, zeroR, 1 )
         CALL INTPR( "   using (right) m:", -1, m, 1)
       END IF
-WRITE(*,*) "RETURNING"
+
       END SUBROUTINE integrateFirstRegion
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                               & ! INPUTS
+    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                              & ! INPUTS
                                      area1, zeroR, count_PreAcc_regions, converged_Pre)                  ! OUTPUTS
       ! Integration of the region *after* the initial, but *before* acceleration is invoked.
       ! Potentially, everything converges in this step (without needing acceleration).
@@ -347,20 +343,18 @@ WRITE(*,*) "RETURNING"
       tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
       sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
       count_PreAcc_regions = 0      ! Count how many pre-acc regions are evaluated
-WRITE(*,*) "ABOUT TO PRE-ACC"
+
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
         mOld = m
         zeroR = zeroL 
-    
+
         IF (Cverbose) CALL DBLEPR("  - No PRE-ACC area for y:", -1, current_y, 1 )
       ELSE
         area1 = 0.0_C_DOUBLE
         area1Old = 10.0_C_DOUBLE
         mOld = m
     
-!        CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-WRITE(*,*) " AVANCING M AGAIN??? m = ", m
         stop_PreAccelerate = .FALSE.
         DO WHILE ( .NOT.(stop_PreAccelerate ) )
           count_PreAcc_regions = count_PreAcc_regions + 1
@@ -380,15 +374,11 @@ WRITE(*,*) " AVANCING M AGAIN??? m = ", m
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
     
-          ! ONLY NEEDED FOR SMALL P???
-WRITE(*,*) "FINDING EXACT ZERO 1:", zeroBoundL, zeroBoundR, zeroStartPoint
           CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
+
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
-WRITE(*,*) "FINDING EXACT ZERO 2:", zeroBoundL, zeroBoundR, zeroStartPoint
           CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
-WRITE(*,*) "FINDING EXACT ZERO 3:", zeroBoundL, zeroBoundR, zeroStartPoint
-WRITE(*,*) "  "
           zeroR = zero
     
           IF (count_Integration_Regions .GT. 1) THEN
@@ -423,9 +413,8 @@ WRITE(*,*) "  "
           CALL DBLEPR("             and t:", -1, zeroR, 1 )
           CALL INTPR( "           using m:", -1, m, 1 )
         END IF
-    
       END IF
-      
+
     END SUBROUTINE integratePreAccRegions
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -434,6 +423,7 @@ WRITE(*,*) "  "
                                             West, zeroR, its_Acceleration, converged_Accelerating)
       ! Integration of the region *after* the initial and pre-acceleration regions, the tail area.
       ! Potentially, everything converges in pre-acceleration (without needing acceleration).
+
 
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroR
@@ -460,13 +450,11 @@ WRITE(*,*) "  "
 
       ! This will be the very first, left-most value of t used in acceleration
       xvec(1) = zeroL
-      
+
       DO WHILE (keep_Accelerating )
         its_Acceleration = its_Acceleration + 1
-    
         mOld = m
         CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-
         zeroBoundL = zeroL
     
         IF (leftOfMax .EQ. 1) THEN
@@ -485,6 +473,7 @@ WRITE(*,*) "  "
 
         ! Find the exact zero
         CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
+
         IF (its_Acceleration .GE. accMax) THEN
           IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
           convergence_Acc = 1
