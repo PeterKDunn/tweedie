@@ -79,7 +79,6 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
 
-
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
 
