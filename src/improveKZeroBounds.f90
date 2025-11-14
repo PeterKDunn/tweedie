@@ -3,14 +3,15 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   ! A decent starting point is sometimes crucial to timely convergence.
   
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)    :: tmax
-  REAL(KIND=C_DOUBLE), INTENT(INOUT) :: zeroMid
-  INTEGER(C_INT), INTENT(IN)         :: i, m, leftOfMax, mmax
-  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroMid
+  INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
+  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroL, zeroR
+  LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
 
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)     :: boundL, boundR, valueL, valueR, SPvalue, multiplier
@@ -32,7 +33,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   ! Set multipier: this adjust the sign depending on whether we are
   ! left of the max (so left bound is negative) or to the right of
   ! the max (so left bound is positive)
-  IF (leftOfMax .EQ. 1) THEN
+  IF (leftOfMax) THEN
     multiplier = -1.0E0_C_DOUBLE
   ELSE
     multiplier = 1.0E0_C_DOUBLE
@@ -58,7 +59,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
 
     ! The solution depends on what side of the max we are.
     ! If to the LEFT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
-    IF ( leftOfMax .EQ. 1) THEN
+    IF ( leftOfMax) THEN
       DO WHILE ( valueL .GT. 0.0_C_DOUBLE) 
         ! We are on the LEFT of the maximum of Im k(t), but the L bound gives a +ive value.
         ! So we need to go LEFT a little.
@@ -84,7 +85,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
 
     ! The solution depends on what side of the max we are.
     ! If to the RIGHT of the max of Im k(t), zeroL should give a +ive value; zeroR a -ive value.
-    IF ( leftOfMax .EQ. 0) THEN
+    IF ( .NOT.(leftOfMax) ) THEN
       DO WHILE ( valueL .LT. 0.0_C_DOUBLE) 
         ! We are on the RIGHT of the maximum of Im k(t), but the L bound gives a -ive value.
         ! So we need to go LEFT a little.

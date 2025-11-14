@@ -3,7 +3,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   USE Integrands_MOD, ONLY: Integrands
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
   USE rprintf_mod
   
   IMPLICIT NONE
@@ -19,7 +19,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
   INTEGER(C_INT)    :: count_PreAcc_regions, count_Acc_Regions
   INTEGER(C_INT)    :: m, min_Acc_Regions
-  INTEGER(C_INT)    :: leftOfMax, flip_To_Other_Side, convergence_Acc
+  INTEGER(C_INT)    :: flip_To_Other_Side, convergence_Acc
   LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
@@ -28,23 +28,26 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 501), Nmatrix(2, 501), xvec(501), wvec(501)
   REAL(KIND=C_DOUBLE)   :: TMP
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
+  LOGICAL(C_BOOL)       :: leftOfMax
   
   ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
     SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, leftOfMax)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
       IMPLICIT NONE
       INTEGER, INTENT(IN)               :: j
-      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax, leftOfMax
+      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
+      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
     END SUBROUTINE findKmax
 
 
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, startx, xL, xR)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax, mmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx, tmax
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+      INTEGER(C_INT), INTENT(IN)        :: i, m, mmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startx, tmax
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xL, xR
+      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
     END SUBROUTINE improveKZeroBounds
     
 
@@ -64,10 +67,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
 
     SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, zeroSP, zero, leftOfMax)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER, INTENT(IN)                 :: i, m, leftOfMax, mmax
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+      INTEGER, INTENT(IN)                 :: i, m, mmax
       REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP, tmax
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zero
+      LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
     END SUBROUTINE findExactZeros
 
   END INTERFACE
@@ -114,7 +118,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
     CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
     CALL INTPR( "  -            mmax:", -1, mmax, 1 )
-    CALL INTPR( "  -     left of max:", -1, leftOfMax, 1 )
     CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
   END IF
   
@@ -226,11 +229,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     
       IMPLICIT NONE
       
-      INTEGER(C_INT), INTENT(IN)    :: mmax, i    ! Maximum value m can take, and current index
-      INTEGER(C_INT), INTENT(INOUT) :: m          ! M index (used for calculation and C-binding)
-      INTEGER(C_INT), INTENT(OUT)   :: mOld       ! Previous index value
-      INTEGER(C_INT), INTENT(INOUT) :: leftOfMax  ! True if on the left side of kmax
-      INTEGER(C_INT), INTENT(INOUT) :: flip       ! True if cross from left to right
+      INTEGER(C_INT), INTENT(IN)      :: mmax, i    ! Maximum value m can take, and current index
+      INTEGER(C_INT), INTENT(INOUT)   :: m          ! M index (used for calculation and C-binding)
+      INTEGER(C_INT), INTENT(OUT)     :: mOld       ! Previous index value
+      LOGICAL(C_BOOL), INTENT(INOUT)  :: leftOfMax  ! True if on the left side of kmax
+      INTEGER(C_INT), INTENT(INOUT)   :: flip       ! True if cross from left to right
       
       REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
     
@@ -248,21 +251,21 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         m = m - 1 
       ELSE
         ! We have a maximum (kmax) to consider
-        IF (leftOfMax .EQ. 1) THEN
+        IF (leftOfMax) THEN
           IF (m == mmax) THEN 
             ! Move to the other side of the maximum
-            leftOfMax = 0
+            leftOfMax = .FALSE.
             flip = 1
           ELSE
             ! Continue towards the maximum
             m = m + 1 
             ! mOld is already saved before the IF block
-            leftOfMax = 1 ! Still on the left side
+            leftOfMax = .TRUE. ! Still on the left side
           END IF
         ELSE
           ! When on the RIGHT of the maximum, can always just reduce m by one
           m = m - 1 
-          leftOfMax = 0
+          leftOfMax = .FALSE.
         END IF
       END IF
     
@@ -276,7 +279,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area0, zeroR
       INTEGER(C_INT), INTENT(IN)          :: m
-      INTEGER(C_INT), INTENT(INOUT)       :: leftOfMax
+      LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
       REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: pi
 
@@ -285,7 +288,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       count_Integration_Regions = 1
 
       ! Find starting point for the first zero
-      IF (leftOfMax .EQ. 1) THEN
+      IF (leftOfMax) THEN
         t_Start_Point = pi / current_y  
         zeroBoundL = 0
         zeroBoundR = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
@@ -328,7 +331,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area1, zeroR
       REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
       INTEGER(C_INT)                      :: mfirst
-      INTEGER(C_INT), INTENT(INOUT)       :: m, leftOfMax
+      INTEGER(C_INT), INTENT(INOUT)       :: m
+      LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
       INTEGER(C_INT), INTENT(OUT)         :: count_PreAcc_regions
       LOGICAL(C_BOOL), INTENT(OUT)        :: converged_Pre
 
@@ -359,11 +363,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         DO WHILE ( .NOT.(stop_PreAccelerate ) )
           count_PreAcc_regions = count_PreAcc_regions + 1
     
-          IF (leftOfMax .EQ. 1) THEN
+          IF (leftOfMax) THEN
             zeroBoundL = zeroR
             zeroBoundR = tmax
             IF (flip_To_Other_Side .EQ. 1) THEN 
-              leftOfMax = 0
+              leftOfMax = .FALSE.
               flip_To_Other_Side = 0
             END IF
           ELSE
@@ -428,7 +432,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroR
       REAL(KIND=C_DOUBLE)                 :: tmax, zeroL
-      INTEGER(C_INT), INTENT(INOUT)       :: m, leftOfMax
+      INTEGER(C_INT), INTENT(INOUT)       :: m
+      LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
       INTEGER(C_INT), INTENT(OUT)         :: its_Acceleration
 
       INTEGER(C_INT)                      :: mOld
@@ -457,7 +462,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
         zeroBoundL = zeroL
     
-        IF (leftOfMax .EQ. 1) THEN
+        IF (leftOfMax) THEN
           zeroBoundR     = tmax
           zeroStartPoint = (zeroBoundL + zeroBoundR) / 2.0_C_DOUBLE
         ELSE
@@ -466,7 +471,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           zeroBoundR = zeroStartPoint * 5.0_C_DOUBLE
           IF (flip_To_Other_Side .EQ. 1) THEN 
             ! Then this is the first time on the right side of the maximum
-            leftOfMax = 0
+            leftOfMax = .FALSE.
             flip_To_Other_Side = 0
           END IF
         END IF

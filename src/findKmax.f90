@@ -3,12 +3,13 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   ! Also return the first value of m (mfirst) amd whether this is to the left of the max (leftOfMax).
 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: kmax, tmax
-  INTEGER(C_INT), INTENT(OUT)         :: mmax, mfirst, leftOfMax
+  INTEGER(C_INT), INTENT(OUT)         :: mmax, mfirst
+  LOGICAL(C_BOOL), INTENT(OUT)        :: leftOfMax
   INTEGER(C_INT), INTENT(IN)          :: i
 
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
@@ -21,7 +22,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     FUNCTION findKmaxSP(j) 
       ! Template tehfunction for finding a starting point for finding Kmax
       
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
       
       IMPLICIT NONE  
       
@@ -33,14 +34,15 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
       ! Crudely improve the bounds for find the zeros of the integrand 
       
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
       
       IMPLICIT NONE  
       
-      INTEGER(C_INT), INTENT(IN)       :: i, m, leftOfMax
+      INTEGER(C_INT), INTENT(IN)        :: i, m
+      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
       
-      REAL(KIND=C_DOUBLE), INTENT(IN)  :: startx
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: xL, xR
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startx
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xL, xR
     END SUBROUTINE improveKZeroBounds
     
     
@@ -138,7 +140,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     mfirst = -1
     kmax = 0.0_C_DOUBLE
     tmax = 0.0_C_DOUBLE
-    leftOfMax = 0
+    leftOfMax = .FALSE.
   ELSE
     ! CASE: IF slope is initially UPWARDS: trickier, esp. with 1 < p < 2
     ! Good starting point often needed
@@ -197,15 +199,15 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     ! Establish the first value of m to use, and whether the first zero is to the left of kmax
     IF (mmax .GT. 0) THEN
       mfirst = 1
-      leftOfMax = 1
+      leftOfMax = .TRUE.
     ELSE
       IF (mmax .EQ. 0 ) THEN
         mfirst = 0
-        leftOfMax = 0
+        leftOfMax = .FALSE.
       ELSE
         ! That is, mmax is LESS THAN 0
         mfirst = -1
-        leftOfMax = 0
+        leftOfMax = .FALSE.
       ENDIF 
     END IF
   END IF

@@ -2,13 +2,14 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   ! Find the exact zeros of the integrand
   
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)        :: i, m, leftOfMax, mmax
+  INTEGER(C_INT), INTENT(IN)        :: i, m, mmax
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: tL, tR, tStart, tmax
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tZero
+  LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
   
   REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
