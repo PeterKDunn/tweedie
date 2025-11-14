@@ -15,7 +15,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE)               :: root
   
-  INTEGER, PARAMETER        :: MAXITS = 100
+  INTEGER, PARAMETER        :: MAXITS = 200
   INTEGER                   :: j
   REAL(KIND=C_DOUBLE)       :: dx, df, f
   REAL(KIND=C_DOUBLE)       :: x_current, x_iter_old, factor, x_new
