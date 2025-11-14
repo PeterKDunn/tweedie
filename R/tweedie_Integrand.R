@@ -130,8 +130,8 @@ tweedie_Integrand <- function(y, power, mu, phi,  t = seq(0, 5, length = 1000), 
           col = "grey")
   }
   
-  return(list(Real = k_Real,
-              Imag = k_Imag,
-              IG = igrand))
+  return(invisible( list(Real = k_Real,
+                         Imag = k_Imag,
+                         IG = igrand)) )
   
 }
