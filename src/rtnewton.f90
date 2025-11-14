@@ -15,7 +15,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   INTEGER(C_INT), INTENT(IN)        :: i
   REAL(KIND=C_DOUBLE)               :: root
   
-  INTEGER, PARAMETER        :: MAXITS = 200
+  INTEGER, PARAMETER        :: MAXITS = 100
   INTEGER                   :: j
   REAL(KIND=C_DOUBLE)       :: dx, df, f
   REAL(KIND=C_DOUBLE)       :: x_current, x_iter_old, factor, x_new
@@ -87,7 +87,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
     
     ! Check for catastrophic failure near zero
     IF (x_new .LE. 0.0_C_DOUBLE) THEN
-        IF (Cverbose) CALL DBLEPR("ERROR (rtnewton): Step halvinhg failed to find positive rot:", -1, x_new, 1)
+        IF (Cverbose) CALL DBLEPR("ERROR (rtnewton): Step halving failed to find positive root:", -1, x_new, 1)
         ! If we can't step forward even a tiny bit, assume the root is effectively 0 or failed.
         x_current = x_iter_old
         EXIT
@@ -103,7 +103,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
   
   ! If we get here, NO CONVERGENCE after MAXITS
   IF (j .GE. MAXITS) THEN
-    IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergece after iterations:", -1, MAXITS, 1)
+    IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergence after iterations:", -1, MAXITS, 1)
     IF (Cverbose) CALL DBLEPR("  Function value is:", -1, f, 1)
     IF (Cverbose) CALL DBLEPR("  at x:", -1, x_current, 1)
   END IF
