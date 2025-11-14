@@ -38,7 +38,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       INTEGER, INTENT(IN)               :: j
       INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
       REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
-      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
+      LOGICAL(C_BOOL), INTENT(INOUT)    :: leftOfMax
     END SUBROUTINE findKmax
 
 
@@ -155,6 +155,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
 
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
+WRITE(*,*) "NOW m =", m
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
@@ -172,7 +173,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     END IF
   END IF
 
-
+WRITE(*,*) "# PRE regions:", count_PreAcc_regions
 
   ! ----------------------------------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
@@ -199,6 +200,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! --- WIND THINGS UP ---
   count_Integration_Regions = count_Integration_Regions + count_Acc_regions
   areaT = area0 + area1 + areaA
+WRITE(*,*) "# regions:", count_Integration_Regions, count_Acc_regions
 
   IF (Cverbose) THEN
     CALL DBLEPR("* Initial area0: ", -1, area0, 1)
@@ -347,7 +349,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
       sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
       count_PreAcc_regions = 0      ! Count how many pre-acc regions are evaluated
-
+WRITE(*,*) ">>> IN PREAccReg"
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
         mOld = m
@@ -377,11 +379,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
-    
           CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
 
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
+
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroR = zero
     
@@ -450,7 +452,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       keep_Accelerating = .TRUE.          ! .TRUE. if we need more integration regions
       converged_Accelerating = .FALSE.    ! .TRUE. if it seems the integration has converged
       
-      accMax = 100             ! Maximum number of regions in acceleration; arbitrary
+      accMax = 100            ! Maximum number of regions in acceleration; arbitrary
       min_Acc_Regions = 3     ! Minimum number of acceleration regions to use; need at leats three
 
       ! This will be the very first, left-most value of t used in acceleration
@@ -496,7 +498,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
         ! Update past estimates
         Wold2 = Wold
         Wold  = West    
-        
         ! Estimate the tail area using acceleration
         CALL accelerate(xvec, wvec, its_Acceleration, Mmatrix, Nmatrix, West)
 
