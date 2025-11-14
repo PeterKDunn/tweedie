@@ -52,7 +52,6 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   CALL evaluateImkM(i, zeroR, valueR, df, m)
 
 
-
   ! CHECK IF BOUNDS REALLY DO BOUND THE ZERO:
   IF ( (valueL * valueR) .GE. 0.0_C_DOUBLE) THEN
     ! Bounds DO NOT trap the zero
@@ -136,6 +135,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
     zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
 
   END IF
+  
   RETURN
 
 END SUBROUTINE improveKZeroBounds
