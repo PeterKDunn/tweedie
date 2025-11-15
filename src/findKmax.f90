@@ -13,112 +13,26 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   INTEGER(C_INT), INTENT(IN)          :: i
 
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
-  REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, omega_SP, ratio
+  REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold
+  REAL(KIND=C_DOUBLE)     :: t_small, t_large
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   INTEGER(C_INT)          :: m_Start_Point
   
 
-  INTERFACE
+  ! Declare external routines that are defined elsewhere.
+  EXTERNAL evaluateImkd       ! evaluate Im k'(t)
+  EXTERNAL evaluateImkdZero   ! the zero-finding version (used by rtsafe/rtnewton)
+  EXTERNAL evaluateImk        ! evaluate Im k(t)
+  EXTERNAL rtsafe             ! safe (bounded) root finding 
+  EXTERNAL rtnewton           ! Newton's methiod (with lower bounding at 0)
 
-    FUNCTION findKmaxSP(j) 
-      ! Template tehfunction for finding a starting point for finding Kmax
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      
-      IMPLICIT NONE  
-      
-      REAL(KIND=C_DOUBLE)   :: findKmaxSP
-      INTEGER, INTENT(IN)   :: j
-    END FUNCTION findKmaxSP
-
-
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
-      ! Crudely improve the bounds for find the zeros of the integrand 
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      
-      IMPLICIT NONE  
-      
-      INTEGER(C_INT), INTENT(IN)        :: i, m
-      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
-      
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startx
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xL, xR
-    END SUBROUTINE improveKZeroBounds
-    
-    
-    SUBROUTINE funcd_signature(i_in, t, f, df) BIND(C)
-      ! Template for the function for which zeros are sought
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: f, df
-    END SUBROUTINE funcd_signature
-
-
-    SUBROUTINE rtsafe(i_in, funcd, x1, x2, xacc, root) 
-      ! Find zeros using (moodified) Newton's method with bisection
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      PROCEDURE(funcd_signature) :: funcd 
-    
-      INTEGER(C_INT), INTENT(IN)        :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-    END SUBROUTINE rtsafe
-      
-
-    SUBROUTINE rtnewton(i_in, funcd, xstart, xacc, root) 
-      ! Find zeros using (moodified) Newton's method
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      PROCEDURE(funcd_signature)        :: funcd
-      
-      INTEGER(C_INT), INTENT(IN)        :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-    END SUBROUTINE rtnewton
-      
-
-    SUBROUTINE evaluateImkdZero(i_in, t, f, df) 
-      ! Evaluate Im k'(t)  and  Im k''(t)  for solving for Kmax (i.e., Im k'(t) = 0)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      
-      IMPLICIT NONE
-
-      INTEGER(C_INT), INTENT(IN)        :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE evaluateImkdZero
-      
-
-    SUBROUTINE evaluateImk(i_in, t_in, kmax_out) 
-      ! Find Im k(t)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-
-      INTEGER(C_INT), INTENT(IN) :: i_in
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: t_in
-      REAL(KIND=C_DOUBLE), INTENT(OUT) :: kmax_out
-    END SUBROUTINE evaluateImk
-      
-
-    INTEGER(C_INT) FUNCTION myfloor(x) 
-      ! A floor function for my purposes
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: x
-    END FUNCTION myfloor
-      
-  END INTERFACE
-
+  ! A. If Im k(t) heads down initially: easy: kmax = tmax = mmax = 0
+  ! B. Otherwise, we need to find kmax etc by solving Im k'(t) = 0
+  !    with a suitable starting point:
+  !    1. If tmax appears that it will be very large, find approx start pt
+  !    2. Otherwise find start point numerically:
+  !       a. If p near 1, approximate starting point by p=1 case analytically
+  !       b. Otherwise, use standard starting point
 
 
   ! Grab the relevant scalar values for this iteration:
@@ -129,133 +43,177 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   ! --- Initialization ---
   aimrerr = 1.0E-09_C_DOUBLE
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+  threshold = 1.0E5_C_DOUBLE ! Threshold for a "large" tmax
+
 
   ! Find starting points
   CALL evaluateImkd(i, 0.0_C_DOUBLE, slope_At_Zero)
+!WRITE(*,*) "INITIAL SLOPE:", slope_At_Zero
 
   IF (slope_At_Zero .LE. 0.0_C_DOUBLE) THEN
-    ! Im k(t) initially heads downwards
-    ! This includes the case 'IF y >= mu'
-    ! Nothing to do; easy-peasy:
+!WRITE(*,*) "SLOPE LE 0"
+    ! A. Im k(t) initially heads DOWNWARDS
+    !
+    !    This includes the case 'IF y >= mu'
+    !    Nothing to do; easy-peasy:
     mmax = 0
     mfirst = -1
     kmax = 0.0_C_DOUBLE
     tmax = 0.0_C_DOUBLE
     leftOfMax = .FALSE.
+    
+    RETURN
   ELSE
-    ! CASE: IF slope is initially UPWARDS: trickier, esp. with 1 < p < 2
-    ! Good starting point often needed
+!WRITE(*,*) "SLOPE > 0"
+    ! B. CASE: IF slope is initially UPWARDS: trickier, esp. with 1 < p < 2
+    !    Need to solve  Im k'(t) = 0.
 
-    ratio = current_y / current_mu
-  
+    IF ( ( current_y ** (1.0_C_DOUBLE - Cp) / current_phi) .GT.  &
+         (10.0_C_DOUBLE * threshold ) ) THEN 
+!WRITE(*,*) "APPROX SP: very very Large t"
+      ! B.1. Sometimes kmax and co are MASSIVE, making things slow and difficult, and 
+      !      sometimes convergence is difficult also.
+      ! In some cases, tmax, kmax and mmax are HUGE; e.g., when we have y=0.001, 
+      !     power=6, mu=.01, phi=.01, verbose=TRUE), we can see that 
+      ! tmax > 1,000,000, kmax > 80,000 and mmax > 25,000...
+      !
+      ! When p near 1, we can solve Im k'(t) = 0 when p = 1:
+      !    t = acos(y/mu)/phi. 
+      ! Much more accurate!
+      !
+      ! When p near 2, do similar with p = 2; need to check, but I get:
+      !    t = 1/(phi*mu) * sqrt( (mu - y)/y )
+      ! provided mu - y (which checks out).
+      !
+      ! This hopefully will flag potentially problematically large kmax/tmax/mmax:
 
-    
-    ! In some cases, tmax, kmax and mmax are HUGE; e.g., when we have y=0.001, 
-    ! power=6, mu=.01, phi=.01, verbose=TRUE), we can see that tmax > 1,000,000,
-    ! kmax > 80,000 and mmax > 25,000...
-    !
-    ! Find the actual maximum, to the required accuracy, is difficult and slow!
-    ! In addition, it is not necesssary; after all, there is a limit on the number
-    ! of acceleration regions being used (currently 200 as I type this).
-    ! 
-    ! So we check the starting point; if it is rather large, we just declare some
-    ! arbitrary and large values for kmax, tmax and mmax and move on.
-
-
-    ! When p near 1, we can solve Im k'(t) = 0 when p = 1:
-    !    t = acos(y/mu)/phi. 
-    ! Much more accurate!
-    IF ( Cp .LT. 1.1 ) THEN
-      t_Start_Point = DACOS(current_y/current_mu) / current_phi
-    ELSE
-      omega_SP = -1
-      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
-                      ( ( 1.0_C_DOUBLE - Cp) * current_phi)
-      END IF
-      
-    ! When p near 2, do similar with p = 2; need to check, but I get:
-    !    t = 1/(phi*mu) * sqrt( (mu - y)/y )
-    ! provided mu - y.\ (which checks out).
-
-    
-    m_Start_Point = floor( t_Start_Point * current_y / pi)                
-    IF ( m_Start_Point .GT. 250 ) then  
-      ! Don't waste time computing kmax and co, especially when it
-      ! is slow and difficult. So a few arbitrary settings:
-      mmax = 250E0_C_DOUBLE     ! Plenty big enough
-      mfirst = 1                ! Set mfirst; always 1 here
-      leftOfMax = .TRUE.        ! Always to left of max here
+      tmax = threshold
       CALL evaluateImk(i, t_Start_Point, kmax)    ! Now find the corresponding value of kmax
-      tmax = DBLE(mmax) * pi / current_y
     ELSE
-      ! Computing kmax and co
+      ! Compute ratio
+      ratio = current_y / current_mu
       
-      IF (ratio .LT. 0.1_C_DOUBLE) THEN
-        t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) / current_phi *    &
-                        DSQRT( 2 * (1.0_C_DOUBLE - ratio))
+      ! 1. Try small-t approximation first (for ratio < 1)
+      IF (ratio < 1.0_C_DOUBLE) THEN
+          t_small = (current_mu**(1.0_C_DOUBLE - Cp) / current_phi) * DSQRT( (2.0_C_DOUBLE/Cp) * (1.0_C_DOUBLE - ratio) )
+          ! Clamp tiny values
+          IF (t_small < 1.0E-12_C_DOUBLE) t_small = 1.0E-12_C_DOUBLE
+          t_Start_Point = t_small
+      ELSE
+          ! 2. Small-t not applicable → standard start
+          IF (Cp < 1.1) THEN
+              t_Start_Point = DACOS(current_y/current_mu)/current_phi
+          ELSE
+              ! Use large-t blended guess
+              t_Start_Point = tInitialGuess()   ! This computes large-t approx
+              IF (t_Start_Point <= 0.0_C_DOUBLE) t_Start_Point = 1.0E-12_C_DOUBLE
+          END IF
       END IF
-      IF (ratio .GT. 0.9_C_DOUBLE) THEN
-        omega_SP = -0.01_C_DOUBLE
-        t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
-                        ( ( 1.0_C_DOUBLE - Cp) * current_phi)
-      END IF
-  
-      ! Now find kmax and tmax
-      IF (Cpsmall) THEN
+!WRITE(*,*) "GOT START PT:", t_Start_Point
+      ! Now find kmax and tmax using this t_Start_Point
+!      IF (Cpsmall) THEN
         tmaxL = 0.0_C_DOUBLE       ! Since Left bound can be zero
         tmaxR = t_Start_Point * 2.0_C_DOUBLE
-  
+!WRITE(*,*) "  BOUNDS 1: RTSAFE", tmaxL, tmaxR
         CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
+!WRITE(*,*) "  BOUNDS 1 revises: RTSAFE", tmaxL, tmaxR
         ! Crudely improve the bounds that bracket the starting point for finding Kmax.
-        CALL rtsafe(i,                &
-                    evaluateImkdZero,   &
-                    tmaxL,          &
-                    tmaxR,          &
-                    aimrerr,        &
-                    tmax)
-      ELSE
-        ! p > 2
-        t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
-                        ( ( 1.0_C_DOUBLE - Cp) * current_phi)
-
-        CALL rtnewton(i,              &
+        CALL rtsafe(i,                  &
                       evaluateImkdZero,   &
-                      t_Start_Point,  &
-                      aimrerr,        &
+                      tmaxL,              &
+                      tmaxR,              &
+                      aimrerr,            &
                       tmax)
-      END IF
-  
-      ! Find mmax, which depends on whether we are working with the PDF or the CDF.
-      ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
-      ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
-      !       the CDF has integrand zeros at Im k(t) =        m pi/y.
-      CALL evaluateImk(i, tmax, kmax)
-      
-      IF (Cpdf) THEN
-        mmax = myfloor(2.0_C_DOUBLE * kmax / pi)
-      ELSE
-        mmax = myfloor(kmax / pi)
-      END IF
+ !     ELSE
+          ! p > 2
+!          t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
+!                          ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+!WRITE(*,*) "  RTNEWTON: start at ", t_Start_Point
 
-      ! Establish the first value of m to use, and whether the first zero is to the left of kmax
-      IF (mmax .GT. 0) THEN
-        mfirst = 1
-        leftOfMax = .TRUE.
+!          CALL rtnewton(i,                  &
+!                        evaluateImkdZero,   &
+!                        t_Start_Point,      &
+!                        aimrerr,            &
+!                        tmax)
+!WRITE(*,*) "   NEWTON:", tmax
+!      END IF
+    END IF  
+!  WRITE(*,*) "!!!!!!!!!!!!!!!! kmax, mmax, tmax, t_Start_Point "      
+      
+    ! Find mmax, which depends on whether we are working with the PDF or the CDF.
+    ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
+    ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
+    !       the CDF has integrand zeros at Im k(t) =        m pi/y.
+
+    ! Find kmax from tmax
+    CALL evaluateImk(i, tmax, kmax)
+
+    ! Find mmax from kmax
+    IF (Cpdf) THEN
+      mmax = FLOOR(2.0_C_DOUBLE * kmax / pi)
+    ELSE
+      mmax = FLOOR(kmax / pi)
+    END IF
+
+    ! Establish the first value of m to use, and whether the first zero is to the left of kmax
+    IF (mmax .GT. 0) THEN
+      mfirst = 1
+      leftOfMax = .TRUE.
+    ELSE
+      IF (mmax .EQ. 0 ) THEN
+        mfirst = 0
+        leftOfMax = .FALSE.
       ELSE
-        IF (mmax .EQ. 0 ) THEN
-          mfirst = 0
-          leftOfMax = .FALSE.
-        ELSE
-          ! That is, mmax is LESS THAN 0
-          mfirst = -1
-          leftOfMax = .FALSE.
-        ENDIF 
-      END IF
+        ! That is, mmax is LESS THAN 0
+        mfirst = -1
+        leftOfMax = .FALSE.
+      ENDIF 
     END IF
   END IF
-  
+
 
   CONTAINS
+    
+    
+    FUNCTION tInitialGuess() RESULT(t0)
+    
+      IMPLICIT NONE
+  
+      REAL(C_DOUBLE)              :: t0, pi
+      REAL(C_DOUBLE)              :: ratio, r, t_small, t_large, c, angle
+    
+      pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+    
+      ! Weighting exponent for interpolation
+      r = 4.0E0_C_DOUBLE ! Artibtrary
+    
+      ! Ratio y/mu
+      ratio = current_y / current_mu
+    
+      ! --- Small-t approximation ---
+      IF (ratio < 1.0E0_C_DOUBLE) THEN
+         t_small = (current_mu**(1.0E0_C_DOUBLE - Cp) / current_phi) *      &
+                    DSQRT( (2.0E0_C_DOUBLE/Cp) * (1.0E0_C_DOUBLE - ratio) )
+!WRITE(*,*) "ratio=", ratio
+!WRITE(*,*) "entering small-t branch"
+
+      ELSE
+         ! If y >= mu, no small-t root: set small approx to zero
+         t_small = 0.0E0_C_DOUBLE
+      ENDIF
+    
+      ! --- Large-t approximation ---
+      angle   = 0.5D0 * pi / (Cp - 1.0E0_C_DOUBLE)
+      c       = DCOS(angle)**(Cp - 1.0E0_C_DOUBLE)
+     t_large = ( current_mu**(2.0_C_DOUBLE*(1.0_C_DOUBLE - Cp)) /   &
+                ((1.0_C_DOUBLE - Cp) * current_phi) ) *             &
+                ( current_y**(Cp - 1.0_C_DOUBLE) )
+    
+      ! --- Blended initial guess ---
+      t0 = ratio**r * t_small + (1.0E0_C_DOUBLE - ratio**r) * t_large
+    
+    END FUNCTION tInitialGuess
+
     
     SUBROUTINE improveKmaxSPBounds(i, startTKmax, tmaxL, tmaxR)
       ! Crudely improve the bounds that bracket the starting point for finding Kmax.
