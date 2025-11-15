@@ -148,9 +148,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
     ratio = current_y / current_mu
   
-    omega_SP = -1
-    t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
-                    ( ( 1.0_C_DOUBLE - Cp) * current_phi)
 
     
     ! In some cases, tmax, kmax and mmax are HUGE; e.g., when we have y=0.001, 
@@ -168,25 +165,28 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
     ! When p near 1, we can solve Im k'(t) = 0 when p = 1:
     !    t = acos(y/mu)/phi. 
     ! Much more accurate!
+    IF ( Cp .LT. 1.1 ) THEN
+      t_Start_Point = DACOS(current_y/current_mu) / current_phi
+    ELSE
+      omega_SP = -1
+      t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
+                      ( ( 1.0_C_DOUBLE - Cp) * current_phi)
+      END IF
+      
     ! When p near 2, do similar with p = 2; need to check, but I get:
-    !    t - sqrt((-mu - phi * y)/(phi * y * mu^2))
-    ! provided y <= -mu/phi... so no maximum!
-    ! But there is a maximum... so perhaps maths is wrong
-    
-    
+    !    t = 1/(phi*mu) * sqrt( (mu - y)/y )
+    ! provided mu - y.\ (which checks out).
+
     
     m_Start_Point = floor( t_Start_Point * current_y / pi)                
-WRITE(*,*) "WELL: ", t_Start_Point, m_Start_Point
     IF ( m_Start_Point .GT. 250 ) then  
       ! Don't waste time computing kmax and co, especially when it
       ! is slow and difficult. So a few arbitrary settings:
       mmax = 250E0_C_DOUBLE     ! Plenty big enough
       mfirst = 1                ! Set mfirst; always 1 here
       leftOfMax = .TRUE.        ! Always to left of max here
-WRITE(*,*) "m/k max:", mmax, kmax
       CALL evaluateImk(i, t_Start_Point, kmax)    ! Now find the corresponding value of kmax
       tmax = DBLE(mmax) * pi / current_y
-WRITE(*,*) "kmax, tmax:", kmax, tmax
     ELSE
       ! Computing kmax and co
       
