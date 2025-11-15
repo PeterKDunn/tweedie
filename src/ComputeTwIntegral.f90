@@ -19,8 +19,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
   INTEGER(C_INT)    :: count_PreAcc_Regions, count_Acc_Regions
   INTEGER(C_INT)    :: m, min_Acc_Regions
-  INTEGER(C_INT)    :: flip_To_Other_Side, convergence_Acc
-  LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre
+  LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre, convergence_Acc
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
@@ -28,7 +27,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 501), Nmatrix(2, 501), xvec(501), wvec(501)
   REAL(KIND=C_DOUBLE)   :: TMP
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
-  LOGICAL(C_BOOL)       :: leftOfMax
+  LOGICAL(C_BOOL)       :: leftOfMax, flip_To_Other_Side
   
   ! --- INTERFACES: All C-bound routines called by DFbigp:
   INTERFACE
@@ -97,14 +96,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   m = 0
   exitstatus = 0
   relerr = 1.0_C_DOUBLE
-  convergence_Acc = 0
+  convergence_Acc = .FALSE.
   epsilon = 1.0E-12_C_DOUBLE
   Mmatrix = 0.0_C_DOUBLE
   Nmatrix = 0.0_C_DOUBLE
   xvec = 0.0_C_DOUBLE
   wvec = 0.0_C_DOUBLE
+  mmax = 0  
   count_Integration_Regions = 0_C_INT
-  mmax = 0
   zeroStartPoint = 0.0_C_DOUBLE
 
   ! --- Integration initialization ---
@@ -124,7 +123,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   m = mfirst
   
   ! INTEGRATION
-  ! Three integration regions:
+  ! Three integration zones:
   !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
   !   2. The initial area *before* Sidi acceleration is invoked: area1
   !      (For instance, wait until Im{k(t)} is on the downturn.)
@@ -136,15 +135,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
   CALL integrateFirstRegion(mfirst, leftOfMax,          & ! INPUTS
                             area0, zeroR)                 ! OUTPUTS
-  count_Integration_Regions = 1
 
   IF (Cverbose) THEN
     CALL DBLEPR("Initial region area:", -1, area0, 1)
     CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
     CALL INTPR( "      using right m:", -1, m, 1)
   END IF
-
-
 
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -157,8 +153,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
                               area1, zeroR, count_PreAcc_Regions,  converged_Pre)     ! OUTPUTS
-  count_Integration_Regions = count_Integration_Regions + count_PreAcc_Regions
-
+                          
   IF (Cverbose) THEN
     CALL DBLEPR(" Pre-acc area:", -1, area1, 1)
     CALL DBLEPR("      between:", -1, zeroL, 1)
@@ -194,9 +189,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       CALL INTPR( "      up to m:", -1, m,     1)
     END IF  
   END IF
+  
 
   ! --- WIND THINGS UP ---
-  count_Integration_Regions = count_PreAcc_Regions + count_Acc_Regions
+  count_Integration_Regions = 1_C_INT  +              &   ! Initial zone has one integration region
+                              count_PreAcc_Regions +  &   ! Pre-acc regions
+                              count_Acc_Regions           ! Acc regions
   areaT = area0 + area1 + areaA
 
   IF (Cverbose) THEN
@@ -224,15 +222,15 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
       ! Determine the next value of m, for solving the zeros of the integrand
       
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
     
       IMPLICIT NONE
       
-      INTEGER(C_INT), INTENT(IN)      :: mmax, i    ! Maximum value m can take, and current index
-      INTEGER(C_INT), INTENT(INOUT)   :: m          ! M index (used for calculation and C-binding)
-      INTEGER(C_INT), INTENT(OUT)     :: mOld       ! Previous index value
-      LOGICAL(C_BOOL), INTENT(INOUT)  :: leftOfMax  ! True if on the left side of kmax
-      INTEGER(C_INT), INTENT(INOUT)   :: flip       ! True if cross from left to right
+      INTEGER(C_INT), INTENT(IN)        :: mmax, i    ! Maximum value m can take, and current index
+      INTEGER(C_INT), INTENT(INOUT)     :: m          ! M index (used for calculation and C-binding)
+      INTEGER(C_INT), INTENT(OUT)       :: mOld       ! Previous index value
+      LOGICAL(C_BOOL), INTENT(INOUT)    :: leftOfMax  ! True if on the left side of kmax
+      LOGICAL(C_BOOL), INTENT(INOUT)    :: flip       ! True if cross from left to right
       
       REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
     
@@ -243,7 +241,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       current_phi  = Cphi(i)  ! Access phi value for index i
     
       mOld = m
-      flip = 0
+      flip = .FALSE.
       
       IF (current_y .GE. current_mu) THEN
         ! Always heading downwards (away from kmax), so easy
@@ -254,7 +252,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           IF (m == mmax) THEN 
             ! Move to the other side of the maximum
             leftOfMax = .FALSE.
-            flip = 1
+            flip = .TRUE.
           ELSE
             ! Continue towards the maximum
             m = m + 1 
@@ -342,10 +340,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
 
 !      pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-      converged_Pre = .FALSE.       ! .TRUE. if it seems the integration has converged
-      tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
-      sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
-      count_PreAcc_Regions = 0      ! Count how many pre-acc regions are evaluated
+      converged_Pre = .FALSE.           ! .TRUE. if it seems the integration has converged
+      tolerance = 1.0E-12_C_DOUBLE      ! tolerance for concluding the area is not vhanging
+      sumAOld = 0.0_C_DOUBLE            ! Previous estimation of the area
+      count_PreAcc_Regions = 0_C_INT    ! Count how many pre-acc regions are evaluated
+
+
+!WRITE(*,*) "     "
+!WRITE(*,*) "PRE ACC STARTS"
 
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
@@ -360,14 +362,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     
         stop_PreAccelerate = .FALSE.
         DO WHILE ( .NOT.(stop_PreAccelerate ) )
-          count_PreAcc_Regions = count_PreAcc_Regions + 1
-    
           IF (leftOfMax) THEN
             zeroBoundL = zeroR
             zeroBoundR = tmax
-            IF (flip_To_Other_Side .EQ. 1) THEN 
+            IF (flip_To_Other_Side) THEN 
               leftOfMax = .FALSE.
-              flip_To_Other_Side = 0
+              flip_To_Other_Side = .FALSE.
             END IF
           ELSE
             zeroBoundL = tmax
@@ -377,27 +377,34 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
           CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
-
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
 
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroR = zero
     
-          IF (count_Integration_Regions .GT. 1) THEN
+          IF (count_PreAcc_Regions .GT. 1) THEN
             area1Old = area1
             sumAOld = sumA
           END IF
 
           CALL GaussQuadrature(i, zeroL, zeroR, sumA)
           area1 = area1 + sumA
+          count_PreAcc_Regions = count_PreAcc_Regions + 1
+
           IF (Cverbose) THEN 
-            CALL DBLEPR("   Right bound:", -1, zeroR, 1)
-            CALL DBLEPR("          sumA:", -1, sumA, 1)
-            CALL DBLEPR("         area1:", -1, area1, 1)
-            CALL INTPR( "       with m::", -1, m, 1)
+            CALL DBLEPR("   Pre-acc:  Left bound:", -1, zeroL, 1)
+            CALL DBLEPR("   Pre-acc: Right bound:", -1, zeroR, 1)
+            CALL DBLEPR("                   sumA:", -1, sumA, 1)
+            CALL DBLEPR("                  area1:", -1, area1, 1)
+            CALL INTPR( "                with m::", -1, m, 1)
           END IF          
-          count_Integration_Regions = count_Integration_Regions + 1
+          
+          
+          
+          
+          
+          
     
           ! Stop condition for pre-acceleration.
           ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
@@ -415,6 +422,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
         END DO 
     
+    
+    
+    
+    
+    
         IF (Cverbose) THEN
           CALL DBLEPR("  *** PRE-ACC area:", -1, sumA, 1 )
           CALL DBLEPR("         between t:", -1, zeroL, 1 )
@@ -422,6 +434,13 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           CALL INTPR( "           using m:", -1, m, 1 )
         END IF
       END IF
+
+
+
+
+
+
+
 
     END SUBROUTINE integratePreAccRegions
 
@@ -453,15 +472,16 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       its_Acceleration = 0                ! Number of integration regions used
       keep_Accelerating = .TRUE.          ! .TRUE. if we need more integration regions
       converged_Accelerating = .FALSE.    ! .TRUE. if it seems the integration has converged
+      its_Acceleration = 0_C_INT          ! Number of acceleration integration regions
       
-      accMax = 100            ! Maximum number of regions in acceleration; arbitrary
-      min_Acc_Regions = 3     ! Minimum number of acceleration regions to use; need at leats three
+      accMax = 100_C_INT                  ! Maximum number of regions in acceleration; arbitrary
+      min_Acc_Regions = 3_C_INT           ! Minimum number of acceleration regions to use; need at least three
 
       ! This will be the very first, left-most value of t used in acceleration
       xvec(1) = zeroL
 
       DO WHILE (keep_Accelerating )
-        its_Acceleration = its_Acceleration + 1
+        its_Acceleration = its_Acceleration + 1_C_INT
         mOld = m
         CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
         zeroBoundL = zeroL
@@ -473,10 +493,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           ! Searching to the right of the maximum of Im k(t)
           zeroStartPoint = zeroL + (pi / current_y)
           zeroBoundR = zeroStartPoint * 5.0_C_DOUBLE
-          IF (flip_To_Other_Side .EQ. 1) THEN 
+          IF (flip_To_Other_Side) THEN 
             ! Then this is the first time on the right side of the maximum
             leftOfMax = .FALSE.
-            flip_To_Other_Side = 0
+            flip_To_Other_Side = .FALSE.
           END IF
         END IF
 
@@ -485,14 +505,13 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
         IF (its_Acceleration .GE. accMax) THEN
           IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
-          convergence_Acc = 1
+          convergence_Acc = .TRUE.
           EXIT
         END IF
     
         xvec(its_Acceleration + 1) = zeroR
         
         CALL GaussQuadrature(i, zeroL, zeroR, psi)           ! psi: area of the latest region
-        count_Integration_Regions = count_Integration_Regions + 1
 
         wvec(its_Acceleration) = psi 
           ! wvec contains the sequence of integration areas, starting with the first and up to the limit
@@ -518,7 +537,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
              (relerr .LT. aimrerr) ) THEN
           keep_Accelerating = .FALSE.
           converged_Accelerating = .TRUE.
-          convergence_Acc = 1
+          convergence_Acc = .TRUE.
         END IF
         
         IF (its_Acceleration .GT. accMax) THEN
