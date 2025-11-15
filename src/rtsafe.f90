@@ -96,8 +96,13 @@ SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
     END IF
   END DO
 
-  IF (Cverbose) CALL INTPR(" ERROR (rtsafe): Maxmimum number of iteratioins reached:", -1, MAXIT, 1)
-  
+  IF (j .GE. MAXIT) THEN
+    IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergence after iterations:", -1, MAXIT, 1)
+    IF (Cverbose) CALL DBLEPR("  Function value is:", -1, f, 1)
+    IF (Cverbose) CALL DBLEPR("  at x:", -1, root, 1)
+    IF (Cverbose) CALL DBLEPR("  and slope is:", -1, df, 1)
+  END IF
+
   RETURN
 
 END SUBROUTINE rtsafe
