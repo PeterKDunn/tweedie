@@ -13,8 +13,6 @@ SUBROUTINE findAccelStart(i, tRightMost)
   INTEGER(C_INT)                    :: lRightMost
   REAL(KIND=C_DOUBLE)               :: current_y, current_mu, current_phi
   
-  INTEGER, EXTERNAL :: myfloor
-
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
@@ -28,7 +26,7 @@ SUBROUTINE findAccelStart(i, tRightMost)
   ELSE
     lRightMostD = DACOS( (current_y / current_mu)**(Cp - 1.0_C_DOUBLE) ) /   &
                   (pi * (Cp - 1.0_C_DOUBLE) )
-    lRightMost = myfloor(lRightMostD) + 1
+    lRightMost = FLOOR(lRightMostD) + 1
 
     ! Final calculation for tRightMost
     omegaRM = REAL(lRightMost, KIND=C_DOUBLE) * pi * (1.0_C_DOUBLE - Cp)
