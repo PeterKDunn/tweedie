@@ -106,6 +106,7 @@ SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
     IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergence after iterations:", -1, MAXITS, 1)
     IF (Cverbose) CALL DBLEPR("  Function value is:", -1, f, 1)
     IF (Cverbose) CALL DBLEPR("  at x:", -1, x_current, 1)
+    IF (Cverbose) CALL DBLEPR("  and slope is:", -1, df, 1)
   END IF
 
   ! Assign the final root value
