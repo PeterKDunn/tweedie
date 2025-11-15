@@ -17,7 +17,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)    :: count_PreAcc_regions, count_Acc_Regions
+  INTEGER(C_INT)    :: count_PreAcc_Regions, count_Acc_Regions
   INTEGER(C_INT)    :: m, min_Acc_Regions
   INTEGER(C_INT)    :: flip_To_Other_Side, convergence_Acc
   LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre
@@ -155,10 +155,9 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
 
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-WRITE(*,*) "NOW m =", m
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
-                              area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
-  count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
+                              area1, zeroR, count_PreAcc_Regions,  converged_Pre)     ! OUTPUTS
+  count_Integration_Regions = count_Integration_Regions + count_PreAcc_Regions
 
   IF (Cverbose) THEN
     CALL DBLEPR(" Pre-acc area:", -1, area1, 1)
@@ -173,34 +172,32 @@ WRITE(*,*) "NOW m =", m
     END IF
   END IF
 
-WRITE(*,*) "# PRE regions:", count_PreAcc_regions
+
 
   ! ----------------------------------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
   IF ( converged_Pre) THEN
     areaA = 0.0_C_DOUBLE
-    count_Acc_regions = 0
+    count_Acc_Regions = 0
   ELSE
     zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
     CALL integrateAccelerationRegions(m, leftOfMax, zeroL,  tmax,                               & ! INPUTS
-                                      areaA, zeroR, count_Acc_regions, converged_Accelerating)    ! OUTPUTS
-  
+                                      areaA, zeroR, count_Acc_Regions, converged_Accelerating)    ! OUTPUTS
     IF (Cverbose) THEN
       IF ( .NOT.(converged_Accelerating) ) THEN
         CALL DBLEPR(" Accelerating dod not converged by t =", -1, zeroR, 1)
       END IF
       
-      CALL DBLEPR("    Aacc area:", -1, areaA, 1)
+      CALL DBLEPR("     Acc area:", -1, areaA, 1)
       CALL DBLEPR("      between:", -1, zeroL, 1)
       CALL DBLEPR("          and:", -1, zeroR, 1)
       CALL INTPR( "      up to m:", -1, m,     1)
     END IF  
   END IF
-  
+
   ! --- WIND THINGS UP ---
-  count_Integration_Regions = count_Integration_Regions + count_Acc_regions
+  count_Integration_Regions = count_PreAcc_Regions + count_Acc_Regions
   areaT = area0 + area1 + areaA
-WRITE(*,*) "# regions:", count_Integration_Regions, count_Acc_regions
 
   IF (Cverbose) THEN
     CALL DBLEPR("* Initial area0: ", -1, area0, 1)
@@ -325,7 +322,7 @@ WRITE(*,*) "# regions:", count_Integration_Regions, count_Acc_regions
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                              & ! INPUTS
-                                     area1, zeroR, count_PreAcc_regions, converged_Pre)                  ! OUTPUTS
+                                     area1, zeroR, count_PreAcc_Regions, converged_Pre)                  ! OUTPUTS
       ! Integration of the region *after* the initial, but *before* acceleration is invoked.
       ! Potentially, everything converges in this step (without needing acceleration).
       
@@ -335,7 +332,7 @@ WRITE(*,*) "# regions:", count_Integration_Regions, count_Acc_regions
       INTEGER(C_INT)                      :: mfirst
       INTEGER(C_INT), INTENT(INOUT)       :: m
       LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
-      INTEGER(C_INT), INTENT(OUT)         :: count_PreAcc_regions
+      INTEGER(C_INT), INTENT(OUT)         :: count_PreAcc_Regions
       LOGICAL(C_BOOL), INTENT(OUT)        :: converged_Pre
 
       INTEGER(C_INT)                      :: mOld
@@ -348,8 +345,8 @@ WRITE(*,*) "# regions:", count_Integration_Regions, count_Acc_regions
       converged_Pre = .FALSE.       ! .TRUE. if it seems the integration has converged
       tolerance = 1.0E-12_C_DOUBLE  ! tolerance for concluding the area is not vhanging
       sumAOld = 0.0_C_DOUBLE        ! Previous estimation of the area
-      count_PreAcc_regions = 0      ! Count how many pre-acc regions are evaluated
-WRITE(*,*) ">>> IN PREAccReg"
+      count_PreAcc_Regions = 0      ! Count how many pre-acc regions are evaluated
+
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
         mOld = m
@@ -363,7 +360,7 @@ WRITE(*,*) ">>> IN PREAccReg"
     
         stop_PreAccelerate = .FALSE.
         DO WHILE ( .NOT.(stop_PreAccelerate ) )
-          count_PreAcc_regions = count_PreAcc_regions + 1
+          count_PreAcc_Regions = count_PreAcc_Regions + 1
     
           IF (leftOfMax) THEN
             zeroBoundL = zeroR
@@ -394,12 +391,17 @@ WRITE(*,*) ">>> IN PREAccReg"
 
           CALL GaussQuadrature(i, zeroL, zeroR, sumA)
           area1 = area1 + sumA
-          
+          IF (Cverbose) THEN 
+            CALL DBLEPR("   Right bound:", -1, zeroR, 1)
+            CALL DBLEPR("          sumA:", -1, sumA, 1)
+            CALL DBLEPR("         area1:", -1, area1, 1)
+            CALL INTPR( "       with m::", -1, m, 1)
+          END IF          
           count_Integration_Regions = count_Integration_Regions + 1
     
           ! Stop condition for pre-acceleration.
           ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
-          IF ( (count_PreAcc_regions .GE. 2) .AND. (zeroL .GT. tmax) ) THEN
+          IF ( (count_PreAcc_Regions .GE. 2) .AND. (zeroL .GT. tmax) ) THEN
             stop_PreAccelerate = .TRUE.
           END IF
          
