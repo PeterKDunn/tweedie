@@ -1,4 +1,5 @@
-tweedie_Integrand <- function(y, power, mu, phi,  t = seq(0, 5, length = 1000), type = "PDF", whichPlots = c(1, 2, 3, 4), yLimits = NULL){
+tweedie_Integrand <- function(y, power, mu, phi,  t = seq(0, 5, length = 1000), 
+                              type = "PDF", whichPlots = 1:4, yLimits = NULL){
   
   # BEGIN: Define function to be used
   k <- function(p, mu, phi, y, t){
