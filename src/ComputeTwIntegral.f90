@@ -5,6 +5,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
   USE rprintf_mod
+  USE Calcs_Imag
+  USE Calcs_Real
   
   IMPLICIT NONE
   
@@ -105,6 +107,9 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   mmax = 0  
   count_Integration_Regions = 0_C_INT
   zeroStartPoint = 0.0_C_DOUBLE
+  flip_To_Other_Side = .FALSE.
+  zeroR = 0.0_c_DOUBLE
+  zeroL = 0._C_DOUBLE
 
   ! --- Integration initialization ---
   area0 = 0.0_C_DOUBLE
@@ -145,7 +150,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
 
-  !  CALL findWhereAccelerationStarts()
 
   ! Integrate (note: m is advanced in the SUBROUTINE)
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
@@ -277,12 +281,20 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area0, zeroR
       INTEGER(C_INT), INTENT(IN)          :: m
       LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
+      
       REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: pi
 
 
       pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+      
+      ! Initialisation
+      t_Start_Point = 0.0_C_DOUBLE
+      zeroL = 0.0_C_DOUBLE
+      zeroBoundL = 0.0_c_DOUBLE
+      zeroBoundR = 0.0_C_DOUBLE
       count_Integration_Regions = 1
+      
 
       ! Find starting point for the first zero
       IF (leftOfMax) THEN
@@ -335,7 +347,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
       INTEGER(C_INT)                      :: mOld
       REAL(KIND=C_DOUBLE)                 :: zeroL, zeroBoundL, zeroBoundR
-      REAL(KIND=C_DOUBLE)                 :: area1Old, tolerance, sumAOld
+      REAL(KIND=C_DOUBLE)                 :: area1Old, tolerance, sumAOld, Rek
       LOGICAL(C_BOOL)                     :: stop_PreAccelerate
 
 
@@ -345,9 +357,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       sumAOld = 0.0_C_DOUBLE            ! Previous estimation of the area
       count_PreAcc_Regions = 0_C_INT    ! Count how many pre-acc regions are evaluated
 
-
-!WRITE(*,*) "     "
-!WRITE(*,*) "PRE ACC STARTS"
 
       IF (mfirst .EQ. -1) THEN
         area1 = 0.0_C_DOUBLE
@@ -373,7 +382,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
             zeroBoundL = tmax
             zeroBoundR = zeroBoundL * 20.0_C_DOUBLE
           END IF
-    
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
           CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
@@ -393,39 +401,20 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           count_PreAcc_Regions = count_PreAcc_Regions + 1
 
           IF (Cverbose) THEN 
-            CALL DBLEPR("   Pre-acc:  Left bound:", -1, zeroL, 1)
-            CALL DBLEPR("   Pre-acc: Right bound:", -1, zeroR, 1)
-            CALL DBLEPR("                   sumA:", -1, sumA, 1)
-            CALL DBLEPR("                  area1:", -1, area1, 1)
-            CALL INTPR( "                with m::", -1, m, 1)
+            CALL DBLEPR("   Pre-acc:  Left t:", -1, zeroL, 1)
+            CALL DBLEPR("   Pre-acc: Right t:", -1, zeroR, 1)
+            CALL DBLEPR("               sumA:", -1, sumA, 1)
+            CALL DBLEPR("              area1:", -1, area1, 1)
+            CALL INTPR( "            with m::", -1, m, 1)
           END IF          
+!CALL INTPR( "       >>>>>     with m::", -1, m, 1)
           
-          
-          
-          
-          
-          
-    
-          ! Stop condition for pre-acceleration.
-          ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
-          IF ( (count_PreAcc_Regions .GE. 2) .AND. (zeroL .GT. tmax) ) THEN
-            stop_PreAccelerate = .TRUE.
-          END IF
-         
-          ! Check for convergence
-          IF ( (DABS(sumA - sumAOld) .LE. tolerance)  ) THEN
-            converged_Pre = .TRUE.
-            stop_PreAccelerate = .TRUE.  
-          END IF
+          ! Determine if we can stop pre-accelerating yet
+          CALL stopPreAcc(tmax, zeroL, stop_PreAccelerate)
 
           mOld = m
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
         END DO 
-    
-    
-    
-    
-    
     
         IF (Cverbose) THEN
           CALL DBLEPR("  *** PRE-ACC area:", -1, sumA, 1 )
@@ -453,6 +442,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
 
       IMPLICIT NONE
+
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroR
       REAL(KIND=C_DOUBLE)                 :: tmax, zeroL
       INTEGER(C_INT), INTENT(INOUT)       :: m
@@ -551,6 +541,64 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       END DO  
     
     END SUBROUTINE integrateAccelerationRegions
+    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+    SUBROUTINE stopPreAcc(tmax, zeroL, stop_PreAccelerate)
+      ! Determine if it is OK to stop pre-accelerating, and start using acceleration
+      
+      IMPLICIT NONE
+    
+      REAL(KIND=C_DOUBLE), INTENT(IN) :: tmax, zeroL
+      LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate
+      
+      INTEGER (C_INT)       :: nmax, tstop
+      REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd
+      
+      
+      ! Stop condition for pre-acceleration.
+      ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
+      IF ( Cp .GT. 2) THEN
+        IF (current_y .GT. current_mu) THEN
+          stop_PreAccelerate = .TRUE.
+        ELSE
+          IF (zeroL .GT. tmax) stop_PreAccelerate = .TRUE.
+        END IF
+      ELSE
+        IF (current_y .GT. current_mu) THEN
+          stop_PreAccelerate = .TRUE.
+        ELSE
+          MM = 1.0_C_DOUBLE / (2.0_C_DOUBLE  * (Cp - 1.0_C_DOUBLE))
+          IF ( MM .LE. 1.0_C_DOUBLE ) THEN
+            stop_PreAccelerate = .TRUE.
+          ELSE
+          ! Check when t is larger than the last turning point of Re k(t) 
+          ! Or when exp{Re(k)/t} is so small that it makes no difference... but 
+          ! care is needed: Re k(t) is not necessarily convex here
+             IF ( ABS( MM - FLOOR(MM) ) < 1.0E-09_C_DOUBLE ) then
+                nmax = FLOOR(MM) - 1
+             ELSE
+                nmax = FLOOR(MM)
+             END IF
+             tstop = current_mu**(1.0_C_DOUBLE - Cp) / ((1.0_C_DOUBLE - Cp) * current_phi) *   & 
+                     tan( nmax * pi * (1.0_C_DOUBLE - Cp) )
+             IF (zeroL .GT. tstop) stop_PreAccelerate = .TRUE.
+             
+             ! Sometimes this takes forever to flag stop_preacc as TRUE,
+             ! so also check if exp{Re k(t)/t}
+              CALL evaluateRek( i, zeroL, Rek)
+              CALL evaluateRekd(i, zeroL, Rekd)
+             IF ( ( (Rek/zeroL) .LT. 1.0E-05_C_DOUBLE) .AND.          & 
+                  (Rekd .LT. 0.0_C_DOUBLE) ) stop_PreAccelerate = .TRUE.
+          END IF
+        END IF
+      END IF
+!          IF ( (DABS(sumA - sumAOld) .LE. tolerance)  ) THEN
+!            converged_Pre = .TRUE.
+!            stop_PreAccelerate = .TRUEs.  
+!          END IF
+
+    END SUBROUTINE stopPreAcc
 
 END SUBROUTINE ComputeTwIntegral
 
