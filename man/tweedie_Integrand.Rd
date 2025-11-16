@@ -2,7 +2,7 @@
 \title{Plotting Tweedie Fourier integrands}
 \description{Plots the integhrand for Fourir inversion and the real, imaginary parts separately}
 \usage{
-	tweedie_Integrand((y, p, mu, phi, t, type = "PDF", yLimits = NULL)
+	tweedie_Integrand((y, p, mu, phi,  t = seq(0, 5, length = 1000), type = "PDF", whichPlots = 1:4, yLimits = NULL)
 }
 \arguments{
 	\item{y}{vector of ??}
