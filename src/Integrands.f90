@@ -1,7 +1,8 @@
 MODULE Integrands_MOD
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
+  USE Calcs_Imag, ONLY: evaluateImk
+  USE Calcs_Real
   IMPLICIT NONE
   
 CONTAINS
@@ -11,7 +12,7 @@ CONTAINS
 
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
+      
     IMPLICIT NONE
     
     INTEGER(C_INT), INTENT(IN)        :: i
@@ -24,31 +25,7 @@ CONTAINS
     
     INTERFACE
     
-      SUBROUTINE evaluateImk(i, t, Imk)
-        ! Find Im k(t)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)          :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
-      END SUBROUTINE evaluateImk
-
-      
-      SUBROUTINE evaluateRek(i, t, Rek)
-        ! Find Re k(t)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)          :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
-      END SUBROUTINE evaluateRek
-      
-      
-      SUBROUTINE evaluateLambda(i, lambda)
+        SUBROUTINE evaluateLambda(i, lambda)
        ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
         USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
         

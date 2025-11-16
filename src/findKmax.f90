@@ -4,7 +4,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
+  USE Calcs_Imag
+  USE Calcs_Solvers
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: kmax, tmax
@@ -18,13 +19,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   INTEGER(C_INT)          :: m_Start_Point
   
-
-  ! Declare external routines that are defined elsewhere.
-  EXTERNAL evaluateImkd       ! evaluate Im k'(t)
-  EXTERNAL evaluateImkdZero   ! the zero-finding version (used by rtsafe/rtnewton)
-  EXTERNAL evaluateImk        ! evaluate Im k(t)
-  EXTERNAL rtsafe             ! safe (bounded) root finding 
-  EXTERNAL rtnewton           ! Newton's methiod (with lower bounding at 0)
 
   ! A. If Im k(t) heads down initially: easy: kmax = tmax = mmax = 0
   ! B. Otherwise, we need to find kmax etc by solving Im k'(t) = 0
@@ -232,9 +226,6 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       INTEGER(C_INT)          :: max_Search, search_Its
       LOGICAL                 :: keep_Searching
       
-      EXTERNAL evaluateImkd
-      
-    
       ! Grab the relevant scalar values for this iteration:
       current_y    = Cy(i)    ! Access y value for index i
       current_mu   = Cmu(i)   ! Access mu value for index i

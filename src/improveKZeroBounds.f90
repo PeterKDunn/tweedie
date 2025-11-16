@@ -4,7 +4,8 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
+  USE Calcs_Imag, ONLY: evaluateImkM
+  
   IMPLICIT NONE
   
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
@@ -18,8 +19,6 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR, df, valueMid
   INTEGER(C_INT)          :: maxSearch, itsSearch
   LOGICAL                 :: keepSearching
-  
-  EXTERNAL evaluateImkM
   
 
   ! Grab the relevant scalar values for this iteration:

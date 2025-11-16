@@ -3,7 +3,9 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
+  USE Calcs_Solvers
+  USE Calcs_Imag
+  
   IMPLICIT NONE
 
   INTEGER(C_INT), INTENT(IN)        :: i, m, mmax
@@ -13,65 +15,6 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   
   REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-
-
-  INTERFACE
-
-    SUBROUTINE funcd_signature(i, x, f, df)
-      ! Template the function to be solved to find the zeros 
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE 
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE funcd_signature
-
-
-    SUBROUTINE rtnewton(i, funcd, xstart,xacc, root)
-      ! Find zeros using (moodified) Newton's method
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-      
-      PROCEDURE(funcd_signature) :: funcd
-    END SUBROUTINE rtnewton
-
-
-    SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
-      ! Find zeros using (moodified) Newton's method with bisection
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-      
-      PROCEDURE(funcd_signature) :: funcd
-    END SUBROUTINE rtsafe
-
-
-    SUBROUTINE evaluateImkM(i, t, f, df, m)
-      ! Evaluate  Im k(t) - m * pi (CDF) - pi/2  or  Im k(t) - m * pi (CDF)
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i, m
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE evaluateImkM
-  END INTERFACE
 
 
   ! Grab the relevant scalar values for this iteration:
