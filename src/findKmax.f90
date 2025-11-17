@@ -18,6 +18,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   REAL(KIND=C_DOUBLE)     :: t_small, t_large
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   INTEGER(C_INT)          :: m_Start_Point
+  LOGICAL(C_BOOL)         :: error
   
 
   ! A. If Im k(t) heads down initially: easy: kmax = tmax = mmax = 0
@@ -82,7 +83,9 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       ! This hopefully will flag potentially problematically large kmax/tmax/mmax:
 
       tmax = threshold
-      CALL evaluateImk(i, t_Start_Point, kmax)    ! Now find the corresponding value of kmax
+      CALL evaluateImk(i, t_Start_Point, kmax, error)    ! Now find the corresponding value of kmax
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t_Start_Point, 1)
+
     ELSE
       ! Compute ratio
       ratio = current_y / current_mu
@@ -117,30 +120,19 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
                       tmaxL,              &
                       tmaxR,              &
                       aimrerr,            &
-                      tmax)
- !     ELSE
-          ! p > 2
-!          t_Start_Point = current_mu ** (1.0_C_DOUBLE - Cp) * DTAN(omega_SP) /   &
-!                          ( ( 1.0_C_DOUBLE - Cp) * current_phi)
-!WRITE(*,*) "  RTNEWTON: start at ", t_Start_Point
-
-!          CALL rtnewton(i,                  &
-!                        evaluateImkdZero,   &
-!                        t_Start_Point,      &
-!                        aimrerr,            &
-!                        tmax)
-!WRITE(*,*) "   NEWTON:", tmax
-!      END IF
+                      tmax,               &
+                      error)
+        IF (error) CALL DBLEPR("ERROR: cannot solve", -1, tmax, 1)
     END IF  
-!  WRITE(*,*) "!!!!!!!!!!!!!!!! kmax, mmax, tmax, t_Start_Point "      
-      
+
     ! Find mmax, which depends on whether we are working with the PDF or the CDF.
     ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
     ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
     !       the CDF has integrand zeros at Im k(t) =        m pi/y.
 
     ! Find kmax from tmax
-    CALL evaluateImk(i, tmax, kmax)
+    CALL evaluateImk(i, tmax, kmax, error)
+    IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, tmax, 1)
 
     ! Find mmax from kmax
     IF (Cpdf) THEN
@@ -224,7 +216,7 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       REAL(KIND=C_DOUBLE)     :: boundL, boundR, slopeL, slopeR
       REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR
       INTEGER(C_INT)          :: max_Search, search_Its
-      LOGICAL                 :: keep_Searching
+      LOGICAL(C_BOOL)         :: keep_Searching, error
       
       ! Grab the relevant scalar values for this iteration:
       current_y    = Cy(i)    ! Access y value for index i
@@ -239,7 +231,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       boundR = tmaxR
 
       CALL evaluateImkd(i, boundL, slopeL)
-      CALL evaluateImk(i, boundL, Imk_value)
+      CALL evaluateImk(i, boundL, Imk_value, error)
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundL, 1)
       
       ! Slope at starting point should always be positive if we are here:
       ! if the slope is negative, Im k(t) heads down and m = -1, -2, ...
@@ -250,7 +243,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
         oldBoundL = boundL
         boundL = (boundL + 1.0E-2_C_DOUBLE) * 1.250E0_C_DOUBLE
         CALL evaluateImkd(i, boundL, slopeL)
-        CALL evaluateImk(i, boundL, Imk_value)
+        CALL evaluateImk(i, boundL, Imk_value, error)
+        IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundL, 1)
 
         IF ( (slopeL .LT. 0.0E0_C_DOUBLE ) .OR.   &
              (Imk_value .LT. 0.0_C_DOUBLE) ) THEN
@@ -271,7 +265,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       CALL evaluateImkd(i, boundR, slopeR)
       
       ! Find the value if kmax at the starting point (SP)
-      CALL evaluateImk(i, boundR, Imk_value)
+      CALL evaluateImk(i, boundR, Imk_value, error)
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
 
       ! A valid upper bound:
       ! - must have a negative SLOPE (must be negative)i.e., heading down), *AND*
@@ -290,7 +285,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
           boundR = (boundR + 0.1_C_DOUBLE) * 2.0E0_C_DOUBLE
     
           CALL evaluateImkd(i, boundR, slopeR)
-          CALL evaluateImk(i, boundR, Imk_value)
+          CALL evaluateImk(i, boundR, Imk_value, error)
+          IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
 
           IF ( (slopeR .LT. 0.0E0_C_DOUBLE ) .AND.  &
                (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
@@ -307,7 +303,8 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
         oldBoundR = boundR
         boundR = boundR * 0.90E0_C_DOUBLE
         CALL evaluateImkd(i, boundR, slopeR)
-        CALL evaluateImk(i, boundR, Imk_value)
+        CALL evaluateImk(i, boundR, Imk_value, error)
+        IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
 
         IF ( (slopeR .GT. 0.0E0_C_DOUBLE) .AND.   &
              (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
