@@ -5,7 +5,7 @@ useDynLib(tweedie, .registration = TRUE)
 exportPattern("^[^\\.]")
 
 importFrom("graphics", "abline", "lines", "plot", "points", "rug",
-             "title")
+             "title", "axis", "mtext", "par")
 importFrom("stats", "contrasts", "deviance", "dgamma", "dnorm",
              "dpois", "fitted", "glm.control", "glm.fit",
              "is.empty.model", "model.matrix", "model.offset",

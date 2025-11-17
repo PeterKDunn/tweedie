@@ -1,23 +1,24 @@
-SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
+SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR)
   ! Improve the bounds that bracket the zero of Im k(t).
   ! A decent starting point is sometimes crucial to timely convergence.
   
   USE tweedie_params_mod, ONLY: Cphi, Cmu, Cy
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+  USE Calcs_Imag, ONLY: evaluateImkM
+  
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)    :: startZero
-  INTEGER(C_INT), INTENT(IN)         :: i, m, leftOfMax
-  REAL(KIND=C_DOUBLE), INTENT(OUT)   :: zeroL, zeroR
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroMid
+  INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroL, zeroR
+  LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
 
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)     :: boundL, boundR, valueL, valueR, SPvalue, multiplier
-  REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR, df
+  REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR, df, valueMid
   INTEGER(C_INT)          :: maxSearch, itsSearch
   LOGICAL                 :: keepSearching
-  
-  EXTERNAL evaluateImkM
   
 
   ! Grab the relevant scalar values for this iteration:
@@ -26,110 +27,116 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startZero, zeroL, zeroR)
   current_phi  = Cphi(i)  ! Access phi value for index i
 
 
-  maxSearch = 10  ! Donlt spend too long, so set limit
+
+  ! Initialisation
+  maxSearch = 10  ! Don't spend too long, so set limit
 
   ! Set multipier: this adjust the sign depending on whether we are
   ! left of the max (so left bound is negative) or to the right of
   ! the max (so left bound is positive)
-  IF (leftOfMax .EQ. 1) THEN
+  IF (leftOfMax) THEN
     multiplier = -1.0E0_C_DOUBLE
   ELSE
     multiplier = 1.0E0_C_DOUBLE
   END IF
 
+
+  ! TWO ROLES:
+  ! a) if the bounds actually do bound the zero (i.e, bound give opposite signs for the function
+  !    for which zeros are sought): improve if we can, Smetimes, a good start pt is necessary.
+  ! b) if the bounds actually do NOT bound the zero: find bounds that do!
+
   ! FIND the function value of the starting point (SP)
-  CALL evaluateImkM(i, startZero, SPvalue, df, m)
-    ! The fn value at the starting point, so we know which way to search
-
-  ! LOWER BOUND
-  ! - If fn value at SP is *positive*, only need to creep to the right
-  boundL = startZero
-  itsSearch = 0
-  
-  IF ( (multiplier * SPvalue) .LE. 0.0E0_C_DOUBLE) THEN
-
-    itsSearch = itsSearch + 1
-
-    keepSearching = .TRUE.
-    DO WHILE (keepSearching)
-      ! - If fn value at SP is negative, take bold steps left to find lower bound
-      boundL = boundL / 1.50E0_C_DOUBLE
-      
-    CALL evaluateImkM(i, boundL, valueL, df, m)
-      
-      IF ( (multiplier * valueL) .GT. 0.0E0_C_DOUBLE ) THEN
-        ! - Found a lower bound where the fn value is positive
-        keepSearching = .FALSE.
-      END IF 
-    END DO
-  END IF
-
-  ! - Now creep to the right from boundL (refine the lower bound)
-  keepSearching = .TRUE.
-  itsSearch = 0
-  DO WHILE (keepSearching)
-    itsSearch = itsSearch + 1
-
-    oldBoundL = boundL
-    boundL = boundL * 1.10E0_C_DOUBLE
-    CALL evaluateImkM(i, boundL, valueL, df, m)
-
-    IF ( (multiplier * valueL) .LT. 0.0E0_C_DOUBLE ) THEN
-      ! - Gone too far, so keep previous bound
-      keepSearching = .FALSE.
-      boundL = oldBoundL
-    END IF
-    IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
-
-  END DO
-  zeroL = boundL
+  zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
+  CALL evaluateImkM(i, zeroMid, valueMid, df, m)
+  CALL evaluateImkM(i, zeroL, valueL, df, m)
+  CALL evaluateImkM(i, zeroR, valueR, df, m)
 
 
+  ! CHECK IF BOUNDS REALLY DO BOUND THE ZERO:
+  IF ( (valueL * valueR) .GE. 0.0_C_DOUBLE) THEN
+    ! Bounds DO NOT trap the zero
 
-
-  ! UPPER BOUND
-  ! - SPvalue computed above
-  boundR = startZero
-
-  itsSearch = 0
-  ! - If fn value at SP is *negative*, only need to creep to the left
-  IF ( (multiplier * SPvalue) .GT. 0.0E0_C_DOUBLE) THEN
-    itsSearch = itsSearch + 1
-    boundR = startZero
-    keepSearching = .TRUE.
-    
-    DO WHILE (keepSearching)
-      ! - If fn value at SP is positive, take bold steps right to find upper bound
-      boundR = boundR * 1.5E0_C_DOUBLE
-
-      CALL evaluateImkM(i, boundR, valueR, df, m)
-
-      IF ( (multiplier * valueR) .LT. 0.0E0_C_DOUBLE ) THEN
-        ! - Found an upper bound where the fn value is negative
-        keepSearching = .FALSE.
-      END IF 
-      IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
+    ! The solution depends on what side of the max we are.
+    ! If to the LEFT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
+    IF ( leftOfMax) THEN
+      DO WHILE ( valueL .GT. 0.0_C_DOUBLE) 
+        ! We are on the LEFT of the maximum of Im k(t), but the L bound gives a +ive value.
+        ! So we need to go LEFT a little.
+        zeroL = (zeroL - 0.1_C_DOUBLE) * 0.95_C_DOUBLE
+        CALL evaluateImkM(i, zeroL, valueL, df, m)
       END DO
-  END IF
 
-  ! - Now creep to the left from boundR (refine the upper bound)
-  itsSearch = 0
-  keepSearching = .TRUE.
-  DO WHILE (keepSearching)
-    itsSearch = itsSearch + 1
 
-    oldBoundR = boundR
-    boundR = boundR * 0.90E0_C_DOUBLE
-    CALL evaluateImkM(i, boundR, valueR, df, m)
-    IF ( (multiplier * valueR).GT. 0.0E0_C_DOUBLE ) THEN
-      ! Gone too far, so keep previous bound
-      keepSearching = .FALSE.
-      boundR = oldBoundR
+
+      ! The solution depends on what side of the max we are.
+      ! If to the LEFT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
+      DO WHILE ( valueR .LT. 0.0_C_DOUBLE) 
+        ! We are on the LEFT of the maximum of Im k(t), but the R bound gives a -ive value.
+        ! So we need to go RIGHT a little.
+        zeroR = (zeroR + 0.1_C_DOUBLE) * 1.05_C_DOUBLE
+        CALL evaluateImkM(i, zeroR, valueR, df, m)
+      END DO
     END IF
-    IF (itsSearch .GT. maxSearch) keepSearching = .FALSE.
-  END DO
-  zeroR = boundR
 
+
+
+
+
+    ! The solution depends on what side of the max we are.
+    ! If to the RIGHT of the max of Im k(t), zeroL should give a +ive value; zeroR a -ive value.
+    IF ( .NOT.(leftOfMax) ) THEN
+      DO WHILE ( valueL .LT. 0.0_C_DOUBLE) 
+        ! We are on the RIGHT of the maximum of Im k(t), but the L bound gives a -ive value.
+        ! So we need to go LEFT a little.
+        zeroL = (zeroL - 0.1_C_DOUBLE) * 0.95_C_DOUBLE
+        CALL evaluateImkM(i, zeroL, valueL, df, m)
+      END DO
+
+
+
+      ! The solution depends on what side of the max we are.
+      ! If to the RIGHT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
+      DO WHILE ( valueR .GT. 0.0_C_DOUBLE) 
+        ! We are on the RIGHT of the maximum of Im k(t), but the R bound gives a +ive value.
+        ! So we need to go RIGHT a little.
+        zeroR = (zeroR + 0.1_C_DOUBLE) * 1.05_C_DOUBLE
+        CALL evaluateImkM(i, zeroR, valueR, df, m)
+      END DO
+    END IF
+
+
+
+
+  ELSE
+    ! Bounds DO trap the zero, so improve a little
+  
+    ! Find a point halfway between bounds.
+    ! If the new point has same sign as L/R bound, make that the new L/R bounds.
+    IF ( (valueMid * valueL) .GE. 0.0_C_DOUBLE) THEN
+      zeroL = zeroMid
+    ELSE IF ( (valueMid * valueR) .GE. 0.0_C_DOUBLE) THEN
+      zeroR = zeroMid
+    END IF
+      
+    ! And once more ONLY
+    zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
+    CALL evaluateImkM(i, zeroMid, valueMid, df, m)
+    CALL evaluateImkM(i, zeroL, valueL, df, m)
+    CALL evaluateImkM(i, zeroR, valueR, df, m)
+
+    ! Find a point halfway between bounds.
+    ! If the new point has same sign as L/R bound, make that the new L/R bounds.
+    IF ( (valueMid * valueL) .GE. 0.0_C_DOUBLE) THEN
+      zeroL = zeroMid
+    ELSE IF ( (valueMid * valueR) .GE. 0.0_C_DOUBLE) THEN
+      zeroR = zeroMid
+    END IF
+    
+    zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
+
+  END IF
+  
   RETURN
 
 END SUBROUTINE improveKZeroBounds

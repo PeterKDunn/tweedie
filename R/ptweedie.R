@@ -1,3 +1,15 @@
+#' Tweedie Density: Distribution Function
+#'
+#' Internal function to evaluate the Tweedie distribution function.
+#' \bold{Not intended for general users.}
+#'
+#' @param y vector of quantiles.
+#' @param power The power parameter \eqn{p}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @return A numeric vector of densities.
+#' @keywords internal
+#' @export
 ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE) {
 
   # Evaluates the cdf for Tweedie distributions, for given values of:

@@ -1,3 +1,20 @@
+#' Tweedie Distribution Function: Series Evaluation for the Distribution Function
+#'
+#' Internal function to evaluate the Tweedie distribution function using the infinite series expansion.
+#' \bold{Not intended for general users.}
+#'
+#' @param q vector of quantiles.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @param verbose Display some internal computation details.
+#' @param details Return the DF and the number of series terms used.
+#' @return A numeric vector of densities.
+#' 
+#' @importFrom stats dpois 
+#'
+#' @keywords internal
+
 ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
 
   # Evaluates the cdf for Tweedie distributions, using the infinite series 
@@ -58,7 +75,7 @@ ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
     pois.den <- dpois( N, lambda)
     
     # Incomplete gamma
-    incgamma.den <- pchisq(2 * q / tau, 
+    incgamma.den <- stats::pchisq(2 * q / tau, 
                            -2 * alpha * N )
     
     # What we want

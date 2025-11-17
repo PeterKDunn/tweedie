@@ -3,6 +3,7 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
   
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE Calcs_Imag
 
   IMPLICIT NONE
   
@@ -12,20 +13,6 @@ REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP(i)
 
   REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
 
-  INTERFACE
-    SUBROUTINE evaluateImkd(i, t, Imkd)
-      ! Find Im k'(t)
-  
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-  
-      REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
-      INTEGER(C_INT), INTENT(IN)         :: i
-      REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Imkd
-    END SUBROUTINE evaluateImkd
-  END INTERFACE
-  
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i

@@ -39,5 +39,6 @@ SUBROUTINE findAccelStart(i, tmax, tStartAcc)
   ! which is never smaller than the largest inflection pint of Re k(t).
   
   tStartAcc = MAX(tmax, t_nmax)
+
   
 END SUBROUTINE findAccelStart

@@ -11,11 +11,11 @@
 \title{Tweedie Distributions}
 \description{Density, distribution function, quantile function and random number generation for the Tweedie family of distributions}
 \usage{
-	dtweedie(y, xi = NULL, mu, phi, power = NULL)
+	dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
 	dtweedie.series(y, power, mu, phi)
 	dtweedie.inversion(y, power, mu, phi, method, verbose = FALSE, details = FALSE)
 	dtweedie.stable(y, power, mu, phi)
-	ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+	ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
 	ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 	ptweedie.inversion(q, mu, phi, power, verbose = FALSE, details = FALSE)
 	qtweedie(p, xi = NULL, mu, phi, power = NULL)

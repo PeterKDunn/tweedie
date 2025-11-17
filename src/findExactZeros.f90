@@ -1,95 +1,29 @@
-SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, find_Exact_Zero_Success) 
+SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax) 
   ! Find the exact zeros of the integrand
   
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
+  USE Calcs_Solvers
+  USE Calcs_Imag
+  
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)          :: i, m  
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: tL, tR, tStart   
-  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: tZero
-  LOGICAL(C_BOOL), INTENT(OUT)        :: find_Exact_Zero_Success
-  
-  REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update
+  INTEGER(C_INT), INTENT(IN)        :: i, m, mmax
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: tL, tR, tStart, tmax
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tZero
+  LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
+
+  REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-  INTEGER(C_INT)        :: leftOfMax
-  LOGICAL(C_BOOL)       :: root_Found
 
-
-  INTERFACE
-
-    SUBROUTINE funcd_signature(i, x, f, df)
-      ! Template the function to be solved to find the zeros 
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE 
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE funcd_signature
-
-
-    SUBROUTINE rtnewton(i, funcd, xstart,xacc, root, root_Found)
-      ! Find zeros using (moodified) Newton's method
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-      LOGICAL(C_BOOL), INTENT(OUT)      :: root_Found
-      
-      PROCEDURE(funcd_signature) :: funcd
-    END SUBROUTINE rtnewton
-
-
-    SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root, root_Found)
-      ! Find zeros using (moodified) Newton's method with bisection
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
-      LOGICAL(C_BOOL), INTENT(OUT)      :: root_Found
-      
-      PROCEDURE(funcd_signature) :: funcd
-    END SUBROUTINE rtsafe
-
-
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER(C_INT), INTENT(IN)          :: i, m, leftOfMax
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: startx, xL, xR
-    END SUBROUTINE improveKZeroBounds
-    
-
-    SUBROUTINE evaluateImkM(i, t, f, df, m)
-      ! Evaluate  Im k(t) - m * pi (CDF) - pi/2  or  Im k(t) - m * pi (CDF)
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: i, m
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
-    END SUBROUTINE evaluateImkM
-  END INTERFACE
+  LOGICAL(C_BOOL)       :: error
 
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
-
 
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
@@ -103,20 +37,23 @@ SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, find_Exact_Zero_Success)
   CALL evaluateImkM(i, tL, fL, dfL, m)
   CALL evaluateImkM(i, tR, fR, dfR, m)
 
-  IF ( (fl * fR) .GT. 0.0_C_DOUBLE ) THEN
+  IF ( (fL * fR) .GT. 0.0_C_DOUBLE ) THEN
     ! Then bounds do not bound the zero
-    IF (Cverbose) CALL DBLEPR("Bounds do not bracket the zero", -1, fL, 1)
-    IF (Cverbose) CALL DBLEPR("            (in findExactZero)", -1, fR, 1)
-    find_Exact_Zero_Success = .FALSE.
+     tMid = (tL + tR) / 2.0_C_DOUBLE
+ 
+    CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, tMid, tL, tR)
+    IF (Cverbose) CALL DBLEPR("Bounds do not bracket the zero (findExactZeros)", -1, fR, 1)
   END IF
   ! For robustness, use rtsafe when the  distance between zeros 
   ! is expected to be small (i.e., in the tail).
   IF ( m .LE. -3 ) THEN ! Use rtsafe whenever m is large and negative
-    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, root_Found)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
+    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! When small p and small y, fight harder for good starting bounds
-    CALL improveKZeroBounds(i, m, leftOfMax, tStart, tL, tR)
-    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, root_Found)
+    CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, tStart, tL, tR)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
+    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
     tstart_update = (tL + tR) / 2.0_C_DOUBLE

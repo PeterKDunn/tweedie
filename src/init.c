@@ -1,30 +1,19 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <stdlib.h> // for NULL
-#include <R_ext/Rdynload.h>
+#include <R_ext/Rdynload.h> 
 
-/* --- Forward declarations for BIND(C) Fortran Subroutines --- */
-// twcomputation has 11 arguments
-extern void twcomputation(int *N, double *p, double *phi, double *y, double *mu, int *verbose, int *pdf, double *funvalue, int *exitstatus, double *relerr, int *its);
-/* --- C Routine Registration Table (R_CMethodDef) --- */
-/* R will look here for BIND(C) symbols like "twcomputation" */
-static const R_CMethodDef CEntries[] = {
-  {"twcomputation", (DL_FUNC) twcomputation, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
-  {NULL, NULL, 0, {0}}
-};
+// (Routines are extern void-declared here, as you already have them)
 
-/* --- Fortran Routine Registration Table (R_FortranMethodDef) --- */
-/* This table is empty now, as BIND(C) routines go in CEntries */
-static const R_FortranMethodDef FortranEntries[] = {
-  {NULL, NULL, 0, {0}} // EMPTY TABLE
-};
+/* --- C and Fortran Routine Registration Tables here --- */
+// (CEntries and FortranEntries tables go here, as you already have them)
 
 
-/* --- The main initialization entry point R looks for (Single Definition) --- */
+// --- The R-MANDATORY initialization entry point ---
+// The function must be exported and registered. 
+// We rely on the R build system to handle the visibility, not non-portable attributes.
 void R_init_tweedie(DllInfo *dll)
 {
-  // Register C Routines (CEntries), then Fortran Routines (FortranEntries)
-  R_registerRoutines(dll, CEntries, NULL, FortranEntries, NULL); 
-  
-  R_useDynamicSymbols(dll, FALSE); 
+  R_registerRoutines(dll, CEntries, NULL, FortranEntries, NULL); 
+  R_useDynamicSymbols(dll, FALSE); 
 }

@@ -1,7 +1,8 @@
 MODULE Integrands_MOD
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
+  USE Calcs_Imag, ONLY: evaluateImk
+  USE Calcs_Real
   IMPLICIT NONE
   
 CONTAINS
@@ -11,7 +12,7 @@ CONTAINS
 
     USE tweedie_params_mod
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
+      
     IMPLICIT NONE
     
     INTEGER(C_INT), INTENT(IN)        :: i
@@ -20,47 +21,9 @@ CONTAINS
     REAL(KIND=C_DOUBLE)               :: integrand_result ! The result of the function
     REAL(KIND=C_DOUBLE)               :: current_y, current_mu
     REAL(KIND=C_DOUBLE)               :: Imk, Rek, lambda
+    LOGICAL(C_BOOL)                   :: error
     
     
-    INTERFACE
-    
-      SUBROUTINE evaluateImk(i, t, Imk)
-        ! Find Im k(t)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)          :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
-      END SUBROUTINE evaluateImk
-
-      
-      SUBROUTINE evaluateRek(i, t, Rek)
-        ! Find Re k(t)
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)          :: i
-        REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
-        REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
-      END SUBROUTINE evaluateRek
-      
-      
-      SUBROUTINE evaluateLambda(i, lambda)
-       ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-        
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)        :: i
-        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda
-      END SUBROUTINE evaluateLambda
-      
-    END INTERFACE
-      
-  
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
     current_mu   = Cmu(i)
@@ -75,7 +38,8 @@ CONTAINS
       RETURN
     ELSE
       CALL evaluateRek(i, t, Rek)
-      CALL evaluateImk(i, t, Imk)
+      CALL evaluateImk(i, t, Imk, error)
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t, 1)
       
       IF (Cpdf) THEN
         IF (CpSmall) THEN
