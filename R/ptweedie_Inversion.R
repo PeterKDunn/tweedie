@@ -1,4 +1,18 @@
-ptweedie.inversion <- function(q, mu, phi,  power, verbose = FALSE, details = FALSE ){ 
+#' Tweedie Distribution: Fourier Inversion Evaluation for the Distribution Function
+#'
+#' Internal function to evaluate the Tweedie distribution function using Fourier inversion.
+#' \bold{Not intended for general users.}
+#'
+#' @param q vector of quantiles.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @param verbose Display some internal computation details.
+#' @param details Return the DF and the number of integral regions used.
+#' @return A numeric vector of the distribution function values
+#' @keywords internal
+#' @export
+ptweedie.inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
   #
   #   q           : the values at which to compute the DF (possibly a vector)

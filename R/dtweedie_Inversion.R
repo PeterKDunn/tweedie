@@ -1,3 +1,18 @@
+#' Tweedie Distribution: Fourier Inversion Evaluation for the Probability Function
+#'
+#' Internal function to evaluate the Tweedie density using Fourier inversion.
+#' \bold{Not intended for general users.}
+#'
+#' @param y vector of quantiles.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @param verbose Display some internal computation details.
+#' @param details Return the DF and the number of integration regions used.
+
+#' @return A numeric vector of densities.
+#' @keywords internal
+
 dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
   #

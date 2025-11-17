@@ -1,3 +1,17 @@
+#' Tweedie Distribution : Quantiles
+#'
+#' Internal function to evaluate the Tweedie density using the infinite series expansion.
+#' \bold{Not intended for general users.}
+#'
+#' @param p vector of probabilities.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param xi The value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @return A numeric vector of densities.
+#' 
+#' @importFrom stats uniroot
+#' @export
 qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   
   ### BEGIN preliminary work
@@ -57,12 +71,12 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
     prob <- p.1 # Rename p to avoid confusion with  pwr: This is the  qtweedie()  input p (a probability)
     
     if ( pwr < 2 ) {
-      qp <- qpois(prob, 
+      qp <- stats::qpois(prob, 
                   lambda = mu.1 / phi.1)
       if ( pwr == 1 ) ans[i] <- qp   
     }
     
-    qg <- qgamma(prob,  
+    qg <- stats::qgamma(prob,  
                  rate = 1 / (phi.1 * mu.1), 
                  shape = 1 / phi.1 )
     if ( pwr == 2 ) ans[i] <- qg
@@ -151,7 +165,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
       #   pt2(start, mu=mu.1, phi=phi.1, pwr=pwr, p.given=prob), 
       #   pt2(start.2, mu=mu.1, phi=phi.1, pwr=pwr, p.given=prob),"\n")
       
-      out <- uniroot(pt2, 
+      out <- stats::uniroot(pt2, 
                      c(start, start.2), 
                      mu = mu.1, 
                      phi = phi.1, 

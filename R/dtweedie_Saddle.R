@@ -1,3 +1,20 @@
+#' Tweedie Distribution: Saddlepoint-Approximation Evaluation for the Density Function
+#'
+#' Internal function to evaluate the Tweedie density using the saddlepoint approximation.
+#' \bold{Not intended for general users.}
+#'
+#' @param y vector of quantiles.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param xi A synonym for \code{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @param eps The small amount added for the saddlepoint approximation.
+#' @return A numeric vector of densities.
+#' @keywords internal
+#' 
+#' #' @importFrom base pi
+#'
+#' @export
 dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #
   # Peter K Dunn
@@ -77,6 +94,3 @@ dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #    }
   density
 }
-
-
-#############################################################################

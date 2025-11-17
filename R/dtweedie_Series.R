@@ -1,3 +1,20 @@
+#' Tweedie Distribution: Series Evaluation for the Probability Function
+#'
+#' Internal function to evaluate the Tweedie density using the infinite series expansion.
+#' \bold{Not intended for general users.}
+#'
+#' @param y vector of quantiles.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @param verbose Display some internal computation details.
+#' @param details Return the PDF and the number of series terms used.
+#' @return A numeric vector of densities.
+#' 
+#' @importFrom stats dgamma dpois 
+#' 
+#' @keywords internal
+
 dtweedie.series <- function(y, power, mu, phi){ 
   # Evaluates the Tweedie density using a series expansion
   

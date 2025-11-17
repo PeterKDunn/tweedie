@@ -1,3 +1,16 @@
+#' Tweedie Distribution; Random Numbers
+#'
+#' Internal function to evaluate the Tweedie density using the infinite series expansion.
+#' \bold{Not intended for general users.}
+#'
+#' @param n How many random numbers to produce.
+#' @param power The power parameter \eqn{p}{power}.
+#' @param xi The value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
+#' @param mu The mean parameter.
+#' @param phi The dispersion parameter.
+#' @return A numeric vector of densities.
+#' @keywords internal
+#' @export
 rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   ### BEGIN preliminary work
@@ -32,13 +45,13 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   if (power == 2) {
     alpha <- (2 - power) / (1 - power)
     gam <- phi * (power - 1) * mu ^ (power - 1)
-    rt <- rgamma( n, 
+    rt <- stats::rgamma( n, 
                   shape = 1 / phi, 
                   scale = gam )
   }
   
   if ( power > 2) {
-    rt <- qtweedie( runif(n),
+    rt <- qtweedie( stats::runif(n),
                     mu = mu,
                     phi = phi, 
                     power = power)
@@ -53,10 +66,10 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
     alpha <- (2 - power) / (1 - power)
     gam <- phi * (power - 1) * mu ^ (power - 1)
     
-    N <- rpois(n, 
+    N <- stats::rpois(n, 
                lambda = lambda)
     for (i in (1:n) ){
-      rt[i] <- rgamma(1, 
+      rt[i] <- stats::rgamma(1, 
                       shape = -N[i] * alpha, 
                       scale = gam[i])
     }

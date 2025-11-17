@@ -178,12 +178,12 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
     # CASE: gamma (p=2)
     if ( power == 2 ) {
       if (type == "PDF") {
-        f <- dgamma( y,
+        f <- stats::dgamma( y,
                      rate = 1 / (phi * mu), 
                      shape = 1 / phi)
         return(f)
       } else {
-        f <- pgamma( y, 
+        f <- stats::pgamma( y, 
                      rate = 1 / (phi * mu), 
                      shape = 1 / phi)
         return(f)
@@ -208,12 +208,12 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
     # CASE: Normal (p=0)
     if ( power == 0) {
       if (type == "PDF") {
-        f <- pnorm( mean = mu, 
+        f <- stats::pnorm( mean = mu, 
                     sd = sqrt(phi),
                     q = y )
         return(f)
       } else {
-        f <- pnorm( mean = mu, 
+        f <- stats::pnorm( mean = mu, 
                     sd = sqrt(phi),
                     q = y )
         return(f)
@@ -223,11 +223,11 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
     # CASE: Poisson (p=1)
     if ( power == 1) {
       if (type == "PDF"){
-        f <- dpois(y, 
+        f <- stats::dpois(y, 
                    lambda = mu / phi )
         return(f)
       } else {
-        f <- ppois(y, 
+        f <- stats::ppois(y, 
                    lambda = mu / phi )
         return(f)
       }
@@ -260,9 +260,9 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
 
 ################################################################################
 
-find_Lambda <- function(mu, phi, p){
+find_Lambda <- function(mu, phi, power){
   # Computes the value of lambda, such that P(Y = 0 ) = exp( -lambda) when 1 < p < 2
-  if (p >= 2) stop("ERROR: lambda only sensible for  1 < xi < 2.")
-  mu ^ (2 - p) / (phi * (2 - p) )
+  if (power >= 2) stop("ERROR: lambda only sensible for  1 < xi < 2.")
+  mu ^ (2 - power) / (phi * (2 - power) )
   
 }
