@@ -1,8 +1,10 @@
 # src/Makevars
+# Temporarily add these flags to FFLAGS for debugging
+FFLAGS += -fcheck=all -Wall -Wextra -g -O0
 
 # --- 1. Define Fortran Source Files in Compilation Order ---
 # Module files MUST be listed first to generate the .mod files required by other sources.
-MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 Calcs_Imag.f90 Calcs_Real.f90 Integrands.f90 Calc_Solvers.f90
+MODULE_SRCS = rprintf_mod.f90 00tweedie_params.f90 Calcs_Imag.f90 Calcs_Real.f90 Integrands.f90 Calcs_Solvers.f90
 
 # Find all other Fortran source files in the directory and filter out the modules
 # to prevent compiling them twice.
