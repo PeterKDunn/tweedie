@@ -45,10 +45,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
     SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, startx, xL, xR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      INTEGER(C_INT), INTENT(IN)        :: i, m, mmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)   :: startx, tmax
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: xL, xR
-      LOGICAL(C_BOOL), INTENT(IN)       :: leftOfMax
+      INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: startx, tmax
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xL, xR
+      LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
     END SUBROUTINE improveKZeroBounds
     
 
@@ -223,7 +223,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   CONTAINS
   
 
-    SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip)
+    SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
       ! Determine the next value of m, for solving the zeros of the integrand
       
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
@@ -234,7 +234,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       INTEGER(C_INT), INTENT(INOUT)     :: m          ! M index (used for calculation and C-binding)
       INTEGER(C_INT), INTENT(OUT)       :: mOld       ! Previous index value
       LOGICAL(C_BOOL), INTENT(INOUT)    :: leftOfMax  ! True if on the left side of kmax
-      LOGICAL(C_BOOL), INTENT(INOUT)    :: flip       ! True if cross from left to right
+      LOGICAL(C_BOOL), INTENT(INOUT)    :: flip_To_Other_Side       ! True if cross from left to right
       
       REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
     
@@ -245,7 +245,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       current_phi  = Cphi(i)  ! Access phi value for index i
     
       mOld = m
-      flip = .FALSE.
+      flip_To_Other_Side = .FALSE.
+      
       
       IF (current_y .GE. current_mu) THEN
         ! Always heading downwards (away from kmax), so easy
@@ -256,7 +257,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           IF (m == mmax) THEN 
             ! Move to the other side of the maximum
             leftOfMax = .FALSE.
-            flip = .TRUE.
+            flip_To_Other_Side = .TRUE.
           ELSE
             ! Continue towards the maximum
             m = m + 1 
@@ -269,7 +270,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           leftOfMax = .FALSE.
         END IF
       END IF
-    
+
     END SUBROUTINE advanceM
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -384,10 +385,11 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           END IF
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
-          CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, zeroBoundL, zeroBoundR)
+          CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, &
+                                  zeroBoundL, zeroBoundR)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
-          CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zero, leftOfMax)
-
+          CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, &
+                              zeroStartPoint, zero, leftOfMax)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroR = zero
     
@@ -410,7 +412,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 !CALL INTPR( "       >>>>>     with m::", -1, m, 1)
           
           ! Determine if we can stop pre-accelerating yet
-          CALL stopPreAcc(tmax, zeroL, stop_PreAccelerate)
+          CALL stopPreAcc(tmax, zeroR, stop_PreAccelerate)
 
           mOld = m
           CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
@@ -423,13 +425,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           CALL INTPR( "           using m:", -1, m, 1 )
         END IF
       END IF
-
-
-
-
-
-
-
 
     END SUBROUTINE integratePreAccRegions
 
@@ -469,6 +464,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
       ! This will be the very first, left-most value of t used in acceleration
       xvec(1) = zeroL
+
+
+
+!      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
 
       DO WHILE (keep_Accelerating )
         its_Acceleration = its_Acceleration + 1_C_INT
@@ -544,12 +543,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-    SUBROUTINE stopPreAcc(tmax, zeroL, stop_PreAccelerate)
+    SUBROUTINE stopPreAcc(tmax, zero, stop_PreAccelerate)
       ! Determine if it is OK to stop pre-accelerating, and start using acceleration
       
       IMPLICIT NONE
     
-      REAL(KIND=C_DOUBLE), INTENT(IN) :: tmax, zeroL
+      REAL(KIND=C_DOUBLE), INTENT(IN) :: tmax, zero
       LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate
       
       INTEGER (C_INT)       :: nmax, tstop
@@ -558,11 +557,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       
       ! Stop condition for pre-acceleration.
       ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
+      stop_PreAccelerate = .FALSE.
       IF ( Cp .GT. 2) THEN
         IF (current_y .GT. current_mu) THEN
           stop_PreAccelerate = .TRUE.
         ELSE
-          IF (zeroL .GT. tmax) stop_PreAccelerate = .TRUE.
+          IF (zero .GT. tmax) THEN
+            stop_PreAccelerate = .TRUE.
+          END IF
         END IF
       ELSE
         IF (current_y .GT. current_mu) THEN
@@ -586,8 +588,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
              
              ! Sometimes this takes forever to flag stop_preacc as TRUE,
              ! so also check if exp{Re k(t)/t}
-              CALL evaluateRek( i, zeroL, Rek)
-              CALL evaluateRekd(i, zeroL, Rekd)
+              CALL evaluateRek( i, zero, Rek)
+              CALL evaluateRekd(i, zero, Rekd)
              IF ( ( (Rek/zeroL) .LT. 1.0E-05_C_DOUBLE) .AND.          & 
                   (Rekd .LT. 0.0_C_DOUBLE) ) stop_PreAccelerate = .TRUE.
           END IF

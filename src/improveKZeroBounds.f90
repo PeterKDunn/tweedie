@@ -11,7 +11,7 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroMid
   INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
-  REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroL, zeroR
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroL, zeroR
   LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
 
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
@@ -27,6 +27,8 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   current_phi  = Cphi(i)  ! Access phi value for index i
 
 
+
+  ! Initialisation
   maxSearch = 10  ! Don't spend too long, so set limit
 
   ! Set multipier: this adjust the sign depending on whether we are
