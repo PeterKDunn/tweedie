@@ -1,6 +1,6 @@
 # src/Makevars
 # Temporarily add these flags to FFLAGS for debugging
-FFLAGS += -fcheck=all -Wall -Wextra -g -O0
+#FFLAGS += -fcheck=all -Wall -Wextra -g -O0
 
 # --- 1. Define Fortran Source Files in Compilation Order ---
 # Module files MUST be listed first to generate the .mod files required by other sources.
@@ -17,11 +17,12 @@ SRCS = $(MODULE_SRCS) $(OTHER_F_SRCS)
 OBJECTS = $(SRCS:.f90=.o)
 # Add the C wrapper
 OBJECTS += Rprintf_wrapper.o
-
+# ADD THE MANDATORY INITIALIZATION OBJECT FILE HERE
+OBJECTS += init.o
 
 # --- 2. Standard R Compilation Variables ---
 # Define FFLAGS and use the standard SHLIB_FFLAGS
-FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all 
+#FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all 
 
 
 # --- 3. Custom GNU Make Dependency Rules ---
@@ -31,6 +32,13 @@ FFLAGS = $(SHLIB_FFLAGS) -g -fcheck=all
 .PHONY: all
 all: $(SHLIB)
 
+# Explicit rule to ensure init.c is compiled using standard R C flags
+# This prevents pollution from FFLAGS/FCFLAGS and ensures visibility.
+# Explicit rule to ensure init.c is compiled using standard R C flags 
+# (SHLIB_CFLAGS and SHLIB_C_FLAGS includes the path to R.h)
+init.o: init.c
+	$(CC) $(SHLIB_CFLAGS) $(SHLIB_C_FLAGS) -c $< -o $@
+	
 twcomputation.o: ComputeTwIntegral.o
 
 # Rule to explicitly create the Integrands_mod.mod file
@@ -43,3 +51,9 @@ gaussian_data_mod.mod: gaussianData.f90
 ComputeTwIntegral.o: Integrands.o accelerate.o GaussQuadratureq.o gaussianData.o
 
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib
+
+
+FCFLAGS = -fno-underscoring
+
+
+

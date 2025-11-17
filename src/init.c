@@ -1,30 +1,19 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <stdlib.h> // for NULL
-#include <R_ext/Rdynload.h>
-#include <R_ext/Visibility.h> // <-- New required header
+#include <R_ext/Rdynload.h> 
 
-/* --- Forward declarations for BIND(C) Fortran Subroutines --- */
-extern void twcomputation(int *N, double *p, double *phi, double *y, double *mu, int *verbose, int *pdf, double *funvalue, int *exitstatus, double *relerr, int *its);
+// (Routines are extern void-declared here, as you already have them)
 
-/* --- C Routine Registration Table (R_CMethodDef) --- */
-static const R_CMethodDef CEntries[] = {
-  {"twcomputation", (DL_FUNC) twcomputation, 11, {R_TYPE_INT, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_DBL, R_TYPE_INT, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT, R_TYPE_DBL, R_TYPE_INT}},
-  {NULL, NULL, 0, {0}}
-};
-
-/* --- Fortran Routine Registration Table (R_FortranMethodDef) --- */
-static const R_FortranMethodDef FortranEntries[] = {
-  {NULL, NULL, 0}
-};
+/* --- C and Fortran Routine Registration Tables here --- */
+// (CEntries and FortranEntries tables go here, as you already have them)
 
 
-/* --- The main initialization entry point --- */
-// Force the function to be exported (visible) on Linux
-void R_init_tweedie(DllInfo *dll) attribute_visible; 
-
+// --- The R-MANDATORY initialization entry point ---
+// The function must be exported and registered. 
+// We rely on the R build system to handle the visibility, not non-portable attributes.
 void R_init_tweedie(DllInfo *dll)
 {
-  R_registerRoutines(dll, CEntries, NULL, FortranEntries, NULL); 
-  R_useDynamicSymbols(dll, FALSE); 
+  R_registerRoutines(dll, CEntries, NULL, FortranEntries, NULL); 
+  R_useDynamicSymbols(dll, FALSE); 
 }
