@@ -23,21 +23,6 @@ CONTAINS
     REAL(KIND=C_DOUBLE)               :: Imk, Rek, lambda
     
     
-    INTERFACE
-    
-        SUBROUTINE evaluateLambda(i, lambda)
-       ! Find lambda, such that P(Y = 0) = exp( -lambda ) when 1 < p < 2 
-        USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-        
-        IMPLICIT NONE
-
-        INTEGER(C_INT), INTENT(IN)        :: i
-        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: lambda
-      END SUBROUTINE evaluateLambda
-      
-    END INTERFACE
-      
-  
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
     current_mu   = Cmu(i)
