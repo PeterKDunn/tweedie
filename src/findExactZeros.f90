@@ -15,6 +15,7 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   
   REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
+  LOGICAL(C_BOOL)       :: error
 
 
   ! Grab the relevant scalar values for this iteration:
@@ -45,11 +46,13 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   ! For robustness, use rtsafe when the  distance between zeros 
   ! is expected to be small (i.e., in the tail).
   IF ( m .LE. -3 ) THEN ! Use rtsafe whenever m is large and negative
-    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
+    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! When small p and small y, fight harder for good starting bounds
     CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, tStart, tL, tR)
-    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
+    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
     tstart_update = (tL + tR) / 2.0_C_DOUBLE
