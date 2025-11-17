@@ -9,7 +9,7 @@ MODULE Calcs_Imag
   
 CONTAINS
 
-  SUBROUTINE evaluateImk(i, t, Imk) 
+  SUBROUTINE evaluateImk(i, t, Imk, error) 
     ! Evaluate Im k(t)
     
     IMPLICIT NONE
@@ -17,6 +17,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
     INTEGER(C_INT), INTENT(IN)          :: i
+    LOGICAL(C_BOOL), INTENT(OUT)        :: error
     
     REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha, pi
     REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
@@ -28,6 +29,8 @@ CONTAINS
     current_phi  = Cphi(i)  ! Access phi value for index i
   
   
+    ! Initialisation
+    error = .FALSE.
     pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     front = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
     tanArg = (1.0_C_DOUBLE - Cp) * t * current_phi  / (current_mu ** (1.0_C_DOUBLE - Cp) )
@@ -42,7 +45,8 @@ CONTAINS
       CALL DBLEPR("        mu:", -1, current_mu, 1)
       CALL DBLEPR("       phi:", -1, current_phi, 1)
   
-      STOP
+      error = .TRUE.
+      RETURN
     END IF
     alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)
   
@@ -65,10 +69,12 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)        :: m
   
     REAL(KIND=C_DOUBLE)               :: pi, Imk_val
+    LOGICAL(C_BOOL)                   :: error
   
     pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-    CALL evaluateImk(i, t, Imk_val)
-  
+    CALL evaluateImk(i, t, Imk_val, error)
+    IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t, 1)
+
     ! The expression depends on whether we are working with the PDF or the CDF.
     ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
     ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;

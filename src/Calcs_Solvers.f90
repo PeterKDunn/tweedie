@@ -125,7 +125,7 @@ CONTAINS
   
   
   
-  SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root)
+  SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root, error)
     ! Adapted from NUMERICAL RECIPES Sect. 9.4
     ! Uses a combination of Newton-Raphson and bisection, find the root of a function bracketed
     ! between x1 and x2. The root is refined until its accuracy is known within plus/minus xacc. 
@@ -141,6 +141,7 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
+    LOGICAL(C_BOOL), INTENT(OUT)      :: error
     
     INTEGER(C_INT)                    :: MAXIT, j
     REAL(KIND=C_DOUBLE)               :: df, dx, dxold, f, fh, fl, temp, xh, xl
@@ -149,6 +150,7 @@ CONTAINS
     
     PROCEDURE(funcd_signature) :: funcd
     
+    error = .FALSE.
     call funcd(i, x1, fl, df)
     call funcd(i, x2, fh, df)
     
@@ -156,7 +158,8 @@ CONTAINS
            .OR.                                                &
            (fl .LT. 0.0_C_DOUBLE) .AND. (fh .LT. 0.0_C_DOUBLE) ) THEN
       IF (Cverbose) CALL DBLEPR("ERROR (rtsafe): Root not bracketed: ", -1, x2, 1)
-      STOP
+      error = .TRUE.
+      RETURN
     END IF
     
     IF (fl .EQ. 0.0_C_DOUBLE) THEN

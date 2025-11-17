@@ -21,6 +21,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE)               :: integrand_result ! The result of the function
     REAL(KIND=C_DOUBLE)               :: current_y, current_mu
     REAL(KIND=C_DOUBLE)               :: Imk, Rek, lambda
+    LOGICAL(C_BOOL)                   :: error
     
     
     ! Grab the relevant scalar values for this iteration:
@@ -37,7 +38,8 @@ CONTAINS
       RETURN
     ELSE
       CALL evaluateRek(i, t, Rek)
-      CALL evaluateImk(i, t, Imk)
+      CALL evaluateImk(i, t, Imk, error)
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t, 1)
       
       IF (Cpdf) THEN
         IF (CpSmall) THEN

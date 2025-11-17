@@ -285,6 +285,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       
       REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: pi
+      LOGICAL(C_BOOL)                     :: error
 
 
       pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
@@ -317,7 +318,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       zeroL = 0.0_C_DOUBLE
 
       CALL findExactZeros(i, mfirst, mmax, tmax, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
-      CALL evaluateImk(i, zeroR, TMP)
+      CALL evaluateImk(i, zeroR, TMP, error)
+      IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, zeroR, 1)
 
       ! Find the area
       CALL GaussQuadrature(i, zeroL, zeroR, area0)
