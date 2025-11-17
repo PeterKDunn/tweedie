@@ -75,7 +75,7 @@ tweedie_Integrand <- function(y, power, mu, phi,  t = seq(0, 5, length = 1000),
          at = mValues * pi + ifelse(type=="PDF", pi/2, 0),
          las = 1,
          cex = 0.8,
-         label = mValues )
+         labels = mValues )
   }
   
   
