@@ -1,4 +1,4 @@
-SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR)
+SUBROUTINE improveKZeroBounds(i, m, leftOfMax, zeroMid, zeroL, zeroR)
   ! Improve the bounds that bracket the zero of Im k(t).
   ! A decent starting point is sometimes crucial to timely convergence.
   
@@ -8,18 +8,16 @@ SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroMid, zeroL, zeroR
   
   IMPLICIT NONE
   
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroMid
-  INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
+  INTEGER(C_INT), INTENT(IN)          :: i, m
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroL, zeroR
   LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
 
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
-  REAL(KIND=C_DOUBLE)     :: boundL, boundR, valueL, valueR, SPvalue, multiplier
-  REAL(KIND=C_DOUBLE)     :: oldBoundL, oldBoundR, df, valueMid
-  INTEGER(C_INT)          :: maxSearch, itsSearch
-  LOGICAL                 :: keepSearching
-  
+  REAL(KIND=C_DOUBLE)     :: valueL, valueR, multiplier
+  REAL(KIND=C_DOUBLE)     :: df, valueMid
+  INTEGER(C_INT)          :: maxSearch
+
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
