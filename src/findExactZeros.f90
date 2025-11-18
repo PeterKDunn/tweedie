@@ -3,7 +3,6 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-
   USE Calcs_Solvers
   USE Calcs_Imag
   
@@ -16,7 +15,6 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
 
   REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-
   LOGICAL(C_BOOL)       :: error
 
 
@@ -27,7 +25,6 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
 
   ! Set the accuracy
   xacc = 1.0E-13_C_DOUBLE
-  find_Exact_Zero_Success = .FALSE.
 
   ! Find mmax, which depends on whether we are working with the PDF or the CDF.
   ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
@@ -57,10 +54,9 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
     tstart_update = (tL + tR) / 2.0_C_DOUBLE
-    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero, root_Found)
+    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
   END IF
   
-  IF (root_Found) find_Exact_Zero_Success = .TRUE.
 
   CONTAINS 
   

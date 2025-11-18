@@ -14,11 +14,19 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
   INTEGER(C_INT), INTENT(IN)          :: i
 
   REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
-  REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold
-  REAL(KIND=C_DOUBLE)     :: t_small, t_large
+  REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
   REAL(KIND=C_DOUBLE)     :: current_y, current_mu, current_phi
-  INTEGER(C_INT)          :: m_Start_Point
   LOGICAL(C_BOOL)         :: error
+  
+
+  ! A. If Im k(t) heads down initially: easy: kmax = tmax = mmax = 0
+  ! B. Otherwise, we need to find kmax etc by solving Im k'(t) = 0
+  !    with a suitable starting point:
+  !    1. If tmax appears that it will be very large, find approx start pt
+  !    2. Otherwise find start point numerically:
+  !       a. If p near 1, approximate starting point by p=1 case analytically
+  !       b. Otherwise, use standard starting point
+
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -76,14 +84,14 @@ SUBROUTINE findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
       CALL evaluateImk(i, t_Start_Point, kmax, error)    ! Now find the corresponding value of kmax
       IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t_Start_Point, 1)
 
-
     ELSE
       ! Compute ratio
       ratio = current_y / current_mu
       
       ! 1. Try small-t approximation first (for ratio < 1)
       IF (ratio < 1.0_C_DOUBLE) THEN
-          t_small = (current_mu**(1.0_C_DOUBLE - Cp) / current_phi) * DSQRT( (2.0_C_DOUBLE/Cp) * (1.0_C_DOUBLE - ratio) )
+          t_small = (current_mu**(1.0_C_DOUBLE - Cp) / current_phi) *    &
+                    DSQRT( (2.0_C_DOUBLE/Cp) * (1.0_C_DOUBLE - ratio) )
           ! Clamp tiny values
           IF (t_small < 1.0E-12_C_DOUBLE) t_small = 1.0E-12_C_DOUBLE
           t_Start_Point = t_small

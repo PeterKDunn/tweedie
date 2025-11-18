@@ -21,9 +21,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
   INTEGER(C_INT)    :: count_PreAcc_Regions, count_Acc_Regions
   INTEGER(C_INT)    :: m, min_Acc_Regions
-  INTEGER(C_INT)    :: leftOfMax, flip_To_Other_Side
   LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre, convergence_Acc
-  REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr, tStartAcc
+  REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
@@ -44,10 +43,10 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
     END SUBROUTINE findKmax
 
 
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, mmax, tmax, startx, xL, xR)
+    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      INTEGER(C_INT), INTENT(IN)          :: i, m, mmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: startx, tmax
+      INTEGER(C_INT), INTENT(IN)          :: i, m
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: startx
       REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xL, xR
       LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
     END SUBROUTINE improveKZeroBounds
@@ -151,21 +150,12 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
 
-<<<<<<< HEAD
-  ! Find where to start accelerating
-  IF (Cp .GT. 2.0_C_DOUBLE) THEN
-    tStartAcc = 0.0_C_DOUBLE
-  ELSE
-    CALL findAccelStart(i, tmax, tStartAcc)
-  END IF
-  IF (Cverbose) CALL DBLEPR(" Start accelerating after:", -1, tStartAcc, 1)
 
-=======
 
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
 
   CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-  CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax, tStartAcc,        & ! INPUTS
+  CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                   & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
 
@@ -345,14 +335,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,  tStartAcc,                  & ! INPUTS
-                                     area1, zeroR, count_PreAcc_regions, converged_Pre)                  ! OUTPUTS
+    SUBROUTINE integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax,                           & ! INPUTS
+                                     area1, zeroR, count_PreAcc_regions, converged_Pre)               ! OUTPUTS
       ! Integration of the region *after* the initial, but *before* acceleration is invoked.
       ! Potentially, everything converges in this step (without ever needing acceleration).
       
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area1, zeroR
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax, tStartAcc
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
       INTEGER(C_INT)                      :: mfirst
       INTEGER(C_INT), INTENT(INOUT)       :: m
       LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
@@ -361,7 +351,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
       INTEGER(C_INT)                      :: mOld
       REAL(KIND=C_DOUBLE)                 :: zeroL, zeroBoundL, zeroBoundR
-      REAL(KIND=C_DOUBLE)                 :: area1Old, tolerance, sumAOld, Rek
+      REAL(KIND=C_DOUBLE)                 :: area1Old, tolerance, sumAOld
       LOGICAL(C_BOOL)                     :: stop_PreAccelerate
 
 
@@ -397,7 +387,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
           END IF
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroL = zeroR
-          CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, zeroStartPoint, &
+          CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, &
                                   zeroBoundL, zeroBoundR)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, &
@@ -563,8 +553,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       REAL(KIND=C_DOUBLE), INTENT(IN) :: tmax, zero
       LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate
       
-      INTEGER (C_INT)       :: nmax, tstop
-      REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd
+      INTEGER (C_INT)       :: nmax
+      REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop
       
       
       ! Stop condition for pre-acceleration.
@@ -595,7 +585,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
                 nmax = FLOOR(MM)
              END IF
              tstop = current_mu**(1.0_C_DOUBLE - Cp) / ((1.0_C_DOUBLE - Cp) * current_phi) *   & 
-                     tan( nmax * pi * (1.0_C_DOUBLE - Cp) )
+                     DTAN( DBLE(nmax) * pi * (1.0_C_DOUBLE - Cp) )
              IF (zeroL .GT. tstop) stop_PreAccelerate = .TRUE.
              
              ! Sometimes this takes forever to flag stop_preacc as TRUE,
