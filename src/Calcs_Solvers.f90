@@ -15,7 +15,7 @@ MODULE Calcs_Solvers
     SUBROUTINE funcd_signature(i, x, f, df)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
-      REAL(KIND=C_DOUBLE), INTENT(IN)    :: x
+      REAL(KIND=C_DOUBLE), INTENT(IN)     :: x
       INTEGER(C_INT), INTENT(IN)          :: i
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
     END SUBROUTINE funcd_signature
@@ -40,7 +40,7 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE)               :: root
     
-    INTEGER, PARAMETER        :: MAXITS = 200
+    INTEGER, PARAMETER        :: MAXITS = 100
     INTEGER                   :: j
     REAL(KIND=C_DOUBLE)       :: dx, df, f
     REAL(KIND=C_DOUBLE)       :: x_current, x_iter_old, factor, x_new
@@ -213,7 +213,7 @@ CONTAINS
     IF (j .GE. MAXIT) THEN
       IF (Cverbose) CALL INTPR( "ERROR (rtnewton): failed to convergence after iterations:", -1, MAXIT, 1)
       IF (Cverbose) CALL DBLEPR("  Function value is:", -1, f, 1)
-      IF (Cverbose) CALL DBLEPR("  at x:", -1, root, 1)
+      IF (Cverbose) CALL DBLEPR("  at t:", -1, root, 1)
       IF (Cverbose) CALL DBLEPR("  and slope is:", -1, df, 1)
     END IF
     

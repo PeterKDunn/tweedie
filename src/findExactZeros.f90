@@ -45,12 +45,12 @@ SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, tStart, tZero, leftOfMax)
   ! is expected to be small (i.e., in the tail).
   IF ( m .LE. -3 ) THEN ! Use rtsafe whenever m is large and negative
     CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
-    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+    IF (error) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     ! When small p and small y, fight harder for good starting bounds
     CALL improveKZeroBounds(i, m, leftOfMax, mmax, tmax, tStart, tL, tR)
     CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
-    CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+    IF (error) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
     tstart_update = (tL + tR) / 2.0_C_DOUBLE
