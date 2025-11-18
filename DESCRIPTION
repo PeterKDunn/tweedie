@@ -7,6 +7,7 @@ Author: Peter K. Dunn [cre, aut]
 Maintainer: Peter K. Dunn <pdunn2@usc.edu.au>
 Depends: R (>= 2.8.0)
 Encoding: UTF-8
+UseDynLib: tweedie
 Imports:
      methods
 Suggests: 
