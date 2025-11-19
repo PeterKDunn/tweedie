@@ -7,6 +7,7 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   USE rprintf_mod
   USE Calcs_Imag
   USE Calcs_Real
+  USE Calcs_K
   
   IMPLICIT NONE
   
@@ -31,31 +32,14 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   LOGICAL(C_BOOL)       :: leftOfMax, flip_To_Other_Side
   
-  ! --- INTERFACES: All C-bound routines called by DFbigp:
+
   INTERFACE
-    SUBROUTINE findKmax(j, kmax, tmax, mmax, mfirst, leftOfMax)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      IMPLICIT NONE
-      INTEGER, INTENT(IN)               :: j
-      INTEGER(C_INT), INTENT(OUT)       :: mfirst, mmax
-      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: kmax, tmax
-      LOGICAL(C_BOOL), INTENT(INOUT)    :: leftOfMax
-    END SUBROUTINE findKmax
-
-
-    SUBROUTINE improveKZeroBounds(i, m, leftOfMax, startx, xL, xR)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      INTEGER(C_INT), INTENT(IN)          :: i, m
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: startx
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xL, xR
-      LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
-    END SUBROUTINE improveKZeroBounds
-    
 
     SUBROUTINE GaussQuadrature(i, a, b, area)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       REAL(KIND=C_DOUBLE), INTENT(OUT)      :: area
       REAL(KIND=C_DOUBLE), INTENT(IN)       :: a, b
+      INTEGER(C_INT), INTENT(IN)            :: i
     END SUBROUTINE GaussQuadrature
 
 
@@ -65,15 +49,6 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
       REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(501), wvec(501), Mmatrix(2, 501), Nmatrix(2, 501)
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
     END SUBROUTINE accelerate
-
-
-    SUBROUTINE findExactZeros(i, m, mmax, tmax, tL, tR, zeroSP, zero, leftOfMax)
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      INTEGER, INTENT(IN)                 :: i, m, mmax
-      REAL(KIND=C_DOUBLE), INTENT(IN)     :: tL, tR, zeroSP, tmax
-      REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zero
-      LOGICAL(C_BOOL), INTENT(IN)         :: leftOfMax
-    END SUBROUTINE findExactZeros
 
   END INTERFACE
 
@@ -138,8 +113,8 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   ! ----------------------------------------------------------------------------
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
-  CALL integrateFirstRegion(mfirst, leftOfMax,          & ! INPUTS
-                            area0, zeroR)                 ! OUTPUTS
+  CALL integrateFirstRegion(i, mfirst, leftOfMax,         & ! INPUTS
+                            area0, zeroR)                   ! OUTPUTS
 
   IF (Cverbose) THEN
     CALL DBLEPR("Initial region area:", -1, area0, 1)
@@ -221,71 +196,15 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
   CONTAINS
   
-
-    SUBROUTINE advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-      ! Determine the next value of m, for solving the zeros of the integrand
-      
-      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-    
-      IMPLICIT NONE
-      
-      INTEGER(C_INT), INTENT(IN)        :: mmax, i    ! Maximum value m can take, and current index
-      INTEGER(C_INT), INTENT(INOUT)     :: m          ! M index (used for calculation and C-binding)
-      INTEGER(C_INT), INTENT(OUT)       :: mOld       ! Previous index value
-      LOGICAL(C_BOOL), INTENT(INOUT)    :: leftOfMax  ! True if on the left side of kmax
-      LOGICAL(C_BOOL), INTENT(INOUT)    :: flip_To_Other_Side       ! True if cross from left to right
-      
-      REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
-    
-    
-      ! Grab the relevant scalar values for this iteration:
-      current_y    = Cy(i)    ! Access y value for index i
-      current_mu   = Cmu(i)   ! Access mu value for index i
-      current_phi  = Cphi(i)  ! Access phi value for index i
-    
-      mOld = m
-      flip_To_Other_Side = .FALSE.
-      
-WRITE(*,*) ">>> IN advanceM: m, mmax", m, mmax
-WRITE(*,*) "    leftOfMax, flip", leftOfMax, flip_To_Other_Side
-      IF (current_y .GE. current_mu) THEN
-        ! Always heading downwards (away from kmax), so easy
-        m = m - 1 
-      ELSE
-        ! We have a maximum (kmax) to consider
-        IF (leftOfMax) THEN
-          IF (m == mmax) THEN 
-            ! Move to the other side of the maximum
-WRITE(*,*) "m = mmax; flipping to other side"
-            leftOfMax = .FALSE.
-            flip_To_Other_Side = .TRUE.
-            ! NOTE: The value of m does not change for this iteration; 
-            ! same value, just on other side of max
-          ELSE
-            ! Continue towards the maximum
-            m = m + 1
-WRITE(*,*) "KEEP increasing m: m = m + 1"
-            ! mOld is already saved before the IF block
-            leftOfMax = .TRUE. ! Still on the left side
-          END IF
-        ELSE
-WRITE(*,*) "Now we are on R of max; m = m - 1"
-          ! When on the RIGHT of the maximum, can always just reduce m by one
-          m = m - 1 
-          leftOfMax = .FALSE.
-        END IF
-      END IF
-
-    END SUBROUTINE advanceM
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
-    SUBROUTINE integrateFirstRegion(m, leftOfMax, area0, zeroR)
+    SUBROUTINE integrateFirstRegion(i, mfirst, leftOfMax,           & ! INPUTS
+                                    area0, zeroR)                     ! OUTPUT
       ! Integrates the initial region of the Fourier integral
 
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area0, zeroR
-      INTEGER(C_INT), INTENT(IN)          :: m
+      INTEGER(C_INT), INTENT(IN)          :: mfirst, i
       LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
       
       REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroL, zeroBoundL, zeroBoundR
@@ -294,14 +213,19 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
 
 
       pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
+
+      ! Grab the relevant scalar values for this iteration:
+      current_y    = Cy(i)    ! Access y value for index i
+      current_mu   = Cmu(i)   ! Access mu value for index i
+      current_phi  = Cphi(i)  ! Access phi value for index i
+  
       
       ! Initialisation
       t_Start_Point = 0.0_C_DOUBLE
       zeroL = 0.0_C_DOUBLE
       zeroBoundL = 0.0_c_DOUBLE
       zeroBoundR = 0.0_C_DOUBLE
-      count_Integration_Regions = 1
-      
+
 
       ! Find starting point for the first zero
       IF (leftOfMax) THEN
@@ -322,7 +246,7 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
       ! Find the zero
       zeroL = 0.0_C_DOUBLE
 
-      CALL findExactZeros(i, mfirst, mmax, tmax, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
+      CALL findExactZeros(i, mfirst, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
       CALL evaluateImk(i, zeroR, TMP, error)
       IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, zeroR, 1)
 
@@ -333,7 +257,7 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
         CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
         CALL DBLEPR("         between t:", -1, 0.0_C_DOUBLE, 1 )
         CALL DBLEPR("             and t:", -1, zeroR, 1 )
-        CALL INTPR( "   using (right) m:", -1, m, 1)
+        CALL INTPR( "   using (right) m:", -1, mfirst, 1)
       END IF
 
       END SUBROUTINE integrateFirstRegion
@@ -349,6 +273,7 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
       
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: area1, zeroR
       REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: zeroL
       INTEGER(C_INT), INTENT(IN)          :: mfirst, mmax
       INTEGER(C_INT), INTENT(INOUT)       :: m
       LOGICAL(C_BOOL), INTENT(INOUT)      :: leftOfMax
@@ -356,7 +281,7 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
       LOGICAL(C_BOOL), INTENT(OUT)        :: converged_Pre
 
       INTEGER(C_INT)                      :: mOld
-      REAL(KIND=C_DOUBLE)                 :: zeroL, zeroBoundL, zeroBoundR
+      REAL(KIND=C_DOUBLE)                 :: zeroBoundL, zeroBoundR
       REAL(KIND=C_DOUBLE)                 :: area1Old, tolerance, sumAOld
       LOGICAL(C_BOOL)                     :: stop_PreAccelerate
   
@@ -367,18 +292,14 @@ WRITE(*,*) "Now we are on R of max; m = m - 1"
       sumAOld = 0.0_C_DOUBLE            ! Previous estimation of the area
       count_PreAcc_Regions = 0_C_INT    ! Count how many pre-acc regions are evaluated
 
-WRITE(*,*) "INTO  iPreAcc: mmax =", mmax
       IF (mfirst .EQ. -1) THEN
-WRITE(*,*) "DOWN!!"
         area1 = 0.0_C_DOUBLE
         mOld = m
         zeroR = zeroL 
 
         IF (Cverbose) CALL DBLEPR("  - No PRE-ACC area for y:", -1, current_y, 1 )
       ELSE
-WRITE(*,*) "UP!!!! about to call advanceM"
         CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
-WRITE(*,*) "       back after advanceM-ing"
         area1 = 0.0_C_DOUBLE
         area1Old = 10.0_C_DOUBLE
         mOld = m
@@ -401,7 +322,7 @@ WRITE(*,*) "       back after advanceM-ing"
           CALL improveKZeroBounds(i, m, leftOfMax, zeroStartPoint, &
                                   zeroBoundL, zeroBoundR)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
-          CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, &
+          CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, &
                               zeroStartPoint, zero, leftOfMax)
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroR = zero
@@ -504,7 +425,7 @@ WRITE(*,*) "       back after advanceM-ing"
         END IF
 
         ! Find the exact zero
-        CALL findExactZeros(i, m, mmax, tmax, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
+        CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
         IF (its_Acceleration .GE. accMax) THEN
           IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
           convergence_Acc = .TRUE.
