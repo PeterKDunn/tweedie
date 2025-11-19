@@ -1,4 +1,4 @@
-SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
+SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
   ! Compute the value of the integrals in the Fourier-inversion expressions for the PDF and CDF
 
   USE Integrands_MOD, ONLY: Integrands
@@ -535,5 +535,5 @@ SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, count_Integration
 
     END SUBROUTINE stopPreAcc
 
-END SUBROUTINE ComputeTwIntegral
+END SUBROUTINE TweedieIntegration
 
