@@ -18,7 +18,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   INTERFACE
   
-    SUBROUTINE ComputeTwIntegral(i, funvalueI, exitstatus, relerr, Int_Regions)
+    SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, Int_Regions)
       ! Computes the integral in the PDF or CDF expression
 
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -30,7 +30,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
       INTEGER, INTENT(OUT)                      :: exitstatus
       REAL(KIND=C_DOUBLE), INTENT(OUT)          :: relerr
       INTEGER, INTENT(OUT)                      :: Int_Regions
-    END SUBROUTINE ComputeTwIntegral
+    END SUBROUTINE TweedieIntegration
 
   END INTERFACE
 
@@ -65,7 +65,7 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   ! Loop over N values
   DO i = 1, N
-    CALL ComputeTwIntegral(i, funvalueTMP, exitstatus, relerr, Int_RegionsTMP)
+    CALL TweedieIntegration(i, funvalueTMP, exitstatus, relerr, Int_RegionsTMP)
     funvalue(i) = funvalueTMP
     Int_Regions(i) = Int_RegionsTMP
   END DO
