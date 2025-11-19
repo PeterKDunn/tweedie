@@ -69,7 +69,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       if ( any(!special_y_Cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
   
-        f_TMP <- ptweedie.inversion(power   = power,
+        f_TMP <- ptweedie_inversion(power   = power,
                                     q       = q[!special_y_Cases],
                                     mu      = mu[!special_y_Cases],
                                     phi     = phi[!special_y_Cases],
@@ -102,9 +102,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       # ### OLD CODE:
       # if ( (power>1) & (power<2) ) {
       #     if ( power <1.7 ) {
-      #        f <- ptweedie.series(power=power, q=y, mu=mu, phi=phi )
+      #        f <- ptweedie_series(power=power, q=y, mu=mu, phi=phi )
       #     } else{
-      #        f <- ptweedie.inversion( power=power, q=y, mu=mu, phi=phi)
+      #        f <- ptweedie_inversion( power=power, q=y, mu=mu, phi=phi)
       #     }
       # }
     
@@ -115,7 +115,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       #  #### XXXXXXXXXXXXXXXXXXXXXXXXX This is arbitrary, and needs a closer look
       #  if (verbose) cat("- With 1 < p < 2: use series")
       #  
-      #  f_TMP <- ptweedie.series(power = power, 
+      #  f_TMP <- ptweedie_series(power = power, 
       #                           q     = y[!special_y_Cases], 
       #                           mu    = mu[!special_y_Cases], 
       #                           phi   = phi[!special_y_Cases] )
@@ -129,7 +129,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
         
       if ( any(!special_y_Cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
-        f_TMP <- ptweedie.inversion(power   = power,
+        f_TMP <- ptweedie_inversion(power   = power,
                                     q       = q[!special_y_Cases], 
                                     mu      = mu[!special_y_Cases], 
                                     phi     = phi[!special_y_Cases],

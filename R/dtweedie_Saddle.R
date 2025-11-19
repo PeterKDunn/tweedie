@@ -15,7 +15,7 @@
 #' #' @importFrom base pi
 #'
 #' @export
-dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
+dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #
   # Peter K Dunn
   # 09 Jan 2002
@@ -72,7 +72,7 @@ dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #        }
   #      else{
   
-  dev <- tweedie.dev(y = y, 
+  dev <- tweedie_dev(y = y, 
                      mu = mu, 
                      power = power)
   density <- (2 * pi * phi * y.eps ^ power) ^ (-1/2) * exp( -dev / (2 * phi) )
@@ -89,8 +89,17 @@ dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   }
   
   #    if(any(y != 0)) {
-  #     dev <- tweedie.dev(y=y[yp], mu=mu[yp], power=power)
+  #     dev <- tweedie_dev(y=y[yp], mu=mu[yp], power=power)
   #      density[yp] <- (2*pi*phi[yp]*y[yp]^power)^(-1/2) * exp( -dev/(2*phi[yp]) )
   #    }
   density
 }
+
+
+#' @export
+dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL){ 
+  .Deprecated("dtweedie_saddle", package = "tweedie")
+  dtweedie_saddle(y, xi = NULL, mu, phi, eps = 1/6, power = NULL)
+}
+
+

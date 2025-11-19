@@ -1,7 +1,10 @@
 #' Tweedie Distribution: Fourier Inversion Evaluation for the Distribution Function
 #'
-#' Internal function to evaluate the Tweedie distribution function using Fourier inversion.
-#' \bold{Not intended for general users.}
+#' Evaluates the distribution function (DF) for Tweedie distributions
+#' using Fourier inversion, for given values of the dependent variable \code{y}, 
+#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
+#'
 #'
 #' @param q vector of quantiles.
 #' @param power The power parameter \eqn{p}{power}.
@@ -12,7 +15,7 @@
 #' @return A numeric vector of the distribution function values
 #' @keywords internal
 #' @export
-ptweedie.inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
+ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
   #
   #   q           : the values at which to compute the DF (possibly a vector)
@@ -62,5 +65,11 @@ ptweedie.inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   } else {
     return(cdf)
   }
+}
+
+#' @export
+ptweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+  .Deprecated("ptweedie_inversion", package = "tweedie")
+  ptweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
 }
 

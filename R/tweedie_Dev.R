@@ -10,7 +10,7 @@
 #' @keywords internal
 #'
 #' @noRd
-tweedie.dev <- function(y, mu, power)
+tweedie_dev <- function(y, mu, power)
 {
   # 
   # Peter K Dunn 

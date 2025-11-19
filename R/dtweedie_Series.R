@@ -1,7 +1,10 @@
 #' Tweedie Distribution: Series Evaluation for the Probability Function
 #'
-#' Internal function to evaluate the Tweedie density using the infinite series expansion.
-#' \bold{Not intended for general users.}
+#' Evaluates the probability density function (PDF) for Tweedie distributions
+#' using an infinite series, for given values of the dependent variable \code{y}, 
+#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
+#'
 #'
 #' @param y vector of quantiles.
 #' @param power The power parameter \eqn{p}{power}.
@@ -13,9 +16,8 @@
 #' 
 #' @importFrom stats dgamma dpois 
 #' 
-#' @keywords internal
-
-dtweedie.series <- function(y, power, mu, phi){ 
+#' @export
+dtweedie_series <- function(y, power, mu, phi){ 
   # Evaluates the Tweedie density using a series expansion
   
   if ( power < 1) stop("power must be between 1 and 2.")
@@ -73,14 +75,14 @@ dtweedie.series <- function(y, power, mu, phi){
     
     if ( any( y!= 0 ) ) { 
       if (power > 2) {
-        density[yp] <- dtweedie.series.bigp(power = power,
+        density[yp] <- dtweedie_series_bigp(power = power,
                                             mu = mu[yp], 
                                             y = y[yp],
                                             phi = phi[yp])$density
       }
       
       if ( ( power > 1 ) && ( power < 2 ) ) {
-        density[yp] <- dtweedie.series.smallp(power = power,
+        density[yp] <- dtweedie_series_smallp(power = power,
                                               mu = mu[yp], 
                                               y = y[yp],
                                               phi = phi[yp])$density
@@ -96,7 +98,7 @@ dtweedie.series <- function(y, power, mu, phi){
 
 
 #############################################################################
-dtweedie.series.smallp <- function(power, y, mu, phi){ 
+dtweedie_series_smallp <- function(power, y, mu, phi){ 
   
   #
   # Peter K Dunn
@@ -124,7 +126,7 @@ dtweedie.series.smallp <- function(power, y, mu, phi){
     phi <- array( dim = length(y), phi )
   }
   
-  result <- dtweedie.logw.smallp( y = y, 
+  result <- dtweedie_logw_smallp( y = y, 
                                   power = power, 
                                   phi = phi)
   logw <- result$logw
@@ -144,7 +146,7 @@ dtweedie.series.smallp <- function(power, y, mu, phi){
 
 
 #############################################################################
-dtweedie.jw.smallp <- function(y, phi, power ){ 
+dtweedie_jw_smallp <- function(y, phi, power ){ 
   #
   # Peter K Dunn
   # 18 Jun 2002
@@ -236,7 +238,7 @@ dtweedie.jw.smallp <- function(y, phi, power ){
 
 
 #############################################################################
-dtweedie.kv.bigp <- function(y, phi, power){ 
+dtweedie_kv_bigp <- function(y, phi, power){ 
   # 
   # Peter K Dunn 
   # 18 Jun 2002
@@ -349,7 +351,7 @@ dtweedie.kv.bigp <- function(y, phi, power){
   
 }
 #############################################################################
-dtweedie.logv.bigp <- dtweedie.logv.bigp <- function( y, phi, power){ 
+dtweedie_logv_bigp <- function( y, phi, power){ 
   # Peter K Dunn 
   # 02 Feb 2000 
   # 
@@ -466,7 +468,7 @@ dtweedie.logv.bigp <- dtweedie.logv.bigp <- function( y, phi, power){
 
 
 #############################################################################
-dtweedie.logw.smallp <- function(y, phi, power){ 
+dtweedie_logw_smallp <- function(y, phi, power){ 
   #
   # Peter K Dunn
   # 02 Feb 2000
@@ -558,6 +560,12 @@ dtweedie.logw.smallp <- function(y, phi, power){
        logw = logw, 
        j.max = j.max )
   
+}
+
+#' @export
+dtweedie.series <- function(y, power, mu, phi){ 
+  .Deprecated("dtweedie_series", package = "tweedie")
+  dtweedie_series(y, power, mu, phi)
 }
 
 

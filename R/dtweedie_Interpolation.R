@@ -1,4 +1,4 @@
-dtweedie.interp <- function(grid, nx, np, xix.lo, xix.hi,
+dtweedie_interp <- function(grid, nx, np, xix.lo, xix.hi,
                             p.lo, p.hi, power, xix) {
   # Does the interpolation calculation
   
@@ -44,7 +44,7 @@ dtweedie.interp <- function(grid, nx, np, xix.lo, xix.hi,
 
 #############################################################################
 
-stored.grids <- function(power){
+stored_grids <- function(power){
   # This S-Plus function contains all the stored interpolation
   # grids for interpolating the Tweedie densities.
   

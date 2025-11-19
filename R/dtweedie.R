@@ -14,8 +14,8 @@
 #' Evaluation is difficult for \eqn{p}{p} outside of \eqn{p=0, 1, 2, 3}{power = 0, 1, 2, 3}. This function
 #' uses one of two primary methods, depending on the combination of parameters:
 #' \enumerate{
-#'   \item Evaluation of an infinite series (\code{dtweedie.series}).
-#'   \item Interpolation from stored values computed via a Fourier inversion technique (\code{dtweedie.inversion}).
+#'   \item Evaluation of an infinite series (\code{dtweedie_series}).
+#'   \item Interpolation from stored values computed via a Fourier inversion technique (\code{dtweedie_inversion}).
 #' }
 #' This function employs a two-dimensional interpolation procedure to compute
 #' the density for some parts of the parameter space from previously computed
@@ -43,7 +43,7 @@
 #' }
 #'
 #' @importFrom stats dgamma dnorm dpois
-#' @seealso \code{\link{ptweedie}}, \code{\link{rtweedie}}, \code{\link{dtweedie.series}}, \code{\link{dtweedie.inversion}}, \code{\link{dtweedie.saddle}}
+#' @seealso \code{\link{ptweedie}}, \code{\link{rtweedie}}, \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{dtweedie_saddle}}
 #'
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008). ... \doi{10.1007/s11222-007-9039-6}
@@ -59,7 +59,7 @@
 #' fy <- dtweedie(y = y, power = power, mu = mu, phi = phi)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
 #' # Compare to the saddlepoint density
-#' f.saddle <- dtweedie.saddle( y = y, power = power, mu = mu, phi = phi)
+#' f.saddle <- dtweedie_saddle( y = y, power = power, mu = mu, phi = phi)
 #' lines( y, f.saddle, col = 2 )
 #' legend("topright", col = c(1,2), lwd = c(2,1),
 #'   legend = c("Actual", "Saddlepoint") )
@@ -211,7 +211,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
     if ( (power > 1) && (power <= 1.1) ) {
       id.series <- (!id.type0)
       if (any(id.series)){
-        density[id.series] <- dtweedie.series(y = y[id.series],
+        density[id.series] <- dtweedie_series(y = y[id.series],
                                               mu = mu[id.series], 
                                               phi = phi[id.series],
                                               power = power)
@@ -227,7 +227,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.1) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 1.1
         p.hi <- 1.2
         xix.lo <- 0
@@ -241,7 +241,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.3) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 1.2
         p.hi <- 1.3
         xix.lo <- 0
@@ -254,7 +254,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.5) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 1.3
         p.hi <- 1.4
         xix.lo <- 0
@@ -267,7 +267,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.8) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 1.4
         p.hi <- 1.5
         xix.lo <- 0
@@ -280,7 +280,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 1.5
         p.hi <- 2
         xix.lo <- 0
@@ -295,7 +295,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 2
         p.hi <- 3
         xix.lo <- 0
@@ -308,7 +308,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 3
         p.hi <- 4
         xix.lo <- 0
@@ -321,7 +321,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 4
         p.hi <- 5
         xix.lo <- 0
@@ -334,7 +334,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.5) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 5
         p.hi <- 7
         xix.lo <- 0
@@ -347,7 +347,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       id.interp <- ( (xix > 0) & (xix < 0.3) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored.grids(power)
+        grid <- stored_grids(power)
         p.lo <- 7
         p.hi <- 10
         xix.lo <- 0
@@ -363,7 +363,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
     }
     
     if (any(id.series)) {
-      density[id.series] <- dtweedie.series(y = y[id.series],
+      density[id.series] <- dtweedie_series(y = y[id.series],
                                             mu = mu[id.series], 
                                             phi = phi[id.series],
                                             power = power)
@@ -371,7 +371,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
     
     if (any(id.interp)) {
       dim( grid ) <- c( nx + 1, np + 1 )
-      rho <- dtweedie.interp(grid, 
+      rho <- dtweedie_interp(grid, 
                              np = np, 
                              nx = nx,
                              xix.lo = xix.lo, 
@@ -380,7 +380,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
                              p.hi = p.hi,
                              power = power, 
                              xix = xix[id.interp] )
-      dev <- tweedie.dev(power = power, 
+      dev <- tweedie_dev(power = power, 
                          mu = mu[id.interp], 
                          y = y[id.interp])
       front <- rho / (y[id.interp] * sqrt(2 * pi * xi[id.interp]))

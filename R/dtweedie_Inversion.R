@@ -1,7 +1,9 @@
 #' Tweedie Distribution: Fourier Inversion Evaluation for the Probability Function
 #'
-#' Internal function to evaluate the Tweedie density using Fourier inversion.
-#' \bold{Not intended for general users.}
+#' Evaluates the probability density function (PDF) for Tweedie distributions
+#' using Fourier inversion, for given values of the dependent variable \code{y}, 
+#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
 #' @param y vector of quantiles.
 #' @param power The power parameter \eqn{p}{power}.
@@ -11,9 +13,8 @@
 #' @param details Return the DF and the number of integration regions used.
 
 #' @return A numeric vector of densities.
-#' @keywords internal
-
-dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+#' @export
+dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
   #
   #   y           : the values at which to compute the density (possibly a vector)
@@ -66,7 +67,7 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 
   # Method 1
   m1 <- exp( (y * theta - kappa ) / phi )
-  dev <- tweedie.dev(y = y, 
+  dev <- tweedie_dev(y = y, 
                      mu = mu,
                      power = power )
   
@@ -144,3 +145,11 @@ dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
     return(density)
   }
 }
+
+
+#' @export
+dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+  .Deprecated("dtweedie_inversion", package = "tweedie")
+  dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
+}
+

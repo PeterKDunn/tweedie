@@ -10,7 +10,7 @@
 #' @return A numeric vector of densities.
 #' @keywords internal
 
-dtweedie.stable <- function(y, power, mu, phi)
+dtweedie_stable <- function(y, power, mu, phi)
 {
   # Error checks
   if ( power < 1) stop("power must be greater than 2.\n")

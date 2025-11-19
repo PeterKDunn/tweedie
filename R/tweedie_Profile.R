@@ -67,7 +67,9 @@
 #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
 #' @importFrom stats contrasts fitted optimize glm.fit splinefun glm.control deviance deviance uniroot
-tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
+#' 
+#' @export
+tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
                             data, weights, offset, fit.glm = FALSE, 
                             do.smooth = TRUE, do.plot = FALSE, 
                             do.ci = do.smooth, eps = 1/6,
@@ -225,18 +227,18 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   # First define the function to *minimize*;
   # since we want a *maximum* likelihood estimator,
   # define the negative.
-  dtweedie.nlogl <- function(phi, y, mu, power) {
+  dtweedie_nlogl <- function(phi, y, mu, power) {
     ans <- -2 * sum( log( dtweedie( y = y, 
                                     mu = mu, 
                                     phi = phi, 
                                     power = power ) ) )
     if ( is.infinite( ans ) ) {
       # If infinite, replace with saddlepoint estimate?
-      ans <- sum( tweedie.dev(y = y, 
+      ans <- sum( tweedie_dev(y = y, 
                               mu = mu, 
                               power = power) ) / length( y )
     }
-    attr(ans, "gradient") <- dtweedie.dldphi(y = y, 
+    attr(ans, "gradient") <- dtweedie_dldphi(y = y, 
                                              mu = mu, 
                                              phi = phi, 
                                              power = power)
@@ -323,7 +325,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
         if (verbose >= 1) cat(" (using optimize): ")
         
         # Saddlepoint approx of phi:
-        phi.saddle <- sum( tweedie.dev(y = ydata, 
+        phi.saddle <- sum( tweedie_dev(y = ydata, 
                                        mu = mu, 
                                        power = p) ) / length( ydata )
         
@@ -340,11 +342,11 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
         }
         low.limit <- min( 0.001, phi.saddle / 2)
         
-        #    ans <- nlm(p=phi.est, f=dtweedie.nlogl, 
+        #    ans <- nlm(p=phi.est, f=dtweedie_nlogl, 
         #                hessian=FALSE,
         #                power=p, mu=mu, y=data)
         if ( p != 0 ) {
-          ans <- optimize(f = dtweedie.nlogl, 
+          ans <- optimize(f = dtweedie_nlogl, 
                           maximum = FALSE, 
                           interval = c(low.limit, 
                                        10*phi.est),
@@ -360,7 +362,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
       } else{ # phi.method=="saddlepoint")
         
         if (verbose >= 1) cat(" (using mean deviance/saddlepoint): ")
-        phi <- phi.est <- phi.vec[i] <- sum( tweedie.dev(y = ydata, 
+        phi <- phi.est <- phi.vec[i] <- sum( tweedie_dev(y = ydata, 
                                                          mu = mu, 
                                                          power = p) )/ length( ydata )
         if (verbose >= 1) cat(" Done (phi =", phi, ")\n")
@@ -383,7 +385,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
       L[i] <- NA
     } else {   
       if ( method == "saddlepoint") {
-        L[i] <- dtweedie.logl.saddle(y = ydata, 
+        L[i] <- dtweedie_logl.saddle(y = ydata, 
                                      mu = mu, 
                                      power = p, 
                                      phi = phi, 
@@ -425,15 +427,15 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                 pmatch(method, 
                        c("interpolation", "series", "inversion"), 
                        nomatch = 2),
-                "1" = dtweedie.logl( mu = mu, 
+                "1" = dtweedie_logl( mu = mu, 
                                      power = p, 
                                      phi = phi, 
                                      y = ydata),
-                "2" = sum( log( dtweedie.series( y = ydata, 
+                "2" = sum( log( dtweedie_series( y = ydata, 
                                                  mu = mu, 
                                                  power =p, 
                                                  phi =phi) ) ),
-                "3" = sum( log( dtweedie.inversion( y = ydata, 
+                "3" = sum( log( dtweedie_inversion( y = ydata, 
                                                     mu = mu, 
                                                     power = p, 
                                                     phi = phi) ) ) )
@@ -589,7 +591,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
       xi.max <- xi.vec[ L.max == y ]
       cat("MLE of", index.par, "is between 0 and 1, which is impossible.",
           "Instead, the MLE of", index.par, "has been set to", xi.max,
-          ".  Please check your data and the call to tweedie.profile().")
+          ".  Please check your data and the call to tweedie_profile().")
     }
     
     # Now need to find mle of  phi  at this very value of  p
@@ -629,22 +631,22 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                                offset = offset,
                                family = statmod::tweedie(xi.max, 
                                                          link.power = link.power)))
-        phi.max <- sum( tweedie.dev(y = ydata, 
+        phi.max <- sum( tweedie_dev(y = ydata, 
                                     mu = mu, 
                                     power = xi.max) ) / length( ydata )
         
       } else {
-        #        phi.max <- nlm(p=phi.est, f=dtweedie.nlogl, 
+        #        phi.max <- nlm(p=phi.est, f=dtweedie_nlogl, 
         #                    hessian=FALSE,
         #                    power=p, mu=mu, y=data, 
-        #                    gradient=dtweedie.dldphi)$estimate
+        #                    gradient=dtweedie_dldphi)$estimate
         mu <- fitted( glm.fit( y = ydata, 
                                x = model.x, 
                                weights = weights, 
                                offset = offset,
                                family = statmod::tweedie(xi.max, 
                                                          link.power = link.power)))
-        phi.max <- optimize( f = dtweedie.nlogl, 
+        phi.max <- optimize( f = dtweedie_nlogl, 
                              maximum = FALSE, 
                              interval = c(phi.lo, phi.hi ), 
                              # set lower limit phi.lo???

@@ -1,7 +1,11 @@
 #' Tweedie Distribution Function: Series Evaluation for the Distribution Function
 #'
-#' Internal function to evaluate the Tweedie distribution function using the infinite series expansion.
-#' \bold{Not intended for general users.}
+#' Evaluates the probability density function (PDF) for Tweedie distributions 
+#' with \eqn{1 < p < 2}{1 < p < 2}
+#' using an infinite series, for given values of the dependent variable \code{y}, 
+#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
+#'
 #'
 #' @param q vector of quantiles.
 #' @param power The power parameter \eqn{p}{power}.
@@ -13,9 +17,8 @@
 #' 
 #' @importFrom stats dpois 
 #'
-#' @keywords internal
-
-ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
+#' @keywords export
+ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
 
   # Evaluates the cdf for Tweedie distributions, using the infinite series 
   # expansion (i.e., just for 1 < p < 2), for given values of:
@@ -93,5 +96,11 @@ ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
     return(cdf)
   }
   
+}
+
+#' @export
+ptweedie.series <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+  .Deprecated("ptweedie_series", package = "tweedie")
+  ptweedie_series(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
 }
 

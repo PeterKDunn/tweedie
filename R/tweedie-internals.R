@@ -1,22 +1,22 @@
 #' Tweedie internal function
 #'
 #' @name Tweedie internals
-#' @aliases dtweedie.dlogfdphi dtweedie.logl dtweedie.logl.saddle dtweedie.logv.bigp dtweedie.logw.smallp dtweedie.interp dtweedie.jw.smallp dtweedie.kv.bigp dtweedie.series.bigp dtweedie.series.smallp stored.grids check_Inputs sort_Notation special_Cases_CDF dtweedie_Fortran dtweedie_Inversion_Report dtweedie_Inversion_Threemethods dtweedie_Series_Report ptweedie_Inversion_Report ptweedie_Series_Report special_Cases_CDF
+#' @aliases dtweedie_dlogfdphi dtweedie_logl dtweedie_logl_saddle dtweedie_logv_bigp dtweedie_logw_smallp dtweedie_interp dtweedie_jw.smallp dtweedie_kv_bigp dtweedie_series_bigp dtweedie_series_smallp stored_grids check_Inputs sort_Notation special_Cases_CDF dtweedie_Fortran dtweedie_Inversion_Report dtweedie_Inversion_Threemethods dtweedie_Series_Report ptweedie_Inversion_Report ptweedie_Series_Report special_Cases_CDF
 #' @title Tweedie internal function
 #' @description Internal tweedie functions. These are not to be called by the user.
 #'
 #' @usage
-#' dtweedie.dlogfdphi(y, mu, phi, power)
-#' dtweedie.logl(phi, y, mu, power)
-#' dtweedie.logl.saddle( phi, power, y, mu, eps=0)
-#' dtweedie.logv.bigp( y, phi, power)
-#' dtweedie.logw.smallp(y, phi, power)
-#' dtweedie.interp(grid, nx, np, xix.lo, xix.hi,p.lo, p.hi, power, xix)
-#' dtweedie.jw.smallp(y, phi, power )
-#' dtweedie.kv.bigp(y, phi, power)
-#' dtweedie.series.bigp(power, y, mu, phi)
-#' dtweedie.series.smallp(power, y, mu, phi)
-#' stored.grids(power)
+#' dtweedie_dlogfdphi(y, mu, phi, power)
+#' dtweedie_logl(phi, y, mu, power)
+#' dtweedie_logl_saddle( phi, power, y, mu, eps=0)
+#' dtweedie_logv_bigp( y, phi, power)
+#' dtweedie_logw_smallp(y, phi, power)
+#' dtweedie_interp(grid, nx, np, xix.lo, xix.hi,p.lo, p.hi, power, xix)
+#' dtweedie_jw_smallp(y, phi, power )
+#' dtweedie_kv_bigp(y, phi, power)
+#' dtweedie_series_bigp(power, y, mu, phi)
+#' dtweedie_series_smallp(power, y, mu, phi)
+#' stored_grids(power)
 #' 
 #'
 #'

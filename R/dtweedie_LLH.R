@@ -1,13 +1,13 @@
 
 #############################################################################
-dtweedie.dldphi.saddle <- function(phi, mu, power, y){
+dtweedie_dldphi_saddle <- function(phi, mu, power, y){
   # Calculates the derivative of log f wrt phi
   # where the density is the saddlepoint density
   
   # Peter Dunn
   # 13 August 2002
   
-  dev <- tweedie.dev( power = power, 
+  dev <- tweedie_dev( power = power, 
                       y = y, 
                       mu = mu)
   l <-  (-1) / (2 * phi) + dev / (2 * phi ^ 2)
@@ -18,7 +18,7 @@ dtweedie.dldphi.saddle <- function(phi, mu, power, y){
 
 
 #############################################################################
-dtweedie.logl <- function(phi, y, mu, power) {
+dtweedie_logl <- function(phi, y, mu, power) {
   # Computes the log-likelihood for
   # a Tweedie density.  
   
@@ -55,13 +55,13 @@ logLiktweedie <- function(glm.obj, dispersion = NULL) {
 
 
 #############################################################################
-dtweedie.logl.saddle <- function( phi, power, y, mu, eps=0){
+dtweedie_logl_saddle <- function( phi, power, y, mu, eps=0){
   # Calculates the log likelihood of Tweedie densities
   # where the density is the saddlepoint density
   
   # Peter Dunn
   # 01 May 2001
-  sum( log( dtweedie.saddle(power = power, 
+  sum( log( dtweedie_saddle(power = power, 
                             phi = phi, 
                             y = y, 
                             mu = mu,
@@ -75,7 +75,7 @@ dtweedie.logl.saddle <- function( phi, power, y, mu, eps=0){
 
 
 #############################################################################
-dtweedie.series.bigp <- function(power, y, mu, phi){ 
+dtweedie_series_bigp <- function(power, y, mu, phi){ 
   
   # 
   # Peter K Dunn 
@@ -104,7 +104,7 @@ dtweedie.series.bigp <- function(power, y, mu, phi){
   }
   
   
-  result <- dtweedie.logv.bigp(power = power, 
+  result <- dtweedie_logv_bigp(power = power, 
                                y = y, 
                                phi = phi)
   logv <- result$logv
@@ -124,14 +124,7 @@ dtweedie.series.bigp <- function(power, y, mu, phi){
 
 
 #############################################################################
-
-#############################################################################
-
-
-#############################################################################
-
-#############################################################################
-dtweedie.dldphi <- function(phi, mu, power, y ){
+dtweedie_dldphi <- function(phi, mu, power, y ){
   # Calculates the log-likelihood
   # function, wrt phi, for p>2.  In particular, it returns
   #    sum{ d(log f)/d(phi) } = d( log-likelihood )/d(phi).
@@ -157,7 +150,7 @@ dtweedie.dldphi <- function(phi, mu, power, y ){
                      power = power, 
                      mu = k * mu, 
                      phi = 1 )
-      d <- dtweedie.dlogfdphi( y = k * y, 
+      d <- dtweedie_dlogfdphi( y = k * y, 
                                power = power, 
                                mu = k * mu, 
                                phi = 1 )
@@ -167,14 +160,14 @@ dtweedie.dldphi <- function(phi, mu, power, y ){
       
     } else{
       # Compute directly
-      d <- -2 * sum( dtweedie.dlogfdphi(y = y, 
+      d <- -2 * sum( dtweedie_dlogfdphi(y = y, 
                                         power = power, 
                                         mu = mu, 
                                         phi = phi) )
     }
   } else{
     # Cases p == 1 and  p == 2 
-    d <- -2 * sum( dtweedie.dlogfdphi(y = y, 
+    d <- -2 * sum( dtweedie_dlogfdphi(y = y, 
                                       power = power, 
                                       mu = mu, 
                                       phi = phi) )
@@ -185,7 +178,7 @@ dtweedie.dldphi <- function(phi, mu, power, y ){
 
 
 #############################################################################
-dtweedie.dlogfdphi <- function(y, mu, phi, power)
+dtweedie_dlogfdphi <- function(y, mu, phi, power)
 {
   #
   # Calculates d(log f)/d(phi) for the Tweedie
@@ -214,11 +207,11 @@ dtweedie.dlogfdphi <- function(y, mu, phi, power)
     # Here, we evaluate logv and everything as normal.
     # If logv has infinite values then we resort to other tactics.
     
-    kv <- dtweedie.kv.bigp(power = power, 
+    kv <- dtweedie_kv_bigp(power = power, 
                            phi = phi, 
                            y = y)$kv
     dv.dphi <- (kv * (a - 1)) / phi
-    out.logv <- dtweedie.logv.bigp(power = power, 
+    out.logv <- dtweedie_logv_bigp(power = power, 
                                    phi = phi, 
                                    y = y)
     
@@ -265,11 +258,11 @@ dtweedie.dlogfdphi <- function(y, mu, phi, power)
     # We fill  f  with the Y=0 case
     f <- array(  dim = length(y), 
                  mu ^ (2 - power) / ( phi ^ 2 * (2 - power) )  )
-    jw <- dtweedie.jw.smallp(power = power, 
+    jw <- dtweedie_jw+smallp(power = power, 
                              phi = phi[y > 0], 
                              y = y[y > 0])$jw
     dw.dphi <- (jw * (a - 1)) / phi[y > 0]
-    logw <- dtweedie.logw.smallp(power = power, 
+    logw <- dtweedie_logw_smallp(power = power, 
                                  phi = phi[y > 0], 
                                  y = y[y > 0])$logw
     f[y>0] <- A[y > 0] + B[y > 0] + dw.dphi / exp(logw)
