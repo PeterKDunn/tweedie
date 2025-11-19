@@ -9,7 +9,9 @@ all: $(SHLIB)
 # --- Module Compilation Rules ---
 # These rules explicitly define how the module file (.mod) and object file (.o)
 # are created, and on which other modules they depend.
-
+rprintf_mod.o rprintf_mod.mod: rprintf_mod.f90
+    $(FC) $(FFLAGS) $(FCFLAGS) -c $< -o rprintf_mod.o
+    
 # 0. Base Parameters Module (NEW RULE)
 # This module must be built first as all other modules depend on it.
 00tweedie_params.o 00tweedie_params.mod: 00tweedie_params.f90
@@ -35,9 +37,9 @@ gaussianData.o gaussian_data_mod.mod: gaussianData.f90 00tweedie_params.mod
 # 4. GaussQuadrature.o (Uses Integrands_mod and gaussian_data_mod)
 GaussQuadrature.o: Integrands_mod.mod gaussian_data_mod.mod
 
-# 5. ComputeTwIntegral.o (The main integration routine, depends on many compiled objects)
+# 5. TweedieIntegration.o (The main integration routine, depends on many compiled objects)
 # It uses Calcs_Real.mod via its dependencies, so we only list the .o files here.
-ComputeTwIntegral.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
+TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o rprintf_mod.mod
 
 # --- Final Linker Flags ---
 # If you need to include the RPATH, keep this:

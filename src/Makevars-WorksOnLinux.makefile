@@ -13,7 +13,7 @@ all: $(SHLIB)
 # 1. 00tweedie_params.o (base module)
 # 2. Modules used by Calcs_K (e.g., Calcs_Solvers.o)
 # 3. Calcs_K.o
-# 4. ComputeTwIntegral.o (The main routine that calls the module procedures)
+# 4. TweedieIntegration.o (The main routine that calls the module procedures)
 
 OBJECTS = 00tweedie_params.o \
           rprintf_mod.o \
@@ -25,7 +25,7 @@ OBJECTS = 00tweedie_params.o \
           gaussianData.o \
           GaussQuadrature.o \
           accelerate.o \
-          ComputeTwIntegral.o
+          TweedieIntegration.o
           
           
           
@@ -72,9 +72,9 @@ gaussianData.o gaussian_data_mod.mod: gaussianData.f90 00tweedie_params.mod
 # 4. GaussQuadrature.o (Uses Integrands_mod and gaussian_data_mod)
 GaussQuadrature.o: Integrands_mod.mod gaussian_data_mod.mod
 
-# 5. ComputeTwIntegral.o (The main integration routine, depends on many compiled objects)
+# 5. TweedieIntegration.o (The main integration routine, depends on many compiled objects)
 # It uses Calcs_Real.mod via its dependencies, so we only list the .o files here.
-ComputeTwIntegral.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
+TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
 
 # --- Final Linker Flags ---
 # If you need to include the RPATH, keep this:
