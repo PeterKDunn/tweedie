@@ -605,7 +605,7 @@ CONTAINS
           leftOfMax = .FALSE.
         END IF
       END IF
-
+!WRITE(*,*) " - Moving m from ", mOld, 'to', m
     END SUBROUTINE advanceM
     
     
@@ -638,7 +638,7 @@ CONTAINS
   current_phi  = Cphi(i)  ! Access phi value for index i
 
   ! Set the accuracy
-  xacc = 1.0E-13_C_DOUBLE
+  xacc = 1.0E-11_C_DOUBLE
 
   ! Find mmax, which depends on whether we are working with the PDF or the CDF.
   ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
