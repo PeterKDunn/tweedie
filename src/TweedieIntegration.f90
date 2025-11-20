@@ -113,6 +113,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! ----------------------------------------------------------------------------
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
+!WRITE(*,*) "Initial area"
   CALL integrateFirstRegion(i, mfirst, leftOfMax,         & ! INPUTS
                             area0, zeroR)                   ! OUTPUTS
 
@@ -122,11 +123,12 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     CALL INTPR( "      using right m:", -1, m, 1)
   END IF
 
+
+
+
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
-
-
-
+!WRITE(*,*) "Starting pre-acceleration"
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax, mmax,             & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
@@ -149,6 +151,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! ----------------------------------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
+!WRITE(*,*) "Starting acceleration"
   IF ( converged_Pre) THEN
     areaA = 0.0_C_DOUBLE
     count_Acc_Regions = 0
@@ -252,7 +255,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
       ! Find the area
       CALL GaussQuadrature(i, zeroL, zeroR, area0)
-
+!WRITE(*,*) "From", zeroL, "to", zeroR, "(m=", m, "), area=", area0
       IF (Cverbose) THEN
         CALL DBLEPR("  *** INITIAL area:", -1, area0, 1 )
         CALL DBLEPR("         between t:", -1, 0.0_C_DOUBLE, 1 )
@@ -333,6 +336,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
           END IF
 
           CALL GaussQuadrature(i, zeroL, zeroR, sumA)
+!WRITE(*,*) "From", zeroL, "to", zeroR, "(m=", m, "), area=", sumA
 
           area1 = area1 + sumA
           count_PreAcc_Regions = count_PreAcc_Regions + 1
@@ -415,12 +419,15 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
           zeroStartPoint = (zeroBoundL + zeroBoundR) / 2.0_C_DOUBLE
         ELSE
           ! Searching to the right of the maximum of Im k(t)
-          zeroStartPoint = zeroL + (pi / current_y)
-          zeroBoundR = zeroStartPoint * 5.0_C_DOUBLE
           IF (flip_To_Other_Side) THEN 
             ! Then this is the first time on the right side of the maximum
             leftOfMax = .FALSE.
             flip_To_Other_Side = .FALSE.
+            zeroBoundL = tmax
+            zeroBoundR = tmax * 2.0_C_DOUBLE
+          ELSE
+            zeroStartPoint = zeroL + (pi / current_y)
+            zeroBoundR = zeroStartPoint * 5.0_C_DOUBLE
           END IF
         END IF
 
@@ -435,6 +442,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
         xvec(its_Acceleration + 1) = zeroR
         
         CALL GaussQuadrature(i, zeroL, zeroR, psi)           ! psi: area of the latest region
+!WRITE(*,*) "From", zeroL, "to", zeroR, "(m=", m, "), area=", psi
         wvec(its_Acceleration) = psi 
           ! wvec contains the sequence of integration areas, starting with the first and up to the limit
     
@@ -522,7 +530,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       END IF
       
       ! Sometimes this takes forever to flag stop_preacc as TRUE,
-      ! so also check if exp{Re k(t)/t}
+      ! so also check if exp{Re k(t)/t} is small
       CALL evaluateRek( i, zero, Rek)
       CALL evaluateRekd(i, zero, Rekd)
       IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-05_C_DOUBLE) .AND.          & 
@@ -532,6 +540,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
           WRITE(*,*) "Pre-accelerating stopping. Rek(t) small:", (DEXP(Rek)/zeroL) 
         END IF
       END IF
+
+      IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-15_C_DOUBLE)  ) then
+        stop_PreAccelerate = .TRUE.
+        IF (Cverbose) THEN 
+          WRITE(*,*) "Pre-accelerating stopping. Rek(t) small:", (DEXP(Rek)/zeroL) 
+        END IF
+      END IF
+
 
     END SUBROUTINE stopPreAcc
 
