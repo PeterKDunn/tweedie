@@ -42,11 +42,16 @@ CONTAINS
     
     INTEGER, PARAMETER        :: MAXITS = 100
     INTEGER                   :: j
-    REAL(KIND=C_DOUBLE)       :: dx, df, f
+    REAL(KIND=C_DOUBLE)       :: dx, df, f, epsilon_f, epsilon_x, rel
     REAL(KIND=C_DOUBLE)       :: x_current, x_iter_old, factor, x_new
     
     PROCEDURE(funcd_signature):: funcd
     
+    
+    ! Iniyialise
+    epsilon_x = xacc* 10.0_c_DOUBLE   ! For changes in value of the root
+    epsilon_f = xacc                  ! For changes in the value of the root
+    rel = xacc * 10.0_C_DOUBLE        ! For *relative* changes in the root
     
     ! Initialize starting guess
     x_current = xstart
@@ -65,20 +70,21 @@ CONTAINS
       ! Calculate function value (f) and derivative (df) at the current safe point
       CALL funcd(i, x_current, f, df) 
       
-      ! Check for convergence based on function value
-      IF (ABS(f) .LT. xacc) THEN
+      ! Newton-Raphson Step: dx = f/f'
+      dx = f / df
+
+      ! Check for convergence:
+      !  - check for convergence based on function value
+      IF (ABS(f) .LT. epsilon_f) THEN
         EXIT ! Root found (f is close to zero)
       END IF
       
-      ! Check for near-zero derivative (Newton-Raphson failure)
-      IF (ABS(df) .LT. 1.0E-12_C_DOUBLE) THEN ! Use a non-zero tolerance here
-        IF (Cverbose) CALL DBLEPR("ERROR (rtnewton): Derivative near zero:", -1, df, 1)
+      ! Check for convergence:
+      !  - check for convergence based on change in x-values
+      IF ( ABS(dx) .LE. MAX(epsilon_x, rel * ABS(x_current)) ) THEN
         EXIT
       END IF
-      
-      ! Newton-Raphson Step: dx = f/f'
-      dx = f / df
-          
+
       ! Initialize step fraction and compute new value
       factor = 1.0_C_DOUBLE
       x_new = x_iter_old - dx ! Full step proposal
