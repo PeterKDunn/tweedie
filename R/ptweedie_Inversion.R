@@ -68,8 +68,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
 }
 
 #' @export
-ptweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+ptweedie.inversion <- function(y, power, mu, phi, verbose = FALSE, details = FALSE){ 
   .Deprecated("ptweedie_inversion", package = "tweedie")
-  ptweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
+  ptweedie_inversion(y, power, mu, phi, verbose = FALSE, details = FALSE)
 }
 
