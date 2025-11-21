@@ -57,3 +57,8 @@ TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
 # --- Final Linker Flags ---
 # If you need to include the RPATH, keep this:
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib
+
+PKG_CPPFLAGS = $(SHLIB_OPENMP_CFLAGS) -I$(R_INCLUDE_DIR)
+
+SDK_PATH := $(shell xcrun --show-sdk-path)
+CPPFLAGS += -I$(SDK_PATH)/usr/include/c++/v1   
