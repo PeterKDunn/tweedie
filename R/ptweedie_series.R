@@ -99,8 +99,8 @@ ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
 
 #' @export
-ptweedie.series <- function(y, power, mu, phi, verbose = FALSE, details = FALSE){ 
+ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE){ 
   .Deprecated("ptweedie_series", package = "tweedie")
-  ptweedie_series(y, power, mu, phi, verbose = FALSE, details = FALSE)
+  ptweedie_series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
 

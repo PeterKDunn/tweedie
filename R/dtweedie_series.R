@@ -96,6 +96,17 @@ dtweedie_series <- function(y, power, mu, phi){
 
 
 
+#' @export
+dtweedie.series <- function(q, power, mu, phi){ 
+  .Deprecated("dtweedie_series", package = "tweedie")
+  dtweedie_series(q = q, 
+                  power = power, 
+                  mu = mu, 
+                  phi = phi)
+}
+
+
+
 
 #############################################################################
 dtweedie_series_smallp <- function(power, y, mu, phi){ 
