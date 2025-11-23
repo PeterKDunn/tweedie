@@ -6,65 +6,43 @@
 .PHONY: all
 all: $(SHLIB)
 
-
-
-# Define the explicit order of compilation for all files.
-# Dependencies: 
-# 1. 00tweedie_params.o (base module)
-# 2. Modules used by Calcs_K (e.g., Calcs_Solvers.o)
-# 3. Calcs_K.o
-# 4. TweedieIntegration.o (The main routine that calls the module procedures)
-
-OBJECTS = 00tweedie_params.o \
-          rprintf_mod.o \
-          Calcs_Real.o \
-          Calcs_Imag.o \
-          Calcs_Solvers.o \
-          Calcs_K.o \
-          Integrands.o \
-          gaussianData.o \
-          GaussQuadrature.o \
-          accelerate.o \
-          TweedieIntegration.o
-          
-          
-          
-          
 # --- Module Compilation Rules ---
 # These rules explicitly define how the module file (.mod) and object file (.o)
 # are created, and on which other modules they depend.
 
 # 0. Base Parameters Module (NEW RULE)
 # This module must be built first as all other modules depend on it.
-00tweedie_params.o 00tweedie_params.mod: 00tweedie_params.f90
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o 00tweedie_params.o
-
 rprintf_mod.o rprintf_mod.mod: rprintf_mod.f90
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o rprintf_mod.o
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o rprintf_mod.o
 
+00tweedie_params.o 00tweedie_params.mod: 00tweedie_params.f90
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o 00tweedie_params.o
 
 # 1. Calcs_Real Module (Fixes the _evaluaterek_ error)
 # Depends on 00tweedie_params.mod because Calcs_Real.f90 uses the tweedie_params_mod.
 Calcs_Real.o Calcs_Real.mod: Calcs_Real.f90 00tweedie_params.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o Calcs_Real.o
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_Real.o
 
+# Depends on 00tweedie_params.mod because Calcs_Real.f90 uses the tweedie_params_mod.
 Calcs_Imag.o Calcs_Imag.mod: Calcs_Imag.f90 00tweedie_params.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o Calcs_Imag.o
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_Imag.o
 
+# Depends on 00tweedie_params.mod because Calcs_Real.f90 uses the tweedie_params_mod.
 Calcs_Solvers.o Calcs_Solvers.mod: Calcs_Solvers.f90 00tweedie_params.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o Calcs_Solvers.o
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_Solvers.o
 
-Calcs_K.o Calcs_K.mod: Calcs_K.f90 00tweedie_params.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o Calcs_K.o
+# Depends on 00tweedie_params.mod because Calcs_Real.f90 uses the tweedie_params_mod.
+Calcs_K.o Calcs_K.mod: Calcs_K.f90 Calcs_Solvers.mod 00tweedie_params.mod
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_K.o
 
 # 2. Integrands Module (Uses Calcs_Real)
 # This is both a compilation rule and a dependency rule.
 Integrands.o Integrands_mod.mod: Integrands.f90 Calcs_Real.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o Integrands.o
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Integrands.o
 
 # 3. gaussianData Module
-gaussianData.o gaussian_data_mod.mod: gaussianData.f90 00tweedie_params.mod
-	$(FC) $(FFLAGS) $(FCFLAGS) -c $< -o gaussianData.o
+gaussianData.o gaussian_data_mod.mod: gaussianData.f90 00tweedie_params.mod rprintf_mod.mod
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o gaussianData.o
 
 # --- Object Dependency Rules ---
 # These rules ensure the correct order for object files that consume modules.
@@ -79,3 +57,8 @@ TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
 # --- Final Linker Flags ---
 # If you need to include the RPATH, keep this:
 LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib
+
+PKG_CPPFLAGS = $(SHLIB_OPENMP_CFLAGS) -I$(R_INCLUDE_DIR)
+
+SDK_PATH := $(shell xcrun --show-sdk-path)
+CPPFLAGS += -I$(SDK_PATH)/usr/include/c++/v1   
