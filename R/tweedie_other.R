@@ -78,7 +78,7 @@ AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
 
 #############################################################################
 
-tweedie_Convert <- function(xi = NULL, mu, phi, power = NULL){
+tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
   ### ADDED 14 July 2017
   
   if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")

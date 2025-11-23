@@ -3,7 +3,7 @@
 #' @description Plots the integrand for Fourier inversion and the real and imaginary parts separately.
 #'
 #' @usage
-#' tweedie_Integrand(y, power, mu, phi, t = seq(0, 5, length = 1000), 
+#' tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 1000), 
 #'                   type = "PDF", whichPlots = 1:4, yLimits = NULL)
 #'
 #' @param y vector of ??
@@ -61,7 +61,7 @@
 #' @importFrom graphics par mtext abline axis lines
 #' @keywords models
 #' @export
-tweedie_Integrand <- function(y, power, mu, phi, 
+tweedie_integrand <- function(y, power, mu, phi, 
                               t = seq(0, 5, length = 1000), 
                               type = "PDF", whichPlots = 1:4, 
                               yLimits = NULL) {

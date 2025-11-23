@@ -22,7 +22,7 @@
 #' @param ... Plotting parameters
 #' 
 #' @importFrom graphics lines rug par mtext abline axis  points plot
-tweedie_Plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
+tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
                          add =FALSE, ...) {
   
   # Sort out the xi/power notation
