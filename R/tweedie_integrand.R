@@ -54,7 +54,7 @@
 #' Tweedie, M. C. K. (1984). An index which distinguishes between some important exponential families. \emph{Statistics: Applications and New Directions. Proceedings of the Indian Statistical Institute Golden Jubilee International Conference} (Eds. J. K. Ghosh and J. Roy), pp. 579-604. Calcutta: Indian Statistical Institute.
 #'
 #' @examples
-#' tweedie_Integrand(2, power = 3, mu = 1, phi = 1)
+#' tweedie_integrand(2, power = 3, mu = 1, phi = 1)
 #'
 #' @seealso \code{\link{dtweedie}}
 #' 
