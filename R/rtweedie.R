@@ -76,3 +76,6 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   }
   as.vector(rt)
 }
+
+
+
