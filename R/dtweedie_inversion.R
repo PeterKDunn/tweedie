@@ -148,8 +148,14 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
 
 
 #' @export
-dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose, details){ 
   .Deprecated("dtweedie_inversion", package = "tweedie")
-  dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
+  dtweedie_inversion(y = y, 
+                     power = power, 
+                     mu = mu, 
+                     phi = phi, 
+                     method = method, 
+                     verbose = FALSE, 
+                     details = FALSE)
 }
 
