@@ -14,12 +14,12 @@ test_that("No common errors", {
   expect_no_error(
     ptweedie_inversion(0.075075, mu = 1, phi = 1, power = 4.5, verbose=FALSE)  )
   expect_no_error(
-    ptweedie_inversion(.001, power=6, mu=.01, phi=.01)  )
+    ptweedie_inversion(.001, power = 6, mu = 0.01, phi = 0.01)  )
   expect_no_error(
    ptweedie_inversion(0.001, phi = 10, p = 1.01, mu = 5)  )
   expect_no_error(
     ptweedie_inversion(0.001, mu = 1, phi = 0.01, p = 1.01)  )
   expect_no_error(
-  ptweedie_inversion(50, mu=1.4, phi=0.74, power=3) )
+    ptweedie_inversion(50, mu = 1.4, phi = 0.74, power = 3) )
 })
 
