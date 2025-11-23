@@ -1,3 +1,4 @@
+
 SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integration_Regions) 
   ! Compute the value of the integrals in the Fourier-inversion expressions for the PDF and CDF
 
@@ -28,7 +29,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 501), Nmatrix(2, 501), xvec(501), wvec(501)
-  REAL(KIND=C_DOUBLE)   :: TMP
+  REAL(KIND=C_DOUBLE)   :: TMP,   leftPreAccZero, leftAccZero
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   LOGICAL(C_BOOL)       :: leftOfMax, flip_To_Other_Side
   
@@ -130,13 +131,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
 !WRITE(*,*) "Starting pre-acceleration"
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
+  leftPreAccZero = zeroL
   CALL integratePreAccRegions(m, mfirst, leftOfMax, zeroL,  tmax, mmax,             & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
 
   IF (Cverbose) THEN
     CALL DBLEPR(" Pre-acc area:", -1, area1, 1)
-    CALL DBLEPR("      between:", -1, zeroL, 1)
+    CALL DBLEPR("      between:", -1, leftPreAccZero, 1)
     CALL DBLEPR("          and:", -1, zeroR, 1)
     CALL INTPR( "using right m:", -1, m,     1)
   
@@ -156,6 +158,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     areaA = 0.0_C_DOUBLE
     count_Acc_Regions = 0
   ELSE
+    leftAccZero = zeroL
     zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
     CALL integrateAccelerationRegions(m, leftOfMax, zeroL,  tmax,                               & ! INPUTS
                                       areaA, zeroR, count_Acc_Regions, converged_Accelerating)    ! OUTPUTS
@@ -165,7 +168,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       END IF
       
       CALL DBLEPR("     Acc area:", -1, areaA, 1)
-      CALL DBLEPR("      between:", -1, zeroL, 1)
+      CALL DBLEPR("      between:", -1, leftAccZero, 1)
       CALL DBLEPR("          and:", -1, zeroR, 1)
       CALL INTPR( "      up to m:", -1, m,     1)
     END IF  
