@@ -1,4 +1,4 @@
-sort_Notation <- function(xi = NULL, power = NULL){
+sort_notation <- function(xi = NULL, power = NULL){
   # Sorts out whether the  xi  or the  p/power  notation is being used,
   # so output presented appropriately
   
@@ -45,7 +45,7 @@ sort_Notation <- function(xi = NULL, power = NULL){
 
 ################################################################################
 
-check_Inputs <- function(y, mu, phi, power, type = FALSE){
+check_inputs <- function(y, mu, phi, power, type = FALSE){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
 
@@ -130,7 +130,7 @@ check_Inputs <- function(y, mu, phi, power, type = FALSE){
     }
   }
   
-  # NOTE: The length of xi/power should have been checked in sort_Notation(), 
+  # NOTE: The length of xi/power should have been checked in sort_notation(), 
   #        so does not need checking here again.
 
   return( list(mu = mu, 
@@ -143,91 +143,91 @@ check_Inputs <- function(y, mu, phi, power, type = FALSE){
 
 ################################################################################
 
-special_Cases <- function(y, mu, phi, power, type = "PDF"){
+special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
   # Special cases may be one of two types:
   # - based on the value of p:
   #   - p = 0: use Normal distribution
   #   - p = 1: use Poisson distribution
   #   - p = 2: use gamma distribution
-  #   In this case, special_p_Cases is a scalar and is TRUE
+  #   In this case, special_p_cases is a scalar and is TRUE
   #
   # - other values of p, and hence based on value of y:
   #   - y < 0
   #   - y == 0
-  #   In this case, special_y_Cases is a vector, and is TRUE when appropriate
+  #   In this case, special_y_cases is a vector, and is TRUE when appropriate
   
   f <- array( 0, 
               dim = length(y) )
-  special_p_Cases <- FALSE        # TRUE if special cases are defined by special values of p: SCALAR
-  special_y_Cases <- rep(FALSE,   # TRUE where special cases are defined by special values of y: VECTOR
+  special_p_cases <- FALSE        # TRUE if special cases are defined by special values of p: SCALAR
+  special_y_cases <- rep(FALSE,   # TRUE where special cases are defined by special values of y: VECTOR
                          length(y) )
-
+  
   # Special cases BASED ON VALUE OF p
-  if ( (power == 0 ) | (power == 1) | (power== 2) ){
+  if ( (power == 0 ) | (power == 1) | (power == 2) | (power == 3) ){
+    if (verbose) cat("Special cases in p found ")
     # Special cases based on the value of p  
-    special_p_Cases = TRUE
+    special_p_cases = TRUE
     
-    # CASE: gamma (p=2)
-    if ( power == 2 ) {
-      if (type == "PDF") {
-        f <- stats::dgamma( y,
-                     rate = 1 / (phi * mu), 
-                     shape = 1 / phi)
-        return(f)
-      } else {
-        f <- stats::pgamma( y, 
-                     rate = 1 / (phi * mu), 
-                     shape = 1 / phi)
-        return(f)
-      }
-    }
-    
-    # CASE: inverse Gaussian (p=3)
-    if ( power == 3) {
-      if (type == "PDF") {
-        f <- statmod::dinvgauss(x = y, 
-                                mean = mu, 
-                                dispersion = phi)
-        return(f)
-      } else {
-        f <- statmod::pinvgauss(x = y, 
-                                mean = mu, 
-                                dispersion = phi)
-        return(f)
-      }
-    }
-
     # CASE: Normal (p=0)
     if ( power == 0) {
+      if (verbose) cat("power = 0 (normal case)\n")
       if (type == "PDF") {
         f <- stats::pnorm( mean = mu, 
-                    sd = sqrt(phi),
-                    q = y )
-        return(f)
+                           sd = sqrt(phi),
+                           q = y )
       } else {
         f <- stats::pnorm( mean = mu, 
-                    sd = sqrt(phi),
-                    q = y )
-        return(f)
+                           sd = sqrt(phi),
+                           q = y )
       }
     }
     
     # CASE: Poisson (p=1)
     if ( power == 1) {
+      if (verbose) cat("power = 1 (Poisson case)\n")
       if (type == "PDF"){
         f <- stats::dpois(y, 
-                   lambda = mu / phi )
-        return(f)
+                          lambda = mu / phi )
       } else {
         f <- stats::ppois(y, 
-                   lambda = mu / phi )
-        return(f)
+                          lambda = mu / phi )
       }
     }
+    
+    # CASE: gamma (p=2)
+    if ( power == 2 ) {
+      if (verbose) cat("power = 2 (gamma case)\n")
+      if (type == "PDF") {
+        f <- stats::dgamma( y,
+                     scale = mu * phi, 
+                     shape = 1 / phi)
+      } else {
+        f <- stats::pgamma( y, 
+                     scale = mu * phi, 
+                     shape = 1 / phi)
+      }
+    }
+    
+    # CASE: inverse Gaussian (p=3)
+    if ( power == 3) {
+      if (verbose) cat("power = 3 (inverse Gaussian case)\n")
+      if (type == "PDF") {
+        f <- statmod::dinvgauss(x = y, 
+                                mean = mu, 
+                                dispersion = phi)
+      } else {
+        f <- statmod::pinvgauss(x = y, 
+                                mean = mu, 
+                                dispersion = phi)
+      }
+    }
+
   } else {
     # Special cases BASED ON THE VALUES OF y (when y <= 0)
-    special_y_Cases <- (y <= 0)
-    if (any(special_y_Cases)) {
+    if (verbose) cat("Special cases in y found.\n")
+    
+    special_y_cases <- (y <= 0)
+    if (any(special_y_cases)) {
       # NEGATIVE VALUES
       y_Negative <- (y < 0)
       if (any(y_Negative) ) f[y_Negative] <- 0
@@ -244,8 +244,8 @@ special_Cases <- function(y, mu, phi, power, type = "PDF"){
   }
 
   return( list(f = f,                                # vector
-               special_p_Cases = special_p_Cases,    # scalar
-               special_y_Cases = special_y_Cases) )  # vector
+               special_p_cases = special_p_cases,    # scalar
+               special_y_cases = special_y_cases) )  # vector
 }
 
 
