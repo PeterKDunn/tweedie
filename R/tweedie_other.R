@@ -46,7 +46,7 @@ dtweedie_stable <- function(y, power, mu, phi)
 
 
 #############################################################################
-AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
+tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
   # New  dispersion  input for (e.g.) Poisson case, added October 2017
   
   wt <- glm.obj$prior.weights
@@ -75,6 +75,20 @@ AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
   return( AIC + k * (edf) )
   
 }
+
+
+
+
+#' @export
+AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
+  .Deprecated("tweedie_AIC", package = "tweedie")
+  tweedie_AIC(glm.obj = glm.obj, 
+              dispersion = dispersion,
+              k = k,
+              verbose = verbose)
+}
+
+
 
 #############################################################################
 
@@ -129,4 +143,17 @@ tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
         gamma.mean = mu,
         gamma.phi = phi.g)
   
+}
+
+
+
+
+#' @export
+tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
+  .Deprecated("tweedie_convert", package = "tweedie")
+  if (is.null(power)) power <- xi
+  tweedie_convert(xi = NULL, 
+              mu = mu,
+              phi = phi,
+              power=power)
 }
