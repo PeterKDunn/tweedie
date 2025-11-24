@@ -26,14 +26,25 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   #   details     : whether to return details of the algorithm
   
   ### NOTE: No checking of inputs
-  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
+
+  # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
+  if (verbose) cat("- Checking, resizing inputs\n")
+  out <- check_Inputs(y, mu, phi, power)
+  mu <- out$mu
+  phi <- out$phi
+  # density2 is the whole vector.
+  # density is just the part where !special_y_Cases.
+  # All is resolved in the end
+  density <- array(0,
+                   dim = length(q) )
+  if (details) regions <- array(0, dim = length(q))
+
+
 
   ### BEGIN SET UP
   N <- as.integer( length(y) )
-  density <- as.double(rep(0, N))
   pSmall  <- ifelse( (power > 1) & (power < 2), 
                      TRUE, FALSE )
-
   # Initialise
   exitstatus_scalar <- as.integer(0)
   relerr_scalar     <- as.double(0.0)
@@ -83,7 +94,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   optimal_Method <- apply(method_List, 
                           MARGIN = 1, 
                           FUN = which.min)
-
+  
   
   ### BEGIN: Set parameters for FORTRAN call, depending on method
   # mu = 1 for all methods:
@@ -122,7 +133,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
             PACKAGE    = "tweedie")
   
   den <- tmp$funvalue
-  
+
   # Reconstruct
   if (any(optimal_Method == 1)){
     use_M1 <- optimal_Method==1
@@ -135,7 +146,6 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
     density <- den[use_M3] * m3[use_M3]
   }
   
-
   # Return
   if (details) {
     return( list( density = density,
