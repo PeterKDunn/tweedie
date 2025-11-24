@@ -109,7 +109,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
   if (verbose) cat("- Checking notation\n")
-  out <- sort_Notation(xi = xi, power = power)
+  out <- sort_notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
   xi.notation <- out$xi.notation
@@ -119,77 +119,51 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
-  out <- check_Inputs(y, mu, phi, power)
+  out <- check_inputs(y, mu, phi, power)
   mu <- out$mu
   phi <- out$phi
+
   # density2 is the whole vector.
-  # density is just the part where !special_y_Cases.
+  # density is just the part where !special_y_cases.
   # All is resolved in the end
-  density2 <- array(0,
-                    dim = length(q) )
-  if (details) regions <- array(0, dim = length(q))
+  density2 <- numeric(length = length(q) )
+  if (details) regions <- integer(length = length(q))
   
   
   # IDENTIFY SPECIAL CASES
-  special_y_Cases <- rep(FALSE, length(y))
+  special_y_cases <- rep(FALSE, length(y))
   if (verbose) cat("- Checking for special cases\n")
-  out <- special_Cases(y, mu, phi, power,
+  out <- special_cases(y, mu, phi, power,
                        type = "PDF")
-  special_p_Cases <- out$special_p_Cases
-  special_y_Cases <- out$special_y_Cases
 
-  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
-  if ( any(special_y_Cases) ) {
-    special_y_Cases <- out$special_y_Cases  
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
+
+  if (verbose & special_p_cases) cat("  - Special case for p used\n")
+  if ( any(special_y_cases) ) {
+    special_y_cases <- out$special_y_cases  
     if (verbose) cat("  - Special cases for first input found\n")
-#    density[special_y_Cases] <- out$f[special_y_Cases]
+#    density[special_y_cases] <- out$f[special_y_cases]
     density2 <- out$f
   }
   
-  # Set things up for the interpolation/series; i.e., not special_y_Cases
-  density <- density2[ !special_y_Cases ]
-  mu <- mu[ !special_y_Cases ]
-  phi <- phi[ !special_y_Cases ]
-  y <- y[ !special_y_Cases ]
+  # Set things up for the interpolation/series; i.e., not special_y_cases
+  density <- density2[ !special_y_cases ]
+  mu <- mu[ !special_y_cases ]
+  phi <- phi[ !special_y_cases ]
+  y <- y[ !special_y_cases ]
   ### END preliminary work
-  
-  
-  
-  # Special Cases
-  # if ( power == 3 ){
-  #   density <- statmod::dinvgauss(x = y, 
-  #                                 mean = mu, 
-  #                                 dispersion = phi)
-  #   return(density)
-  # }
-  # if ( power == 2 ) {
-  #   density <- dgamma( rate = 1 / (phi * mu), 
-  #                      shape = 1 / phi, 
-  #                      x = y )
-  #   return(density)
-  # }
-  # if ( power == 0) {
-  #   density <- dnorm( mean = mu, 
-  #                     sd = sqrt(phi), 
-  #                     x = y )
-  #   return(density)
-  # }
-  # if ( (power == 1) & (all(phi == 1))) {
-  #   # Poisson case
-  #   density <- dpois(x = y / phi, 
-  #                    lambda = mu / phi )
-  #   return(density)
-  # }
   
 
   regions = NA  # 'regions'  may not be relevant if interpolation is used 
-  if ( !special_p_Cases ) {
-    
+  if (special_p_cases){
+    density = out$f
+  } else {
     # Set up
     id.type0 <- array( FALSE, dim = length(y) )
     id.series <- id.type0
     id.interp <- id.type0
-    density <- density2[ !special_y_Cases ]
+    density <- density2[ !special_y_cases ]
     
     ###   Now consider the cases 1 < p < 2   ###
     id.type0 <- (y == 0)
@@ -389,11 +363,11 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   }
   
   # Restoration of whole vector, and sanity fixes
-  density2[ !special_y_Cases ] <- density
+  density2[ !special_y_cases ] <- density
   density <- density2
   if (any(density < 0 ) )  density[ density < 0 ] <- rep(0, sum(density < 0) )
   density <- as.vector(density)
-  
+
   if (details) {
     return(list(density = density,
                 regions = regions) )

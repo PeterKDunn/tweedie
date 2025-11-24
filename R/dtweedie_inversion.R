@@ -9,6 +9,7 @@
 #' @param power The power parameter \eqn{p}{power}.
 #' @param mu The mean parameter.
 #' @param phi The dispersion parameter.
+#' @param method The method to use; one of \code{1}, \code{2}, or \code{3} (the default)
 #' @param verbose Display some internal computation details.
 #' @param details Return the DF and the number of integration regions used.
 
@@ -26,14 +27,14 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   #   details     : whether to return details of the algorithm
   
   ### NOTE: No checking of inputs
-
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
-  out <- check_Inputs(y, mu, phi, power)
+  out <- check_inputs(y, mu, phi, power)
+
   mu <- out$mu
   phi <- out$phi
   # density2 is the whole vector.
-  # density is just the part where !special_y_Cases.
+  # density is just the part where !special_y_cases.
   # All is resolved in the end
   density <- array(0,
                    dim = length(q) )
@@ -145,7 +146,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   if (any(optimal_Method == 3)){
     density <- den[use_M3] * m3[use_M3]
   }
-  
+
   # Return
   if (details) {
     return( list( density = density,

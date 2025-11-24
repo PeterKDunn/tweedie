@@ -17,7 +17,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
-  out <- sort_Notation(xi = xi, power = power)
+  out <- sort_notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
   xi.notation <- out$xi.notation
@@ -26,7 +26,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
 
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  out <- check_Inputs(p, mu, phi, power,
+  out <- check_inputs(p, mu, phi, power,
                       type = "quantile")
   mu <- out$mu
   phi <- out$phi
@@ -35,12 +35,12 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
 
   
   # IDENTIFY SPECIAL CASES
-  special_y_Cases <- rep(FALSE, length(p))
-  out <- special_Cases(p, mu, phi, power)
-  special_p_Cases <- out$special_p_Cases
-  special_y_Cases <- out$special_y_Cases
-  if ( any(special_y_Cases) ) {
-    special_y_Cases <- out$special_y_Cases  
+  special_y_cases <- rep(FALSE, length(p))
+  out <- special_cases(p, mu, phi, power)
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
+  if ( any(special_y_cases) ) {
+    special_y_cases <- out$special_y_cases  
     f <- out$f
   }
   

@@ -16,7 +16,7 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
-  out <- sort_Notation(xi = xi, power = power)
+  out <- sort_notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
   xi.notation <- out$xi.notation
@@ -25,7 +25,7 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  out <- check_Inputs(n, mu, phi, power,
+  out <- check_inputs(n, mu, phi, power,
                       type = "random")
   mu <- out$mu
   phi <- out$phi
@@ -34,10 +34,10 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
 
   
   # IDENTIFY SPECIAL CASES
-  out <- special_Cases(n, mu, phi, power)
+  out <- special_cases(n, mu, phi, power)
   f <- out$f
-  special_p_Cases <- out$special_p_Cases
-  special_y_Cases <- out$special_y_Cases
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
 
   ### END preliminary work
   

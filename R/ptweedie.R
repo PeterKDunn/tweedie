@@ -3,7 +3,7 @@
 #' Internal function to evaluate the Tweedie distribution function.
 #' \bold{Not intended for general users.}
 #'
-#' @param y vector of quantiles.
+#' @param q vector of quantiles.
 #' @param power The power parameter \eqn{p}.
 #' @param mu The mean parameter.
 #' @param phi The dispersion parameter.
@@ -25,7 +25,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
   if (verbose) cat("- Checking notation\n")
-  out <- sort_Notation(xi = xi, power = power)
+  out <- sort_notation(xi = xi, power = power)
   xi <- out$xi
   power <- out$power
   xi.notation <- out$xi.notation
@@ -35,7 +35,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   if (verbose) cat("- Checking, resizing inputs\n")
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
-  out <- check_Inputs(q, mu, phi, power)
+  out <- check_inputs(q, mu, phi, power)
   mu <- out$mu
   phi <- out$phi
   f <- array(0,
@@ -44,16 +44,16 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
 
   # IDENTIFY SPECIAL CASES
-  special_y_Cases <- rep(FALSE, length(q))
+  special_y_cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
-  out <- special_Cases(q, mu, phi, power, 
+  out <- special_cases(q, mu, phi, power, 
                        type = "CDF")
-  special_p_Cases <- out$special_p_Cases
-  special_y_Cases <- out$special_y_Cases
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
   
-  if (verbose & special_p_Cases) cat("  - Special case for p used\n")
-  if ( any(special_y_Cases) ) {
-    special_y_Cases <- out$special_y_Cases  
+  if (verbose & special_p_cases) cat("  - Special case for p used\n")
+  if ( any(special_y_cases) ) {
+    special_y_cases <- out$special_y_cases  
     if (verbose) cat("  - Special cases for first input found\n")
     f <- out$f
   }
@@ -61,25 +61,25 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   ### END preliminary work
 
 
-  if ( !special_p_Cases ) {
+  if ( !special_p_cases ) {
     # NOT special p case; ONLY special y cases 
     
     if ( power > 2 ) {
       # For p > 2 the only option is the inversion
-      if ( any(!special_y_Cases)) { 
+      if ( any(!special_y_cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
   
         f_TMP <- ptweedie_inversion(power   = power,
-                                    q       = q[!special_y_Cases],
-                                    mu      = mu[!special_y_Cases],
-                                    phi     = phi[!special_y_Cases],
+                                    q       = q[!special_y_cases],
+                                    mu      = mu[!special_y_cases],
+                                    phi     = phi[!special_y_cases],
                                     verbose = verbose,
                                     details = details)
         if (details) {
-          f[!special_y_Cases] <- f_TMP$cdf
-          regions[!special_y_Cases] <- f_TMP$regions
+          f[!special_y_cases] <- f_TMP$cdf
+          regions[!special_y_cases] <- f_TMP$regions
         } else {
-          f[!special_y_Cases] <- f_TMP
+          f[!special_y_cases] <- f_TMP
         }
       }
     } else {
@@ -116,30 +116,30 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       #  if (verbose) cat("- With 1 < p < 2: use series")
       #  
       #  f_TMP <- ptweedie_series(power = power, 
-      #                           q     = y[!special_y_Cases], 
-      #                           mu    = mu[!special_y_Cases], 
-      #                           phi   = phi[!special_y_Cases] )
+      #                           q     = y[!special_y_cases], 
+      #                           mu    = mu[!special_y_cases], 
+      #                           phi   = phi[!special_y_cases] )
       #  if (details) {
-      #    f[!special_y_Cases] <- f_TMP$cdf
-      #    regions[!special_y_Cases] <- f_TMP$regions
+      #    f[!special_y_cases] <- f_TMP$cdf
+      #    regions[!special_y_cases] <- f_TMP$regions
       #  } else {
-      #    f[!special_y_Cases] <- f_TMP
+      #    f[!special_y_cases] <- f_TMP
       #  }
       #} else{
         
-      if ( any(!special_y_Cases)) {
+      if ( any(!special_y_cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
         f_TMP <- ptweedie_inversion(power   = power,
-                                    q       = q[!special_y_Cases], 
-                                    mu      = mu[!special_y_Cases], 
-                                    phi     = phi[!special_y_Cases],
+                                    q       = q[!special_y_cases], 
+                                    mu      = mu[!special_y_cases], 
+                                    phi     = phi[!special_y_cases],
                                     verbose = verbose,
                                     details = details)
         if (details) {
-          f[!special_y_Cases] <- f_TMP$cdf
-          regions[!special_y_Cases] <- f_TMP$regions
+          f[!special_y_cases] <- f_TMP$cdf
+          regions[!special_y_cases] <- f_TMP$regions
         } else {
-          f[!special_y_Cases] <- f_TMP
+          f[!special_y_cases] <- f_TMP
         }
       }
     }  
