@@ -46,8 +46,21 @@
 #' @seealso \code{\link{ptweedie}}, \code{\link{rtweedie}}, \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{dtweedie_saddle}}
 #'
 #' @references
-#' Dunn, P. K. and Smyth, G. K. (2008). ... \doi{10.1007/s11222-007-9039-6}
-#' \dots [Include all references here or in a separate file, then use \code{@importFrom} for external packages]
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+#' 
+#' Dunn, Peter K and Smyth, Gordon K (2005).
+#' Series evaluation of Tweedie exponential dispersion model densities
+#' \emph{Statistics and Computing},
+#' \bold{15}(4). 267--280.
+#' \doi{10.1007/s11222-005-4070-y}
+#' 
+#' Jorgensen, B. (1997).
+#' \emph{Theory of Dispersion Models}.
+#' Chapman and Hall, London.
 #'
 #' @examples
 #' # The examples from your .Rd file go here.
