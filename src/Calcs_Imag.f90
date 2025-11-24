@@ -44,7 +44,7 @@ CONTAINS
       CALL DBLEPR("         y:", -1, current_y, 1)
       CALL DBLEPR("        mu:", -1, current_mu, 1)
       CALL DBLEPR("       phi:", -1, current_phi, 1)
-  
+
       error = .TRUE.
       RETURN
     END IF
