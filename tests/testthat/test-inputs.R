@@ -111,7 +111,7 @@ test_that("Invalid parameters cause error in rtweedie", {
   # 1. Test for bad mu value (mu <= 0)
   # The error message is the string "mu must be positive."
   expect_error(
-    rtweedie(1, mu = -1, phi = 1, power = 3.5), 
+    rtweedie(2, mu = -1, phi = 1, power = 3.5), 
     regexp = "mu must be positive." 
   )
   
