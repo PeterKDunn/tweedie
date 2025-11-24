@@ -12,8 +12,13 @@
 #' @param phi The dispersion parameter.
 #' @param verbose Display some internal computation details.
 #' @param details Return the DF and the number of integral regions used.
+#' 
 #' @return A numeric vector of the distribution function values
+#' 
 #' @keywords internal
+#' 
+#' @aliases ptweedie_inversion
+#' @aliases ptweedie.inversion
 #' @export
 ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:

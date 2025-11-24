@@ -7,11 +7,11 @@
 #' @param power The power parameter \eqn{p}{power}.
 #' @param mu The mean parameter.
 #' @return A numeric vector containing the unit deviance.
-#' @keywords internal
+#' 
+#' @aliases tweedie.dev
 #'
-#' @noRd
-tweedie_dev <- function(y, mu, power)
-{
+#' @export
+tweedie_dev <- function(y, mu, power){
   # 
   # Peter K Dunn 
   # 29 Oct 2000 
@@ -38,5 +38,12 @@ tweedie_dev <- function(y, mu, power)
     }
   }
   dev * 2
+}
+
+
+#' @export
+tweedie.dev <- function(y, mu, power){ 
+  .Deprecated("tweedie_dev", package = "tweedie")
+  tweedie_dev(y, mu, power)
 }
 

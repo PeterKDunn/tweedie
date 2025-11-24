@@ -20,7 +20,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   #   verbose: whether to display what is happening
   #   details:  whether to returns reports of relerr, regions needed, etc.
   
-
   ### BEGIN preliminary work
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
@@ -42,7 +41,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
              dim = length(q) )
   if (details) regions <- array(0, dim = length(q))
   
-
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
@@ -50,7 +48,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
                        type = "CDF")
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
-  
+
   if (verbose & special_p_cases) cat("  - Special case for p used\n")
   if ( any(special_y_cases) ) {
     special_y_cases <- out$special_y_cases  
@@ -60,8 +58,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
 
   ### END preliminary work
 
-
-  if ( !special_p_cases ) {
+  if ( special_p_cases ) {
+    f <- out$f
+  } else {
     # NOT special p case; ONLY special y cases 
     
     if ( power > 2 ) {

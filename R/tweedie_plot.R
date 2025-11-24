@@ -21,6 +21,10 @@
 #' 
 #' @param ... Plotting parameters
 #' 
+#' @aliases tweedie_plot
+#' @aliases tweedie.plot
+
+#' 
 #' @importFrom graphics lines rug par mtext abline axis  points plot
 tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
                          add =FALSE, ...) {

@@ -12,8 +12,11 @@
 #' @return A numeric vector of densities.
 #' @keywords internal
 #' 
-#' #' @importFrom base pi
+#' @importFrom base pi
 #'
+#' @aliases dtweedie_saddle
+#' @aliases dtweedie.saddle
+#' 
 #' @export
 dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #

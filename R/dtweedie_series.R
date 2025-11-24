@@ -14,6 +14,9 @@
 #' 
 #' @importFrom stats dgamma dpois 
 #' 
+#' @aliases dtweedie_series
+#' @aliases dtweedie.series
+
 #' @export
 dtweedie_series <- function(y, power, mu, phi){ 
   # Evaluates the Tweedie density using a series expansion

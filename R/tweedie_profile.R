@@ -56,7 +56,7 @@
 #'   \code{eps} is ignored unless \code{method = "saddlepoint"}.
 #' @param control A list of parameters for controlling the fitting process;
 #' @param do.points Logical flag. If \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} are explicitly shown by points. The defaults is \code{do.plot}.
-#' @param method The method of evaluation. One of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).
+#' @param method The method of evaluation. One of \code{saddlepoint}, \code{interpolation} (the default), \code{series} or \code{inversion}.
 #' @param conf.level The level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).
 #' @param phi.method The nethod used to estimate \eqn{\phi}{phi}. One of \code{saddlepoint}, \code{mle} (the default).
 #' @param verbose Logical flag. If \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
@@ -67,6 +67,9 @@
 #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
 #' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
+#' 
+#' @aliases tweedie_profile
+#' @aliases tweedie.profile
 #' 
 #' @export
 tweedie_profile <- function(formula, 
@@ -85,7 +88,7 @@ tweedie_profile <- function(formula,
                                             maxit = stats::glm.control()$maxit, 
                                             trace = glm.control()$trace ),
                             do.points = do.plot, 
-                            method = "inversion",
+                            method = "interpolation",
                             conf.level = 0.95, 
                             phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
                             verbose = FALSE, 
@@ -175,7 +178,7 @@ tweedie_profile <- function(formula,
   ### AT THIS POINT, we have both xi.vec and p.vec declared, and both are the same
   ### but we stick with using xi.vec hereafter
   
-  
+
   # Determine notation to use in output (consistent with what was supplied by the user)
   index.par <- ifelse( xi.notation, "xi", "p")
   
@@ -227,7 +230,6 @@ tweedie_profile <- function(formula,
     xi.vec <- c( 0, xi.vec )
   }
 
-  
   # Some renaming
   ydata <- Y
   model.x <- X
@@ -268,7 +270,7 @@ tweedie_profile <- function(formula,
   c.vec  <- L
   mu.vec <- L
   b.mat  <- array( dim = c(xi.len, length(ydata) ) )
-  
+
   for (i in (1:xi.len)) {
     
     if ( verbose > 0) {

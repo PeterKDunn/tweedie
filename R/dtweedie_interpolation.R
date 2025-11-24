@@ -43,7 +43,15 @@ dtweedie_interp <- function(grid, nx, np, xix.lo, xix.hi,
 
 
 #############################################################################
-
+#' Tweedie Density: Distribution Function internal function
+#'
+#' \bold{Not intended for general users.}
+#'
+#' @param power The power parameter \eqn{p}.
+#' @return A grid for interpolationfor evaluating Tweedie densities.
+#'
+#' @keywords internal
+#' @export
 stored_grids <- function(power){
   # This S-Plus function contains all the stored interpolation
   # grids for interpolating the Tweedie densities.

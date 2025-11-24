@@ -14,6 +14,9 @@
 #' @param details Return the DF and the number of integration regions used.
 
 #' @return A numeric vector of densities.
+#' 
+#' @aliases dtweedie.inversion
+
 #' @export
 dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:

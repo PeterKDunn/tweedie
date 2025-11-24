@@ -13,11 +13,14 @@
 #' @param phi The dispersion parameter.
 #' @param verbose Display some internal computation details.
 #' @param details Return the DF and the number of series terms used.
-#' @return A numeric vector of densities.
 #' 
+#' @return A numeric vector of densities.
 #' @importFrom stats dpois 
 #'
-#' @keywords export
+#' @export
+#' 
+#' @aliases ptweedie.series
+
 ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
 
   # Evaluates the cdf for Tweedie distributions, using the infinite series 
