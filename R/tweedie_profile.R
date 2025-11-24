@@ -66,16 +66,30 @@
 #' 
 #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
-#' @importFrom stats contrasts fitted optimize glm.fit splinefun glm.control deviance deviance uniroot
+#' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
 #' 
 #' @export
-tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
-                            data, weights, offset, fit.glm = FALSE, 
-                            do.smooth = TRUE, do.plot = FALSE, 
-                            do.ci = do.smooth, eps = 1/6,
-                            control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, trace = glm.control()$trace ),
-                            do.points = do.plot, method = "inversion", conf.level = 0.95, 
-                            phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), verbose = FALSE, add0 = FALSE) {
+tweedie_profile <- function(formula, 
+                            p.vec = NULL, 
+                            xi.vec = NULL, 
+                            link.power = 0, 
+                            data, 
+                            weights = 1, 
+                            offset = 0, 
+                            fit.glm = FALSE, 
+                            do.smooth = TRUE, 
+                            do.plot = FALSE, 
+                            do.ci = do.smooth, 
+                            eps = 1/6,
+                            control = list( epsilon = 1e-09, 
+                                            maxit = stats::glm.control()$maxit, 
+                                            trace = glm.control()$trace ),
+                            do.points = do.plot, 
+                            method = "inversion",
+                            conf.level = 0.95, 
+                            phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
+                            verbose = FALSE, 
+                            add0 = FALSE) {
   # verbose gives feedback on screen:
   #    0 : minimal (FALSE)
   #    1 : small amount (TRUE)
@@ -95,16 +109,14 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   # 07 Dec 2004
   
   
-  if ( is.logical( verbose ) ) {
-    verbose <- as.numeric(verbose)
-  }
+  if ( is.logical( verbose ) ) verbose <- as.numeric(verbose)
   
   if (verbose >= 1 ) {
-    cat("---\n This function may take some time to complete;\n")
-    cat(" Please be patient.  If it fails, try using  method=\"series\"\n")
+    cat("---\n This function may take some time to complete.\n")
+    cat("If it fails, try using  method=\"series\"\n")
     cat(" rather than the default  method=\"inversion\"\n")
-    cat(" Another possible reason for failure is the range of p:\n")
-    cat(" Try a different input for  p.vec\n---\n")
+    cat(" Another possible reason for failure is the range of p;\n")
+    cat(" try a different input for  p.vec\n---\n")
   }
   
   
@@ -118,7 +130,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   mt <- attr(mf, "terms")
   Y <- stats::model.response(mf, "numeric")
   X <- if (!stats::is.empty.model(mt))
-    stats::model.matrix(mt, mf, contrasts)
+    stats::model.matrix(mt, mf, contrasts = NULL)
   else matrix(, NROW(Y), 0)
   weights <- as.vector(stats::model.weights(mf))
   if (!is.null(weights) && !is.numeric(weights))
@@ -180,6 +192,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
     }
   }
   
+
   # Warnings
   if ( any( Y == 0 ) & any( (xi.vec >= 2) | (xi.vec <= 0) ) ) {
     xi.fix.these <- (xi.vec >= 2 | xi.vec <= 0)
@@ -213,10 +226,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
     p.vec  <- c( 0, p.vec )
     xi.vec <- c( 0, xi.vec )
   }
-  
-  
-  cat(xi.vec,"\n")
-  
+
   
   # Some renaming
   ydata <- Y
@@ -242,7 +252,6 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                                              mu = mu, 
                                              phi = phi, 
                                              power = power)
-    
     ans
   }
   
@@ -251,7 +260,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   xi.len <- length(xi.vec)
   phi <- NaN
   
-  L <- array( dim = xi.len )
+  L <- numeric( length = xi.len )
   phi.vec <- L
   
   # Now most of these are for debugging:
@@ -322,7 +331,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
     } else {
       if ( phi.method == "mle"){
         
-        if (verbose >= 1) cat(" (using optimize): ")
+        if (verbose >= 1) cat(" (using optimise): ")
         
         # Saddlepoint approx of phi:
         phi.saddle <- sum( tweedie_dev(y = ydata, 
@@ -346,10 +355,10 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
         #                hessian=FALSE,
         #                power=p, mu=mu, y=data)
         if ( p != 0 ) {
-          ans <- optimize(f = dtweedie_nlogl, 
+          ans <- optimise(f = dtweedie_nlogl, 
                           maximum = FALSE, 
                           interval = c(low.limit, 
-                                       10*phi.est),
+                                       10 * phi.est),
                           power = p, 
                           mu = mu, 
                           y = ydata )
@@ -385,7 +394,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
       L[i] <- NA
     } else {   
       if ( method == "saddlepoint") {
-        L[i] <- dtweedie_logl.saddle(y = ydata, 
+        L[i] <- dtweedie_logl_saddle(y = ydata, 
                                      mu = mu, 
                                      power = p, 
                                      phi = phi, 
@@ -646,7 +655,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                                offset = offset,
                                family = statmod::tweedie(xi.max, 
                                                          link.power = link.power)))
-        phi.max <- optimize( f = dtweedie_nlogl, 
+        phi.max <- optimise( f = dtweedie_nlogl, 
                              maximum = FALSE, 
                              interval = c(phi.lo, phi.hi ), 
                              # set lower limit phi.lo???
@@ -679,7 +688,7 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   
   # Now find approximate, nominal 95% CI info
   ht <- L.max - ( stats::qchisq(conf.level, 1) / 2 )
-  ci <- array( dim = 2, NA )
+  ci <- c(NA, NA )
   
   
   if ( do.ci ) {
@@ -819,4 +828,40 @@ tweedie_profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
   invisible( out )
   
 }
+
+
+
+
+  
+
+#' @export
+tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
+                               data, weights, offset, fit.glm = FALSE, 
+                               do.smooth = TRUE, do.plot = FALSE, 
+                               do.ci = do.smooth, eps = 1/6,
+                               control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, trace = glm.control()$trace ),
+                               do.points = do.plot, method = "inversion", conf.level = 0.95, 
+                               phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), verbose = FALSE, add0 = FALSE){ 
+  .Deprecated("tweedie_profile", package = "tweedie")
+  tweedie_profile(formula = formula, 
+                  p.vec = p.vec,
+                  xi.vec = xi.vec,
+                  link.power = link.power,
+                  data = data,
+                  weights = NULL,
+                  offset = NULL,
+                  fit.glm = fit.glm,
+                  do.smooth = do.smooth,
+                  do.plot = do.plot,
+                  do.ci = do.ci,
+                  eps = eps,
+                  control = control,
+                  do.points = do.points,
+                  method = method,
+                  conf.level = conf.level,
+                  phi.method = phi.method,
+                  verbose = verbose,
+                  add0 = add0)
+}
+
 
