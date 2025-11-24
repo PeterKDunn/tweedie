@@ -1,6 +1,9 @@
 
 test_that("Deprecated functions work", {
   expect_warning(
+    tweedie.dev(y=1, mu = 1, power = 6)  
+  )
+  expect_warning(
     ptweedie.inversion(1, mu = 1, phi = 1, power = 6, verbose=FALSE)  
   )
   expect_warning(
@@ -24,6 +27,7 @@ test_that("Deprecated functions work", {
                     do.smooth = TRUE, 
                     do.plot = FALSE, 
                     do.ci = FALSE, 
+                    method = "interpolation",
                     do.points = FALSE,
                     phi.method = "mle") 
   }
@@ -36,7 +40,8 @@ test_that("Deprecated functions work", {
   )
   expect_warning({
     y <- rgamma(10, shape = 1.4, scale = 1.5)
-    mod1 <- glm(y ~ 1, family="Gamma")
+    mod1 <- glm(y ~ 1, family=statmod::tweedie(link.power = 0, 
+                                               var.power = 2) )
     AICtweedie( mod1, 
                 dispersion = NULL,
                 k = 2,
