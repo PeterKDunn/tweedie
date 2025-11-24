@@ -10,8 +10,6 @@
 #' @param power The power parameter \eqn{p}{power}.
 #' @param mu The mean parameter.
 #' @param phi The dispersion parameter.
-#' @param verbose Display some internal computation details.
-#' @param details Return the PDF and the number of series terms used.
 #' @return A numeric vector of densities.
 #' 
 #' @importFrom stats dgamma dpois 
