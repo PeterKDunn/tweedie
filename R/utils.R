@@ -45,7 +45,7 @@ sort_notation <- function(xi = NULL, power = NULL){
 
 ################################################################################
 
-check_inputs <- function(y, mu, phi, power, type = FALSE){
+check_inputs <- function(y, mu, phi, power, type = "standard"){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
 
@@ -56,11 +56,10 @@ check_inputs <- function(y, mu, phi, power, type = FALSE){
                           length(y))
   
   inputs_Error <- FALSE
-
   ### CHECKING VALUES ARE OK
   # Checking the input values for qtweedie
   if ( type == "quantile" ) {
-    if ( any(y < 0 ) | any(y > 1) ) {
+    if ( any(y < 0) | any(y > 1) ) {
       stop("quantiles must be between 0 and 1.\n")
       inputs_Error <- TRUE
     }
@@ -69,13 +68,13 @@ check_inputs <- function(y, mu, phi, power, type = FALSE){
   ### CHECKING VALUES ARE OK
   # Checking the input values: n for rtweedie
   if ( type == "random" ) {
-    y <- round(n)
+    y <- round(y)
     if ( y <= 0 ) {
       stop("n must be a positive integer.\n")
       inputs_Error <- TRUE
     }
   }
-  
+
   # Checking the input values: power
   if ( any(power < 1 ) ) {
     stop( "The Tweedie index parameter must be greater than 1.\n")
