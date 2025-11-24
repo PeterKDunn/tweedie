@@ -100,3 +100,22 @@ tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL,
                         x = y) ))
   
 }
+
+
+
+
+  
+#' @export
+tweedie.plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
+                         add =FALSE, ...){
+  .Deprecated("tweedie.plot", package = "tweedie")
+  if ( is.null(power)) power <- xi
+  tweedie_plot(y = y, 
+              power = power, 
+              mu = mu, 
+              phi = phi, 
+              type = type, 
+              add = add, 
+              ... = ...)
+}
+
