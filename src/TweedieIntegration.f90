@@ -542,14 +542,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
            (Rekd .LT. 0.0_C_DOUBLE) ) then
         stop_PreAccelerate = .TRUE.
         IF (Cverbose) THEN 
-          WRITE(*,*) "Pre-accelerating stopping. Rek(t) small:", (DEXP(Rek)/zeroL) 
+          CALL DBLEPR("Pre-accelerating stopping. Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
         END IF
       END IF
 
       IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-15_C_DOUBLE)  ) then
         stop_PreAccelerate = .TRUE.
         IF (Cverbose) THEN 
-          WRITE(*,*) "Pre-accelerating stopping. Rek(t) small:", (DEXP(Rek)/zeroL) 
+          CALL DBLEPR("Pre-accelerating stopping. Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
         END IF
       END IF
 
