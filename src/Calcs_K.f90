@@ -118,14 +118,14 @@ CONTAINS
                 IF (t_Start_Point <= 0.0_C_DOUBLE) t_Start_Point = 1.0E-12_C_DOUBLE
             END IF
         END IF
-  !WRITE(*,*) "GOT START PT:", t_Start_Point
+!  WRITE(*,*) "GOT START PT:", t_Start_Point
         ! Now find kmax and tmax using this t_Start_Point
   !      IF (Cpsmall) THEN
           tmaxL = 0.0_C_DOUBLE       ! Since Left bound can be zero
           tmaxR = t_Start_Point * 2.0_C_DOUBLE
-  !WRITE(*,*) "  BOUNDS 1: RTSAFE", tmaxL, tmaxR
+!  WRITE(*,*) "  BOUNDS 1: RTSAFE", tmaxL, tmaxR
           CALL improveKmaxSPBounds(i, t_Start_Point, tmaxL, tmaxR)
-  !WRITE(*,*) "  BOUNDS 1 revises: RTSAFE", tmaxL, tmaxR
+!  WRITE(*,*) "  BOUNDS 1 revises: RTSAFE", tmaxL, tmaxR
           ! Crudely improve the bounds that bracket the starting point for finding Kmax.
           CALL rtsafe(i,                  &
                         evaluateImkdZero,   &
@@ -145,14 +145,13 @@ CONTAINS
       ! Find kmax from tmax
       CALL evaluateImk(i, tmax, kmax, error)
       IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, tmax, 1)
-  
       ! Find mmax from kmax
       IF (Cpdf) THEN
-        mmax = FLOOR(2.0_C_DOUBLE * kmax / pi)
+        mmax = FLOOR(2.0_C_DOUBLE * kmax / pi) - 1
       ELSE
         mmax = FLOOR(kmax / pi)
       END IF
-  
+
       ! Establish the first value of m to use, and whether the first zero is to the left of kmax
       IF (mmax .GT. 0) THEN
         mfirst = 1
@@ -168,7 +167,7 @@ CONTAINS
         ENDIF 
       END IF
     END IF
-  
+
   
     CONTAINS
       
@@ -645,9 +644,11 @@ CONTAINS
   ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m * pi/y;
   !       the CDF has integrand zeros at Im k(t) =        m * pi/y.
   ! Ensure the bounds actually bound the zero
+!WRITE(*,*)">>> IN findExactZeros: i, m, tL, tR", i, m, tL, tR
   CALL evaluateImkM(i, tL, fL, dfL, m)
+!WRITE(*,*) "fL, dfL", fL, dfL
   CALL evaluateImkM(i, tR, fR, dfR, m)
-
+!WRITE(*,*) "fR, dfR", fR, dfR
   IF ( (fL * fR) .GT. 0.0_C_DOUBLE ) THEN
     ! Then bounds do not bound the zero
      tMid = (tL + tR) / 2.0_C_DOUBLE
