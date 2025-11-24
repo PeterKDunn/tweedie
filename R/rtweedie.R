@@ -25,7 +25,10 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  out <- check_inputs(n, mu, phi, power,
+  out <- check_inputs(y = n, 
+                      mu = mu, 
+                      phi = phi, 
+                      power = power,
                       type = "random")
   mu <- out$mu
   phi <- out$phi
