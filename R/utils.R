@@ -65,21 +65,11 @@ check_Inputs <- function(y, mu, phi, power, type = FALSE){
       inputs_Error <- TRUE
     }
   }
-
-  
-  ### CHECKING VALUES ARE OK
-  # Checking the input values: n for rtweedie
-  if ( type == "quantile" ) {
-    if ( any(y > 1 ) ) {
-      stop("quantiles must be between 0 and 1.\n")
-      inputs_Error <- TRUE
-    }
-  }
-
   
   ### CHECKING VALUES ARE OK
   # Checking the input values: n for rtweedie
   if ( type == "random" ) {
+    y <- round(n)
     if ( y <= 0 ) {
       stop("n must be a positive integer.\n")
       inputs_Error <- TRUE
@@ -115,9 +105,10 @@ check_Inputs <- function(y, mu, phi, power, type = FALSE){
     # Checking the length of  mu
     if ( length(mu) > 1) {
       # If  mu  not a scalar, check it is the same length as  y
-      if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as the first input.\n")
-      inputs_Error <- TRUE
-      
+      if ( length(mu) != length(y) ) {
+        stop("mu must be scalar, or the same length as the first input.\n")
+        inputs_Error <- TRUE
+      }
     } else {
       # If  mu  is a scalar, force it to be the same same length as  y
       mu <- array( dim = length(y), mu )
@@ -128,9 +119,10 @@ check_Inputs <- function(y, mu, phi, power, type = FALSE){
     # Checking the length of  phi
     if ( length(phi) > 1) {
       # If  phi  not a scalar, check it is the same length as  y
-      if ( length(phi) != length(y) ) stop("phi must be scalar, or the same length as the first input.\n")
-      inputs_Error <- TRUE
-      
+      if ( length(phi) != length(y) ) {
+        stop("phi must be scalar, or the same length as the first input.\n")
+        inputs_Error <- TRUE
+      }
     } else {
       # If  phi  is a scalar, force it to be the same same length as  y
       phi <- array( dim = length(y), phi )
