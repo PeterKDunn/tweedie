@@ -258,7 +258,7 @@ dtweedie_dlogfdphi <- function(y, mu, phi, power)
     # We fill  f  with the Y=0 case
     f <- array(  dim = length(y), 
                  mu ^ (2 - power) / ( phi ^ 2 * (2 - power) )  )
-    jw <- dtweedie_jw+smallp(power = power, 
+    jw <- dtweedie_jw_smallp(power = power, 
                              phi = phi[y > 0], 
                              y = y[y > 0])$jw
     dw.dphi <- (jw * (a - 1)) / phi[y > 0]
