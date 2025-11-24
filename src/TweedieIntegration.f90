@@ -229,10 +229,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! Initialisation
       t_Start_Point = 0.0_C_DOUBLE
       zeroL = 0.0_C_DOUBLE
-      zeroBoundL = 0.0_c_DOUBLE
+      zeroBoundL = 0.0_C_DOUBLE
       zeroBoundR = 0.0_C_DOUBLE
 
-
+!WRITE(*,*) "leftOfMax:", leftOfmax
       ! Find starting point for the first zero
       IF (leftOfMax) THEN
         t_Start_Point = pi / current_y  
@@ -244,15 +244,17 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
         zeroBoundL = tmax
         zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
       END IF
-
+!WRITE(*,*) "BOUNDS", zeroBoundL, t_Start_Point, zeroBoundR
       IF ( (t_Start_Point .GT. zeroBoundR) .OR. (t_Start_Point .LT. zeroBoundL) ) Then
         t_Start_Point = (zeroBoundL + zeroBoundR) / 2.0_c_DOUBLE
       END IF
     
       ! Find the zero
       zeroL = 0.0_C_DOUBLE
+!WRITE(*,*) "BOUNDS---about to call find exact zeros", zeroBoundL, t_Start_Point, zeroBoundR
 
       CALL findExactZeros(i, mfirst, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, leftOfMax)
+!WRITE(*,*) "FOUND---zeroR", zeroR
       CALL evaluateImk(i, zeroR, TMP, error)
       IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, zeroR, 1)
 
