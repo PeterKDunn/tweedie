@@ -55,17 +55,10 @@ GaussQuadrature.o: Integrands_mod.mod gaussian_data_mod.mod
 TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
 
 # --- Final Linker Flags ---
-# 1. Portable LDFLAGS: Replaces the GNU += with the portable R variable and syntax.
-# LDFLAGS is used directly for linking libraries.
-LDFLAGS = $(LDFLAGS) -Wl,-rpath,$(R_HOME)/lib
+# If you need to include the RPATH, keep this:
+LDFLAGS += -Wl,-rpath,$(R_HOME)/bin/exec/R/lib 
 
-# 2. Portable CPPFLAGS: Correctly uses PKG_CPPFLAGS for includes, but avoids the OpenMP macro.
-PKG_CPPFLAGS = -I$(R_INCLUDE_DIR)
+PKG_CPPFLAGS = $(SHLIB_OPENMP_CFLAGS) -I$(R_INCLUDE_DIR)
 
-# 3. Portable CXXFLAGS (for OpenMP and C++ headers): 
-#    - Uses the C++ OpenMP macro (required by the R Extensions manual).
-#    - Moves the system C++ include path into the CXX-specific flags.
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I$(SDK_PATH)/usr/include/c++/v1
-
-# 4. OpenMP Libraries: Links the necessary OpenMP libraries.
-PKG_LIBS = $(SHLIB_OPENMP_LIBS)
+SDK_PATH := $(shell xcrun --show-sdk-path)
+CPPFLAGS += -I$(SDK_PATH)/usr/include/c++/v1   
