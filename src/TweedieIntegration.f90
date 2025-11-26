@@ -538,7 +538,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! so also check if exp{Re k(t)/t} is small
       CALL evaluateRek( i, zero, Rek)
       CALL evaluateRekd(i, zero, Rekd)
-      IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-05_C_DOUBLE) .AND.          & 
+      IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND.          & 
            (Rekd .LT. 0.0_C_DOUBLE) ) then
         stop_PreAccelerate = .TRUE.
         IF (Cverbose) THEN 
