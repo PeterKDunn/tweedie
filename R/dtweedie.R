@@ -133,8 +133,6 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
-  cat("Lngth: y, mu", length(y), length(mu), "\n")
-  
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_inputs(y, mu, phi, power)
