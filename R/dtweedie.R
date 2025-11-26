@@ -92,15 +92,16 @@
 #'
 #' @export
 dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){
-  # Two methods are employed:  cgf inversion (type=1)
-  # and series evaluation (type=2 if 1<p<2; type=3 if p>2)).
+  # Methods employed:  
+  # - cgf inversion (type=1)
+  # - series evaluation (type = 2 if 1 < p < 2); 
+  # - series evaluation (type = 3 if p > 2).
   #
   # This function uses bivariate interpolation to accurately
   # approximate the inversion in conjunction with the series.
   #
   #
   # FIRST, establish whether the series or the cgf inversion is the better method.
-  
   #
   # Here is a summary of what happens:
   #
@@ -174,7 +175,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   
 
   
-  regions <- NA  # 'regions'  may not be relevant if interpolation is used 
+  regions <- NA  # 'regions'  may not be relevant (e.g., if interpolation is used)
   if (special_p_cases){
     density <- out$f
   } else {
