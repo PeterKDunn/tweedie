@@ -14,6 +14,12 @@
 #' 
 #' @return A numeric vector of densities.
 #' 
+#' @examples 
+#' # Plot a Tweedie density
+#' y <- seq(0, 5, length = 200)
+#' fy <- dtweedie_series(y, power = 1.1, mu = 1, phi = 1)
+#' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
+
 #' @importFrom stats dgamma dpois 
 #' 
 #' @aliases dtweedie.series

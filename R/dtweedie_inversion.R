@@ -20,6 +20,12 @@
 #' @note
 #' The three methods are described in Dunn & Smyth (2008).
 #' 
+#' @examples
+#' # Plot a Tweedie density
+#' y <- seq(0, 5, length = 200)
+#' fy <- dtweedie_inversion(y, power = 1.1, mu = 1, phi = 1)
+#' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
+##' 
 #' @aliases dtweedie.inversion
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).
