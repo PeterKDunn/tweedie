@@ -71,6 +71,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   # - Method 1: Evaluate a(): compute a(y, phi) = f(y; 1, phi)
   # - Method 2: Rescale the mean to 1
   # - Method 3: Rescale y to 1 and evaluate b().
+  #
   # If no method is explicitly requested, find the notional "optimal" method for each i.
   
  	### BEGIN ESTABLISH METHOD
@@ -142,13 +143,13 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   # Reconstruct
   if (any(optimal_Method == 1)){
     use_M1 <- optimal_Method==1
-    density <- den[use_M1] * m1[use_M1]
+    density[use_M1] <- den[use_M1] * m1[use_M1]
   }    
   if (any(optimal_Method == 2)){
-    density <- den[use_M2] * m2[use_M2]
+    density[use_M2] <- den[use_M2] * m2[use_M2]
   }  
   if (any(optimal_Method == 3)){
-    density <- den[use_M3] * m3[use_M3]
+    density[use_M3] <- den[use_M3] * m3[use_M3]
   }
 
   # Return
