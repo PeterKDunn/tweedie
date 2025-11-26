@@ -65,7 +65,7 @@ PKG_CPPFLAGS = -I$(R_INCLUDE_DIR)
 # 3. Portable CXXFLAGS (for OpenMP and C++ headers): 
 #    - Uses the C++ OpenMP macro (required by the R Extensions manual).
 #    - Moves the system C++ include path into the CXX-specific flags.
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I$(SDK_PATH)/usr/include/c++/v1
+# PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I$(SDK_PATH)/usr/include/c++/v1
 
 # 4. OpenMP Libraries: Links the necessary OpenMP libraries.
 PKG_LIBS = $(SHLIB_OPENMP_LIBS)
