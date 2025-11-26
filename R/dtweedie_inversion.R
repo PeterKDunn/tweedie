@@ -14,8 +14,8 @@
 #' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default).
 #' @param verbose logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
-
-#' @return A numeric vector of densities if \code{details=FALSE}; if \code{details=TRUE}, return a list with \code{density} (the density values) and \code{regions} (the number of integration regions used). 
+#'
+#' @return A numeric vector of densities if \code{details=FALSE}; if \code{details=TRUE}, return a list with \code{density} (the density values), \code{regions} (the number of integration regions used) and \code{methods} (which of the three methods was used).
 #' 
 #' @note
 #' The three methods are described in Dunn & Smyth (2008).
