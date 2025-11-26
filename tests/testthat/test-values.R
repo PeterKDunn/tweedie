@@ -7,12 +7,12 @@ test_that("Same values as non-central chi-sq", {
          15, 20, 50, 100) 
   expect_equal(
       ptweedie(y, mu = mu, phi = phi, power = p),
-      pchisq(y, df=0, ncp=1)
+      pchisq(y, df = 0, ncp = 1)
   )
 
   expect_equal(
     dtweedie(y, mu = mu, phi = phi, power = p),
-    dchisq(y, df=0, ncp=1)
+    dchisq(y, df = 0, ncp = 1)
   )
   
 })
