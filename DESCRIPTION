@@ -1,17 +1,15 @@
 Package: tweedie
 Version: 3.0.0
-Date: 2025-11-21
+Date: 2025-11-27
 Title: Evaluation of Tweedie Exponential Family Models
 Authors@R: person("Peter K.", "Dunn", email = "pdunn2@usc.edu.au", role = c("cre", "aut") )
 Author: Peter K. Dunn [cre, aut]
 Maintainer: Peter K. Dunn <pdunn2@usc.edu.au>
 Depends: R (>= 2.8.0)
 Encoding: UTF-8
-UseDynLib: tweedie
 Imports:
      methods
 Suggests: 
-    stabledist,
     statmod (>= 1.4.20),
     testthat (>= 3.0.0)
 Description: Maximum likelihood computations for Tweedie families, including the series expansion (Dunn and Smyth, 2005; <doi:10.1007/s11222-005-4070-y>) and the Fourier inversion  (Dunn and Smyth, 2008; <doi:10.1007/s11222-007-9039-6>), and related methods.
