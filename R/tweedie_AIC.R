@@ -1,25 +1,28 @@
-#' Density for the Tweedie Family of Distributions
+#' AIC for Tweedie glms
 #'
-#' Evaluates the AIC for a fitted Tweedie glm.
+#' @description Evaluates the \acronym{aic} for a fitted Tweedie \acronym{glm}.
+#' The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{edm}s), 
+#' famous for their role in generalized linear models. 
+#' The Tweedie distributions are the \acronym{edm}s with a variance of the form 
+#' \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
+#' \emph{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
+#'
+#' @usage tweedie_AIC(glm.obj, dispersion = NULL, k = 2, verbose = TRUE)
 #' 
-#' @description Evaluates the AIC for a fitted Tweedie glm.
-#'   The Tweedie family of distributions belong to the class of
-#'   exponential dispersion models (EDMs), famous for their role in generalized
-#'   linear models. The Tweedie distributions are the EDMs with a variance
-#'   of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
-#'   \bold{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
-#'
 #' @details
-#' Evaluating the likelihood can be time consuming, so the function may take some time.
+#' The \acronym{aic} is computed by evaluating the density function.
+
+#' @note
+#' Evaluating the likelihood can be time consuming, so the function may take some time for large data sets.
 #'
-#' @param glm.obj A fitted \code{glm} object, fitted using the \code{tweedie} family.
-#' @param dispersion The dispersion parameter, usually extracted from \code{glm.obj}; however, occasionally  a specified value of the dispersion may be needed.
-#' @param k The AIC penalty; \code{k = 2} (the default) produces the AIC.
-#' @param verbose Logical. Whether to display details of the internal process. Defaults to \code{FALSE}.
+#' @param glm.obj a fitted \code{glm} object, fitted using the \code{tweedie} family.
+#' @param dispersion the dispersion parameter, usually extracted from \code{glm.obj}; however, occasionally  a specified value of the dispersion may be needed.
+#' @param k the \acronym{aic} penalty; \code{k = 2} (the default) produces the AIC.
+#' @param verbose logical; if \code{TRUE}, display details of the internal process. The default is \code{FALSE}.
 #'
-#' @return The value of the computed AIC.
+#' @return The value of the computed \acronym{aic}.
 #'
-#' @seealso \code{\link{ptweedie}}, \code{\link{rtweedie}}, \code{\link{dtweedie}}
+#' @seealso \code{\link{dtweedie}}
 #'
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).
@@ -42,21 +45,18 @@
 #' \emph{Akaike Information Criterion Statistics}. 
 #' D. Reidel Publishing Company.
 #' 
-#' @examples
-#' ### Plot a Tweedie density
-#' power <- 2.5
-#' mu <- 1
-#' phi <- 1
-#' y <- seq(0, 6, length = 500)
-#' fy <- dtweedie(y = y, power = power, mu = mu, phi = phi)
-#' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
-#' # Compare to the saddlepoint density
-#' f.saddle <- dtweedie_saddle( y = y, power = power, mu = mu, phi = phi)
-#' lines( y, f.saddle, col = 2 )
-#' legend("topright", col = c(1,2), lwd = c(2,1),
-#'   legend = c("Actual", "Saddlepoint") )
+#' @importFrom stats glm
+#' @importFrom statmod tweedie
 #'
-#' @aliases tweedie_AIC
+#' @examples
+#' ### Fit a Tweedie density using  tweedie  family function from  statmod
+#' library(statmod)
+#' pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
+#' fit <- glm(y ~ 1, data = pretend, family = tweedie(link.power = 0, var.power = 2.1))
+#'
+#' # Compute the AIC
+#' tweedie_AIC(fit)
+#'
 #' @aliases AICtweedie
 #' 
 #' @export

@@ -1,29 +1,19 @@
-#' Tweedie Distributions: Plot Tweedie density functions
+#' Plot Tweedie Density Functions
 #'
-#' Plot the Tweedie PDF.
 #' @description This function produced a plot of the specified Tweedie distribution.
 #'
 #' @details If \eqn{1 < p < 2}{1 < power < 2}, the mass at \eqn{Y=0}{Y = 0} is automatically added.
 #'
-#' @param y The values for \eqn{y}{y} in the plot.
+#' @param y the values for \eqn{y}{y} in the plot.
+#' @param power the variance power \eqn{p}{power}.
+#' @param mu the mean of the distribution \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param xi a synonym for \code{power}.
+#' @param type the type of plot, either \code{PDF} (the default) or \code{CDF}.
+#' @param add logical; if \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.
+#' @param ... plotting parameters passed to \code{plot()}.
 #' 
-#' @param power The variance power.
-#' 
-#' @param mu The mean of the distribution.
-#' 
-#' @param phi The dispersion parameter.
-#' 
-#' @param xi A synonym for \code{power}.
-#' 
-#' @param type The type of plot, either \code{PDF} (the default) or \code{CDF}.
-#'
-#' @param add If \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.
-#' 
-#' @param ... Plotting parameters
-#' 
-#' @aliases tweedie_plot
 #' @aliases tweedie.plot
-
 #' 
 #' @importFrom graphics lines rug par mtext abline axis  points plot
 tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
@@ -104,8 +94,6 @@ tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL,
                         x = y) ))
   
 }
-
-
 
 
   

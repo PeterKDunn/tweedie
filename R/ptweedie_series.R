@@ -1,18 +1,20 @@
-#' Tweedie Distribution Function: Series Evaluation for the Distribution Function
+#'  Series Evaluation for the Tweedie Distribution Function
 #'
-#' Evaluates the probability density function (PDF) for Tweedie distributions 
+#' @description
+#' Evaluates the distribution function (\acronym{df}) for Tweedie distributions 
 #' with \eqn{1 < p < 2}{1 < p < 2}
 #' using an infinite series, for given values of the dependent variable \code{y}, 
 #' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
-#'
+#' @usage ptweedie_series(q, power, mu, phi, verbose = FALSE, details = FALSE)
+#' 
 #' @param q vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param verbose Display some internal computation details.
-#' @param details Return the DF and the number of series terms used.
+#' @param power the power parameter \eqn{p}{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
+#' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
 #' 
 #' @return A numeric vector of densities.
 #' @importFrom stats dpois 
@@ -22,19 +24,9 @@
 #' @aliases ptweedie.series
 
 ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
-
-  # Evaluates the cdf for Tweedie distributions, using the infinite series 
-  # expansion (i.e., just for 1 < p < 2), for given values of:
-  #   q (possibly a vector)
-  #   mu, the mean 
-  #   phi the dispersion parameter
-  #   power,  the Tweedie index parameter
-  
   ### NOTE: No checking of inputs
   ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
   
-  ### NOTE: Same number of iterations used for each value of q, if vector inputs are given
-
   # SET UP
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
   tau    <- phi * (power - 1) * mu ^ ( power - 1 )

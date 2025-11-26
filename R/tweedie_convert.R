@@ -1,13 +1,14 @@
 #' Tweedie Distribution: Converting between parameter formats
 #'
+#' @description
 #' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\,mu}{mu} and \eqn{\phi}{phi}
 #' and the correspinding underlying Poisson and gamma parameters (when \eqn{1 < p < 2}).
 #'
-#' @param xi A synonym for \code{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param power The power parameter \eqn{p}{power}.
-#' @return A list of the parameters of the parameters of the corresponding underlying 
+#' @param xi a synonym for \code{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param power the power parameter \eqn{p}{power}; a synonym for \eqn{\xi}{xi}.
+#' @return a list of the parameters of the parameters of the corresponding underlying 
 #' Poisson and gamma densities: 
 #' \code{poisson.lambda} (\eqn{\lambda}{lambda} from the underlying Poisson distribution),
 #' \code{gamma.shape}, \code{gamma.scale} (the shape and scale parameters
@@ -15,6 +16,17 @@
 #'  \code{p0} (the probability that \eqn{Y = 0}),
 #'  \code{gamma.mean} and \code{gamma.phi} (the gamma mean and dispersion parameter values)
 #'  
+#' @importFrom stats glm fitted
+#' @importFrom statmod tweedie
+#' 
+#' @examples
+#' ### Fit a Tweedie density
+#' pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
+#' fit <- glm(y ~ 1, data = pretend, family = statmod::tweedie(link.power = 0, var.power = 1.4))
+#'
+#' # Convert parameters
+#' tweedie_convert(mu = fitted(fit, type="response"), phi = 1, power = 1.4)
+#'
 #' @aliases tweedie.convert
 #'  
 #' @export

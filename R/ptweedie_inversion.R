@@ -1,37 +1,25 @@
-#' Tweedie Distribution: Fourier Inversion Evaluation for the Distribution Function
+#' Fourier Inversion Evaluation for the Tweedie Distribution Function
 #'
 #' @description
-#' #' Evaluates the distribution function (DF) for Tweedie distributions using Fourier inversion, 
+#' Evaluates the distribution function (\acronym{df}) for Tweedie distributions using Fourier inversion, 
 #' for given values of the dependent variable \code{y}, 
 #' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
+#' @usage ptweedie_inversion(q, mu, phi, power, verbose = FALSE, details = FALSE)
 #'
 #' @param q vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param verbose Display some internal computation details.
-#' @param details Return the DF and the number of integral regions used.
+#' @param power the power parameter \eqn{p}{power}.
+#' @param mu the mean parameter.
+#' @param phi the dispersion parameter.
+#' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
+#' @param details logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.
 #' 
-#' @return A numeric vector of the distribution function values
+#' @return if \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{CDF} (a vector of the values of the distribution function) and \code{regions} (a vector of the number of integration regions used).
 #' 
-#' @keywords internal
-#' 
-#' @aliases ptweedie_inversion
 #' @aliases ptweedie.inversion
 #' @export
 ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
-  # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:
-  #
-  #   q           : the values at which to compute the DF (possibly a vector)
-  #   power       : the Tweedie index parameter
-  #   mu          : the mean (possibly a vector)
-  #   phi         : the dispersion parameter (possibly a vector)
-  #   verbose     : the verbosity of the output
-  #   details     : whether to return details of the algorithm
-  
-
   ### NOTE: No checking of inputs
   ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
   

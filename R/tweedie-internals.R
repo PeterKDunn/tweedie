@@ -1,9 +1,9 @@
-#' Tweedie internal function
+#' Tweedie internal functions
 #'
 #' @name Tweedie internals
 #' @aliases dtweedie_logv_bigp dtweedie_logw_smallp dtweedie_interp dtweedie_jw_smallp dtweedie_kv_bigp dtweedie_Fortran dtweedie_Inversion_Report dtweedie_Inversion_Threemethods dtweedie_dldphi_saddle dtweedie_dlogfdphi dtweedie_logl dtweedie_dldphi dtweedie_logl_saddle dtweedie_series_bigp dtweedie_series_smallp logLiktweedie stored_grids twcomputation sort_notation check_inputs special_cases
 #' @title Tweedie internal function
-#' @description Internal tweedie functions. These are not to be called by the user.
+#' @description Internal tweedie functions. \bold{These are not to be called by the user.}
 #'
 #' @usage
 #' dtweedie_dlogfdphi(y, mu, phi, power)

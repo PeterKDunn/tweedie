@@ -1,23 +1,24 @@
-#' Plotting Tweedie Fourier integrands
-#'
+#' Display Integrand Information for Tweedie Fourier inversion
+#' 
 #' @description Plots the integrand for Fourier inversion and the real and imaginary parts separately.
 #'
 #' @usage
-#' tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 1000), 
+#' tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 200), 
 #'                   type = "PDF", whichPlots = 1:4, yLimits = NULL)
 #'
-#' @param y vector of ??
+#' @param y vector of quantiles.
 #' @param power a synonym for \eqn{\xi}{xi}; the Tweedie power-index on the variance.
-#' @param mu the mean.
-#' @param phi the dispersion.
-#' @param t the values of the variable over which to integrate; the default is \code{t = seq(0, 5, length = 1000)}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param t the values of the variable over which to integrate; the default is \code{t = seq(0, 5, length = 200)}.
 #' @param type either \code{"PDF"} (the default) for the (probability) density function, or \code{"CDF"} for the (cumulative) distribution function.
 #' @param whichPlots which combination of the four plots (described below) are produced; by default, all four are produced (i.e., \code{whichPlots = 1:4}).
 #' @param yLimits the \eqn{y}{y}-limits to use when plotting the integrand; the default is \code{NULL} which uses R defaults.
 #'
-#' @details The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{EDM}s), famous for their role in generalized linear models. The Tweedie distributions are the \acronym{EDM}s with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var(Y) = phi * mu^power} where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
+#' @details The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{edm}s), famous for their role in generalized linear models. 
+#' The Tweedie distributions are the \acronym{edm}s with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var(Y) = phi * mu^power} where \eqn{p}{power} is greater than or equal to one, or less than or equal to zero.
 #'
-#' \bold{This function only evaluates for \eqn{p}{power} greater than or equal to one.}
+#' \emph{This function only evaluates for \eqn{p}{power} greater than or equal to one.}
 #'
 #' Special cases include the normal (\eqn{p = 0}{power = 0}), Poisson (\eqn{p = 1}{power = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}{power = 2}) and inverse Gaussian (\eqn{p = 3}{power = 3}) distributions. For other values of \code{power}, the distributions are still defined but cannot be written in closed form, and hence evaluation is very difficult.
 #'
@@ -45,12 +46,6 @@
 #'
 #' Jorgensen, B. (1997). \emph{Theory of Dispersion Models}. Chapman and Hall, London.
 #'
-#' Nolan, John P (1997). Numerical calculation of stable densities and distribution functions. \emph{Communication in Statistics---Stochastic models}, \bold{13}(4). 759--774. \doi{10.1080/15326349708807450}
-#'
-#' Sidi, Avram (1982). The numerical evaluation of very oscillatory infinite integrals by extrapolation. \emph{Mathematics of Computation} \bold{38}(158), 517--529. \doi{10.1090/S0025-5718-1982-0645667-5}
-#'
-#' Sidi, Avram (1988). A user-friendly extrapolation method for oscillatory infinite integrals. \emph{Mathematics of Computation} \bold{51}(183), 249--266. \doi{10.1090/S0025-5718-1988-0942153-5}
-#'
 #' Tweedie, M. C. K. (1984). An index which distinguishes between some important exponential families. \emph{Statistics: Applications and New Directions. Proceedings of the Indian Statistical Institute Golden Jubilee International Conference} (Eds. J. K. Ghosh and J. Roy), pp. 579-604. Calcutta: Indian Statistical Institute.
 #'
 #' @examples
@@ -62,7 +57,7 @@
 #' @keywords models
 #' @export
 tweedie_integrand <- function(y, power, mu, phi, 
-                              t = seq(0, 5, length = 1000), 
+                              t = seq(0, 5, length = 200), 
                               type = "PDF", whichPlots = 1:4, 
                               yLimits = NULL) {
 

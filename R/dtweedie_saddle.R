@@ -1,5 +1,5 @@
-#' Tweedie Distribution: Saddlepoint-Approximation Evaluation for the Density Function
-#'
+#' Tweedie densities evaluation using the saddlepoint approximation
+#' 
 #' @description
 #' Density function for the Tweedie EMDs using a saddlepoint approximation.
 #' 
@@ -11,11 +11,9 @@
 #' @param eps the offset in computing the variance function; the default is \code{eps=1/6} (as suggested by Nelder and Pregibon, 1987).
 #' 
 #' @return A numeric vector of densities.
-#' @keywords internal
 #' 
 #' @importFrom base pi
 #'
-#' @aliases dtweedie_saddle
 #' @aliases dtweedie.saddle
 #' 
 #' @references
@@ -28,12 +26,7 @@
 #' 
 #' @export
 dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
-  #
-  # Peter K Dunn
-  # 09 Jan 2002
-  #
-  #
-  
+
   # Sort out the xi/power notation
   if ( is.null(power) & is.null(xi) ) stop("Either xi or power must be given\n")
   xi.notation <- TRUE

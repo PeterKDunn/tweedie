@@ -1,12 +1,13 @@
-#' Tweedie deviance: Computes the unit deviance for Tweedie distributions
+#' Deviance for a Tweedie distribution
+#' 
+#' @description
+#' Computes the unit deviance for Tweedie distributions.
 #'
-#' Internal function to evaluate the Tweedie unit deviance.
-#' \bold{Not intended for general users.}
-#'
+#' @usage tweedie_dev(y, mu, power)
 #' @param y vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @return A numeric vector containing the unit deviance.
+#' @param power the power parameter \eqn{p}{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @return a numeric vector containing the unit deviance.
 #' 
 #' @aliases tweedie.dev
 #'

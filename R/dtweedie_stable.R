@@ -1,17 +1,16 @@
-#' Tweedie Distribution: Stable Evaluation for the Density
+#' Evaluation for the Tweedie Distribution Function via Stable Distributions
 #'
-#' Internal function to evaluate the Tweedie density using stable distributions.
-#' \emph{Not intended for general users.}
-#'
+#' @description
+#' Evaluation of the Tweedie densities via the stable distributions.
+
 #' @usage dtweedie_stable(y, power, mu,phi)
 #' 
 #' @param y vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @return A numeric vector of densities.
-#' @keywords internal
-
+#' @param power the power parameter \eqn{p}{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @return a numeric vector of densities.
+#' 
 dtweedie_stable <- function(y, power, mu, phi)
 {
   # Error checks

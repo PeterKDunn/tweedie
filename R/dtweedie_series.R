@@ -1,7 +1,7 @@
-#' Tweedie Distribution: Series Evaluation for the Probability Function
+#' Series  Evaluation for the Tweedie Probability Function
 #'
 #' @description
-#' Evaluates the probability density function (PDF) for Tweedie distributions using an infinite series, 
+#' Evaluates the probability density function (\acronym{pdf}) for Tweedie distributions using an infinite series, 
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 #'

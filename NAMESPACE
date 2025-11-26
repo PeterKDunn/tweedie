@@ -14,17 +14,17 @@ importFrom("stats", "contrasts", "deviance", "dgamma", "dnorm",
              "rgamma", "rpois", "runif", "splinefun", "uniroot")
 importFrom("methods", "is")
 
-
-
-
-export(call_fortran)
+#export(call_fortran)
 export(dtweedie)
 export(dtweedie_saddle)
 export(ptweedie)
 export(ptweedie_inversion)
 export(qtweedie)
 export(rtweedie)
+export(tweedie_dev)
 export(tweedie_integrand)
+export(tweedie_plot)
+export(tweedie_profile)
 importFrom(graphics,abline)
 importFrom(graphics,axis)
 importFrom(graphics,lines)

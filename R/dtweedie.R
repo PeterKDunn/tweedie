@@ -1,6 +1,5 @@
-#' Density for the Tweedie Family of Distributions
-#'
-#' @aliases ptweedie qtweedie rtweedie
+#' Tweedie distributions 
+#' 
 #' @description Density, distribution function, quantile function and random generation for the the Tweedie family of distributions, with mean \code{mu}, dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, a synonym for \code{power}).
 #' 
 #' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
@@ -9,8 +8,8 @@
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
 #' @details
-#' The Tweedie EDMs belong to the class of exponential dispersion models (EDMs), known for their role in generalized linear models. 
-#' The Tweedie distributions are the EDMs with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
+#' The Tweedie \acronym{edm}s belong to the class of exponential dispersion models (\acronym{edm}s), known for their role in generalized linear models (\acronym{glm}s). 
+#' The Tweedie distributions are the \acronym{edm}s with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
 #' \emph{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
 #'
 #' Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
@@ -27,7 +26,7 @@
 #' When \eqn{1<p<2}{1 < power < 2}, the density function include a positive probably for \eqn{Y = 0}.
 #'
 #' @section Note:
-#' \code{dtweedie} and \code{ptweedie} are the only functions meant for users. 
+#' \code{dtweedie} and \code{ptweedie} are the only functions generally to be called by users. 
 #' Consequently, all checks on the function inputs are performed in these functions.
 #'
 #' @param y vector of quantiles.
@@ -50,7 +49,11 @@
 #' If \code{details = FALSE} (default), a numeric vector of densities or distribution function values is returned.
 #' If \code{details = TRUE}, a list containing \code{density} (the computed density vector for \code{dtweedie}) or \code{f} (the computed distribution function value for \code{ptweedie}), and \code{regions} (the number of integration regions used).
 #'
+#' @aliases ptweedie qtweedie rtweedie
+#'
 #' @importFrom stats dgamma dnorm dpois
+#' @importFrom graphics lines legend plot
+#' 
 #' @seealso \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{ptweedie_series}}, \code{\link{ptweedie_inversion}}, \code{\link{dtweedie_saddle}}, \code{\link{find_lambda}}
 #'
 #' @references
@@ -71,36 +74,24 @@
 #' Chapman and Hall, London.
 #'
 #' @examples
-#' ### Plot a Tweedie density
-#' power <- 2.5
+#' # Plot a Tweedie density
+#' power <- 1.1
 #' mu <- 1
 #' phi <- 1
-#' y <- seq(0, 6, length = 500)
-#' 
+#' y <- seq(0, 5, length = 200)
 #' fy <- dtweedie(y, power = power, mu = mu, phi = phi)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
 #' # Compare to the saddlepoint density
 #' f.saddle <- dtweedie_saddle( y = y, power = power, mu = mu, phi = phi)
-#' lines( y, f.saddle, col = 2 )
-#' legend("topright", col = c(1,2), lwd = c(2,1),
-#'   legend = c("Actual", "Saddlepoint") )
-#'   
-#'# Plot the DF:
+#' lines( y, f.saddle, col = 2)
+#' legend("topright", col = c(1, 2), lwd = c(2, 1), legend = c("Actual", "Saddlepoint"))
+#' # Plot the DF:
 #' Fy <- ptweedie(y, power = power, mu = mu, phi = phi)
 #' plot(y, Fy, type = "l", lwd = 2, ylab = "Density")
 #' 
 #'
 #' @export
 dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){
-
-  # Evaluates the density for Tweedie distributions, for given values of:
-  #   y (possibly a vector)
-  #   mu, the mean 
-  #   phi the dispersion parameter
-  #   power,  the Tweedie index parameter
-  #   verbose: whether to display what is happening
-  #   details:  whether to returns reports of relerr, regions needed, etc.
-
   # Two methods are employed:  cgf inversion (type=1)
   # and series evaluation (type=2 if 1<p<2; type=3 if p>2)).
   #
@@ -142,6 +133,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
+  cat("Lngth: y, mu", length(y), length(mu), "\n")
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
@@ -152,6 +144,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   # density2 is the whole vector.
   # density is just the part where !special_y_cases.
   # All is resolved in the end
+
   density2 <- numeric(length = length(q) )
   if (details) regions <- integer(length = length(q))
   
@@ -172,7 +165,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
 #    density[special_y_cases] <- out$f[special_y_cases]
     density2 <- out$f
   }
-  
+
+
   # Set things up for the interpolation/series; i.e., not special_y_cases
   density <- density2[ !special_y_cases ]
   mu <- mu[ !special_y_cases ]
@@ -181,15 +175,18 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   ### END preliminary work
   
 
-  regions = NA  # 'regions'  may not be relevant if interpolation is used 
+  
+  regions <- NA  # 'regions'  may not be relevant if interpolation is used 
   if (special_p_cases){
-    density = out$f
+    density <- out$f
   } else {
     # Set up
     id.type0 <- array( FALSE, dim = length(y) )
     id.series <- id.type0
     id.interp <- id.type0
     density <- density2[ !special_y_cases ]
+    
+
     
     ###   Now consider the cases 1 < p < 2   ###
     id.type0 <- (y == 0)
@@ -201,8 +198,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
         density[id.type0] <- exp( -lambda )
       }
     }
-    
-    
+
+        
     xi <- array( dim = length(y) )
     xi[id.type0] <- 0
     xi[!id.type0] <- phi[!id.type0] * y[!id.type0] ^ (power - 2)
@@ -216,7 +213,6 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
                                               phi = phi[id.series],
                                               power = power)
       }
-      return(density = density)
     }
     
     if ( power == 1 ) { # AND phi not equal to one here
@@ -387,10 +383,12 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
       density[id.interp] <- front * exp(-1/(2 * phi[id.interp]) * dev)
     }
   }
-  
+
+    
   # Restoration of whole vector, and sanity fixes
   density2[ !special_y_cases ] <- density
   density <- density2
+
   if (any(density < 0 ) )  density[ density < 0 ] <- rep(0, sum(density < 0) )
   density <- as.vector(density)
 

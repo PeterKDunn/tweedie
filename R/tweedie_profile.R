@@ -1,27 +1,26 @@
-#' Tweedie Distributions: MLE Estimation of Power Parameter
-#'
-#' Maximum likelihood estimation of the Tweedie index parameter \eqn{p}{p} (or \eqn{\xi}{xi}).
-#'
+#' Profile likelihood estimate of Tweedie variance index parameter
+#' 
 #' @description This function profiles the (log-)likelihood over a vector of
-#'   Tweedie power parameters (\code{p.vec} or \code{xi.vec}) to find the maximum
-#'   likelihood estimate (MLE) of the index parameter $p$.
+#'   Tweedie power-index parameter (denoted \eqn{p}{power} or \eqn{\xi}{xi}) to find the maximum
+#'   likelihood estimate (MLE) of the index parameter \eqn{p} (or equivalently \eqn{\xi}{xi}).
 #'
 #' @details
 #' For each value in \code{p.vec}, the function computes an estimate of \eqn{\phi}{phi}
 #' and then computes the value of the log-likelihood for these parameters.
 #' The plot of the log-likelihood against \code{p.vec} allows the maximum
-#' likelihood value of \eqn{p}{p} to be found. Once \eqn{p}{p} is found, the distribution
-#' within the class of Tweedie distributions is identified.
+#' likelihood value of \eqn{p}{p} to be found. 
+#' Once \eqn{p}{p} is found, the distribution within the class of Tweedie distributions is identified.
 #'
-#' @section Note:
-#' The estimates of \eqn{p}{p} and \eqn{\phi}{phi} are printed invisibly. If the response
-#' variable has any exact zeros, the values in \code{p.vec} must all be
+#' @note
+#' The estimates of \eqn{p}{p} and \eqn{\phi}{phi} are printed invisibly. 
+#' If the response variable has any exact zeros, the values in \code{p.vec} must all be
 #' between one and two.
 #'
-#' The function can be temperamental (for theoretical reasons involved in
-#' numerically computing the density) and may be very slow or fail. One solution
-#' is to change the method. The default is \code{method = "inversion"}; then try
-#' \code{"series"}, \code{"interpolation"}, and \code{"saddlepoint"} in that order.
+#' The function can be temperamental (for theoretical reasons involved in numerically computing
+#' the density; see Dunn and Smyth (2005)) and may be very slow or fail. 
+#' One solution is to change the method. 
+#' The default is \code{method = "inversion"}; then try \code{"series"}, \code{"interpolation"}, 
+#' and \code{"saddlepoint"} in that order.
 #' Note that \code{method = "saddlepoint"} is an approximate method only.
 #'
 #' It is recommended that for the first use with a data set, use \code{p.vec}
@@ -29,44 +28,44 @@
 #' \code{do.ci = FALSE}. If this is successful, a larger vector \code{p.vec}
 #' and smoothing can be used.
 #'
-#' @param formula A formula expression as for other regression models and
+#' @param formula a formula expression as for other regression models and
 #'   generalized linear models, of the form \code{response ~ predictors}.
-#' @param p.vec A vector of $p$ values for consideration. The values must all
-#'   be larger than one. If the response has zeros, values must be $1 < p < 2$.
+#' @param p.vec a vector of \eqn{p}{power} values for consideration. 
+#'   The values must all be larger than one. 
+#'   If the response has zeros, values must be \eqn{1 < p < 2}.
 #'   If \code{NULL} (default), \code{p.vec} is set automatically.
-#' @param xi.vec The same as \code{p.vec}; some authors use the \eqn{\xi}{xi} notation.
-#' @param link.power The power link function to use. These link functions
-#'   \eqn{g(\cdot)}{g()} are of the form \eqn{g(\eta)=\eta^{\\rm link.power}}{g(\eta) = \eta^{\text{link.power}}}.
-#'   \code{link.power = 0} (default) refers to the logarithm link function.
-#' @param data An optional data frame, list or environment containing the variables.
-#' @param weights An optional vector of weights to be used in the fitting process.
-#' @param offset An \emph{a priori} known component included in the linear predictor.
+#' @param xi.vec a synonym for \code{p.vec}, as some authors use the \eqn{\xi}{xi} notation.
+#' @param link.power the power link function to use in the \code{tweedie} \acronym{glm} family. 
+#'  These link functions \eqn{g(\cdot)}{g()} are of the form \eqn{g(\eta)=\eta^{link.power}}{g(\eta) = \eta^{\text{link.power}}}, where \code{link.power = 0} (default) refers to the logarithm link function.
+#' @param data an optional data frame, list or environment containing the variables.
+#' @param weights an optional vector of weights to be used in the fitting process.
+#' @param offset an \emph{a priori} known component included in the linear predictor.
 #'   See \code{\link{model.offset}}.
-#' @param fit.glm Logical flag. If \code{TRUE}, the Tweedie GLM is fitted using the
-#'   value of \eqn{p}{p} found by the profiling function. Default is \code{FALSE}.
-#' @param do.smooth Logical flag. If \code{TRUE} (default), a spline is fitted to the
+#' @param fit.glm logical; if \code{TRUE}, the Tweedie \acronym{glm} is fitted using the
+#'   value of \eqn{p} found by the profiling function. The default is \code{FALSE}.
+#' @param do.smooth logical; if \code{TRUE} (default), a spline is fitted to the
 #'   data to smooth the profile likelihood plot. \bold{Note} that \code{p.vec}
 #'   must contain \emph{at least five points} for smoothing.
-#' @param do.plot Logical flag. If \code{TRUE}, a plot of the profile likelihood is produced.
-#'   Default is \code{FALSE}.
-#' @param do.ci Logical flag. If \code{TRUE}, the nominal \code{100*conf.level} is computed.
-#'   Defaults to \code{do.smooth}. Confidence intervals are never computed if
-#'   \code{do.smooth = FALSE}.
-#' @param eps The offset in computing the variance function. Default is \code{1/6}.
+#' @param do.plot logical; if \code{TRUE}, a plot of the profile likelihood is produced.
+#'   The default is \code{FALSE}.
+#' @param do.ci logical; if \code{TRUE}, the nominal \code{100*conf.level} is computed.
+#'   Defaults to the value of \code{do.smooth}. 
+#'   Confidence intervals are ony computed if \code{do.smooth = TRUE}.
+#' @param eps the offset in computing the variance function. Default is \code{1/6} (as recommended by Nelder and Pregibon, 1987).
 #'   \code{eps} is ignored unless \code{method = "saddlepoint"}.
-#' @param control A list of parameters for controlling the fitting process;
-#' @param do.points Logical flag. If \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} are explicitly shown by points. The defaults is \code{do.plot}.
-#' @param method The method of evaluation. One of \code{saddlepoint}, \code{interpolation} (the default), \code{series} or \code{inversion}.
-#' @param conf.level The level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).
-#' @param phi.method The method used to estimate \eqn{\phi}{phi}. One of \code{saddlepoint}, \code{mle} (the default).
-#' @param verbose Logical flag. If \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
-#' @param add0 A logical flag; add \eqn{P(Y=0)}{P(Y = 0)} to the plot. The default is \code{FALSE}.
+#' @param control a list of parameters for controlling the fitting process;
+#' @param do.points logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
+#' The defaults is the value of \code{do.plot}.
+#' @param method the method of evaluation; one of \code{saddlepoint}, \code{interpolation} (the default), \code{series} or \code{inversion}.
+#' @param conf.level the level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).
+#' @param phi.method the method used to estimate \eqn{\phi}{phi}; one of \code{saddlepoint}, \code{mle} (the default).
+#' @param verbose logical; if \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
+#' @param add0 logical; if \code{TRUE}, adds \eqn{P(Y = 0)}{P(Y = 0)} to the plot. The default is \code{FALSE}.
 #' 
 #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
 #' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
 #' 
-#' @aliases tweedie_profile
 #' @aliases tweedie.profile
 #' 
 #' @export

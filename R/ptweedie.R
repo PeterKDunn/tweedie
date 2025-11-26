@@ -1,13 +1,5 @@
 ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE) {
 
-  # Evaluates the cdf for Tweedie distributions, for given values of:
-  #   q (possibly a vector)
-  #   mu, the mean 
-  #   phi the dispersion parameter
-  #   power,  the Tweedie index parameter
-  #   verbose: whether to display what is happening
-  #   details:  whether to returns reports of relerr, regions needed, etc.
-  
   ### BEGIN preliminary work
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
