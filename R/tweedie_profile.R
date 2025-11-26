@@ -4,6 +4,15 @@
 #'   Tweedie power-index parameter (denoted \eqn{p}{power} or \eqn{\xi}{xi}) to find the maximum
 #'   likelihood estimate (MLE) of the index parameter \eqn{p} (or equivalently \eqn{\xi}{xi}).
 #'
+#' @usage tweedie_profile(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
+#'   data, weights = 1, offset = 0, fit.glm = FALSE, do.smooth = TRUE, 
+#'   do.plot = FALSE, do.ci = do.smooth, eps = 1/6, 
+#'   control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, 
+#'   trace = glm.control()$trace ),
+#'   do.points = do.plot, method = "inversion", conf.level = 0.95, 
+#'   phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
+#'   verbose = FALSE, add0 = FALSE)
+#'   
 #' @details
 #' For each value in \code{p.vec}, the function computes an estimate of \eqn{\phi}{phi}
 #' and then computes the value of the log-likelihood for these parameters.
@@ -56,13 +65,20 @@
 #' @param control a list of parameters for controlling the fitting process;
 #' @param do.points logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
 #' The defaults is the value of \code{do.plot}.
-#' @param method the method of evaluation; one of \code{saddlepoint}, \code{interpolation} (the default), \code{series} or \code{inversion}.
+#' @param method the method of evaluation; one of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).
 #' @param conf.level the level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).
 #' @param phi.method the method used to estimate \eqn{\phi}{phi}; one of \code{saddlepoint}, \code{mle} (the default).
 #' @param verbose logical; if \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
 #' @param add0 logical; if \code{TRUE}, adds \eqn{P(Y = 0)}{P(Y = 0)} to the plot. The default is \code{FALSE}.
 #' 
-#' @importFrom methods is
+#' @examples 
+#' data(Loblolly)
+#' out <- tweedie_profile(height~age, data = Loblolly, 
+#'           do.plot = TRUE, p.vec = seq(3, 4.5, length = 11) )
+#' # The estimate for the variance power index (p, or xi) is:
+#' out$p.max
+#' 
+#' #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
 #' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
 #' 
@@ -85,7 +101,7 @@ tweedie_profile <- function(formula,
                                             maxit = stats::glm.control()$maxit, 
                                             trace = glm.control()$trace ),
                             do.points = do.plot, 
-                            method = "interpolation",
+                            method = "inversion",
                             conf.level = 0.95, 
                             phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
                             verbose = FALSE, 
@@ -114,7 +130,7 @@ tweedie_profile <- function(formula,
   if (verbose >= 1 ) {
     cat("---\n This function may take some time to complete.\n")
     cat("If it fails, try using  method=\"series\"\n")
-    cat(" rather than the default  method=\"interpolation\"\n")
+    cat(" rather than the default  method=\"inversion\"\n")
     cat(" Another possible reason for failure is the range of p;\n")
     cat(" try a different input for  p.vec\n---\n")
   }
@@ -838,7 +854,7 @@ tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0
                                do.smooth = TRUE, do.plot = FALSE, 
                                do.ci = do.smooth, eps = 1/6,
                                control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, trace = glm.control()$trace ),
-                               do.points = do.plot, method = "interpolation", conf.level = 0.95, 
+                               do.points = do.plot, method = "inversion", conf.level = 0.95, 
                                phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), verbose = FALSE, add0 = FALSE){ 
   .Deprecated("tweedie_profile", package = "tweedie")
   tweedie_profile(formula = formula, 
