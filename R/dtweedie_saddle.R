@@ -1,14 +1,15 @@
 #' Tweedie Distribution: Saddlepoint-Approximation Evaluation for the Density Function
 #'
-#' Internal function to evaluate the Tweedie density using the saddlepoint approximation.
-#' \bold{Not intended for general users.}
-#'
+#' @description
+#' Density function for the Tweedie EMDs using a saddlepoint approximation.
+#' 
 #' @param y vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param xi A synonym for \code{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param eps The small amount added for the saddlepoint approximation.
+#' @param xi scalar; the value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
+#' @param mu vector of mean \eqn{\mu}{mu}.
+#' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
+#' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
+#' @param eps the offset in computing the variance function; the default is \code{eps=1/6} (as suggested by Nelder and Pregibon, 1987).
+#' 
 #' @return A numeric vector of densities.
 #' @keywords internal
 #' 
@@ -16,6 +17,14 @@
 #'
 #' @aliases dtweedie_saddle
 #' @aliases dtweedie.saddle
+#' 
+#' @references
+#' 	Nelder, J. A. and Pregibon, D. (1987).
+#' 	An extended quasi-likelihood function
+#' 	\emph{Biometrika},
+#' 	\bold{74}(2), 221--232.
+#' 	\doi{10.1093/biomet/74.2.221}
+
 #' 
 #' @export
 dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {

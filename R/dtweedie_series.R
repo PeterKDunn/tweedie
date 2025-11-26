@@ -1,20 +1,21 @@
 #' Tweedie Distribution: Series Evaluation for the Probability Function
 #'
-#' Evaluates the probability density function (PDF) for Tweedie distributions
-#' using an infinite series, for given values of the dependent variable \code{y}, 
-#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
-#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
+#' @description
+#' Evaluates the probability density function (PDF) for Tweedie distributions using an infinite series, 
+#' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 #'
+#' @usage dtweedie_series(y, power, mu,phi)
 #'
 #' @param y vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
+#' @param mu vector of mean \eqn{\mu}{mu}.
+#' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
+#' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^power}.
+#' 
 #' @return A numeric vector of densities.
 #' 
 #' @importFrom stats dgamma dpois 
 #' 
-#' @aliases dtweedie_series
 #' @aliases dtweedie.series
 
 #' @export

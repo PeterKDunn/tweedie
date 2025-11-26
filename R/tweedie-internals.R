@@ -1,7 +1,7 @@
 #' Tweedie internal function
 #'
 #' @name Tweedie internals
-#' @aliases dtweedie_logv_bigp dtweedie_logw_smallp dtweedie_interp dtweedie_jw_smallp dtweedie_kv_bigp dtweedie_Fortran dtweedie_Inversion_Report dtweedie_Inversion_Threemethods dtweedie_dldphi_saddle dtweedie_dlogfdphi dtweedie_logl dtweedie_dldphi dtweedie_logl_saddle dtweedie_series_bigp dtweedie_series_smallp logLiktweedie stored.grids twcomputation
+#' @aliases dtweedie_logv_bigp dtweedie_logw_smallp dtweedie_interp dtweedie_jw_smallp dtweedie_kv_bigp dtweedie_Fortran dtweedie_Inversion_Report dtweedie_Inversion_Threemethods dtweedie_dldphi_saddle dtweedie_dlogfdphi dtweedie_logl dtweedie_dldphi dtweedie_logl_saddle dtweedie_series_bigp dtweedie_series_smallp logLiktweedie stored_grids twcomputation sort_notation check_inputs special_cases
 #' @title Tweedie internal function
 #' @description Internal tweedie functions. These are not to be called by the user.
 #'
@@ -16,27 +16,33 @@
 #' dtweedie_kv_bigp(y, phi, power)
 #' dtweedie_series_bigp(power, y, mu, phi)
 #' dtweedie_series_smallp(power, y, mu, phi)
-#' stored.grids(power)
-#' 
+#' stored_grids(power)
+#' check_inputs(y, mu, phi, power, type = "standard")
+#' sort_notation(xi = NULL, power = NULL)
+#' special_cases(y, mu, phi, power, type="PDF", verbose = FALSE)
 #'
 #'
-#' @param y the vector of responses
-#' @param y the vector of responses
-#' @param power the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^p}{var(Y) = phi * mu^power}
-#' @param mu the mean
-#' @param phi the dispersion
-#' @param grid the interpolation grid necessary for the given value of \eqn{p}{power}
-#' @param nx the number of interpolation points in the \eqn{\xi}{xi} dimension
-#' @param np the number of interpolation points in the \eqn{p}{power} dimension
+#' @param y the vector of responses.
+#' @param y the vector of responses.
+#' @param power the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^p}{var(Y) = phi * mu^power}.
+#' @param xi a synonym for \code{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion \eqn{\phi}{phi}.
+#' @param grid the interpolation grid necessary for the given value of \eqn{p}{power}.
+#' @param nx the number of interpolation points in the \eqn{\xi}{xi} dimension.
+#' @param np the number of interpolation points in the \eqn{p}{power}-dimension.
 #' @param xix.lo the lower value of the transformed \eqn{\xi}{xi} value used in the interpolation grid. (Note that the value of \eqn{\xi}{xi} is from \eqn{0} to \eqn{\infty}{infty}, and is transformed such that it is on the range \eqn{0} to \eqn{1}.)
 #' @param xix.hi the higher value of the transformed \eqn{\xi}{xi} value used in the interpolation grid.
 #' @param p.lo the lower value of the \eqn{p} value used in the interpolation grid.
 #' @param p.hi the higher value of the \eqn{p} value used in the interpolation grid.
 #' @param xix the value of the transformed \eqn{\xi}{xi} at which a value is sought.
+#' @param verbose logical; if \code{TRUE}, some details of the algorithm are returned.
+#' @param type description
 #' @param eps the offset in computing the variance function in the saddlepoint approximation. The default is \code{eps=1/6} (as suggested by Nelder and Pregibon, 1987).
-#' @param p the Tweedie index parameter
+#' @param type in \code{check_inputs}, the type of function for which inputs should be checked (one of \code{"standard"} (for \code{dtweedie} and \code{ptweedie}; the default), \code{"random"} (for \code{rtweedie}) or \code{"quantile"} (for \code{qtweedie})); in \code{special_cases}, one of \code{"PDF"} (the probability density function; the default) or \code{"CDF"} (the cumulative distribution function).
 #'
 #' @author Peter Dunn (\email{pdunn2@usc.edu.au})
+#' 
 #' @references
 #' 	Nelder, J. A. and Pregibon, D. (1987).
 #' 	An extended quasi-likelihood function

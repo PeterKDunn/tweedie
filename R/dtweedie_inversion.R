@@ -1,22 +1,33 @@
 #' Tweedie Distribution: Fourier Inversion Evaluation for the Probability Function
 #'
-#' Evaluates the probability density function (PDF) for Tweedie distributions
-#' using Fourier inversion, for given values of the dependent variable \code{y}, 
-#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
-#' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
+#' @description
+#' Evaluates the probability density function (PDF) for Tweedie distributions using Fourier inversion, 
+#' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
+#'
+#' @usage dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
 #'
 #' @param y vector of quantiles.
-#' @param power The power parameter \eqn{p}{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param method The method to use; one of \code{1}, \code{2}, or \code{3} (the default)
-#' @param verbose Display some internal computation details.
-#' @param details Return the DF and the number of integration regions used.
+#' @param power scalar; the power parameter \eqn{p}{power}.
+#' @param mu the mean parameter \eqn{\mu}{mu}.
+#' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default), as described in Dunn & Smyth (2008).
+#' @param verbose logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.
+#' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
 
-#' @return A numeric vector of densities.
+#' @return A numeric vector of densities if \code{details=FALSE}; if \code{details=TRUE}, return a list with \code{density} (the density values) and \code{regions} (the number of integration regions used). 
+#' 
+#' @note
+#' The three methods are described in Dunn & Smyth (2008).
 #' 
 #' @aliases dtweedie.inversion
-
+#' @references
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+#' 
 #' @export
 dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
   # Evaluates the pdf for Tweedie distributions, using Fourier inversion, in FORTRAN:

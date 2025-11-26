@@ -1,18 +1,21 @@
 #' Density for the Tweedie Family of Distributions
 #'
-#' Evaluates the probability density function (PDF) for Tweedie distributions
-#' for given values of the dependent variable \code{y}, the mean \code{mu},
-#' dispersion \code{phi}, and power parameter \code{power}.
-#'
-#' @description The Tweedie family of distributions belong to the class of
-#'   exponential dispersion models (EDMs), famous for their role in generalized
-#'   linear models. The Tweedie distributions are the EDMs with a variance
-#'   of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
-#'   \bold{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
+#' @aliases ptweedie qtweedie rtweedie
+#' @description Density, distribution function, quantile function and random generation for the the Tweedie family of distributions, with mean \code{mu}, dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, a synonym for \code{power}).
+#' 
+#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
+#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
+#' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
+#' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
 #' @details
-#' Evaluation is difficult for \eqn{p}{p} outside of \eqn{p=0, 1, 2, 3}{power = 0, 1, 2, 3}. This function
-#' uses one of two primary methods, depending on the combination of parameters:
+#' The Tweedie EDMs belong to the class of exponential dispersion models (EDMs), known for their role in generalized linear models. 
+#' The Tweedie distributions are the EDMs with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
+#' \emph{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
+#'
+#' Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
+#' Evaluation is difficult for \eqn{p}{p} outside of \eqn{p = 0, 1, 2, 3}{power = 0, 1, 2, 3}. 
+#' This function uses one of two primary methods, depending on the combination of parameters:
 #' \enumerate{
 #'   \item Evaluation of an infinite series (\code{dtweedie_series}).
 #'   \item Interpolation from stored values computed via a Fourier inversion technique (\code{dtweedie_inversion}).
@@ -21,29 +24,34 @@
 #' the density for some parts of the parameter space from previously computed
 #' values (interpolation) and uses the series solution for others.
 #'
-#' Special cases include the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
+#' When \eqn{1<p<2}{1 < power < 2}, the density function include a positive probably for \eqn{Y = 0}.
 #'
 #' @section Note:
-#' \code{dtweedie} and \code{ptweedie} are the only functions meant for users. Consequently, all checks on the function inputs are performed here.
+#' \code{dtweedie} and \code{ptweedie} are the only functions meant for users. 
+#' Consequently, all checks on the function inputs are performed in these functions.
 #'
-#' @param y Vector of quantiles.
-#' @param xi The value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param power A synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
-#' @param verbose Logical. Whether to display details of the internal process. Defaults to \code{FALSE}.
-#' @param details Logical. Whether to return computational reports (regions needed, etc.). Defaults to \code{FALSE}.
+#' @param y vector of quantiles.
+#' @param q vector of quantiles.
+#' @param p vector of probabilities.
+#' @param n number of observations. 
+#' @param xi scalar; the value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
+#' @param mu vector of mean \eqn{\mu}{mu}.
+#' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
+#' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
+#' @param verbose logical; if \code{TRUE}, displays details of the internal process. Defaults to \code{FALSE}.
+#' @param details logical; if \code{TRUE}, returns computational reports (regions needed, etc.). Defaults to \code{FALSE}.
 #'
 #' @return
-#' If \code{details = FALSE} (default), a numeric vector of densities.
-#' If \code{details = TRUE}, a list containing:
-#' \describe{
-#'   \item{\code{density}}{The computed density vector.}
-#'   \item{\code{regions}}{The number of integration regions used.}
-#' }
+#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \code{qtweedie} gives the quantile function, 
+#' and \code{rtweedie} generates random deviates.
+#' 
+#' The length of the result is determined by \code{n} for \code{rtweedie}, and by the length of \code{mu} for other functions.
+#' 
+#' If \code{details = FALSE} (default), a numeric vector of densities or distribution function values is returned.
+#' If \code{details = TRUE}, a list containing \code{density} (the computed density vector for \code{dtweedie}) or \code{f} (the computed distribution function value for \code{ptweedie}), and \code{regions} (the number of integration regions used).
 #'
 #' @importFrom stats dgamma dnorm dpois
-#' @seealso \code{\link{ptweedie}}, \code{\link{rtweedie}}, \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{dtweedie_saddle}}
+#' @seealso \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{ptweedie_series}}, \code{\link{ptweedie_inversion}}, \code{\link{dtweedie_saddle}}, \code{\link{find_lambda}}
 #'
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).
@@ -63,19 +71,24 @@
 #' Chapman and Hall, London.
 #'
 #' @examples
-#' # The examples from your .Rd file go here.
 #' ### Plot a Tweedie density
 #' power <- 2.5
 #' mu <- 1
 #' phi <- 1
 #' y <- seq(0, 6, length = 500)
-#' fy <- dtweedie(y = y, power = power, mu = mu, phi = phi)
+#' 
+#' fy <- dtweedie(y, power = power, mu = mu, phi = phi)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
 #' # Compare to the saddlepoint density
 #' f.saddle <- dtweedie_saddle( y = y, power = power, mu = mu, phi = phi)
 #' lines( y, f.saddle, col = 2 )
 #' legend("topright", col = c(1,2), lwd = c(2,1),
 #'   legend = c("Actual", "Saddlepoint") )
+#'   
+#'# Plot the DF:
+#' Fy <- ptweedie(y, power = power, mu = mu, phi = phi)
+#' plot(y, Fy, type = "l", lwd = 2, ylab = "Density")
+#' 
 #'
 #' @export
 dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){

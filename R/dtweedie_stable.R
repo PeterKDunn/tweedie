@@ -1,8 +1,10 @@
 #' Tweedie Distribution: Stable Evaluation for the Density
 #'
 #' Internal function to evaluate the Tweedie density using stable distributions.
-#' \bold{Not intended for general users.}
+#' \emph{Not intended for general users.}
 #'
+#' @usage dtweedie_stable(y, power, mu,phi)
+#' 
 #' @param y vector of quantiles.
 #' @param power The power parameter \eqn{p}{power}.
 #' @param mu The mean parameter.

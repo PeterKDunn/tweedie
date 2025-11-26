@@ -1,7 +1,8 @@
 #' Tweedie Distribution: Fourier Inversion Evaluation for the Distribution Function
 #'
-#' Evaluates the distribution function (DF) for Tweedie distributions
-#' using Fourier inversion, for given values of the dependent variable \code{y}, 
+#' @description
+#' #' Evaluates the distribution function (DF) for Tweedie distributions using Fourier inversion, 
+#' for given values of the dependent variable \code{y}, 
 #' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'

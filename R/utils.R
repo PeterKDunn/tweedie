@@ -1,12 +1,3 @@
-#' Tweedie Density: Distribution Function internal function
-#'
-#' \bold{Not intended for general users.}
-#'
-#' @param xi The power parameter \eqn{xi},  asynonym for \eqn{p}.
-#' @param power The power parameter \eqn{p}.
-#' @return A list helpful for sorting notations.
-#' @keywords internal
-#' @export
 sort_notation <- function(xi = NULL, power = NULL){
   # Sorts out whether the  xi  or the  p/power  notation is being used,
   # so output presented appropriately
@@ -53,19 +44,7 @@ sort_notation <- function(xi = NULL, power = NULL){
 
 
 ################################################################################
-#' Tweedie Density: Distribution Function internal function
-#'
-#' \bold{Not intended for general users.}
-#'
-#' @param y vector of \eqn{y} values
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param power The power parameter \eqn{p}.
-#' @return A list, containing \code{mu} and \code{phi} as vectors of the same size as \code{y}, and
-#'  \code{inputs_Error} (\code{TRUE} isf error were found).
-#'
-#' @keywords internal
-#' @export
+
 check_inputs <- function(y, mu, phi, power, type = "standard"){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
@@ -162,23 +141,6 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
 
 
 ################################################################################
-#' Tweedie Density: Distribution Function internal function
-#'
-#' \bold{Not intended for general users.}
-#'
-#' @param y vector of \eqn{y} values
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param power The power parameter \eqn{p}.
-#' @param type One of \code{PDF} (the probability function) or \code{CDF} (the distribution function).
-#' @param verbose If \code{TRUE}, some internal deliberations are displayed.
-#' @return A list, containing \code{f} (the probability/distribution function values),
-#'  \code{special_p_cases} (\code{TRUE} if a special cases of \eqn{p} was found) and
-#'  \code{special_y_cases} (\code{TRUE} and \code{FALSE} for each value of \code{y}, 
-#'  indicating if the corresponding value of \code{y} was evaluated as a special case).
-#'
-#' @keywords internal
-#' @export
 
 special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
   # Special cases may be one of two types:
@@ -272,7 +234,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
       if (any(y_Zero)) {
 
         if ( (power > 0) & (power < 2) ) {
-          f[y_Zero] <- exp( -find_Lambda(mu[y_Zero], phi[y_Zero], power) )
+          f[y_Zero] <- exp( -find_lambda(mu[y_Zero], phi[y_Zero], power) )
         } else {
           f[y_Zero] <- 0  
         }
@@ -288,20 +250,3 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
 
 
 ################################################################################
-#' Tweedie Density: Distribution Function internal function
-#'
-#' \bold{Not intended for general users.}
-#'
-#' @param mu The mean parameter.
-#' @param phi The dispersion parameter.
-#' @param power The power parameter \eqn{p}.
-#' @return The value of \eqn{lambda} when \eqn{1 < p < 2} such that \eqn{P(Y=0) = \exp(-\lambda)}{P(Y=0) = exp(-lambda)}.
-#' 
-#' @keywords internal
-#' @export
-
-find_Lambda <- function(mu, phi, power){
-  # Computes the value of lambda, such that P(Y = 0 ) = exp( -lambda) when 1 < p < 2
-  if (power >= 2) stop("ERROR: lambda only sensible for  1 < xi < 2.")
-  mu ^ (2 - power) / (phi * (2 - power) )
-}

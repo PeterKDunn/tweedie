@@ -43,7 +43,6 @@
 #' D. Reidel Publishing Company.
 #' 
 #' @examples
-#' # The examples from your .Rd file go here.
 #' ### Plot a Tweedie density
 #' power <- 2.5
 #' mu <- 1
