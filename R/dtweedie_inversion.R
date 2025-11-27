@@ -22,10 +22,10 @@
 #' 
 #' @examples
 #' # Plot a Tweedie density
-#' y <- seq(0, 5, length = 200)
+#' y <- seq(0, 5, length = 100)
 #' fy <- dtweedie_inversion(y, power = 1.1, mu = 1, phi = 1)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
-##' 
+#' 
 #' @aliases dtweedie.inversion
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).
@@ -34,28 +34,51 @@
 #' \bold{18}, 73--86.
 #' \doi{10.1007/s11222-007-9039-6}
 #' 
+#' @keywords distribution
+#' 
 #' @export
 dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
-  ### NOTE: No checking of inputs
+  ### NOTE: No notation checks
+  
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_inputs(y, mu, phi, power)
-
   mu <- out$mu
   phi <- out$phi
-  # density2 is the whole vector.
-  # density is just the part where !special_y_cases.
-  # All is resolved in the end
-  density <- array(0,
-                   dim = length(q) )
-  if (details) regions <- array(0, dim = length(q))
-
-
-
+  
+  # cdf    is the whole vector; the same length as  y.
+  # All is resolved in the end.
+  density <- numeric(length = length(y) )
+  regions <- integer(length = length(y)) # Filled with zeros by default
+  
+  # IDENTIFY SPECIAL CASES
+  special_y_cases <- rep(FALSE, length(y))
+  if (verbose) cat("- Checking for special cases\n")
+  out <- special_cases(y, mu, phi, power,
+                       type = "PDF")
+  
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
+  
+  if (verbose & special_p_cases) cat("  - Special case for p used\n")
+  if ( any(special_y_cases) ) {
+    special_y_cases <- out$special_y_cases  
+    if (verbose) cat("  - Special cases for first input found\n")
+    density <- out$f # This is the final vector of results to return, filled with the special-case info.
+    # NOTE: regions filled with zeros by default, so regions = 0 in these cases
+  }
+  
+  ### WHAT DO DO IF SPEICAL P CASE?  RETURN.
+  
+  # Now use FORTRAN on the remaining values:
+  N <- length(y)
+  N_nonSpecial <- N - sum(out$special_y_cases) 
+  
+  
   ### BEGIN SET UP
-  N <- as.integer( length(y) )
   pSmall  <- ifelse( (power > 1) & (power < 2), 
                      TRUE, FALSE )
+
   # Initialise
   exitstatus_scalar <- as.integer(0)
   relerr_scalar     <- as.double(0.0)
@@ -64,12 +87,14 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   
   
   # Establish which method to use
+  # For special cases, method is 0.
   if ( is.null(method)){
-    method <- array( dim = N)
+    method <- array(0, dim = N)
   } else {
     method <- array( method, 
                      dim = N)
   }
+  method[special_y_cases] <- 0
   # There are three approaches ('method'), each a product of a simple bit
 	# and a complicated bit computed in FORTRAN
   #
@@ -100,14 +125,17 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   # Method 3
   m3 <- exp( -dev/(2 * phi) ) / y
     
-  # Select method
+  # Select method: this is an n x 3 array of the vaklues of [m1, m2, m3], 
+  # and from this we chose the method (i.e., column) containing the minimum
   method_List <- array(c(m1, m2, m3), 
                        dim = c(length(y), 3))
+  method_List[special_y_cases, ] <- 0 # Method 0 for special-cases rows
+
   optimal_Method <- apply(method_List, 
                           MARGIN = 1, 
                           FUN = which.min)
-  
-  
+  optimal_Method[special_y_cases] <- 0  
+
   ### BEGIN: Set parameters for FORTRAN call, depending on method
   # mu = 1 for all methods:
   mu_F <- rep(1, length(y) )
@@ -130,32 +158,32 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   ### END: Set parameters for FORTRAN call, depending on method
 
   tmp <- .C("twcomputation",
-            N          = as.integer(N),
+            N          = as.integer(N_nonSpecial),
             power      = as.double(power),
-            phi        = as.double(phi_F),
-            y          = as.double(y_F),
-            mu         = as.double(mu_F),
+            phi        = as.double(phi_F[!special_y_cases]),
+            y          = as.double(y_F[!special_y_cases]),
+            mu         = as.double(mu_F[!special_y_cases]),
             verbose    = as.integer( verbose ),
             pdf        = as.integer(1),          # 1: TRUE, as this is the PDF
             # THE OUTPUTS:
-            funvalue   = as.double(rep(0, N)),   # funvalue
+            funvalue   = as.double(rep(0, N_nonSpecial)),   # funvalue
             exitstatus = as.integer(0),          # exitstatus
             relerr     = as.double(0),           # relerr
-            its        = as.integer(rep(0, N)),  # its
+            its        = as.integer(rep(0, N_nonSpecial)),  # its
             PACKAGE    = "tweedie")
   
-  den <- tmp$funvalue
+  density[!special_y_cases] <- tmp$funvalue
 
   # Reconstruct
   if (any(optimal_Method == 1)){
     use_M1 <- optimal_Method==1
-    density[use_M1] <- den[use_M1] * m1[use_M1]
+    density[use_M1] <- density[use_M1] * m1[use_M1]
   }    
   if (any(optimal_Method == 2)){
-    density[use_M2] <- den[use_M2] * m2[use_M2]
+    density[use_M2] <- density[use_M2] * m2[use_M2]
   }  
   if (any(optimal_Method == 3)){
-    density[use_M3] <- den[use_M3] * m3[use_M3]
+    density[use_M3] <- density[use_M3] * m3[use_M3]
   }
 
   # Return
