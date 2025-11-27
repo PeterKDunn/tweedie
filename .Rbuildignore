@@ -3,3 +3,5 @@
 ^src/Headers$
 ^src/include$
 ^\.git/
+^tweedie-Ex.pdf$
+^tweedie-Ex.timings$
