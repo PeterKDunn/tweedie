@@ -13,6 +13,10 @@
 #' @param add logical; if \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.
 #' @param ... plotting parameters passed to \code{plot()}.
 #' 
+#' @examples
+#' y <- seq(0, 5, length = 100)
+#' tweedie_plot(y, power = 1.1, mu = 1, phi = 1)
+#' 
 #' @aliases tweedie.plot
 #' 
 #' @importFrom graphics lines rug par mtext abline axis  points plot
