@@ -22,7 +22,8 @@
 #' @examples
 #' ### Fit a Tweedie density
 #' pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
-#' fit <- glm(y ~ 1, data = pretend, family = statmod::tweedie(link.power = 0, var.power = 1.4))
+#' fit <- glm(y ~ 1, data = pretend, 
+#'            family = statmod::tweedie(link.power = 0, var.power = 1.4))
 #'
 #' # Convert parameters
 #' tweedie_convert(mu = fitted(fit, type="response"), phi = 1, power = 1.4)
