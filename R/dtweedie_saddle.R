@@ -12,7 +12,16 @@
 #' 
 #' @return A numeric vector of densities.
 #' 
+#' @examples
+#' # Plot a Tweedie density
+#' y <- seq(0, 5, length = 100)
+#' fy <- dtweedie_saddle(y, power = 1.1, mu = 1, phi = 1)
+#' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
+#'
+#'
 #' @importFrom base pi
+#' 
+#' @keywords distribution
 #'
 #' @aliases dtweedie.saddle
 #' 
