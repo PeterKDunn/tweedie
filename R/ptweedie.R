@@ -1,4 +1,4 @@
-ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE) {
+ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE) {
 
   ### BEGIN preliminary work
 
@@ -19,8 +19,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   phi <- out$phi
   f <- array(0,
              dim = length(q) )
-  if (details) regions <- array(0, dim = length(q))
-  
+
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
@@ -52,14 +51,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
                                     q       = q[!special_y_cases],
                                     mu      = mu[!special_y_cases],
                                     phi     = phi[!special_y_cases],
-                                    verbose = verbose,
-                                    details = details)
-        if (details) {
-          f[!special_y_cases] <- f_TMP$cdf
-          regions[!special_y_cases] <- f_TMP$regions
-        } else {
-          f[!special_y_cases] <- f_TMP
-        }
+                                    verbose = FALSE,
+                                    details = FALSE)
+        f[!special_y_cases] <- f_TMP
       }
     } else {
       # CASE 1 < p < 2
@@ -112,14 +106,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
                                     q       = q[!special_y_cases], 
                                     mu      = mu[!special_y_cases], 
                                     phi     = phi[!special_y_cases],
-                                    verbose = verbose,
-                                    details = details)
-        if (details) {
-          f[!special_y_cases] <- f_TMP$cdf
-          regions[!special_y_cases] <- f_TMP$regions
-        } else {
-          f[!special_y_cases] <- f_TMP
-        }
+                                    verbose = FALSE,
+                                    details = FALSE)
+        f[!special_y_cases] <- f_TMP
       }
     }  
   }
@@ -129,11 +118,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
 
-  if (details) {
-    return(list(f = f,
-                regions = regions) )
-  } else {
-    return(f)
-  }
+  return(f)
 }
 

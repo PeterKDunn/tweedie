@@ -8,9 +8,9 @@
 #' @usage dtweedie_series(y, power, mu,phi)
 #'
 #' @param y vector of quantiles.
+#' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^power}.
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
-#' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^power}.
 #' 
 #' @return A numeric vector of densities.
 #' 

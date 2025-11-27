@@ -2,8 +2,8 @@
 #' 
 #' @description Density, distribution function, quantile function and random generation for the the Tweedie family of distributions, with mean \code{mu}, dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, a synonym for \code{power}).
 #' 
-#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
-#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE)
+#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
 #' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
@@ -37,8 +37,7 @@
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
 #' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
-#' @param verbose logical; if \code{TRUE}, displays details of the internal process. Defaults to \code{FALSE}.
-#' @param details logical; if \code{TRUE}, returns computational reports (regions needed, etc.). Defaults to \code{FALSE}.
+#' @param verbose logical; if \code{TRUE}, some details of the algorithms used is shown. The default is \code{FALSE}.
 #'
 #' @return
 #' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \code{qtweedie} gives the quantile function, 
@@ -46,8 +45,6 @@
 #' 
 #' The length of the result is determined by \code{n} for \code{rtweedie}, and by the length of \code{mu} for other functions.
 #' 
-#' If \code{details = FALSE} (default), a numeric vector of densities or distribution function values is returned.
-#' If \code{details = TRUE}, a list containing \code{density} (the computed density vector for \code{dtweedie}) or \code{f} (the computed distribution function value for \code{ptweedie}), and \code{regions} (the number of integration regions used).
 #'
 #' @aliases ptweedie qtweedie rtweedie
 #'
@@ -94,7 +91,7 @@
 #' @keywords distribution
 #'
 #' @export
-dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){
+dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   # Methods employed:  
   # - cgf inversion (type=1)
   # - series evaluation (type = 2 if 1 < p < 2); 
@@ -147,8 +144,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   # density  is just the part where !special_y_cases.
   # All is resolved in the end.
   density2 <- numeric(length = length(y) )
-  if (details) regions <- integer(length = length(y))
-  
+
   
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, length(y))
@@ -393,11 +389,6 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   if (any(density < 0 ) )  density[ density < 0 ] <- rep(0, sum(density < 0) )
   density <- as.vector(density)
 
-  if (details) {
-    return(list(density = density,
-                regions = regions) )
-  } else {
-    return(density)
-  }
-  
+  return(density)
+
 }

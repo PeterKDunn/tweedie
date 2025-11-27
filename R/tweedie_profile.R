@@ -71,10 +71,16 @@
 #' @param verbose logical; if \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
 #' @param add0 logical; if \code{TRUE}, adds \eqn{P(Y = 0)}{P(Y = 0)} to the plot. The default is \code{FALSE}.
 #' 
+#' @references
+#' Dunn, P. K. and Smyth, G. K. (2018).
+#' Generalized linear models with examples in R.
+#' Springer.
+#' \doi{10.1007/978-1-4419-0118-7}
+#'
 #' @examples 
 #' data(Loblolly)
 #' out <- tweedie_profile(height~age, data = Loblolly, 
-#'           do.plot = TRUE, p.vec = seq(3, 4.5, length = 11) )
+#'           do.plot = FALSE, p.vec = seq(3.5, 4.5, length = 11) )
 #' # The estimate for the variance power index (p, or xi) is:
 #' out$p.max
 #' 

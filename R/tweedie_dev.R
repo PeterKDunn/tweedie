@@ -1,4 +1,4 @@
-#' Unit deviance for a Tweedie distribution
+#' Unit Deviance for a Tweedie Distribution
 #' 
 #' @description
 #' Computes the unit deviance for Tweedie distributions.
@@ -7,7 +7,8 @@
 #' @param y vector of quantiles.
 #' @param power the power parameter \eqn{p}{power}.
 #' @param mu the mean parameter \eqn{\mu}{mu}.
-#' @return a numeric vector containing the unit deviance.
+#' 
+#' @return A numeric vector containing the unit deviance.
 #' 
 #'
 #' @examples

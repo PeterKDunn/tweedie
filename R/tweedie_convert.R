@@ -1,8 +1,8 @@
-#' Tweedie Distribution: Converting between parameter formats
+#' Tweedie Distribution: Converting Between Parameter Formats
 #'
 #' @description
-#' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\,mu}{mu} and \eqn{\phi}{phi}
-#' and the correspinding underlying Poisson and gamma parameters (when \eqn{1 < p < 2}).
+#' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}
+#' and the corresponding underlying Poisson and gamma parameters (when \eqn{1 < p < 2}).
 #'
 #' @param xi a synonym for \code{power}.
 #' @param mu the mean parameter \eqn{\mu}{mu}.

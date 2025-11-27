@@ -2,6 +2,8 @@
 #'
 #' @description This function produced a plot of the specified Tweedie distribution.
 #'
+#' @usage tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, add = FALSE, ...)
+#' 
 #' @details If \eqn{1 < p < 2}{1 < power < 2}, the mass at \eqn{Y=0}{Y = 0} is automatically added.
 #'
 #' @param y the values for \eqn{y}{y} in the plot.

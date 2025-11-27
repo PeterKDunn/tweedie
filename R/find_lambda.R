@@ -1,4 +1,4 @@
-#' The Probability of Observing a Zero Value on a Tweedie Density
+#' The Probability of Observing a Zero Value for a Tweedie Density
 #' 
 #' @description The probability that the variable takes the value of zero.
 #'
@@ -6,7 +6,8 @@
 #' @param mu the mean parameter \eqn{\mu}{mu}.
 #' @param phi the dispersion parameter \eqn{\phi}{phi}.
 #' @param power the power parameter \eqn{p} (sometimes denoted \eqn{\xi}{xi}).
-#' @return the value of \eqn{\lambda}{lambda} when \eqn{1 < p < 2} such that \eqn{P(Y=0) = \exp(-\lambda)}{P(Y=0) = exp(-lambda)}. When \eqn{p>2}{power > 2}, a vector of zeros is returned.
+#' 
+#' @return The value of \eqn{\lambda}{lambda} when \eqn{1 < p < 2} such that \eqn{P(Y=0) = \exp(-\lambda)}{P(Y=0) = exp(-lambda)}. When \eqn{p>2}{power > 2}, a vector of zeros is returned.
 #' 
 #' @references 
 #' Dunn, Peter K and Smyth, Gordon K (2005).
