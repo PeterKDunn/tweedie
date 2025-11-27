@@ -17,16 +17,25 @@
 #' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
 #' 
 #' @return A numeric vector of densities.
+#' 
+#'
+#' @examples
+#' # Plot a Tweedie distribution function
+#' y <- seq(0, 5, length = 100)
+#' Fy <- ptweedie_series(y, power = 1.1, mu = 1, phi = 1)
+#' plot(y, Fy, type = "l", lwd = 2, ylab = "Distribution function")
+#' 
 #' @importFrom stats dpois 
+#'
+#' @keywords distribution
 #'
 #' @export
 #' 
 #' @aliases ptweedie.series
 
 ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
-  ### NOTE: No checking of inputs
-  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
-  
+  ### NOTE: No notation checks
+
   # SET UP
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
   tau    <- phi * (power - 1) * mu ^ ( power - 1 )
