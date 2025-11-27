@@ -83,6 +83,8 @@
 #' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
 #' 
 #' @aliases tweedie.profile
+#'
+#' @keywords  models
 #' 
 #' @export
 tweedie_profile <- function(formula, 
