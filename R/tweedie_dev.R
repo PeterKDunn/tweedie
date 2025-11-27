@@ -1,4 +1,4 @@
-#' Deviance for a Tweedie distribution
+#' Unit deviance for a Tweedie distribution
 #' 
 #' @description
 #' Computes the unit deviance for Tweedie distributions.
@@ -8,6 +8,11 @@
 #' @param power the power parameter \eqn{p}{power}.
 #' @param mu the mean parameter \eqn{\mu}{mu}.
 #' @return a numeric vector containing the unit deviance.
+#' 
+#'
+#' @examples
+#' # Unit deviance is not symmetric in general:
+#' round( tweedie_dev(0:6, mu = 3, power = 1.1), 3)
 #' 
 #' @aliases tweedie.dev
 #'
