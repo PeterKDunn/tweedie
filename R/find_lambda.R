@@ -20,7 +20,7 @@
 #' lambda <- find_lambda(mu = 1:3, phi = 1, power = 1.1)
 #' exp( -lambda)
 #' 
-#' # When p > 2, there is no probability that Y = 0:
+#' # When p > 2, there is zero probability that Y = 0:
 #' lambda  <- find_lambda(mu = 1, phi = 1, power = 3.1)
 
 find_lambda <- function(mu, phi, power){
