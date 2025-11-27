@@ -78,17 +78,20 @@
 #' power <- 1.1
 #' mu <- 1
 #' phi <- 1
-#' y <- seq(0, 5, length = 200)
+#' y <- seq(0, 5, length = 100)
 #' fy <- dtweedie(y, power = power, mu = mu, phi = phi)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
+#' 
 #' # Compare to the saddlepoint density
 #' f.saddle <- dtweedie_saddle( y = y, power = power, mu = mu, phi = phi)
 #' lines( y, f.saddle, col = 2)
 #' legend("topright", col = c(1, 2), lwd = c(2, 1), legend = c("Actual", "Saddlepoint"))
+#' 
 #' # Plot the DF:
 #' Fy <- ptweedie(y, power = power, mu = mu, phi = phi)
 #' plot(y, Fy, type = "l", lwd = 2, ylab = "Density")
 #' 
+#' @keywords distribution
 #'
 #' @export
 dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, details = FALSE){
@@ -140,12 +143,11 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, detai
   mu <- out$mu
   phi <- out$phi
 
-  # density2 is the whole vector.
-  # density is just the part where !special_y_cases.
-  # All is resolved in the end
-
-  density2 <- numeric(length = length(q) )
-  if (details) regions <- integer(length = length(q))
+  # density2 is the whole vector; the same length as  y.
+  # density  is just the part where !special_y_cases.
+  # All is resolved in the end.
+  density2 <- numeric(length = length(y) )
+  if (details) regions <- integer(length = length(y))
   
   
   # IDENTIFY SPECIAL CASES
