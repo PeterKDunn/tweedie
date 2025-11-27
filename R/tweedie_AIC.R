@@ -49,10 +49,11 @@
 #' @importFrom statmod tweedie
 #'
 #' @examples
-#' ### Fit a Tweedie density using  tweedie  family function from  statmod
+#' # Fit a Tweedie density using  tweedie  family function from  statmod
 #' library(statmod)
 #' pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
-#' fit <- glm(y ~ 1, data = pretend, family = tweedie(link.power = 0, var.power = 2.1))
+#' fit <- glm(y ~ 1, data = pretend, 
+#'            family = tweedie(link.power = 0, var.power = 2.1))
 #'
 #' # Compute the AIC
 #' tweedie_AIC(fit)
