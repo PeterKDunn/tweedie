@@ -23,6 +23,13 @@
 #' @note
 #' The three methods are described in Dunn & Smyth (2008).
 #' 
+#' @references
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+
 #' @examples
 #' # Plot a Tweedie density
 #' y <- seq(0, 5, length = 100)

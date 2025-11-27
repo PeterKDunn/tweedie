@@ -14,6 +14,14 @@
 #' 
 #' @return A numeric vector of densities.
 #' 
+#' @references
+#' Dunn, Peter K and Smyth, Gordon K (2005).
+#' Series evaluation of Tweedie exponential dispersion model densities
+#' \emph{Statistics and Computing},
+#' \bold{15}(4). 267--280.
+#' \doi{10.1007/s11222-005-4070-y}
+#' 
+
 #' @examples 
 #' # Plot a Tweedie density
 #' y <- seq(0, 5, length = 100)

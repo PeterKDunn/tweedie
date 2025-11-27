@@ -20,6 +20,13 @@
 #' For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} is set to \code{NA} for all values of \code{q}.
 #' For special cases of \code{q} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} is set to \code{NA}.
 #'
+#' @references
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+#'
 #' @examples
 #' # Plot a Tweedie distribution function
 #' y <- seq(0, 5, length = 100)

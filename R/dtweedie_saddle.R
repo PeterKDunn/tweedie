@@ -26,12 +26,23 @@
 #' @aliases dtweedie.saddle
 #' 
 #' @references
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+#' 
+#' Dunn, Peter K and Smyth, Gordon K (2005).
+#' Series evaluation of Tweedie exponential dispersion model densities
+#' \emph{Statistics and Computing},
+#' \bold{15}(4). 267--280.
+#' \doi{10.1007/s11222-005-4070-y}
+#' 
 #' 	Nelder, J. A. and Pregibon, D. (1987).
 #' 	An extended quasi-likelihood function
 #' 	\emph{Biometrika},
 #' 	\bold{74}(2), 221--232.
 #' 	\doi{10.1093/biomet/74.2.221}
-
 #' 
 #' @export
 dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {

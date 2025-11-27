@@ -10,7 +10,11 @@
 #' 
 #' @return A numeric vector containing the unit deviance.
 #' 
-#'
+#' @references
+#' Jorgensen, B. (1997).
+#' \emph{Theory of Dispersion Models}.
+#' Chapman and Hall, London.
+#' 
 #' @examples
 #' # Unit deviance is not symmetric in general:
 #' round( tweedie_dev(0:6, mu = 3, power = 1.1), 3)
