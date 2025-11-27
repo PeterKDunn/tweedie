@@ -16,16 +16,57 @@
 #' @param details logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.
 #' 
 #' @return if \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{CDF} (a vector of the values of the distribution function) and \code{regions} (a vector of the number of integration regions used).
+#'
+#' @examples
+#' # Plot a Tweedie distribution function
+#' y <- seq(0, 5, length = 100)
+#' Fy <- ptweedie_inversion(y, power = 1.1, mu = 1, phi = 1)
+#' plot(y, Fy, type = "l", lwd = 2, ylab = "Distribution function")
 #' 
 #' @aliases ptweedie.inversion
+#' 
+#' @keywords distribution
+#' 
 #' @export
 ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE ){ 
-  ### NOTE: No checking of inputs
-  ### Assumes that all of y, mu, phi have the same length (they may be vectors) and are valid
+  ### NOTE: No notation checks
+  
+  # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
+  if (verbose) cat("- Checking, resizing inputs\n")
+  out <- check_inputs(q, mu, phi, power)
+  mu <- out$mu
+  phi <- out$phi
+
+  # cdf    is the whole vector; the same length as  y.
+  # All is resolved in the end.
+  cdf <- numeric(length = length(q) )
+  regions <- integer(length = length(q)) # Filled with zeros by default
+  
+  # IDENTIFY SPECIAL CASES
+  special_y_cases <- rep(FALSE, length(q))
+  if (verbose) cat("- Checking for special cases\n")
+  out <- special_cases(q, mu, phi, power,
+                       type = "CDF")
+  
+  special_p_cases <- out$special_p_cases
+  special_y_cases <- out$special_y_cases
+  
+  if (verbose & special_p_cases) cat("  - Special case for p used\n")
+  if ( any(special_y_cases) ) {
+    special_y_cases <- out$special_y_cases  
+    if (verbose) cat("  - Special cases for first input found\n")
+    cdf <- out$f # This is the final vector of results to return, filled with the special-case info.
+    # NOTE: regions filled with zeros by default, so regions = 0 in these cases
+  }
+  
+### WHAT DO DO IF SPEICAL P CASE?  RETURN.
+  
+  # Now use FORTRAN on the remaining values:
+  N_nonSpecial <- length(q) - sum(out$special_y_cases) 
+    
+  
   
   ### BEGIN SET UP
-  N <- as.integer( length(q) )
-  cdf <- as.double(rep(0, N))
   pSmall  <- ifelse( (power > 1) & (power < 2),
                      TRUE, 
                      FALSE )
@@ -38,20 +79,21 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
 
 
   tmp <- .C( "twcomputation",
-             N           = as.integer(N),         # number of observations
-             power       = as.double(power),      # p
-             phi         = as.double(phi),        # phi
-             y           = as.double(q),          # y
-             mu          = as.double(mu),         # mu
-             verbose     = as.integer(verbose),   # verbosity
-             pdf         = as.integer(0),         # 0: FALSE, as this is the CDF not PDF
+             N           = as.integer(N_nonSpecial),              # number of observations
+             power       = as.double(power),                      # p
+             phi         = as.double(phi[!special_y_cases]),      # phi
+             y           = as.double(q[!special_y_cases]),        # y
+             mu          = as.double(mu[!special_y_cases]),       # mu
+             verbose     = as.integer(verbose),                   # verbosity
+             pdf         = as.integer(0),                         # 0: FALSE, as this is the CDF not PDF
              # THE OUTPUTS:
-             funvalue    = as.double(rep(0, N)),  # funvalue
-             exitstatus  = as.integer(0),         # exitstatus
-             relerr      = as.double(0),          # relerr
-             its         = as.integer(rep(0, N)), # its
+             funvalue    = as.double(rep(0, N_nonSpecial)),       # funvalue
+             exitstatus  = as.integer(0),                         # exitstatus
+             relerr      = as.double(0),                          # relerr
+             its         = as.integer(rep(0, N_nonSpecial)),      # its
              PACKAGE     = "tweedie")
-  cdf <- tmp$funvalue
+  cdf[!special_y_cases] <- tmp$funvalue
+  regions[!special_y_cases] <- tmp$its
 
   if (details) {
     return( list( cdf = cdf,
