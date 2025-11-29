@@ -6,8 +6,8 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   IMPLICIT NONE
   
   INTEGER, INTENT(IN)                 :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(501), wvec(501)
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, 501), Nmatrix(2, 501)
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(:), wvec(:)
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(:, :), Nmatrix(:, :)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
 
   INTEGER                         :: p, l_nzeros, maxSize
@@ -17,12 +17,12 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE)             :: s, maxinv, invx
   REAL(KIND=C_DOUBLE), PARAMETER  :: SAFETY_SCALE = 1.0D-12
   REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
-  REAL(KIND=C_DOUBLE)             :: xscaled(501)
+  REAL(KIND=C_DOUBLE), ALLOCATABLE  :: xscaled(:)
 
   ! Constants; initialization
   maxSize  = 200
   l_nzeros = MIN(nzeros, maxSize)
-  
+  ALLOCATE(xscaled(l_nzeros))
 
   ! Rescaling, to improve numerical conditioning
   maxinv = 0.0E0_C_DOUBLE
@@ -115,6 +115,8 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
      Nmatrix(1, p) = Nmatrix(2, p)
   END DO
 
+  DEALLOCATE(xscaled)
+  
   RETURN
 
 END SUBROUTINE accelerate

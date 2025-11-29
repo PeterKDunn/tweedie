@@ -28,7 +28,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-  REAL(KIND=C_DOUBLE)   :: Mmatrix(2, 501), Nmatrix(2, 501), xvec(501), wvec(501)
+  REAL(KIND=C_DOUBLE), ALLOCATABLE   :: Mmatrix(:, :), Nmatrix(:, :), xvec(:), wvec(:)
   REAL(KIND=C_DOUBLE)   :: TMP,   leftPreAccZero, leftAccZero
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   LOGICAL(C_BOOL)       :: leftOfMax, flip_To_Other_Side
@@ -47,7 +47,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       INTEGER, INTENT(IN)                 :: nzeros
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(501), wvec(501), Mmatrix(2, 501), Nmatrix(2, 501)
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(:), wvec(:), Mmatrix(:, :), Nmatrix(:, :)
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
     END SUBROUTINE accelerate
 
@@ -58,6 +58,12 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   current_y    = Cy(i)    ! Access y value for index i
   current_mu   = Cmu(i)   ! Access mu value for index i
   current_phi  = Cphi(i)  ! Access phi value for index i
+  
+  ! ALLOCATE these arrays onto the HEAP
+  ALLOCATE(Mmatrix(2, 502))
+  ALLOCATE(Nmatrix(2, 502))
+  ALLOCATE(xvec(502))
+  ALLOCATE(wvec(502))
   
   IF (Cverbose) THEN
     CALL DBLEPR("*** Computing for p =", -1, Cp, 1)
@@ -80,12 +86,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   Nmatrix = 0.0_C_DOUBLE
   xvec = 0.0_C_DOUBLE
   wvec = 0.0_C_DOUBLE
-  mmax = 0  
-  count_Integration_Regions = 0_C_INT
+  mmax = 0_C_INT
+  accMax = 500_C_INT                    ! Max acceleration regions
+  min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
+  count_Integration_Regions = 0_C_INT   ! Counter for number of integration regions
   zeroStartPoint = 0.0_C_DOUBLE
   flip_To_Other_Side = .FALSE.
-  zeroR = 0.0_c_DOUBLE
-  zeroL = 0._C_DOUBLE
+  zeroR = 0.0_C_DOUBLE
+  zeroL = 0.0_C_DOUBLE
 
   ! --- Integration initialization ---
   area0 = 0.0_C_DOUBLE
@@ -156,7 +164,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 !WRITE(*,*) "Starting acceleration"
   IF ( converged_Pre) THEN
     areaA = 0.0_C_DOUBLE
-    count_Acc_Regions = 0
+    count_Acc_Regions = 0_C_INT
   ELSE
     leftAccZero = zeroL
     zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
@@ -195,7 +203,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   IF (Cpdf) THEN
     funvalueI = areaT/pi 
   ELSE
-    funvalueI = -areaT/pi + 0.5E0_C_DOUBLE
+    funvalueI =  0.5_C_DOUBLE - areaT/pi
   END IF  
   IF (Cverbose) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
   
@@ -220,12 +228,6 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
       pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
-      ! Grab the relevant scalar values for this iteration:
-      current_y    = Cy(i)    ! Access y value for index i
-      current_mu   = Cmu(i)   ! Access mu value for index i
-      current_phi  = Cphi(i)  ! Access phi value for index i
-  
-      
       ! Initialisation
       t_Start_Point = 0.0_C_DOUBLE
       zeroL = 0.0_C_DOUBLE
@@ -236,7 +238,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! Find starting point for the first zero
       IF (leftOfMax) THEN
         t_Start_Point = pi / current_y  
-        zeroBoundL = 0
+        zeroBoundL = 0_C_INT
         zeroBoundR = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
       ELSE
         ! Searching to the right of tmax
@@ -300,7 +302,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       sumAOld = 0.0_C_DOUBLE            ! Previous estimation of the area
       count_PreAcc_Regions = 0_C_INT    ! Count how many pre-acc regions are evaluated
 
-      IF (mfirst .EQ. -1) THEN
+      IF (mfirst .EQ. -1_C_INT) THEN
         area1 = 0.0_C_DOUBLE
         mOld = m
         zeroR = zeroL 
@@ -335,7 +337,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
           zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
           zeroR = zero
     
-          IF (count_PreAcc_Regions .GT. 1) THEN
+          IF (count_PreAcc_Regions .GT. 1_C_INT) THEN
             area1Old = area1
             sumAOld = sumA
           END IF
@@ -393,23 +395,21 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       REAL(KIND=C_DOUBLE)                 :: West, Wold, Wold2
       LOGICAL(C_BOOL)                     :: keep_Accelerating, converged_Accelerating
 
+      ! NOTE: accMax, min_Acc_Regions, aimrerr, Mmatrix, Nmatrix, xvec, wvec,
+      ! and epsilon are accessed implicitly via host association.
+
 
       ! Initialisation of acceleration 
       West = 3.0_C_DOUBLE                 ! The current estimate of the tail area
       Wold = 2.0_C_DOUBLE                 ! Wold and Wold2 are the previous two estimates of the tail area,
       Wold2 = 1.0_C_DOUBLE                !   to allow testing for convergence
-      its_Acceleration = 0                ! Number of integration regions used
+      its_Acceleration = 0_C_INT          ! Number of integration regions used
       keep_Accelerating = .TRUE.          ! .TRUE. if we need more integration regions
       converged_Accelerating = .FALSE.    ! .TRUE. if it seems the integration has converged
       its_Acceleration = 0_C_INT          ! Number of acceleration integration regions
       
-      accMax = 100_C_INT                  ! Maximum number of regions in acceleration; arbitrary
-      min_Acc_Regions = 3_C_INT           ! Minimum number of acceleration regions to use; need at least three
-
       ! This will be the very first, left-most value of t used in acceleration
       xvec(1) = zeroL
-
-
 
 !      CALL advanceM(i, m, mmax, mOld, leftOfMax, flip_To_Other_Side)
 
@@ -438,13 +438,17 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
         ! Find the exact zero
         CALL findExactZeros(i, m, zeroBoundL, zeroBoundR, zeroStartPoint, zeroR, leftOfMax)
+        
         IF (its_Acceleration .GE. accMax) THEN
-          IF (Cverbose) CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
+          CALL INTPR("Max acceleration regions reached. Stopping acceleration at m:", -1, m, 1)
+          
+          exitstatus = 1
           convergence_Acc = .TRUE.
+          converged_Accelerating = .FALSE.
           EXIT
         END IF
     
-        xvec(its_Acceleration + 1) = zeroR
+        xvec(its_Acceleration + 1_C_INT) = zeroR
         
         CALL GaussQuadrature(i, zeroL, zeroR, psi)           ! psi: area of the latest region
 !WRITE(*,*) "From", zeroL, "to", zeroR, "(m=", m, "), area=", psi
@@ -503,7 +507,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! Stop condition for pre-acceleration.
       ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
       stop_PreAccelerate = .FALSE.
-      IF ( Cp .GT. 2) THEN
+      IF ( Cp .GT. 2.0_C_DOUBLE) THEN
         IF (current_y .GT. current_mu) THEN
           stop_PreAccelerate = .TRUE.
         ELSE
@@ -523,7 +527,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
           ! Or when exp{Re(k)/t} is so small that it makes no difference... but 
           ! care is needed: Re k(t) is not necessarily convex here
              IF ( ABS( MM - FLOOR(MM) ) < 1.0E-09_C_DOUBLE ) then
-                nmax = FLOOR(MM) - 1
+                nmax = FLOOR(MM) - 1_C_INT
              ELSE
                 nmax = FLOOR(MM)
              END IF
@@ -538,6 +542,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! so also check if exp{Re k(t)/t} is small
       CALL evaluateRek( i, zero, Rek)
       CALL evaluateRekd(i, zero, Rekd)
+      
       IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND.          & 
            (Rekd .LT. 0.0_C_DOUBLE) ) then
         stop_PreAccelerate = .TRUE.
@@ -555,6 +560,6 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
 
     END SUBROUTINE stopPreAcc
-
+    
 END SUBROUTINE TweedieIntegration
 
