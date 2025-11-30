@@ -19,7 +19,7 @@
 #' stored_grids(power)
 #' check_inputs(y, mu, phi, power, type = "standard")
 #' sort_notation(xi = NULL, power = NULL)
-#' special_cases(y, mu, phi, power, type="PDF", verbose = FALSE)
+#' special_cases(y, mu, phi, power, type="PDF", verbose = FALSE, IGexact = TRUE)
 #'
 #'
 #' @param y the vector of responses.

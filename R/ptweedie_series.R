@@ -18,6 +18,10 @@
 #' 
 #' @return A numeric vector of densities.
 #' 
+#' @note
+#' The 'exact' values for teh inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
+#' for which very good numerical approximation are available in R.
+#' 
 #' @references
 #' Dunn, Peter K and Smyth, Gordon K (2005).
 #' Series evaluation of Tweedie exponential dispersion model densities

@@ -142,7 +142,7 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
 
 ################################################################################
 
-special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
+special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE){
   # Special cases may be one of two types:
   # - based on the value of p:
   #   - p = 0: use Normal distribution
@@ -208,7 +208,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE){
     }
     
     # CASE: inverse Gaussian (p=3)
-    if ( power == 3) {
+    if ( (power == 3) & (IGexact) ) {
       if (verbose) cat("power = 3 (inverse Gaussian case)\n")
       if (type == "PDF") {
         f <- statmod::dinvgauss(x = y, 

@@ -1,4 +1,14 @@
-tweedie 3.0 (Release date: ??)
+tweedie 3.0.3 (Release date: 2025-11-29)
+==============
+
+Changes:
+
+* Add IGexact for [dp]tweedie_inversion: whether to use exact values or inversion when p = 3.
+* Fixed some comments
+
+
+
+tweedie 3.0.2 (Release date: 2025-11-29)
 ==============
 
 Changes:

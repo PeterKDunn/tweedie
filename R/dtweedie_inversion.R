@@ -5,7 +5,8 @@
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 #'
-#' @usage dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE)
+#' @usage dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, 
+#'                           details = FALSE, IGexact = TRUE)
 #'
 #' @param y vector of quantiles.
 #' @param power scalar; the power parameter \eqn{p}{power}.
@@ -14,9 +15,14 @@
 #' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default).
 #' @param verbose logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
+#' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
 #'
 #' @return A numeric vector of densities if \code{details=FALSE}; if \code{details=TRUE}, return a list with \code{density} (the density values), \code{regions} (the number of integration regions used) and \code{methods} (which of the three methods was used).
 #' 
+#' @note
+#' The 'exact' values for teh inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
+#' for which very good numerical approximation are available in R.
+
 #' For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} and \code{method} are set to \code{NA} for all values of \code{y}.
 #' For special cases of \code{y} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} and \code{method} are set to \code{NA}.
 #'
@@ -48,7 +54,8 @@
 #' @keywords distribution
 #' 
 #' @export
-dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, details = FALSE){ 
+dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE,  
+                               details = FALSE, IGexact = TRUE){ 
   ### NOTE: No notation checks
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
@@ -62,7 +69,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE, d
   density <- numeric(length = length(y) )
   
   # IDENTIFY SPECIAL CASES
-  special_y_cases <- rep(FALSE, length(y))
+  special_y_cases <- rep(FALSE, length(y), IGexact = IGexact)
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(y, mu, phi, power,
                        type = "PDF")
