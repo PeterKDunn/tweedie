@@ -58,7 +58,6 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   regions <- integer(length = length(q)) # Filled with zeros by default
   
   # IDENTIFY SPECIAL CASES
-cat(">>> IGexact:", IGexact, "\n")
   special_y_cases <- rep(FALSE, length(q), IGexact = IGexact)
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power,
