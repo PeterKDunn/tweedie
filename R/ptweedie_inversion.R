@@ -22,7 +22,7 @@
 #' For special cases of \code{q} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} is set to \code{NA}.
 #'
 #' @note
-#' The 'exact' values for teh inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
+#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
 #' for which very good numerical approximation are available in R.
 #' 
 #' @references
@@ -58,9 +58,11 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   regions <- integer(length = length(q)) # Filled with zeros by default
   
   # IDENTIFY SPECIAL CASES
+cat(">>> IGexact:", IGexact, "\n")
   special_y_cases <- rep(FALSE, length(q), IGexact = IGexact)
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power,
+                       IGexact = IGexact,
                        type = "CDF")
   
   special_p_cases <- out$special_p_cases

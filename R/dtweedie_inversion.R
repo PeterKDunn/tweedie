@@ -72,6 +72,7 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE,
   special_y_cases <- rep(FALSE, length(y), IGexact = IGexact)
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(y, mu, phi, power,
+                       IGexact = IGexact,
                        type = "PDF")
   
   special_p_cases <- out$special_p_cases

@@ -155,6 +155,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
   #   - y == 0
   #   In this case, special_y_cases is a vector, and is TRUE when appropriate
   
+
   f <- array( 0, 
               dim = length(y) )
   special_p_cases <- FALSE        # TRUE if special cases are defined by special values of p: SCALAR
@@ -162,9 +163,10 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
                          length(y) )
   
   # Special cases BASED ON VALUE OF p
-  if ( (power == 0 ) | (power == 1) | (power == 2) | (power == 3) ){
+  if ( (power == 0 ) | (power == 1) | (power == 2) | (power == 3)){
     if (verbose) cat("Special cases in p found ")
     # Special cases based on the value of p  
+    
     special_p_cases = TRUE
     
     # CASE: Normal (p=0)
@@ -208,16 +210,20 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
     }
     
     # CASE: inverse Gaussian (p=3)
-    if ( (power == 3) & (IGexact) ) {
-      if (verbose) cat("power = 3 (inverse Gaussian case)\n")
-      if (type == "PDF") {
-        f <- statmod::dinvgauss(x = y, 
-                                mean = mu, 
-                                dispersion = phi)
+    if (power == 3) {
+      if (IGexact) {
+        if (verbose) cat("power = 3 (inverse Gaussian case)\n")
+        if (type == "PDF") {
+          f <- statmod::dinvgauss(x = y, 
+                                  mean = mu, 
+                                  dispersion = phi)
+        } else {
+          f <- statmod::pinvgauss(q = y, 
+                                  mean = mu, 
+                                  dispersion = phi)
+        }
       } else {
-        f <- statmod::pinvgauss(q = y, 
-                                mean = mu, 
-                                dispersion = phi)
+        special_p_cases = FALSE
       }
     }
 
