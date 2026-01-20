@@ -20,7 +20,7 @@
 #' @return A numeric vector of densities if \code{details=FALSE}; if \code{details=TRUE}, return a list with \code{density} (the density values), \code{regions} (the number of integration regions used) and \code{methods} (which of the three methods was used).
 #' 
 #' @note
-#' The 'exact' values for teh inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
+#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
 #' for which very good numerical approximation are available in R.
 
 #' For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} and \code{method} are set to \code{NA} for all values of \code{y}.

@@ -59,7 +59,7 @@
 #'   The default is \code{FALSE}.
 #' @param do.ci logical; if \code{TRUE}, the nominal \code{100*conf.level} is computed.
 #'   Defaults to the value of \code{do.smooth}. 
-#'   Confidence intervals are ony computed if \code{do.smooth = TRUE}.
+#'   Confidence intervals are only computed if \code{do.smooth = TRUE}.
 #' @param eps the offset in computing the variance function. Default is \code{1/6} (as recommended by Nelder and Pregibon, 1987).
 #'   \code{eps} is ignored unless \code{method = "saddlepoint"}.
 #' @param control a list of parameters for controlling the fitting process;
