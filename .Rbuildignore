@@ -5,3 +5,6 @@
 ^\.git/
 ^tweedie-Ex.pdf$
 ^tweedie-Ex.timings$
+^CRAN-SUBMISSION$
+
+^cran-comments\.md$
