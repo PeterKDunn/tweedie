@@ -20,10 +20,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
 
   ! Local Variables: All local variables defined here
-  INTEGER(C_INT)    :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)    :: count_PreAcc_Regions, count_Acc_Regions
-  INTEGER(C_INT)    :: m, min_Acc_Regions
-  LOGICAL(C_BOOL)   :: converged_Accelerating, converged_Pre, convergence_Acc
+  INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax
+  INTEGER(C_INT)        :: count_PreAcc_Regions, count_Acc_Regions
+  INTEGER(C_INT)        :: m, min_Acc_Regions
+  LOGICAL(C_BOOL)       :: converged_Accelerating, converged_Pre, convergence_Acc
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
@@ -207,7 +207,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   END IF  
   IF (Cverbose) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
   
-
+  ! Deallocate the arrays
+  DEALLOCATE(Mmatrix, Nmatrix, xvec, wvec)
+  
+  
   CONTAINS
   
     
