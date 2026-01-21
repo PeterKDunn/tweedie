@@ -5,13 +5,13 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)  :: N, verbose, pdf
-  REAL(C_DOUBLE), INTENT(IN)  :: p
-  REAL(C_DOUBLE), INTENT(IN)  :: phi(N), y(N), mu(N)
-  REAL(C_DOUBLE), INTENT(OUT) :: funvalue(N)
-  INTEGER(C_INT), INTENT(OUT) :: exitstatus
-  REAL(C_DOUBLE), INTENT(OUT) :: relerr
-  INTEGER(C_INT), INTENT(OUT) :: Int_Regions(N)
+  INTEGER(C_INT), INTENT(IN)        :: N, verbose, pdf
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: p
+  REAL(KIND=C_DOUBLE), INTENT(IN)   :: phi(N), y(N), mu(N)
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalue(N)
+  INTEGER(C_INT), INTENT(OUT)       :: exitstatus
+  REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr
+  INTEGER(C_INT), INTENT(OUT)       :: Int_Regions(N)
   
   INTEGER               :: i, Int_RegionsTMP
   REAL(KIND=C_DOUBLE)   :: funvalueTMP

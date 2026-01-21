@@ -176,8 +176,8 @@ CONTAINS
       
         IMPLICIT NONE
     
-        REAL(C_DOUBLE)              :: t0, pi
-        REAL(C_DOUBLE)              :: ratio, r, t_small, t_large, c, angle
+        REAL(KIND=C_DOUBLE)     :: t0, pi
+        REAL(KIND=C_DOUBLE)     :: ratio, r, t_small, t_large, c, angle
       
         pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
       
@@ -682,9 +682,9 @@ CONTAINS
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       ! Has access to variable  m  from the containing function/outer scope
       
-      INTEGER(C_INT), INTENT(IN)  :: i
-      REAL(C_DOUBLE), INTENT(IN)  :: x
-      REAL(C_DOUBLE), INTENT(OUT) :: f, df
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: x
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
      
       CALL evaluateImkM(i, x, f, df, m) ! Pass the captured 'm' value]
 
