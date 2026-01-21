@@ -1,4 +1,5 @@
 ^tweedie\.Rproj$
+^tweedie\.github$
 ^\.Rproj\.user$
 ^src/Headers$
 ^src/include$
