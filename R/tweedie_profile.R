@@ -80,7 +80,7 @@
 #' @examples 
 #' data(Loblolly)
 #' out <- tweedie_profile(height~age, data = Loblolly, 
-#'           do.plot = FALSE, p.vec = seq(3.5, 4.5, length = 11) )
+#'           do.plot = FALSE, p.vec = seq(3.5, 4.5, length = 7) )
 #' # The estimate for the variance power index (p, or xi) is:
 #' out$p.max
 #' 
