@@ -26,13 +26,13 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   INTEGER(C_INT)        :: m, min_Acc_Regions
   LOGICAL(C_BOOL)       :: converged_Accelerating, converged_Pre, convergence_Acc
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, psi, zero
-  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA, sumA
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, zero
+  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE), ALLOCATABLE   :: Mmatrix(:, :), Nmatrix(:, :), xvec(:), wvec(:)
-  REAL(KIND=C_DOUBLE)   :: TMP,   leftPreAccZero, leftAccZero
+  REAL(KIND=C_DOUBLE)   :: leftPreAccZero, leftAccZero
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
-  LOGICAL(C_BOOL)       :: leftOfMax, flip_To_Other_Side
+  LOGICAL(C_BOOL)       :: left_Of_Max, flip_To_Other_Side
   
 
   INTERFACE
@@ -102,7 +102,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   zero  = 0.0_C_DOUBLE
 
   ! --- Find kmax, tmax, mmax ---
-  CALL findKmax(i, kmax, tmax, mmax, mfirst, leftOfMax)
+  CALL findKmax(i, kmax, tmax, mmax, mfirst, left_Of_Max)
   IF (Cverbose) THEN
     CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
     CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
@@ -124,7 +124,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! ----------------------------------------------------------------------------
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
 !WRITE(*,*) "Initial area"
-  CALL integrateFirstRegion(i, mfirst, leftOfMax, tmax, &  ! INPUTS
+  CALL integrateFirstRegion(i, mfirst, left_Of_Max, tmax, &  ! INPUTS
                             area0, zeroR)                             ! OUTPUTS
 
   IF (Cverbose) THEN
@@ -141,7 +141,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 !WRITE(*,*) "Starting pre-acceleration"
   zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
   leftPreAccZero = zeroL
-  CALL integratePreAccRegions(i, m, mfirst, leftOfMax, zeroL,  tmax, mmax, , flip_To_Other_Side,    & ! INPUTS
+  CALL integratePreAccRegions(i, m, mfirst, left_Of_Max, zeroL,  tmax, mmax, flip_To_Other_Side,    & ! INPUTS
                               area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
   count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
 
@@ -169,9 +169,13 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ELSE
     leftAccZero = zeroL
     zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
-    CALL integrateAccelerationRegions(i, m, leftOfMax, zeroL,  tmax,                               & ! INPUTS
-                                      areaA, zeroR, count_Acc_Regions, converged_Accelerating,  & ! OUTPUTS
-                                      accMax, relerr)    
+
+    CALL integrateAccelerationRegions(i, m, left_Of_Max, zeroL,  tmax, accMax,                  & ! INPUTS
+                                          aimrerr, epsilon, xvec, wvec, Mmatrix, Nmatrix, & 
+                                          mmax, min_Acc_Regions, exitstatus, flip_To_Other_Side, &
+                                          convergence_Acc, &
+                                          zeroR, converged_Accelerating, &
+                                          relerr)
     IF (Cverbose) THEN
       IF ( .NOT.(converged_Accelerating) ) THEN
         CALL DBLEPR(" Accelerating dod not converged by t =", -1, zeroR, 1)
