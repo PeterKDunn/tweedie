@@ -5,13 +5,13 @@
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 #'
-#' @usage dtweedie_inversion(y, power, mu, phi, method = 3, verbose = FALSE, 
+#' @usage dtweedie_inversion(y, mu, phi, power, method = 3, verbose = FALSE, 
 #'                           details = FALSE, IGexact = TRUE)
 #'
 #' @param y vector of quantiles.
-#' @param power scalar; the power parameter \eqn{p}{power}.
 #' @param mu the mean parameter \eqn{\mu}{mu}.
 #' @param phi the dispersion parameter \eqn{\phi}{phi}.
+#' @param power scalar; the power parameter \eqn{p}{power}.
 #' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default).
 #' @param verbose logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
@@ -39,7 +39,7 @@
 #' @examples
 #' # Plot a Tweedie density
 #' y <- seq(0, 5, length = 100)
-#' fy <- dtweedie_inversion(y, power = 1.1, mu = 1, phi = 1)
+#' fy <- dtweedie_inversion(y, mu = 1, phi = 1, power = 1.1)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
 #' 
 #' @aliases dtweedie.inversion
@@ -54,7 +54,7 @@
 #' @keywords distribution
 #' 
 #' @export
-dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE,  
+dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,  
                                details = FALSE, IGexact = TRUE){ 
   ### NOTE: No notation checks
   
@@ -233,9 +233,9 @@ dtweedie_inversion <- function(y, power, mu, phi, method = 3, verbose = FALSE,
 dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose, details){ 
   .Deprecated("dtweedie_inversion", package = "tweedie")
   dtweedie_inversion(y = y, 
-                     power = power, 
                      mu = mu, 
                      phi = phi, 
+                     power = power, 
                      method = method, 
                      verbose = FALSE, 
                      details = FALSE)

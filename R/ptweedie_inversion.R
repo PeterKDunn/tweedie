@@ -35,7 +35,7 @@
 #' @examples
 #' # Plot a Tweedie distribution function
 #' y <- seq(0, 5, length = 100)
-#' Fy <- ptweedie_inversion(y, power = 1.1, mu = 1, phi = 1)
+#' Fy <- ptweedie_inversion(y, mu = 1, phi = 1, power = 1.1)
 #' plot(y, Fy, type = "l", lwd = 2, ylab = "Distribution function")
 #' 
 #' @aliases ptweedie.inversion
@@ -45,6 +45,11 @@
 #' @export
 ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE, IGexact = TRUE ){ 
   ### NOTE: No notation checks
+  
+  # Check
+  if (length(q) == 0L) {
+    return(numeric(0))
+  }
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
@@ -58,7 +63,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   regions <- integer(length = length(q)) # Filled with zeros by default
   
   # IDENTIFY SPECIAL CASES
-  special_y_cases <- rep(FALSE, length(q), IGexact = IGexact)
+  special_y_cases <- rep(FALSE, 
+                         length(q) )
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power,
                        IGexact = IGexact,
@@ -96,25 +102,26 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
     its_scalar        <- as.integer(0)
     ### END SET UP
   
-  
-    tmp <- .C( "twcomputation",
-               N           = as.integer(N_nonSpecial),              # number of observations
-               power       = as.double(power),                      # p
-               phi         = as.double(phi[!special_y_cases]),      # phi
-               y           = as.double(q[!special_y_cases]),        # y
-               mu          = as.double(mu[!special_y_cases]),       # mu
-               verbose     = as.integer(verbose),                   # verbosity
-               pdf         = as.integer(0),                         # 0: FALSE, as this is the CDF not PDF
-               # THE OUTPUTS:
-               funvalue    = as.double(rep(0, N_nonSpecial)),       # funvalue
-               exitstatus  = as.integer(0),                         # exitstatus
-               relerr      = as.double(0),                          # relerr
-               its         = as.integer(rep(0, N_nonSpecial)),      # its
-               PACKAGE     = "tweedie")
-    cdf[!special_y_cases] <- tmp$funvalue
-    regions[!special_y_cases] <- tmp$its
+    if (N_nonSpecial > 0 ) {
+      tmp <- .C( "twcomputation",
+                 N           = as.integer(N_nonSpecial),              # number of observations
+                 power       = as.double(power),                      # p
+                 phi         = as.double(phi[!special_y_cases]),      # phi
+                 y           = as.double(q[!special_y_cases]),        # y
+                 mu          = as.double(mu[!special_y_cases]),       # mu
+                 verbose     = as.integer(verbose),                   # verbosity
+                 pdf         = as.integer(0),                         # 0: FALSE, as this is the CDF not PDF
+                 # THE OUTPUTS:
+                 funvalue    = as.double(rep(0, N_nonSpecial)),       # funvalue
+                 exitstatus  = as.integer(0),                         # exitstatus
+                 relerr      = as.double(0),                          # relerr
+                 its         = as.integer(rep(0, N_nonSpecial)),      # its
+                 PACKAGE     = "tweedie")
+      cdf[!special_y_cases] <- tmp$funvalue
+      regions[!special_y_cases] <- tmp$its
+    }
   }
-
+  
   if (details) {
     return( list( cdf = cdf,
                   regions = regions))

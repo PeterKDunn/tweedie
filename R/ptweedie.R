@@ -1,4 +1,4 @@
-ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE) {
+ptweedie <- function(q, mu, phi, xi = NULL, power = NULL, verbose = FALSE) {
 
   ### BEGIN preliminary work
 
@@ -47,10 +47,10 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE) {
       if ( any(!special_y_cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
   
-        f_TMP <- ptweedie_inversion(power   = power,
-                                    q       = q[!special_y_cases],
+        f_TMP <- ptweedie_inversion(q       = q[!special_y_cases],
                                     mu      = mu[!special_y_cases],
                                     phi     = phi[!special_y_cases],
+                                    power   = power,
                                     verbose = FALSE,
                                     details = FALSE)
         f[!special_y_cases] <- f_TMP
@@ -102,10 +102,10 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE) {
         
       if ( any(!special_y_cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
-        f_TMP <- ptweedie_inversion(power   = power,
-                                    q       = q[!special_y_cases], 
+        f_TMP <- ptweedie_inversion(q       = q[!special_y_cases], 
                                     mu      = mu[!special_y_cases], 
                                     phi     = phi[!special_y_cases],
+                                    power   = power,
                                     verbose = FALSE,
                                     details = FALSE)
         f[!special_y_cases] <- f_TMP
