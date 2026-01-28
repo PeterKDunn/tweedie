@@ -1,6 +1,6 @@
 test_that("Same values as non-central chi-sq", {
   mu <- 1
-  phi <- 4
+  phi <- 4 * mu
   p <- 1.5
   y <- c(0.001, 0.01, 0.05, 0.1, 0.5, 0.75,
          seq(01, 10, by = 1),
