@@ -2,6 +2,9 @@ test_that("No common errors", {
   # These are situations that had caused errors in the past that 
   # I have (hopefully) now fixed
   expect_no_error(
+    ptweedie_inversion( seq(1, 5, length = 100), mu = 1, phi = 1, power = 1.1, verbose = FALSE)  
+  )
+  expect_no_error(
     ptweedie_inversion(0.01, mu = 5, phi = 0.01, power = 1.01, verbose=FALSE)  
   )
   expect_no_error(
