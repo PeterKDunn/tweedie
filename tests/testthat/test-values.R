@@ -33,8 +33,18 @@ test_that("Same values as inverse Gaussian", {
   )
   
   expect_equal(
+    statmod::dinvgauss(y, mean = mu, dispersion = phi), 
+    dtweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE )
+  )
+
+  expect_equal(
     statmod::pinvgauss(y, mean = mu, dispersion = phi), 
     ptweedie(y, mu = mu, phi = phi, power = p)
+  )
+
+  expect_equal(
+    statmod::pinvgauss(y, mean = mu, dispersion = phi), 
+    ptweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE )
   )
 
 })
