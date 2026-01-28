@@ -1,7 +1,8 @@
+
 MODULE Calcs_K
 
   USE tweedie_params_mod
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
 
   IMPLICIT NONE
   
@@ -553,9 +554,10 @@ CONTAINS
   END SUBROUTINE improveKZeroBounds
   
   
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
-  SUBROUTINE advanceM(i, m, mmax, mOld, left_Of_Max, flip_To_Other_Side)
+  SUBROUTINE advanceM(i, m, mmax, mOld, left_Of_Max)
       ! Determine the next value of m, for solving the zeros of the integrand
       
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
@@ -566,9 +568,12 @@ CONTAINS
       INTEGER(C_INT), INTENT(INOUT)     :: m          ! M index (used for calculation and C-binding)
       INTEGER(C_INT), INTENT(OUT)       :: mOld       ! Previous index value
       LOGICAL(C_BOOL), INTENT(INOUT)    :: left_Of_Max  ! True if on the left side of kmax
-      LOGICAL(C_BOOL), INTENT(INOUT)    :: flip_To_Other_Side       ! True if cross from left to right
-      
-      REAL(KIND=C_DOUBLE)           :: current_y, current_mu, current_phi
+
+      ! Local vars      
+      REAL(KIND=C_DOUBLE)               :: current_y, current_mu, current_phi
+      LOGICAL(C_BOOL)                   :: flip_To_Other_Side
+        ! flip_To_Other_Side. is  .TRUE.  if the value of  m  crosses from the 
+        ! left of  mmax   to the right of  mmax
     
     
       ! Grab the relevant scalar values for this iteration:
@@ -609,7 +614,7 @@ CONTAINS
     END SUBROUTINE advanceM
     
     
-    
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     
     SUBROUTINE findExactZeros(i, m, tL, tR, tStart, tZero, left_Of_Max) 
@@ -670,7 +675,8 @@ CONTAINS
   ELSE
     ! Default to rtnewton for "easy" cases (e.g., initial zeros)
     tstart_update = (tL + tR) / 2.0_C_DOUBLE
-    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
+!    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
+    CALL rtsafe(i, evaluateImkM_wrapper, tL, tR, xacc, tZero, error)
   END IF
   
 
@@ -694,10 +700,6 @@ CONTAINS
   
 END SUBROUTINE findExactZeros
 
-
-
-
-  
   
 END MODULE Calcs_K
 

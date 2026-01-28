@@ -35,8 +35,11 @@ Calcs_Imag.o Calcs_Imag.mod: Calcs_Imag.f90 00tweedie_params.mod
 Calcs_Solvers.o Calcs_Solvers.mod: Calcs_Solvers.f90 00tweedie_params.mod
 	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_Solvers.o
 
-Calcs_K.o Calcs_K.mod: Calcs_K.f90 Calcs_Solvers.mod 00tweedie_params.mod
+Calcs_K.o Calcs_K.mod: Calcs_K.f90 Calcs_Solvers.mod Calcs_Imag.mod 00tweedie_params.mod
 	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o Calcs_K.o
+
+TweedieIntZones.o TweedieIntZones.mod: TweedieIntZones.f90 Calcs_K.mod 00tweedie_params.mod
+	$(FC) $(FFLAGS) $(FCFLAGS) -fPIC -c $< -o TweedieIntZones.o
 
 # Integrands Module: Depends on the Calcs_Real module.
 
@@ -59,7 +62,7 @@ gaussianData.o gaussian_data_mod.mod: gaussianData.f90 00tweedie_params.mod rpri
 GaussQuadrature.o: Integrands_mod.mod gaussian_data_mod.mod
 
 # TweedieIntegration.o (The main entry point) requires all compiled objects.
-TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o
+TweedieIntegration.o: Integrands.o accelerate.o GaussQuadrature.o gaussianData.o TweedieIntZones.o
 
 # ------------------------------------------------------------------------------
 # 3. Final Linker Flags (Addressing CRAN Errors)

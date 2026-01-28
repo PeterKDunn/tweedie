@@ -19,21 +19,38 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr         ! Estimate of relative error
   INTEGER(C_INT), INTENT(OUT)       :: count_Integration_Regions ! Num int regions
 
-
   ! Local Variables: All local variables defined here
   INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax
-  INTEGER(C_INT)        :: count_PreAcc_Regions, count_Acc_Regions
   INTEGER(C_INT)        :: m, min_Acc_Regions
-  LOGICAL(C_BOOL)       :: converged_Accelerating, converged_Pre, convergence_Acc
+  LOGICAL(C_BOOL)       :: convergence_Acc
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, zero
-  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR, area0, area1, areaA
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, West, Wold, Wold2
+  REAL(KIND=C_DOUBLE)   :: zeroL, zeroR
   REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE), ALLOCATABLE   :: Mmatrix(:, :), Nmatrix(:, :), xvec(:), wvec(:)
-  REAL(KIND=C_DOUBLE)   :: leftPreAccZero, leftAccZero
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
-  LOGICAL(C_BOOL)       :: left_Of_Max, flip_To_Other_Side
+  LOGICAL(C_BOOL)       :: left_Of_Max
+  LOGICAL(C_BOOL)       :: flip_To_Other_Side
   
+  INTEGER, PARAMETER :: MAX_ACC = 500
+  INTEGER, PARAMETER :: VEC_SIZE = MAX_ACC + 2
+  REAL(C_DOUBLE), PARAMETER :: EPS = 1.0E-12_C_DOUBLE
+
+  ! Zone 1: initial region
+  REAL(C_DOUBLE)  :: area0
+
+  ! Zone 2: pre-acceleration
+  REAL(C_DOUBLE) :: area1, sumA
+  INTEGER(C_INT) :: count_PreAcc_Regions
+  LOGICAL(C_BOOL):: stop_PreAccelerate, converged_Pre
+  REAL(C_DOUBLE) :: leftPreAccZero
+
+  ! Zone 3: acceleration
+  REAL(C_DOUBLE) :: areaA, psi
+  INTEGER(C_INT) :: count_Acc_Regions
+  LOGICAL(C_BOOL):: keep_Accelerating, converged_Accelerating
+  REAL(C_DOUBLE) :: leftAccZero
+
 
   INTERFACE
 
@@ -44,16 +61,18 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       INTEGER(C_INT), INTENT(IN)            :: i
     END SUBROUTINE GaussQuadrature
 
-
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
     SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-      INTEGER, INTENT(IN)                 :: nzeros
+      INTEGER(C_INT), INTENT(IN)          :: nzeros
       REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(:), wvec(:), Mmatrix(:, :), Nmatrix(:, :)
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
     END SUBROUTINE accelerate
 
   END INTERFACE
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! Grab the relevant scalar values for this iteration:
   current_y    = Cy(i)    ! Access y value for index i
@@ -66,7 +85,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ALLOCATE(xvec(502))
   ALLOCATE(wvec(502))
   
-  IF (Cverbose) THEN
+  IF ( Cverbose ) THEN
+    ! Report the current values for this evaluation
     CALL DBLEPR("*** Computing for p =", -1, Cp, 1)
     CALL DBLEPR("*** Computing for y =", -1, current_y, 1)
     CALL DBLEPR("*** Computing for mu =", -1, current_mu, 1)
@@ -76,34 +96,56 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! --- Initialization ---
   pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-  aimrerr = 1.0E-12_C_DOUBLE ! 1.0E-12_C_DOUBLE
+  aimrerr = 1.0E-12_C_DOUBLE
   mOld = 0
   m = 0
   exitstatus = 0
   relerr = 1.0_C_DOUBLE
   convergence_Acc = .FALSE.
   epsilon = 1.0E-12_C_DOUBLE
-  Mmatrix = 0.0_C_DOUBLE
-  Nmatrix = 0.0_C_DOUBLE
-  xvec = 0.0_C_DOUBLE
-  wvec = 0.0_C_DOUBLE
   mmax = 0_C_INT
-  accMax = 500_C_INT                    ! Max acceleration regions
-  min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
   count_Integration_Regions = 0_C_INT   ! Counter for number of integration regions
   zeroStartPoint = 0.0_C_DOUBLE
   flip_To_Other_Side = .FALSE.
   zeroR = 0.0_C_DOUBLE
   zeroL = 0.0_C_DOUBLE
+  left_Of_Max = .TRUE.
+  area0 = 0.0_C_DOUBLE
+
+
+
+  ! Initialise for pre acceleration
+  area1 = 0.0_C_DOUBLE
+  stop_PreAccelerate = .FALSE.        ! Stop pre-accelerating (and perhaps move to accelerating)
+  converged_Pre = .FALSE.             ! If convergence detected during pre-acceleration
+  sumA = 0.0_C_DOUBLE                 ! Total pre-acceleration area
+  West = 3.0_C_DOUBLE                 ! The current estimate of the tail area
+  Wold = 2.0_C_DOUBLE                 ! Wold and Wold2 are the previous two estimates of the tail area,
+  Wold2 = 1.0_C_DOUBLE                !   to allow testing for convergence
+  count_PreAcc_Regions = 0_C_INT      ! Number of pre-acceleratioin regions
+
+
+  ! Initialise for acceleration
+  count_Acc_Regions = 0_C_INT
+  keep_Accelerating = .TRUE.
+  Mmatrix = 0.0_C_DOUBLE
+  Nmatrix = 0.0_C_DOUBLE
+  xvec = 0.0_C_DOUBLE
+  wvec = 0.0_C_DOUBLE
+  areaA = 0.0_C_DOUBLE
+  count_Acc_Regions = 0_C_INT
+  accMax = 500_C_INT                    ! Max acceleration regions
+  min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
+
 
   ! --- Integration initialization ---
-  area0 = 0.0_C_DOUBLE
-  area1 = 0.0_C_DOUBLE
-  zero  = 0.0_C_DOUBLE
+  area0 = 0.0_C_DOUBLE ! Initial area
 
-  ! --- Find kmax, tmax, mmax ---
+
+
+  ! FIND THE VALUES OF  kmax, tmax, mmax
   CALL findKmax(i, kmax, tmax, mmax, mfirst, left_Of_Max)
-  IF (Cverbose) THEN
+  IF ( Cverbose ) THEN
     CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
     CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
     CALL INTPR( "  -            mmax:", -1, mmax, 1 )
@@ -114,80 +156,140 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   
   ! INTEGRATION
   ! Three integration zones:
+  !
   !   1. The *initial* area, which is not between zeros of Im{k(t)}: area0
+  !      area0 is between tL = 0 and tR.
+  !
   !   2. The initial area *before* Sidi acceleration is invoked: area1
   !      (For instance, wait until Im{k(t)} is on the downturn.)
+  !      So we set tL to be the value of tR is the initial region.
+  !      Then, area1 is between tL set above, and the next zero (i.e., value
+  !       of t), and repeat until it is time for acceleration.
+  !
   !   3. The area thereafter, upon which Sidi acceleration is
   !      applied; the area returned by acceleration is areaA
+  !      Acceleration starts with the tL set as the last value of tR
+  !      used in pre-acceleration.
+
+
 
 
   ! ----------------------------------------------------------------------------
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
-!WRITE(*,*) "Initial area"
-  CALL integrateFirstRegion(i, mfirst, left_Of_Max, tmax, &  ! INPUTS
-                            area0, zeroR)                             ! OUTPUTS
+  ! Find the value of  zeroR  for the initial region (zeroL is always 0.0)
+  CALL findInitialZeroR(i, mfirst, left_Of_Max, tmax, &
+                        zeroR)
+  ! Integrate:
+  CALL GaussQuadrature(i, zeroL, zeroR, area0)
+  ! area0  is the area of the initial region
 
-  IF (Cverbose) THEN
-    CALL DBLEPR("Initial region area:", -1, area0, 1)
-    CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
-    CALL INTPR( "      using right m:", -1, m, 1)
-  END IF
 
 
 
 
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
-!WRITE(*,*) "Starting pre-acceleration"
-  zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
-  leftPreAccZero = zeroL
-  CALL integratePreAccRegions(i, m, mfirst, left_Of_Max, zeroL,  tmax, mmax, flip_To_Other_Side,    & ! INPUTS
-                              area1, zeroR, count_PreAcc_regions,  converged_Pre)     ! OUTPUTS
-  count_Integration_Regions = count_Integration_Regions + count_PreAcc_regions
 
-  IF (Cverbose) THEN
-    CALL DBLEPR(" Pre-acc area:", -1, area1, 1)
-    CALL DBLEPR("      between:", -1, leftPreAccZero, 1)
-    CALL DBLEPR("          and:", -1, zeroR, 1)
-    CALL INTPR( "using right m:", -1, m,     1)
-  
-    IF (converged_Pre) THEN
-      CALL DBLEPR(" Accelerating not needed; convergence by t =", -1, zeroR, 1)
-    ELSE
-      CALL DBLEPR(" Accelerating starting after t =", -1, zeroR, 1)
+  ! Update to get the next values of zeroL and zeroR, and the value of m
+  ! corresponding to zeroR
+  !
+  ! Invariant:
+  !   At entry to every integration call:
+  !     zeroL < zeroR and (zeroL, zeroR) has not yet been integrated
+
+  CALL updateTM( i, tmax, mmax, left_Of_Max, &
+                 m, zeroL, zeroR)
+
+
+  ! The next integration region is between zeroL and zeroR 
+  ! (and  m  corresponds to this value of zeroR)
+!CALL DBLEPR(">>>>ZeroL", -1, zeroL, 1)
+!CALL DBLEPR(">>>>ZeroR", -1, zeroR, 1)
+
+  ! Retain the value of  t  where pre-acceleration starts
+  leftPreAccZero = zeroL
+
+  DO WHILE ( .NOT.(stop_PreAccelerate ) )
+    count_PreAcc_Regions = count_PreAcc_Regions + 1_C_INT    ! Update count
+
+
+    ! Integrate
+    CALL GaussQuadrature(i, zeroL, zeroR, sumA)
+    area1 = area1 + sumA
+    IF ( Cverbose ) THEN
+      CALL DBLEPR(" Pre-acc subregion:", -1, area1, 1)
+      CALL DBLEPR("      between:", -1, zeroL, 1)
+      CALL DBLEPR("          and:", -1, zeroR, 1)
     END IF
-  END IF
+    
+    ! Update zeroL, zeroR and m
+    CALL updateTM( i, tmax, mmax, left_Of_Max, &
+                   m, zeroL, zeroR)
+
+    ! Check if we can stop pre-accelerating yet
+    CALL checkStopPreAcc(i, tmax, zeroR, stop_PreAccelerate, converged_Pre)
+
+  END DO
+
+
 
 
 
   ! ----------------------------------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
-!WRITE(*,*) "Starting acceleration"
-  IF ( converged_Pre) THEN
-    areaA = 0.0_C_DOUBLE
-    count_Acc_Regions = 0_C_INT
-  ELSE
-    leftAccZero = zeroL
-    zeroL = zeroR  ! The last region's right-side zero is next region's left-side zero
 
-    CALL integrateAccelerationRegions(i, m, left_Of_Max, zeroL,  tmax, accMax,                  & ! INPUTS
-                                          aimrerr, epsilon, xvec, wvec, Mmatrix, Nmatrix, & 
-                                          mmax, min_Acc_Regions, exitstatus, flip_To_Other_Side, &
-                                          convergence_Acc, &
-                                          zeroR, converged_Accelerating, &
-                                          relerr)
-    IF (Cverbose) THEN
-      IF ( .NOT.(converged_Accelerating) ) THEN
-        CALL DBLEPR(" Accelerating dod not converged by t =", -1, zeroR, 1)
+  ! Retain the value of  t  where acceleration starts
+  leftAccZero = zeroL
+  
+  ! Initialise the acceleration
+  count_Acc_Regions = 0_C_INT
+  xvec(1) = zeroL
+  
+  IF ( .NOT.(converged_Pre) ) THEN
+    converged_Accelerating = .FALSE.
+
+    DO WHILE ( keep_Accelerating )
+      count_Acc_Regions = count_Acc_Regions + 1_C_INT
+
+      ! Update zeroL, zeroR and m
+      ! - Update xvec
+      xvec(count_Acc_Regions + 1_C_INT) = zeroR
+
+      ! Integrate
+      CALL GaussQuadrature(i, zeroL, zeroR, psi)
+
+      ! Accelerate
+      ! - Update past estimates
+      wvec(count_Acc_Regions)     = psi 
+      ! - wvec contains the sequence of integration areas, starting with the first and up to the limit
+      Wold2 = Wold
+      Wold  = West  
+      ! Accelerate (i.e., update West, the best area estimate)
+      CALL accelerate(xvec, wvec, count_Acc_Regions, Mmatrix, Nmatrix, West)
+      CALL updateTM( i, tmax, mmax, left_Of_Max, &
+                     m, zeroL, zeroR)
+
+      ! Check for convergence
+      relerr = ( DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
+      IF ( (count_Acc_Regions .GE. min_Acc_Regions) .AND. &
+           (relerr .LT. aimrerr) ) THEN
+        keep_Accelerating = .FALSE.
+        converged_Accelerating = .TRUE.
+        convergence_Acc = .TRUE.
       END IF
       
-      CALL DBLEPR("     Acc area:", -1, areaA, 1)
-      CALL DBLEPR("      between:", -1, leftAccZero, 1)
-      CALL DBLEPR("          and:", -1, zeroR, 1)
-      CALL INTPR( "      up to m:", -1, m,     1)
-    END IF  
+      IF (count_Acc_Regions .GE. accMax) THEN
+        keep_Accelerating = .FALSE.
+        converged_Accelerating = .FALSE.
+      END IF
+! IF (m .LT. -3) STOP
+
+    END DO
+    
+    areaA = West
   END IF
-  
+
+
 
   ! --- WIND THINGS UP ---
   count_Integration_Regions = 1_C_INT  +              &   ! Initial zone has one integration region
@@ -195,23 +297,42 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                               count_Acc_Regions           ! Acc regions
   areaT = area0 + area1 + areaA
 
-  IF (Cverbose) THEN
-    CALL DBLEPR("* Initial area0: ", -1, area0, 1)
-    CALL DBLEPR("* Pre-acc area1: ", -1, area1, 1)
-    CALL DBLEPR("*     Acc area!: ", -1, areaA, 1)
-    CALL DBLEPR("***       TOTAL: ", -1, areaT, 1)
+  IF ( Cverbose ) THEN
+    CALL DBLEPR("Initial region area:", -1, area0, 1)
+    CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
+    CALL INTPR( "      using right m:", -1, m, 1)
+    ! --------
+    CALL DBLEPR("       Pre-acc AREA:", -1, area1, 1)
+    CALL DBLEPR("            between:", -1, leftPreAccZero, 1)
+    CALL DBLEPR("                and:", -1, zeroR, 1)
+    CALL INTPR( "      using right m:", -1, m,     1)
+    ! --------
+    IF (converged_Pre) THEN
+      CALL DBLEPR(" Accelerating not needed; convergence by t =", -1, zeroR, 1)
+    ELSE
+      CALL DBLEPR(" Accelerating starting after t =", -1, zeroR, 1)
+      CALL DBLEPR("         Acc area:", -1, areaA, 1)
+      CALL DBLEPR("          between:", -1, leftAccZero, 1)
+      CALL DBLEPR("              and:", -1, zeroR, 1)
+      CALL INTPR( "         up to m:", -1, m,     1)
+    ! --------
+    END IF
+    CALL DBLEPR("*** Initial area0: ", -1, area0, 1)
+    CALL DBLEPR("*** Pre-acc area1: ", -1, area1, 1)
+    CALL DBLEPR("***     Acc area!: ", -1, areaA, 1)
+    CALL DBLEPR("***         TOTAL: ", -1, areaT, 1)
     CALL INTPR( "   over regions: ", -1, count_Integration_Regions, 1)
   END IF
 
   ! We have the value of the integral in the PDF/CDF calculation.
   ! So now work out the actualy PDF/CDF
   
-  IF (Cpdf) THEN
+  IF ( Cpdf ) THEN
     funvalueI = areaT/pi 
   ELSE
     funvalueI =  0.5_C_DOUBLE - areaT/pi
   END IF  
-  IF (Cverbose) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
+  IF ( Cverbose ) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
   
   ! Deallocate the arrays
   DEALLOCATE(Mmatrix, Nmatrix, xvec, wvec)

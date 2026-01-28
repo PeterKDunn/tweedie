@@ -1,5 +1,4 @@
-ptweedie <- function(q, mu, phi, xi = NULL, power = NULL, verbose = FALSE) {
-
+ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   ### BEGIN preliminary work
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
@@ -51,7 +50,7 @@ ptweedie <- function(q, mu, phi, xi = NULL, power = NULL, verbose = FALSE) {
                                     mu      = mu[!special_y_cases],
                                     phi     = phi[!special_y_cases],
                                     power   = power,
-                                    verbose = FALSE,
+                                    verbose = TRUE,
                                     details = FALSE)
         f[!special_y_cases] <- f_TMP
       }
