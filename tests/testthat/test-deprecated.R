@@ -19,7 +19,8 @@ test_that("Deprecated functions work", {
     tweedie.plot(1, mu = 1, phi = 1, power = 1.5)  
   )
   expect_warning({
-    y <- rgamma(50, shape = 1.2, rate = 1.1)
+    set.seed(1000)
+    y <- rgamma(30, shape = 1.2, rate = 1.1)
     tweedie.profile(formula = (y ~ 1), 
                     data = data.frame(y = y ),
                     p.vec = seq(1.5, 2.5, length = 10),
