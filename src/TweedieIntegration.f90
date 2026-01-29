@@ -145,13 +145,6 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! FIND THE VALUES OF  kmax, tmax, mmax
   CALL findKmax(i, kmax, tmax, mmax, mfirst, left_Of_Max)
-  IF ( Cverbose ) THEN
-    CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
-    CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
-    CALL INTPR( "  -            mmax:", -1, mmax, 1 )
-    CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
-  END IF
-  
   m = mfirst
   
   ! INTEGRATION
@@ -176,15 +169,17 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! ----------------------------------------------------------------------------
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
+  
   ! Find the value of  zeroR  for the initial region (zeroL is always 0.0)
   CALL findInitialZeroR(i, mfirst, left_Of_Max, tmax, &
                         zeroR)
   ! Integrate:
-  CALL GaussQuadrature(i, zeroL, zeroR, area0)
-  ! area0  is the area of the initial region
 
+  CALL GaussQuadrature(i, zeroL, zeroR, area0)   ! area0  is the area of the initial region
 
-
+  ! Update
+  CALL updateTM( i, tmax, mmax, left_Of_Max, &
+                 m, zeroL, zeroR)
 
 
   ! ----------------------------------------------------------------------------
@@ -193,18 +188,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! Update to get the next values of zeroL and zeroR, and the value of m
   ! corresponding to zeroR
   !
-  ! Invariant:
-  !   At entry to every integration call:
-  !     zeroL < zeroR and (zeroL, zeroR) has not yet been integrated
-
-  CALL updateTM( i, tmax, mmax, left_Of_Max, &
-                 m, zeroL, zeroR)
 
 
   ! The next integration region is between zeroL and zeroR 
   ! (and  m  corresponds to this value of zeroR)
-!CALL DBLEPR(">>>>ZeroL", -1, zeroL, 1)
-!CALL DBLEPR(">>>>ZeroR", -1, zeroR, 1)
 
   ! Retain the value of  t  where pre-acceleration starts
   leftPreAccZero = zeroL
@@ -212,21 +199,22 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   DO WHILE ( .NOT.(stop_PreAccelerate ) )
     count_PreAcc_Regions = count_PreAcc_Regions + 1_C_INT    ! Update count
 
-
     ! Integrate
     CALL GaussQuadrature(i, zeroL, zeroR, sumA)
     area1 = area1 + sumA
-    IF ( Cverbose ) THEN
+
+    IF ( Cverbose ) THEN    
+      ! -------- Pre-acceleration zone sub-regions
       CALL DBLEPR(" Pre-acc subregion:", -1, area1, 1)
       CALL DBLEPR("      between:", -1, zeroL, 1)
       CALL DBLEPR("          and:", -1, zeroR, 1)
     END IF
-    
-    ! Update zeroL, zeroR and m
+
+    ! Update (zeroL, zeroR and m)
     CALL updateTM( i, tmax, mmax, left_Of_Max, &
                    m, zeroL, zeroR)
 
-    ! Check if we can stop pre-accelerating yet
+    ! Check for convergence
     CALL checkStopPreAcc(i, tmax, zeroR, stop_PreAccelerate, converged_Pre)
 
   END DO
@@ -250,22 +238,23 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
     DO WHILE ( keep_Accelerating )
       count_Acc_Regions = count_Acc_Regions + 1_C_INT
-
-      ! Update zeroL, zeroR and m
-      ! - Update xvec
-      xvec(count_Acc_Regions + 1_C_INT) = zeroR
+      
+      xvec(count_Acc_Regions + 1_C_INT) = zeroR  ! Update xvec
 
       ! Integrate
       CALL GaussQuadrature(i, zeroL, zeroR, psi)
 
-      ! Accelerate
-      ! - Update past estimates
-      wvec(count_Acc_Regions)     = psi 
-      ! - wvec contains the sequence of integration areas, starting with the first and up to the limit
+      ! Prepare for acceleration
+      wvec(count_Acc_Regions)     = psi   ! Update past estimates
+                                          ! wvec contains the sequence of integration areas, 
+                                          ! starting with the first and up to the limit
       Wold2 = Wold
       Wold  = West  
+
       ! Accelerate (i.e., update West, the best area estimate)
       CALL accelerate(xvec, wvec, count_Acc_Regions, Mmatrix, Nmatrix, West)
+
+      ! Update (zeroL, zeroR and m)
       CALL updateTM( i, tmax, mmax, left_Of_Max, &
                      m, zeroL, zeroR)
 
@@ -297,16 +286,34 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                               count_Acc_Regions           ! Acc regions
   areaT = area0 + area1 + areaA
 
+  ! We have the value of the integral in the PDF/CDF calculation, so now work out the actual PDF/CDF
+  IF ( Cpdf ) THEN
+    funvalueI = areaT/pi 
+  ELSE
+    funvalueI =  0.5_C_DOUBLE - areaT/pi
+  END IF  
+  
+  
+  ! Print things if requested
   IF ( Cverbose ) THEN
+    ! -------- Preparatory
+    CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
+    CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
+    CALL INTPR( "  -            mmax:", -1, mmax, 1 )
+    CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
+
+    ! -------- Initial zone
     CALL DBLEPR("Initial region area:", -1, area0, 1)
     CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
     CALL INTPR( "      using right m:", -1, m, 1)
-    ! --------
+
+    ! -------- Pre-acceleration zone
     CALL DBLEPR("       Pre-acc AREA:", -1, area1, 1)
     CALL DBLEPR("            between:", -1, leftPreAccZero, 1)
     CALL DBLEPR("                and:", -1, zeroR, 1)
     CALL INTPR( "      using right m:", -1, m,     1)
-    ! --------
+
+    ! -------- Acceleration zone
     IF (converged_Pre) THEN
       CALL DBLEPR(" Accelerating not needed; convergence by t =", -1, zeroR, 1)
     ELSE
@@ -315,26 +322,22 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       CALL DBLEPR("          between:", -1, leftAccZero, 1)
       CALL DBLEPR("              and:", -1, zeroR, 1)
       CALL INTPR( "         up to m:", -1, m,     1)
-    ! --------
     END IF
+    
+    ! -------- Summary
     CALL DBLEPR("*** Initial area0: ", -1, area0, 1)
     CALL DBLEPR("*** Pre-acc area1: ", -1, area1, 1)
     CALL DBLEPR("***     Acc area!: ", -1, areaA, 1)
     CALL DBLEPR("***         TOTAL: ", -1, areaT, 1)
     CALL INTPR( "   over regions: ", -1, count_Integration_Regions, 1)
+    
+    ! -------- Results
+    CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
+
   END IF
 
-  ! We have the value of the integral in the PDF/CDF calculation.
-  ! So now work out the actualy PDF/CDF
-  
-  IF ( Cpdf ) THEN
-    funvalueI = areaT/pi 
-  ELSE
-    funvalueI =  0.5_C_DOUBLE - areaT/pi
-  END IF  
-  IF ( Cverbose ) CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
-  
-  ! Deallocate the arrays
+
+  ! Tidy up: deallocate the arrays
   DEALLOCATE(Mmatrix, Nmatrix, xvec, wvec)
   
 END SUBROUTINE TweedieIntegration

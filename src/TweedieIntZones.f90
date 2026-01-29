@@ -24,13 +24,14 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)      :: i
     LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate, converged_Pre
     
+    ! Local vars
     INTEGER(C_INT)        :: nmax
     REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, pi
     REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
     
     ! NOTE: 
     ! If  stop_PreAccelerate  is  .TRUE.  it means to stop pre-accelerating
-    ! If  converged_Pre  is  .TRUE.  it means to convergence has een identified during pre-accelerating
+    ! If  converged_Pre  is  .TRUE.  it means to convergence has been identified during pre-accelerating
     ! These are NOT necessarily the same.
     !
     ! If convergence is detected (converged_Pre is .TRUE.), then  stop_PreAccelerate  is also .TRUE.
@@ -248,7 +249,7 @@ CONTAINS
       zeroBoundL = tmax
       zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
     END IF
-!WRITE(*,*) "BOUNDS", zeroBoundL, t_Start_Point, zeroBoundR
+
     IF ( (t_Start_Point .GT. zeroBoundR) .OR. (t_Start_Point .LT. zeroBoundL) ) Then
       t_Start_Point = (zeroBoundL + zeroBoundR) / 2.0_c_DOUBLE
     END IF
@@ -256,7 +257,7 @@ CONTAINS
     ! Find the zero
     CALL findExactZeros(i, mfirst, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, left_Of_Max)
     ! findExactZeros may change the value of  left_Of_Max
-!WRITE(*,*) "FOUND---zeroR", zeroR
+
     CALL evaluateImk(i, zeroR, TMP, error)
     IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, zeroR, 1)
 
