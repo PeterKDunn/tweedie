@@ -31,8 +31,7 @@ test_that("Deprecated functions work", {
                     method = "interpolation",
                     do.points = FALSE,
                     phi.method = "mle") 
-  }
-  )
+  }  )
   expect_warning(
     tweedie.plot(y = seq(0, 10, by = 1),
                  mu = 1,
@@ -40,6 +39,7 @@ test_that("Deprecated functions work", {
                  power = 1.5)
   )
   expect_warning({
+    set.seed(1000)
     y <- rgamma(10, shape = 1.4, scale = 1.5)
     mod1 <- glm(y ~ 1, family=statmod::tweedie(link.power = 0, 
                                                var.power = 2) )
