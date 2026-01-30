@@ -1,5 +1,5 @@
 #' @title Series Evaluation for the Tweedie Probability Function
-#'
+#' @name dtweedie_series
 #' @description
 #' Evaluates the probability density function (\acronym{pdf}) for Tweedie distributions using an infinite series, 
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
@@ -113,11 +113,8 @@ dtweedie_series <- function(y, power, mu, phi){
 
 
 
-#' @title Old Tweedie Function
-#' @description \code{dtweedie.series()} is deprecated; please use \code{dtweedie_series()} instead.
-#' @inheritParams dtweedie_series
+#' @rdname dtweedie_series
 #' @export
-#' @keywords internal
 dtweedie.series <- function(y, power, mu, phi){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "dtweedie.series()", 

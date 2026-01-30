@@ -1,5 +1,5 @@
-#' Tweedie densities evaluation using the saddlepoint approximation
-#' 
+#' @title Tweedie densities evaluation using the saddlepoint approximation
+#' @name dtweedie_saddle
 #' @description
 #' Density function for the Tweedie EMDs using a saddlepoint approximation.
 #' 
@@ -118,11 +118,8 @@ dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
 }
 
 
-#' @title Old Tweedie Function
-#' @description \code{dtweedie.saddle()} is deprecated; please use \code{dtweedie_saddle()} instead.
-#' @inheritParams dtweedie_saddle
+#' @rdname dtweedie_saddle
 #' @export
-#' @keywords internal
 dtweedie.saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "dtweedie.saddle()", 

@@ -1,5 +1,5 @@
 #' @title The Probability of Observing a Zero Value for a Tweedie Density
-#' 
+#' @name tweedie_lambda
 #' @description The probability that the variable takes the value of zero.
 #'
 #' @usage tweedie_lambda(mu, phi, power)

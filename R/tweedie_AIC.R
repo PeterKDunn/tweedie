@@ -1,5 +1,5 @@
 #' @title AIC for Tweedie Glms
-#'
+#' @name tweedie_AIC
 #' @description Evaluates the \acronym{aic} for a fitted Tweedie \acronym{glm}.
 #' The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{edm}s), 
 #' famous for their role in generalized linear models. 
@@ -89,11 +89,8 @@ tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
 }
 
 
-#' @title Old Tweedie Function
-#' @description \code{AICtweedie()} is deprecated; please use \code{tweedie_AIC()} instead.
-#' @inheritParams tweedie_AIC
+#' @rdname tweedie_AIC
 #' @export
-#' @keywords internal
 AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "AICtweedie()", 

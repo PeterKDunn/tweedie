@@ -1,5 +1,5 @@
 #' @title Fourier Inversion Evaluation for the Tweedie Probability Function
-#'
+#' @name dtweedie_inversion
 #' @description
 #' Evaluates the probability density function (\acronym{pdf}) for Tweedie distributions using Fourier inversion, 
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
@@ -227,11 +227,8 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 }
 
 
-#' @title Old Tweedie Function
-#' @description \code{dtweedie.inversion()} is deprecated; please use \code{dtweedie_inversion()} instead.
-#' @inheritParams dtweedie_inversion
+#' @rdname dtweedie_inversion
 #' @export
-#' @keywords internal
 dtweedie.inversion <- function(y, power, mu, phi, method = 3, verbose, details){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "dtweedie.inversion()", 

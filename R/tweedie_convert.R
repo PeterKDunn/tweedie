@@ -1,5 +1,5 @@
 #' @title Tweedie Distribution: Convert Between Parameter Formats
-#'
+#' @name tweedie_convert
 #' @description
 #' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}
 #' and the corresponding underlying Poisson and gamma parameters (when \eqn{1 < p < 2}).
@@ -86,11 +86,8 @@ tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
 
 
 
-#' @title Old Tweedie Function
-#' @description \code{tweedie.convert()} is deprecated; please use \code{tweedie_convert()} instead.
-#' @inheritParams tweedie_convert
+#' @rdname tweedie_convert
 #' @export
-#' @keywords internal
 tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "tweedie.convert()", 

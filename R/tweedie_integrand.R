@@ -1,5 +1,5 @@
 #' @title Display Integrand Information for Tweedie Fourier inversion
-#' 
+#' @name tweedie_integrand
 #' @description Plots the integrand for Fourier inversion and the real and imaginary parts separately.
 #'
 #' @usage

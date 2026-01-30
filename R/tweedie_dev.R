@@ -1,7 +1,6 @@
 #' @title Unit Deviance for a Tweedie Distribution
-#' 
-#' @description
-#' Computes the unit deviance for Tweedie distributions.
+#' @name tweedie_dev
+#' @description Computes the unit deviance for Tweedie distributions.
 #'
 #' @usage tweedie_dev(y, mu, power)
 #' @param y vector of quantiles.
@@ -51,11 +50,8 @@ tweedie_dev <- function(y, mu, power){
 
 
 
-#' @title Old Tweedie Function
-#' @description \code{tweedie.dev()} is deprecated; please use \code{tweedie_dev()} instead.
-#' @inheritParams tweedie_dev
+#' @rdname tweedie_dev
 #' @export
-#' @keywords internal
 tweedie.dev <- function(y, mu, power){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "tweedie.dev()", 

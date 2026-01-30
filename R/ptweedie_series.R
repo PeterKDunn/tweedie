@@ -1,5 +1,5 @@
 #' @title Series Evaluation for the Tweedie Distribution Function
-#'
+#' @name ptweedie_series
 #' @description
 #' Evaluates the distribution function (\acronym{df}) for Tweedie distributions 
 #' with \eqn{1 < p < 2}{1 < p < 2}
@@ -111,11 +111,8 @@ ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
 
 
 
-#' @title Old Tweedie Function
-#' @description \code{ptweedie.series()} is deprecated; please use \code{ptweedie_series()} instead.
-#' @inheritParams ptweedie_series
+#' @rdname ptweedie_series
 #' @export
-#' @keywords internal
 ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "ptweedie.series()", 

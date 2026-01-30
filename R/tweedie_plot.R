@@ -1,5 +1,5 @@
 #' @title Plot Tweedie Models
-#'
+#' @name tweedie_plot
 #' @description This function produced a plot of the specified Tweedie distribution.
 #'
 #' @usage tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, add = FALSE, ...)
@@ -106,11 +106,8 @@ tweedie_plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL,
 
 
 
-#' @title Old Tweedie Function
-#' @description \code{tweedie.plot()} is deprecated; please use \code{tweedie_plot()} instead.
-#' @inheritParams tweedie_plot
+#' @rdname tweedie_plot
 #' @export
-#' @keywords internal
 tweedie.plot <- function(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
                          add =FALSE, ...){
   lifecycle::deprecate_warn(when = "3.0.5", 

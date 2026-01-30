@@ -1,5 +1,5 @@
 #' @title Profile Likelihood Estimate of Tweedie Variance Index Parameter
-#' 
+#' @name tweedie_profile
 #' @description This function profiles the (log-)likelihood over a vector of
 #'   Tweedie power-index parameter (denoted \eqn{p}{power} or \eqn{\xi}{xi}) to find the maximum
 #'   likelihood estimate (MLE) of the index parameter \eqn{p} (or equivalently \eqn{\xi}{xi}).
@@ -851,11 +851,8 @@ tweedie_profile <- function(formula,
 
 
 
-#' @title Old Tweedie Profile Function
-#' @description \code{tweedie.profile()} is deprecated; please use \code{tweedie_profile()} instead.
-#' @inheritParams tweedie_profile
+#' @rdname tweedie_profile
 #' @export
-#' @keywords internal
 tweedie.profile <- function(formula, ...) { 
   # 1. Signal the deprecation
   lifecycle::deprecate_warn(

@@ -1,5 +1,5 @@
 #' @title Fourier Inversion Evaluation for the Tweedie Distribution Function
-#'
+#' @name ptweedie_inversion
 #' @description
 #' Evaluates the distribution function (\acronym{df}) for Tweedie distributions using Fourier inversion, 
 #' for given values of the dependent variable \code{y}, 
@@ -128,11 +128,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   }
 }
 
-#' @title Old Tweedie Function
-#' @description \code{ptweedie.inversion()} is deprecated; please use \code{ptweedie_inversion()} instead.
-#' @inheritParams dtweedie_inversion
+#' @rdname ptweedie_inversion
 #' @export
-#' @keywords internal
 ptweedie.inversion <- function(q, power, mu, phi, verbose, details){ 
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "ptweedie.inversion()", 
