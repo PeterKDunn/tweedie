@@ -4,13 +4,12 @@
 
 * This is a update release.
 
+# Test results
+There were no ERRORs or WARNINGs on R-hub Debian, Ubuntu, macos, and Windows, and local macOS.
 
-## Test results
-There were no ERRORs or WARNINGs on platforms tested (e.g., R-hub Ubuntu, R-hub linux, R-hub macos, R-hub windows, and local macOS).
+There is one one NOTE which is explained below:
 
-There is one WARNING and one NOTE which are explained below:
-  Warning: A complete check needs the 'checkbashisms' script.
+"A complete check needs the 'checkbashisms' script.""
 
-This warning appeared during local checks on macOS, because the checkbashisms utility is not present on the local system. 
-However, the package was tested on R-hub (Debian Linux), where the script is available, and it passed without any bashism issues.
-The configure script follows standard sh syntax.
+Explanation: This warning appeared during local checks on macOS because the checkbashisms utility is not present on the local system. However, the package was tested on R-hub (Debian Linux), where the script is available, and it passed without any bashism issues. The configure script follows standard sh syntax.
+
