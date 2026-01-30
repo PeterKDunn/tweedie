@@ -323,7 +323,7 @@ tweedie_profile <- function(formula,
     
     
     skip.obs <- FALSE
-    if ( is( catch.possible.error, "try-error" ) ) {
+    if ( inherits( catch.possible.error, "try-error" ) ) {
       skip.obs <- TRUE 
     }
     
@@ -434,13 +434,13 @@ tweedie_profile <- function(formula,
               # of  ydata  are multiples of  phi
               y.on.phi <- ydata/phi
               close.enough <- array( dim = length(y.on.phi))
-              for (i in (1 : length(y.on.phi))){
+              for (j in (1 : length(y.on.phi))){
                 if (isTRUE(all.equal(y.on.phi, 
                                      as.integer(y.on.phi)))){
-                  L[i] <- sum( log( dpois(x = round(y / phi), 
+                  L[j] <- sum( log( dpois(x = round(y / phi), 
                                           lambda = mu / phi ) ) )
                 } else {
-                  L[i] <- 0
+                  L[j] <- 0
                 }
               }
             }
@@ -853,7 +853,27 @@ tweedie_profile <- function(formula,
 
 #' @rdname tweedie_profile
 #' @export
-tweedie.profile <- function(formula, ...) { 
+tweedie.profile <- function(formula, 
+                            p.vec = NULL, 
+                            xi.vec = NULL, 
+                            link.power = 0, 
+                            data, 
+                            weights = 1, 
+                            offset = 0, 
+                            fit.glm = FALSE, 
+                            do.smooth = TRUE, 
+                            do.plot = FALSE, 
+                            do.ci = do.smooth, 
+                            eps = 1/6,
+                            control = list( epsilon = 1e-09, 
+                                            maxit = stats::glm.control()$maxit, 
+                                            trace = glm.control()$trace ),
+                            do.points = do.plot, 
+                            method = "inversion",
+                            conf.level = 0.95, 
+                            phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
+                            verbose = FALSE, 
+                            add0 = FALSE) { 
   # 1. Signal the deprecation
   lifecycle::deprecate_warn(
     when = "3.0.5", 
