@@ -1,0 +1,19 @@
+# src/Makevars.win
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(SHLIB_OPENMP_LIBS) $(FLIBS)
+
+$(SHLIB): 00tweedie_params.o rprintf_mod.o Calcs_Real.o Calcs_Imag.o \
+          Calcs_Solvers.o Calcs_K.o TweedieIntZones.o Integrands.o \
+          gaussianData.o GaussQuadrature.o TweedieIntegration.o
+
+# The absolute "must-haves" for Windows to not trip:
+00tweedie_params.o: 00tweedie_params.f90
+rprintf_mod.o: rprintf_mod.f90
+Calcs_Real.o: Calcs_Real.f90 00tweedie_params.o
+Calcs_Imag.o: Calcs_Imag.f90 00tweedie_params.o
+Calcs_Solvers.o: Calcs_Solvers.f90 00tweedie_params.o
+Calcs_K.o: Calcs_K.f90 Calcs_Solvers.o Calcs_Imag.o 00tweedie_params.o
+TweedieIntZones.o: TweedieIntZones.f90 Calcs_K.o 00tweedie_params.o
+Integrands.o: Integrands.f90 Calcs_Real.o
+gaussianData.o: gaussianData.f90 00tweedie_params.o rprintf_mod.o
+GaussQuadrature.o: GaussQuadrature.f90 Integrands.o gaussianData.o
+TweedieIntegration.o: TweedieIntegration.f90 Integrands.o GaussQuadrature.o TweedieIntZones.o
