@@ -1,3 +1,12 @@
+tweedie 3.0.6 (Release date: 2026-01-30)
+==============
+
+Changes:
+
+* Trying to fix an obscure bug that only presents on Debian.
+
+
+
 tweedie 3.0.5 (Release date: 2026-01-30)
 ==============
 
