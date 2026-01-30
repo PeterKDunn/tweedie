@@ -1,4 +1,4 @@
-#' AIC for Tweedie glms
+#' @title AIC for Tweedie Glms
 #'
 #' @description Evaluates the \acronym{aic} for a fitted Tweedie \acronym{glm}.
 #' The Tweedie family of distributions belong to the class of exponential dispersion models (\acronym{edm}s), 
@@ -50,16 +50,13 @@
 #'
 #' @examples
 #' # Fit a Tweedie density using  tweedie  family function from  statmod
-#' library(statmod)
-#' pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
+#' pretend <- data.frame( y = stats::rgamma(20, shape = 1, rate = 1) )
 #' fit <- glm(y ~ 1, data = pretend, 
-#'            family = tweedie(link.power = 0, var.power = 2.1))
+#'            family = statmod::tweedie(link.power = 0, var.power = 2.1))
 #'
 #' # Compute the AIC
 #' tweedie_AIC(fit)
 #'
-#' @aliases AICtweedie
-#' 
 #' @export
 tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
   # New  dispersion  input for (e.g.) Poisson case, added October 2017
@@ -92,11 +89,15 @@ tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
 }
 
 
-
-
+#' @title Old Tweedie Function
+#' @description \code{AICtweedie()} is deprecated; please use \code{tweedie_AIC()} instead.
+#' @inheritParams tweedie_AIC
 #' @export
+#' @keywords internal
 AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
-  .Deprecated("tweedie_AIC", package = "tweedie")
+  lifecycle::deprecate_warn(when = "3.0.5", 
+                            what = "AICtweedie()", 
+                            with = "tweedie_AIC()")
   tweedie_AIC(glm.obj = glm.obj, 
               dispersion = dispersion,
               k = k,

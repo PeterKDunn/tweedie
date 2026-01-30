@@ -1,3 +1,5 @@
+
+#' @noRd
 sort_notation <- function(xi = NULL, power = NULL){
   # Sorts out whether the  xi  or the  p/power  notation is being used,
   # so output presented appropriately
@@ -45,6 +47,7 @@ sort_notation <- function(xi = NULL, power = NULL){
 
 ################################################################################
 
+#' @noRd
 check_inputs <- function(y, mu, phi, power, type = "standard"){
   # Checks that the inputs satisfy the necessary criteria (e.g., mu > 0).
   # Ensures that y, mu and phi are all vectors of the same length.
@@ -142,6 +145,7 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
 
 ################################################################################
 
+#' @noRd
 special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE){
   # Special cases may be one of two types:
   # - based on the value of p:
@@ -240,7 +244,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (any(y_Zero)) {
 
         if ( (power > 0) & (power < 2) ) {
-          f[y_Zero] <- exp( -find_lambda(mu[y_Zero], phi[y_Zero], power) )
+          f[y_Zero] <- exp( -tweedie_lambda(mu[y_Zero], phi[y_Zero], power) )
         } else {
           f[y_Zero] <- 0  
         }

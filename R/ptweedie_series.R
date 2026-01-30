@@ -1,4 +1,4 @@
-#'  Series Evaluation for the Tweedie Distribution Function
+#' @title Series Evaluation for the Tweedie Distribution Function
 #'
 #' @description
 #' Evaluates the distribution function (\acronym{df}) for Tweedie distributions 
@@ -40,9 +40,6 @@
 #' @keywords distribution
 #'
 #' @export
-#' 
-#' @aliases ptweedie.series
-
 ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE) {
   ### NOTE: No notation checks
 
@@ -112,9 +109,17 @@ ptweedie_series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
   
 }
 
+
+
+#' @title Old Tweedie Function
+#' @description \code{ptweedie.series()} is deprecated; please use \code{ptweedie_series()} instead.
+#' @inheritParams ptweedie_series
 #' @export
+#' @keywords internal
 ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE){ 
-  .Deprecated("ptweedie_series", package = "tweedie")
+  lifecycle::deprecate_warn(when = "3.0.5", 
+                            what = "ptweedie.series()", 
+                            with = "ptweedie_series()")
   ptweedie_series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
 

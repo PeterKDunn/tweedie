@@ -30,8 +30,9 @@ test_that("Deprecated functions work", {
                     do.ci = FALSE, 
                     method = "interpolation",
                     do.points = FALSE,
-                    phi.method = "mle") 
-  }  )
+                    phi.method = "mle")},
+    regexp = "deprecated"
+  )
   expect_warning(
     tweedie.plot(y = seq(0, 10, by = 1),
                  mu = 1,

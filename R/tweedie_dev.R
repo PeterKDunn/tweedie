@@ -1,4 +1,4 @@
-#' Unit Deviance for a Tweedie Distribution
+#' @title Unit Deviance for a Tweedie Distribution
 #' 
 #' @description
 #' Computes the unit deviance for Tweedie distributions.
@@ -19,8 +19,6 @@
 #' # Unit deviance is not symmetric in general:
 #' round( tweedie_dev(0:6, mu = 3, power = 1.1), 3)
 #' 
-#' @aliases tweedie.dev
-#'
 #' @export
 tweedie_dev <- function(y, mu, power){
   # 
@@ -52,9 +50,16 @@ tweedie_dev <- function(y, mu, power){
 }
 
 
+
+#' @title Old Tweedie Function
+#' @description \code{tweedie.dev()} is deprecated; please use \code{tweedie_dev()} instead.
+#' @inheritParams tweedie_dev
 #' @export
+#' @keywords internal
 tweedie.dev <- function(y, mu, power){ 
-  .Deprecated("tweedie_dev", package = "tweedie")
+  lifecycle::deprecate_warn(when = "3.0.5", 
+                            what = "tweedie.dev()", 
+                            with = "tweedie_dev()")
   tweedie_dev(y, mu, power)
 }
 

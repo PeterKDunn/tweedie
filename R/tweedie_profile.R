@@ -1,4 +1,4 @@
-#' Profile likelihood estimate of Tweedie variance index parameter
+#' @title Profile Likelihood Estimate of Tweedie Variance Index Parameter
 #' 
 #' @description This function profiles the (log-)likelihood over a vector of
 #'   Tweedie power-index parameter (denoted \eqn{p}{power} or \eqn{\xi}{xi}) to find the maximum
@@ -84,12 +84,9 @@
 #' # The estimate for the variance power index (p, or xi) is:
 #' out$p.max
 #' 
-#' #' @importFrom methods is
 #' @importFrom graphics lines rug points par mtext abline axis  points
-#' @importFrom stats contrasts fitted optimise glm.fit splinefun glm.control deviance deviance uniroot
+#' @importFrom stats contrasts fitted optimize glm.fit splinefun glm.control deviance deviance uniroot
 #' 
-#' @aliases tweedie.profile
-#'
 #' @keywords  models
 #' 
 #' @export
@@ -353,7 +350,7 @@ tweedie_profile <- function(formula,
     } else {
       if ( phi.method == "mle"){
         
-        if (verbose >= 1) cat(" (using optimise): ")
+        if (verbose >= 1) cat(" (using optimize): ")
         
         # Saddlepoint approx of phi:
         phi.saddle <- sum( tweedie_dev(y = ydata, 
@@ -377,7 +374,7 @@ tweedie_profile <- function(formula,
         #                hessian=FALSE,
         #                power=p, mu=mu, y=data)
         if ( p != 0 ) {
-          ans <- optimise(f = dtweedie_nlogl, 
+          ans <- optimize(f = dtweedie_nlogl, 
                           maximum = FALSE, 
                           interval = c(low.limit, 
                                        10 * phi.est),
@@ -677,7 +674,7 @@ tweedie_profile <- function(formula,
                                offset = offset,
                                family = statmod::tweedie(xi.max, 
                                                          link.power = link.power)))
-        phi.max <- optimise( f = dtweedie_nlogl, 
+        phi.max <- optimize( f = dtweedie_nlogl, 
                              maximum = FALSE, 
                              interval = c(phi.lo, phi.hi ), 
                              # set lower limit phi.lo???
@@ -854,36 +851,27 @@ tweedie_profile <- function(formula,
 
 
 
-  
-
+#' @title Old Tweedie Profile Function
+#' @description \code{tweedie.profile()} is deprecated; please use \code{tweedie_profile()} instead.
+#' @inheritParams tweedie_profile
 #' @export
-tweedie.profile <- function(formula, p.vec = NULL, xi.vec = NULL, link.power = 0, 
-                               data, weights, offset, fit.glm = FALSE, 
-                               do.smooth = TRUE, do.plot = FALSE, 
-                               do.ci = do.smooth, eps = 1/6,
-                               control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, trace = glm.control()$trace ),
-                               do.points = do.plot, method = "inversion", conf.level = 0.95, 
-                               phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), verbose = FALSE, add0 = FALSE){ 
-  .Deprecated("tweedie_profile", package = "tweedie")
-  tweedie_profile(formula = formula, 
-                  p.vec = p.vec,
-                  xi.vec = xi.vec,
-                  link.power = link.power,
-                  data = data,
-                  weights = NULL,
-                  offset = NULL,
-                  fit.glm = fit.glm,
-                  do.smooth = do.smooth,
-                  do.plot = do.plot,
-                  do.ci = do.ci,
-                  eps = eps,
-                  control = control,
-                  do.points = do.points,
-                  method = method,
-                  conf.level = conf.level,
-                  phi.method = phi.method,
-                  verbose = verbose,
-                  add0 = add0)
+#' @keywords internal
+tweedie.profile <- function(formula, ...) { 
+  # 1. Signal the deprecation
+  lifecycle::deprecate_warn(
+    when = "3.0.5", 
+    what = "tweedie.profile()", 
+    with = "tweedie_profile()"
+  )
+  
+  # 2. Capture the call as the user wrote it
+  cl <- match.call()
+  
+  # 3. Change the name of the function to be called
+  cl[[1]] <- quote(tweedie::tweedie_profile)
+  
+  # 4. Execute it in the environment where tweedie.profile was called
+  eval(cl, parent.frame())
 }
 
 

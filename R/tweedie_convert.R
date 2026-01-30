@@ -1,4 +1,4 @@
-#' Tweedie Distribution: Converting Between Parameter Formats
+#' @title Tweedie Distribution: Convert Between Parameter Formats
 #'
 #' @description
 #' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}
@@ -28,8 +28,6 @@
 #' # Convert parameters
 #' tweedie_convert(mu = fitted(fit, type="response"), phi = 1, power = 1.4)
 #'
-#' @aliases tweedie.convert
-#'  
 #' @export
 tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
   ### ADDED 14 July 2017
@@ -87,9 +85,16 @@ tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
 
 
 
+
+#' @title Old Tweedie Function
+#' @description \code{tweedie.convert()} is deprecated; please use \code{tweedie_convert()} instead.
+#' @inheritParams tweedie_convert
 #' @export
+#' @keywords internal
 tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
-  .Deprecated("tweedie_convert", package = "tweedie")
+  lifecycle::deprecate_warn(when = "3.0.5", 
+                            what = "tweedie.convert()", 
+                            with = "tweedie_convert()")
   if (is.null(power)) power <- xi
   tweedie_convert(xi = NULL, 
               mu = mu,
