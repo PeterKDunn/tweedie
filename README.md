@@ -42,19 +42,20 @@ Special cases of the Tweedie distributions are:
 
 - the *normal* distribution, with $\xi = 0$ (i.e., the variance is
   $\phi$ and not related to the mean);
-- the *Poisson* distribution, with $\xu = 1$ and $\phi = 1$ (.e.e, the
+- the *Poisson* distribution, with $\xi = 1$ and $\phi = 1$ (i.e., the
   variance is the same as the mean);
-- the *gamma* distribution, with $\x = 2$; and
-- the\* inverse Gaussian\* distribution, with $\xi = 3$.
+- the *gamma* distribution, with $\xi = 2$; and
+- the *inverse Gaussian* distribution, with $\xi = 3$.
 
 For all other values of $\xi$, the probability functions and
 distribution functions have no closed forms.
 
-For $\xi < 1$, applications are limited (non-existent so far?).
+For $\xi < 1$, applications are limited (non-existent so far?), but have
+support on the wntire real line and $\mu > 0$.
 
-For $1 < x < 2$, Tweedie distribution can be represented as a Poisson
-sum of gamma distributions. These distributions are comtinuous for
-$Y > )$ but have a discrete mass for $Y = 0$.
+For $1 < \xi < 2$, Tweedie distributions can be represented as a Poisson
+sum of gamma distributions. These distributions are continuous for
+$Y > 0$ but have a discrete mass at $Y = 0$.
 
 For $\xi \ge 2$, the distributions have support on the positive reals.
 
@@ -79,8 +80,8 @@ for (i in 1:N){
 }
 
 mod.tw <- glm(y ~ 1, 
-              family = tweedie(var.power = 1.5, link.power = 0) )
-   # link.power = 0  means the log-link
+              family = statmod::tweedie(var.power = 1.5, link.power = 0) )
+              # link.power = 0  means the log-link
 ```
 
 However, likelihood computations are necessary in other situations, such
