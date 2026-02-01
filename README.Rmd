@@ -1,31 +1,36 @@
+---
+output: github_document
+---
 
 # tweedie <a href="https://pkgs.rstudio.com/tweedie/"><img src="man/figures/tweedie_hex.png" align="right" height="138" /></a>
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
 # tweedie
 
 <!-- badges: start -->
-
 <!-- ![R-CMD-check](https://github.com/rstudio/rmarkdown/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rstudio/rmarkdown/actions/workflows/R-CMD-check.yaml)
 [![CRAN release](https://www.r-pkg.org/badges/version/rmarkdown)](https://cran.r-project.org/package=rmarkdown)
 [![Codecov test coverage](https://codecov.io/gh/rstudio/rmarkdown/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rstudio/rmarkdown?branch=main) -->
-
 <!-- badges: end -->
 
-The **tweedie** package allows likelihood computations for Tweedie
-distributions.
+The **tweedie** package allows likelihood computations for Tweedie distributions.
 
-Apart from special cases (the normal, Poisson, gamma, inverse Gaussian
-distributions), Tweedie distributions do not have closed-form density
-functions or distribution functions. This package uses fast numerical
-algorithms (infinite oscillation integrals; infinite series) to evaluate
-the Tweedie density functions and distribution functions.
+Apart from special cases (the normal, Poisson, gamma, inverse Gaussian distributions), Tweedie distributions do not have closed-form density functions or distribution functions.
+This package uses fast numerical algorithms (infinite oscillation integrals; infinite series) to evaluate the Tweedie density functions and distribution functions.
 
 ## Installation
 
-You can install the development version of **tweedie** from
-[GitHub](https://github.com/) with:
+You can install the development version of **tweedie** from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
@@ -34,11 +39,9 @@ pak::pak("PeterKDunn/tweedie")
 
 ## Example
 
-Likelihood computations are not need to fit a Tweedie generalized linear
-model, using the `tweedie()` family from the [**statmod**
-package](https://CRAN.R-project.org/package=statmod):
+Likelihood computations are not need to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod):
 
-``` r
+```{r TWexample}
 library(statmod)
 
 set.seed(96)
@@ -57,16 +60,19 @@ mod.tw <- glm(y ~ 1,
    # link.power = 0  means the log-link
 ```
 
-However, likelihood computations are necessary in other situations, such
-as generating random numnbers, plotting accurate density and probability
-functions, and computing the quantile residuals:
+However, likelihood computations are necessary in other situations, such as generating random numnbers, plotting accurate density and probability functions, and computing the quantile residuals:
 
-``` r
+```{r TWqqplot}
 library(tweedie)
 
 qqnorm( statmod::qresid(mod.tw) )
 ```
 
-<img src="man/figures/README-TWqqplot-1.png" width="100%" />
+
+
+
+
 
 <!-- REMEMBER to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
+
+
