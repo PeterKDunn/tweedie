@@ -80,10 +80,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   current_phi  = Cphi(i)  ! Access phi value for index i
   
   ! ALLOCATE these arrays onto the HEAP
-  ALLOCATE(Mmatrix(2, 202))
-  ALLOCATE(Nmatrix(2, 202))
-  ALLOCATE(xvec(202))
-  ALLOCATE(wvec(202))
+  ALLOCATE(Mmatrix(2, VEC_SIZE))
+  ALLOCATE(Nmatrix(2, VEC_SIZE))
+  ALLOCATE(xvec(VEC_SIZE))
+  ALLOCATE(wvec(VEC_SIZE))
   
   IF ( Cverbose ) THEN
     ! Report the current values for this evaluation
@@ -134,7 +134,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   wvec = 0.0_C_DOUBLE
   areaA = 0.0_C_DOUBLE
   count_Acc_Regions = 0_C_INT
-  accMax = 200_C_INT                    ! Max acceleration regions
+  accMax = MAX_ACC                      ! Max acceleration regions
   min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
 
 
