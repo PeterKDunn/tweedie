@@ -32,7 +32,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   LOGICAL(C_BOOL)       :: left_Of_Max
   LOGICAL(C_BOOL)       :: flip_To_Other_Side
   
-  INTEGER, PARAMETER :: MAX_ACC = 500
+  INTEGER, PARAMETER :: MAX_ACC = 200
   INTEGER, PARAMETER :: VEC_SIZE = MAX_ACC + 2
   REAL(C_DOUBLE), PARAMETER :: EPS = 1.0E-12_C_DOUBLE
 
@@ -80,10 +80,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   current_phi  = Cphi(i)  ! Access phi value for index i
   
   ! ALLOCATE these arrays onto the HEAP
-  ALLOCATE(Mmatrix(2, 502))
-  ALLOCATE(Nmatrix(2, 502))
-  ALLOCATE(xvec(502))
-  ALLOCATE(wvec(502))
+  ALLOCATE(Mmatrix(2, VEC_SIZE))
+  ALLOCATE(Nmatrix(2, VEC_SIZE))
+  ALLOCATE(xvec(VEC_SIZE))
+  ALLOCATE(wvec(VEC_SIZE))
   
   IF ( Cverbose ) THEN
     ! Report the current values for this evaluation
@@ -134,7 +134,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   wvec = 0.0_C_DOUBLE
   areaA = 0.0_C_DOUBLE
   count_Acc_Regions = 0_C_INT
-  accMax = 500_C_INT                    ! Max acceleration regions
+  accMax = MAX_ACC                      ! Max acceleration regions
   min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
 
 
@@ -306,12 +306,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     CALL DBLEPR("Initial region area:", -1, area0, 1)
     CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
     CALL INTPR( "      using right m:", -1, m, 1)
+    CALL INTPR( " # pre-acc regions: ", -1, count_PreAcc_Regions, 1)
 
     ! -------- Pre-acceleration zone
     CALL DBLEPR("       Pre-acc AREA:", -1, area1, 1)
     CALL DBLEPR("            between:", -1, leftPreAccZero, 1)
     CALL DBLEPR("                and:", -1, zeroR, 1)
     CALL INTPR( "      using right m:", -1, m,     1)
+    CALL INTPR( "     # acc regions: ", -1, count_Acc_Regions, 1)
 
     ! -------- Acceleration zone
     IF (converged_Pre) THEN
