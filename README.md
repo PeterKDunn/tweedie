@@ -51,7 +51,7 @@ For all other values of $\xi$, the probability functions and
 distribution functions have no closed forms.
 
 For $\xi < 1$, applications are limited (non-existent so far?), but have
-support on the wntire real line and $\mu > 0$.
+support on the entire real line and $\mu > 0$.
 
 For $1 < \xi < 2$, Tweedie distributions can be represented as a Poisson
 sum of gamma distributions. These distributions are continuous for
