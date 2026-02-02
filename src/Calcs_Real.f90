@@ -2,6 +2,7 @@ MODULE Calcs_Real
 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
+  USE R_interfaces
 
   IMPLICIT NONE
   

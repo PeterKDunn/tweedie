@@ -2,6 +2,7 @@ MODULE Calcs_Solvers
 
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+  USE R_interfaces
 
   IMPLICIT NONE
   PRIVATE

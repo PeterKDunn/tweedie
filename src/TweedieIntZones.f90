@@ -6,6 +6,7 @@ MODULE TweedieIntZones
   USE Calcs_Imag
   USE Calcs_Real
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+  USE R_interfaces
 
   IMPLICIT NONE
 

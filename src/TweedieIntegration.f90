@@ -10,7 +10,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   USE Calcs_Imag
   USE Calcs_Real
   USE Calcs_K
-  
+  USE R_interfaces
+
   IMPLICIT NONE
   
   INTEGER(C_INT), INTENT(IN)        :: i              ! Observation index

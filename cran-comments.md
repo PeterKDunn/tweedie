@@ -5,7 +5,8 @@
 * This is a update release.
 
 # Test results
-There were no ERRORs or WARNINGs on R-hub Debian, Ubuntu, macos, and Windows, and local macOS.
+
+There were no ERRORs or WARNINGs on R-hub Ubuntu, macos, and Windows, and local macOS.
 
 There is one one NOTE which is explained below:
 
