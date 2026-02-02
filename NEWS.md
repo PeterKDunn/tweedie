@@ -1,9 +1,9 @@
-tweedie 3.0.6 (Release date: 2026-01-30)
+tweedie 3.0.6 (Release date: 2026-02-01)
 ==============
 
 Changes:
 
-* Trying to fix an obscure bug that only presents on Debian.
+* Trying to fix bugs that pop up (seemingly at random) with rhub checks.
 
 
 
