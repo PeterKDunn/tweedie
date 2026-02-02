@@ -1,5 +1,5 @@
 
-# tweedie <a href="https://pkgs.rstudio.com/tweedie/"><img src="man/figures/tweedie_hex.png" align="right" height="138" /></a>
+# tweedie <a href="https://CRAN.R-project.org/package=tweedie/"><img src="man/figures/tweedie_hex.png" align="right" height="138" /></a>
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
