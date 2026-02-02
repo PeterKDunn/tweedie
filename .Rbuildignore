@@ -12,3 +12,4 @@
 ^revdep$
 ^README\.Rmd$
 ^Meta$
+^doc$
