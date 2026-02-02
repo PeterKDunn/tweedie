@@ -4,33 +4,14 @@ MODULE R_interfaces
 
 CONTAINS
 
-  ! One routine to rule them all - No generic interface to cause ambiguity
-  SUBROUTINE DBLEPR(S, N, V, NV)
-    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
-    INTEGER, INTENT(IN) :: N
-    DOUBLE PRECISION, INTENT(IN) :: V
-    INTEGER, INTENT(IN) :: NV
-    
-    ! Internal C-bound interface
-    INTERFACE
-       SUBROUTINE dblepr_c(S, N, V, NV) BIND(C, NAME="dblepr_")
-         USE ISO_C_BINDING
-         CHARACTER(KIND=C_CHAR) :: S(*)
-         INTEGER(C_INT), VALUE :: N
-         REAL(C_DOUBLE), INTENT(IN) :: V(*)
-         INTEGER(C_INT), VALUE :: NV
-       END SUBROUTINE dblepr_c
-    END INTERFACE
-
-    ! Force conversion to the types R's C code expects
-    CALL dblepr_c(S, INT(N, C_INT), [REAL(V, C_DOUBLE)], INT(NV, C_INT))
-  END SUBROUTINE DBLEPR
-
   SUBROUTINE INTPR(S, N, V, NV)
     CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
     INTEGER, INTENT(IN) :: N
-    INTEGER, INTENT(IN) :: V
-    INTEGER, INTENT(IN) :: NV
+    ! OPTIONAL makes both 2-arg and 4-arg calls valid simultaneously
+    INTEGER, INTENT(IN), OPTIONAL :: V
+    INTEGER, INTENT(IN), OPTIONAL :: NV
+    
+    INTEGER(C_INT) :: V_tmp(1), NV_tmp
     
     INTERFACE
        SUBROUTINE intpr_c(S, N, V, NV) BIND(C, NAME="intpr_")
@@ -42,7 +23,45 @@ CONTAINS
        END SUBROUTINE intpr_c
     END INTERFACE
 
-    CALL intpr_c(S, INT(N, C_INT), [INT(V, C_INT)], INT(NV, C_INT))
+    IF (PRESENT(V) .AND. PRESENT(NV)) THEN
+       V_tmp(1) = INT(V, C_INT)
+       NV_tmp = INT(NV, C_INT)
+    ELSE
+       V_tmp(1) = 0_C_INT
+       NV_tmp = 0_C_INT
+    END IF
+
+    CALL intpr_c(S, INT(N, C_INT), V_tmp, NV_tmp)
   END SUBROUTINE INTPR
+
+  SUBROUTINE DBLEPR(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
+    INTEGER, INTENT(IN) :: N
+    REAL(KIND=C_DOUBLE), INTENT(IN), OPTIONAL :: V
+    INTEGER, INTENT(IN), OPTIONAL :: NV
+    
+    REAL(KIND=C_DOUBLE) :: V_tmp(1)
+    INTEGER(C_INT) :: NV_tmp
+    
+    INTERFACE
+       SUBROUTINE dblepr_c(S, N, V, NV) BIND(C, NAME="dblepr_")
+         USE ISO_C_BINDING
+         CHARACTER(KIND=C_CHAR) :: S(*)
+         INTEGER(C_INT), VALUE :: N
+         REAL(C_DOUBLE), INTENT(IN) :: V(*)
+         INTEGER(C_INT), VALUE :: NV
+       END SUBROUTINE dblepr_c
+    END INTERFACE
+
+    IF (PRESENT(V) .AND. PRESENT(NV)) THEN
+       V_tmp(1) = V
+       NV_tmp = INT(NV, C_INT)
+    ELSE
+       V_tmp(1) = 0.0_C_DOUBLE
+       NV_tmp = 0_C_INT
+    END IF
+
+    CALL dblepr_c(S, INT(N, C_INT), V_tmp, NV_tmp)
+  END SUBROUTINE DBLEPR
 
 END MODULE R_interfaces
