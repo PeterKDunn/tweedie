@@ -2,33 +2,22 @@ MODULE R_interfaces
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_CHAR
   IMPLICIT NONE
 
-  ! This allows you to call 'INTPR' and 'DBLEPR' with either 
-  ! a single value or an array of values.
   INTERFACE INTPR
      MODULE PROCEDURE INTPR_SCALAR
-     MODULE PROCEDURE INTPR_ARRAY
   END INTERFACE INTPR
 
   INTERFACE DBLEPR
      MODULE PROCEDURE DBLEPR_SCALAR
-     MODULE PROCEDURE DBLEPR_ARRAY
+     ! This allows the compiler to find a match even if KIND doesn't match perfectly
+     MODULE PROCEDURE DBLEPR_LEGACY 
   END INTERFACE DBLEPR
 
 CONTAINS
 
-  ! --- INTEGER PRINTING ---
   SUBROUTINE INTPR_SCALAR(S, N, V, NV)
     CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
     INTEGER(C_INT), VALUE :: N
-    INTEGER(C_INT), INTENT(IN) :: V
-    INTEGER(C_INT), VALUE :: NV
-    CALL intpr_c(S, N, [V], NV) ! Wrap scalar in a temporary array
-  END SUBROUTINE INTPR_SCALAR
-
-  SUBROUTINE INTPR_ARRAY(S, N, V, NV)
-    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
-    INTEGER(C_INT), VALUE :: N
-    INTEGER(C_INT), INTENT(IN) :: V(*)
+    INTEGER, INTENT(IN) :: V  ! Standard integer
     INTEGER(C_INT), VALUE :: NV
     
     INTERFACE
@@ -36,28 +25,35 @@ CONTAINS
          USE ISO_C_BINDING
          CHARACTER(KIND=C_CHAR) :: S(*)
          INTEGER(C_INT), VALUE :: N
-         INTEGER(C_INT), INTENT(IN) :: V(*)
+         INTEGER(C_INT) :: V(*)
          INTEGER(C_INT), VALUE :: NV
        END SUBROUTINE intpr_c
     END INTERFACE
-    CALL intpr_c(S, N, V, NV)
-  END SUBROUTINE INTPR_ARRAY
+    CALL intpr_c(S, N, [INT(V, C_INT)], NV)
+  END SUBROUTINE INTPR_SCALAR
 
-  ! --- DOUBLE PRINTING ---
   SUBROUTINE DBLEPR_SCALAR(S, N, V, NV)
     CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
     INTEGER(C_INT), VALUE :: N
     REAL(C_DOUBLE), INTENT(IN) :: V
     INTEGER(C_INT), VALUE :: NV
-    CALL dblepr_c(S, N, [V], NV)
+    CALL dblepr_internal(S, N, [REAL(V, C_DOUBLE)], NV)
   END SUBROUTINE DBLEPR_SCALAR
 
-  SUBROUTINE DBLEPR_ARRAY(S, N, V, NV)
+  ! --- ADD THIS TO CATCH THE Calcs_Imag.f90 ERRORS ---
+  SUBROUTINE DBLEPR_LEGACY(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
+    INTEGER, INTENT(IN) :: N
+    DOUBLE PRECISION, INTENT(IN) :: V
+    INTEGER, INTENT(IN) :: NV
+    CALL dblepr_internal(S, INT(N, C_INT), [REAL(V, C_DOUBLE)], INT(NV, C_INT))
+  END SUBROUTINE DBLEPR_LEGACY
+
+  SUBROUTINE dblepr_internal(S, N, V, NV)
     CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
     INTEGER(C_INT), VALUE :: N
     REAL(C_DOUBLE), INTENT(IN) :: V(*)
     INTEGER(C_INT), VALUE :: NV
-    
     INTERFACE
        SUBROUTINE dblepr_c(S, N, V, NV) BIND(C, NAME="dblepr_")
          USE ISO_C_BINDING
@@ -68,6 +64,6 @@ CONTAINS
        END SUBROUTINE dblepr_c
     END INTERFACE
     CALL dblepr_c(S, N, V, NV)
-  END SUBROUTINE DBLEPR_ARRAY
+  END SUBROUTINE dblepr_internal
 
 END MODULE R_interfaces
