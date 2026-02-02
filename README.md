@@ -59,59 +59,6 @@ $Y > 0$ but have a discrete mass at $Y = 0$.
 
 For $\xi \ge 2$, the distributions have support on the positive reals.
 
-## Example
-
-Likelihood computations are not need to fit a Tweedie generalized linear
-model, using the `tweedie()` family from the [**statmod**
-package](https://CRAN.R-project.org/package=statmod):
-
-``` r
-library(statmod)
-
-set.seed(96)
-N <- 25
-discrete_events <- rpois(N, lambda = 1)
-y <- vector("numeric", N)
-
-for (i in 1:N){
-  y[i] <- ifelse(discrete_events[i] == 0,
-                 0,
-                 sum( rgamma(discrete_events, shape = 1, rate = 1)) )
-}
-
-mod.tw <- glm(y ~ 1, 
-              family = statmod::tweedie(var.power = 1.5, link.power = 0) )
-              # link.power = 0  means the log-link
-```
-
-However, likelihood computations are necessary in other situations, such
-as:
-
-- generating random numbers:
-
-``` r
-tweedie::rtweedie(10, xi = 1.1, mu = 2, phi = 1)
-#>  [1] 0.5557530 2.7182276 1.2461434 4.5963059 1.8539720 0.7706409 0.0000000
-#>  [8] 2.7790688 0.9510953 1.2681239
-```
-
-- plotting accurate density and probability functions; and
-
-``` r
-twden <- tweedie::tweedie_plot(seq(0, 2, length = 100), 
-                               xi = 1.1, mu = 0.5, phi = 0.45)
-```
-
-<img src="man/figures/README-TWplots-1.png" width="100%" />
-
-- computing the quantile residuals:
-
-``` r
-library(tweedie)
-
-qqnorm( statmod::qresid(mod.tw) )
-```
-
-<img src="man/figures/README-TWqqplot-1.png" width="100%" />
+The vignette contains examples.
 
 <!-- REMEMBER to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
