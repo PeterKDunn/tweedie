@@ -98,12 +98,13 @@ tweedie::rtweedie(10, xi = 1.1, mu = 2, phi = 1)
 - plotting accurate density and probability functions; and
 
 ``` r
-twden <- tweedie::tweedie_plot(seq(0, 5, length = 50), 
-                               xi = 1.1, mu = 1, phi = 1)
+twden <- tweedie::tweedie_plot(seq(0, 2, length = 100), 
+                               xi = 1.1, mu = 0.5, phi = 0.45)
 ```
 
-<img src="man/figures/README-TWplots-1.png" width="100%" /> \* computing
-the quantile residuals:
+<img src="man/figures/README-TWplots-1.png" width="100%" />
+
+- computing the quantile residuals:
 
 ``` r
 library(tweedie)
