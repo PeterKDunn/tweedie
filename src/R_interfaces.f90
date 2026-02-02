@@ -2,6 +2,13 @@ MODULE R_interfaces
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_CHAR
   IMPLICIT NONE
 
+  ! This allows you to call 'INTPR' and 'DBLEPR' with either 
+  ! a single value or an array of values.
+  INTERFACE INTPR
+     MODULE PROCEDURE INTPR_SCALAR
+     MODULE PROCEDURE INTPR_ARRAY
+  END INTERFACE INTPR
+
   INTERFACE DBLEPR
      MODULE PROCEDURE DBLEPR_SCALAR
      MODULE PROCEDURE DBLEPR_ARRAY
@@ -9,63 +16,58 @@ MODULE R_interfaces
 
 CONTAINS
 
-  SUBROUTINE DBLEPR_SCALAR(S, N, V, NV)
-    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S
-    INTEGER(C_INT), VALUE :: N
-    REAL(C_DOUBLE), INTENT(IN) :: V
-    INTEGER(C_INT), VALUE :: NV
-    
-    ! Internal interface to R's actual printing routine
-    INTERFACE
-       SUBROUTINE dblepr(S, N, V, NV) BIND(C, NAME="dblepr_") 
-         USE ISO_C_BINDING
-         CHARACTER(KIND=C_CHAR) :: S(*)
-         INTEGER(C_INT), VALUE :: N
-         REAL(C_DOUBLE), INTENT(IN) :: V
-         INTEGER(C_INT), VALUE :: NV
-       END SUBROUTINE dblepr
-    END INTERFACE
-    
-    CALL dblepr(S, N, V, NV)
-  END SUBROUTINE DBLEPR_SCALAR
-
-  SUBROUTINE DBLEPR_ARRAY(S, N, V, NV)
-    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S
-    INTEGER(C_INT), VALUE :: N
-    REAL(C_DOUBLE), INTENT(IN) :: V(*)
-    INTEGER(C_INT), VALUE :: NV
-    
-    INTERFACE
-       SUBROUTINE dblepr(S, N, V, NV) BIND(C, NAME="dblepr_") 
-         USE ISO_C_BINDING
-         CHARACTER(KIND=C_CHAR) :: S(*)
-         INTEGER(C_INT), VALUE :: N
-         REAL(C_DOUBLE), INTENT(IN) :: V(*)
-         INTEGER(C_INT), VALUE :: NV
-       END SUBROUTINE dblepr
-    END INTERFACE
-    
-    CALL dblepr(S, N, V, NV)
-  END SUBROUTINE DBLEPR_ARRAY
-  
-  SUBROUTINE INTPR(S, N)
-    USE ISO_C_BINDING, ONLY: C_CHAR, C_INT
+  ! --- INTEGER PRINTING ---
+  SUBROUTINE INTPR_SCALAR(S, N, V, NV)
     CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
     INTEGER(C_INT), VALUE :: N
+    INTEGER(C_INT), INTENT(IN) :: V
+    INTEGER(C_INT), VALUE :: NV
+    CALL intpr_c(S, N, [V], NV) ! Wrap scalar in a temporary array
+  END SUBROUTINE INTPR_SCALAR
+
+  SUBROUTINE INTPR_ARRAY(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
+    INTEGER(C_INT), VALUE :: N
+    INTEGER(C_INT), INTENT(IN) :: V(*)
+    INTEGER(C_INT), VALUE :: NV
     
     INTERFACE
        SUBROUTINE intpr_c(S, N, V, NV) BIND(C, NAME="intpr_")
          USE ISO_C_BINDING
          CHARACTER(KIND=C_CHAR) :: S(*)
          INTEGER(C_INT), VALUE :: N
-         INTEGER(C_INT) :: V  ! Dummy for intpr
+         INTEGER(C_INT), INTENT(IN) :: V(*)
          INTEGER(C_INT), VALUE :: NV
        END SUBROUTINE intpr_c
     END INTERFACE
-  
-    ! R's intpr(label, n_label, vector, n_vector)
-    ! We pass 0 and 0 for the vector parts when just printing a string
-    CALL intpr_c(S, N, 0_C_INT, 0_C_INT)
-  END SUBROUTINE INTPR
+    CALL intpr_c(S, N, V, NV)
+  END SUBROUTINE INTPR_ARRAY
+
+  ! --- DOUBLE PRINTING ---
+  SUBROUTINE DBLEPR_SCALAR(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
+    INTEGER(C_INT), VALUE :: N
+    REAL(C_DOUBLE), INTENT(IN) :: V
+    INTEGER(C_INT), VALUE :: NV
+    CALL dblepr_c(S, N, [V], NV)
+  END SUBROUTINE DBLEPR_SCALAR
+
+  SUBROUTINE DBLEPR_ARRAY(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S(*)
+    INTEGER(C_INT), VALUE :: N
+    REAL(C_DOUBLE), INTENT(IN) :: V(*)
+    INTEGER(C_INT), VALUE :: NV
+    
+    INTERFACE
+       SUBROUTINE dblepr_c(S, N, V, NV) BIND(C, NAME="dblepr_")
+         USE ISO_C_BINDING
+         CHARACTER(KIND=C_CHAR) :: S(*)
+         INTEGER(C_INT), VALUE :: N
+         REAL(C_DOUBLE), INTENT(IN) :: V(*)
+         INTEGER(C_INT), VALUE :: NV
+       END SUBROUTINE dblepr_c
+    END INTERFACE
+    CALL dblepr_c(S, N, V, NV)
+  END SUBROUTINE DBLEPR_ARRAY
 
 END MODULE R_interfaces
