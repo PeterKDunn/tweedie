@@ -38,7 +38,7 @@
 
 #' @examples
 #' # Plot a Tweedie density
-#' y <- seq(0, 5, length = 100)
+#' y <- seq(0.02, 4, length = 50)
 #' fy <- dtweedie_inversion(y, mu = 1, phi = 1, power = 1.1)
 #' plot(y, fy, type = "l", lwd = 2, ylab = "Density")
 #' 
