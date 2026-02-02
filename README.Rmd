@@ -80,7 +80,18 @@ mod.tw <- glm(y ~ 1,
               # link.power = 0  means the log-link
 ```
 
-However, likelihood computations are necessary in other situations, such as generating random numnbers, plotting accurate density and probability functions, and computing the quantile residuals:
+However, likelihood computations are necessary in other situations, such as:
+
+* generating random numbers:
+```{r TWrandom}
+tweedie::rtweedie(10, xi = 1.1, mu = 2, phi = 1)
+```
+* plotting accurate density and probability functions; and 
+```{r TWplots}
+twden <- tweedie::tweedie_plot(seq(0, 5, length = 50), 
+                               xi = 1.1, mu = 1, phi = 1)
+```
+* computing the quantile residuals:
 
 ```{r TWqqplot}
 library(tweedie)

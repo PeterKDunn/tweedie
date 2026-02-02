@@ -85,8 +85,25 @@ mod.tw <- glm(y ~ 1,
 ```
 
 However, likelihood computations are necessary in other situations, such
-as generating random numnbers, plotting accurate density and probability
-functions, and computing the quantile residuals:
+as:
+
+- generating random numbers:
+
+``` r
+tweedie::rtweedie(10, xi = 1.1, mu = 2, phi = 1)
+#>  [1] 0.5557530 2.7182276 1.2461434 4.5963059 1.8539720 0.7706409 0.0000000
+#>  [8] 2.7790688 0.9510953 1.2681239
+```
+
+- plotting accurate density and probability functions; and
+
+``` r
+twden <- tweedie::tweedie_plot(seq(0, 5, length = 50), 
+                               xi = 1.1, mu = 1, phi = 1)
+```
+
+<img src="man/figures/README-TWplots-1.png" width="100%" /> \* computing
+the quantile residuals:
 
 ``` r
 library(tweedie)
