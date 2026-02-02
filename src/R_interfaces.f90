@@ -1,11 +1,51 @@
 MODULE R_interfaces
-  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
-  INTERFACE
-    SUBROUTINE DBLEPR(S, N, V, NV)
-      CHARACTER(KIND=1, LEN=*), INTENT(IN) :: S
-      INTEGER(C_INT), VALUE :: N
-      REAL(C_DOUBLE), INTENT(IN) :: V(*)
-      INTEGER(C_INT), VALUE :: NV
-    END SUBROUTINE DBLEPR
-  END INTERFACE
+  USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_CHAR
+  IMPLICIT NONE
+
+  INTERFACE DBLEPR
+     MODULE PROCEDURE DBLEPR_SCALAR
+     MODULE PROCEDURE DBLEPR_ARRAY
+  END INTERFACE DBLEPR
+
+CONTAINS
+
+  SUBROUTINE DBLEPR_SCALAR(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S
+    INTEGER(C_INT), VALUE :: N
+    REAL(C_DOUBLE), INTENT(IN) :: V
+    INTEGER(C_INT), VALUE :: NV
+    
+    ! Internal interface to R's actual printing routine
+    INTERFACE
+       SUBROUTINE dblepr(S, N, V, NV) BIND(C, NAME="dblepr_") ! <-- Added underscore here
+         USE ISO_C_BINDING
+         CHARACTER(KIND=C_CHAR) :: S(*)
+         INTEGER(C_INT), VALUE :: N
+         REAL(C_DOUBLE), INTENT(IN) :: V
+         INTEGER(C_INT), VALUE :: NV
+       END SUBROUTINE dblepr
+    END INTERFACE
+    
+    CALL dblepr(S, N, V, NV)
+  END SUBROUTINE DBLEPR_SCALAR
+
+  SUBROUTINE DBLEPR_ARRAY(S, N, V, NV)
+    CHARACTER(KIND=C_CHAR), INTENT(IN) :: S
+    INTEGER(C_INT), VALUE :: N
+    REAL(C_DOUBLE), INTENT(IN) :: V(*)
+    INTEGER(C_INT), VALUE :: NV
+    
+    INTERFACE
+       SUBROUTINE dblepr(S, N, V, NV) BIND(C, NAME="dblepr_") ! <-- Added underscore here
+         USE ISO_C_BINDING
+         CHARACTER(KIND=C_CHAR) :: S(*)
+         INTEGER(C_INT), VALUE :: N
+         REAL(C_DOUBLE), INTENT(IN) :: V(*)
+         INTEGER(C_INT), VALUE :: NV
+       END SUBROUTINE dblepr
+    END INTERFACE
+    
+    CALL dblepr(S, N, V, NV)
+  END SUBROUTINE DBLEPR_ARRAY
+
 END MODULE R_interfaces
