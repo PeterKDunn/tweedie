@@ -5,6 +5,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   
   IMPLICIT NONE
   
+  INTEGER, PARAMETER :: VEC_SIZE = 202
   INTEGER(C_INT), INTENT(IN)          :: nzeros
   REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(:), wvec(:)
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(:, :), Nmatrix(:, :)
