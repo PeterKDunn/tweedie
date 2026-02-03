@@ -11,25 +11,17 @@ MODULE Calcs_Imag
   
 CONTAINS
 
-  SUBROUTINE evaluateImk(i, t, Imk, error) 
+  SUBROUTINE evaluateImk(t, Imk, error) 
     ! Evaluate Im k(t)
     
     IMPLICIT NONE
     
     REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
-    INTEGER(C_INT), INTENT(IN)          :: i
     LOGICAL(C_BOOL), INTENT(OUT)        :: error
     
     REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha, pi
-    REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
-  
-  
-    ! Grab the relevant scalar values for this iteration:
-    current_y    = Cy(i)    ! Access y value for index i
-    current_mu   = Cmu(i)   ! Access mu value for index i
-    current_phi  = Cphi(i)  ! Access phi value for index i
-  
+
   
     ! Initialisation
     error = .FALSE.
@@ -62,10 +54,9 @@ CONTAINS
   
   
 
-  SUBROUTINE evaluateImkM(i, t, f, df, m)
+  SUBROUTINE evaluateImkM(t, f, df, m)
     ! Evaluate  Im k(t) - m*pi - pi/2  (PDF) or  Im k(t) - m*pi  (CDF) for 
     ! finding the zeros of the integrand, for the PDf and CDF
-    INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     INTEGER(C_INT), INTENT(IN)        :: m
@@ -74,7 +65,7 @@ CONTAINS
     LOGICAL(C_BOOL)                   :: error
   
     pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-    CALL evaluateImk(i, t, Imk_val, error)
+    CALL evaluateImk(t, Imk_val, error)
     IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t, 1)
 
     ! The expression depends on whether we are working with the PDF or the CDF.
@@ -86,31 +77,23 @@ CONTAINS
     ELSE
       f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
     END IF
-    CALL evaluateImkd(i, t, df)
+    CALL evaluateImkd(t, df)
     
   END SUBROUTINE evaluateImkM
 
 
 
 
-  SUBROUTINE evaluateImkd(i, t, Imkd) 
+  SUBROUTINE evaluateImkd(t, Imkd) 
     ! Evaluate Im k'(t)
     
     IMPLICIT NONE
     
-    INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
     
     REAL(KIND=C_DOUBLE) :: omega, pindex
-    REAL(KIND=C_DOUBLE) :: current_y, current_mu, current_phi
-  
-  
-    ! Grab the relevant scalar values for this iteration:
-    current_y    = Cy(i)    ! Access y value for index i
-    current_mu   = Cmu(i)   ! Access mu value for index i
-    current_phi  = Cphi(i)  ! Access phi value for index i
-  
+
   
     pindex = 1.0_C_DOUBLE / (1.0_C_DOUBLE - Cp)
     omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
@@ -123,24 +106,17 @@ CONTAINS
 
 
 
-  SUBROUTINE evaluateImkdd(i, t, Imkdd)
+  SUBROUTINE evaluateImkdd(t, Imkdd)
     ! Evaluate Im k''(t)
     
     IMPLICIT NONE
   
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
-    INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkdd
     
     REAL(KIND=C_DOUBLE)    :: front, omega, pindex
-    REAL(KIND=C_DOUBLE)    :: current_mu, current_phi
-  
-  
-    ! Grab the relevant scalar values for this iteration:
-    current_mu   = Cmu(i)   ! Access mu value for index i
-    current_phi  = Cphi(i)  ! Access phi value for index i
-  
-  
+
+
     pindex = Cp / (1.0_C_DOUBLE - Cp)
     front = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))
     omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
@@ -152,21 +128,20 @@ CONTAINS
 
   
   
-  SUBROUTINE evaluateImkdZero(i, t, f, df) 
+  SUBROUTINE evaluateImkdZero(t, f, df) 
   ! Evaluate Im k'(t)  and  Im k''(t)  for solving for Kmax (i.e., Im k'(t) = 0)
     
     USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
   
     IMPLICIT NONE
   
-    INTEGER(C_INT), INTENT(IN)          :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)     :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
   
     REAL(KIND=C_DOUBLE)  :: Imkd, Imkdd
   
-    CALL evaluateImkd( i, t, Imkd)
-    CALL evaluateImkdd(i, t, Imkdd)
+    CALL evaluateImkd( t, Imkd)
+    CALL evaluateImkdd(t, Imkdd)
   
     f  = Imkd
     df = Imkdd

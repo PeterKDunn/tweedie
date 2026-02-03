@@ -27,7 +27,6 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, West, Wold, Wold2
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR
-  REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
   REAL(KIND=C_DOUBLE), ALLOCATABLE   :: Mmatrix(:, :), Nmatrix(:, :), xvec(:), wvec(:)
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   LOGICAL(C_BOOL)       :: left_Of_Max
@@ -174,10 +173,9 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! --- 1. INTEGRATE FIRST (sometimes non-standard) REGION: area0 ---
   
   ! Find the value of  zeroR  for the initial region (zeroL is always 0.0)
-  CALL findInitialZeroR(i, mfirst, left_Of_Max, tmax, &
+  CALL findInitialZeroR(mfirst, left_Of_Max, tmax, &
                         zeroR)
   ! Integrate:
-
   CALL GaussQuadrature(i, zeroL, zeroR, area0)   ! area0  is the area of the initial region
 
   ! Update
@@ -218,8 +216,11 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                    m, zeroL, zeroR)
 
     ! Check for convergence
-    CALL checkStopPreAcc(i, tmax, zeroR, stop_PreAccelerate, converged_Pre)
-
+    CALL checkStopPreAcc(tmax, zeroR, stop_PreAccelerate, converged_Pre)
+    IF (count_Acc_Regions .GT. accMax) THEN
+      stop_PreAccelerate = .TRUE.
+      converged_Pre      = .FALSE.
+    END IF
   END DO
 
 

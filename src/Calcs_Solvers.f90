@@ -13,18 +13,17 @@ MODULE Calcs_Solvers
   ! --- Interface Template ---
   ! This defines the signature that rtnewton and rtsafe rely on.
   INTERFACE
-    SUBROUTINE funcd_signature(i, x, f, df)
+    SUBROUTINE funcd_signature(x, f, df)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
       IMPLICIT NONE
       REAL(KIND=C_DOUBLE), INTENT(IN)     :: x
-      INTEGER(C_INT), INTENT(IN)          :: i
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
     END SUBROUTINE funcd_signature
   END INTERFACE
 
 CONTAINS
 
-  SUBROUTINE rtnewton(i, funcd, xstart, xacc, root)
+  SUBROUTINE rtnewton(funcd, xstart, xacc, root)
     ! This function implements the Newton-Raphson method for finding a root
     ! of the function 'funcd' between bounds x1 and x2, starting at xstart.
     ! It includes a line-search safeguard to ensure x remains > 0.
@@ -38,7 +37,6 @@ CONTAINS
     IMPLICIT NONE
     
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: xstart, xacc
-    INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE)               :: root
     
     INTEGER(C_INT), PARAMETER :: MAXITS = 100
@@ -69,7 +67,7 @@ CONTAINS
       x_iter_old = x_current
       
       ! Calculate function value (f) and derivative (df) at the current safe point
-      CALL funcd(i, x_current, f, df) 
+      CALL funcd(x_current, f, df) 
       
       ! Newton-Raphson Step: dx = f/f'
       dx = f / df
@@ -132,7 +130,7 @@ CONTAINS
   
   
   
-  SUBROUTINE rtsafe(i, funcd, x1, x2, xacc, root, error)
+  SUBROUTINE rtsafe(funcd, x1, x2, xacc, root, error)
     ! Adapted from NUMERICAL RECIPES Sect. 9.4
     ! Uses a combination of Newton-Raphson and bisection, find the root of a function bracketed
     ! between x1 and x2. The root is refined until its accuracy is known within plus/minus xacc. 
@@ -145,7 +143,6 @@ CONTAINS
     
     IMPLICIT NONE
     
-    INTEGER(C_INT), INTENT(IN)        :: i
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: x1, x2, xacc
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: root
     LOGICAL(C_BOOL), INTENT(OUT)      :: error
@@ -158,8 +155,8 @@ CONTAINS
     PROCEDURE(funcd_signature) :: funcd
     
     error = .FALSE.
-    call funcd(i, x1, fl, df)
-    call funcd(i, x2, fh, df)
+    call funcd(x1, fl, df)
+    call funcd(x2, fh, df)
     
     IF ( (fl .GT. 0.0_C_DOUBLE) .AND. (fh .GT. 0.0_C_DOUBLE) &  
            .OR.                                                &
@@ -187,7 +184,7 @@ CONTAINS
     root = 0.5_C_DOUBLE * (x1 + x2)   ! Initialize the guess for root,
     dxold = DABS(x2 - x1)             ! the “stepsize before last,”
     dx = dxold                        ! and the last step.
-    CALL funcd(i, root, f, df)
+    CALL funcd(root, f, df)
     
     DO j = 1, MAXIT ! Loop over allowed iterations.
       IF ( ( (root - xh) * df - f) * ( (root - xl) * df - f) .GT. 0.0_C_DOUBLE    & 
@@ -209,7 +206,7 @@ CONTAINS
       END IF
       
       IF (DABS(dx) .LT. xacc) RETURN  ! Convergence criterion.
-      CALL funcd(i, root, f, df)      ! The one new function evaluation per iteration.
+      CALL funcd(root, f, df)      ! The one new function evaluation per iteration.
       IF (f .LT. 0.0_C_DOUBLE) THEN   ! Maintain the bracket on the root.
         xl = root
       ELSE

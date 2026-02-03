@@ -1,6 +1,7 @@
 # src/Makevars.in
-PKG_FFLAGS = @PKG_FFLAGS@ -O2 -fno-stack-arrays
-PKG_FCFLAGS = @PKG_FCFLAGS@ -O2 -fno-stack-arrays
+PKG_FFLAGS = $(FPIC_FLAGS)
+PKG_FCFLAGS = $(FPIC_FLAGS)
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 # Link all objects into the shared library
 $(SHLIB): 00tweedie_params.o rprintf_mod.o R_interfaces.o \
