@@ -5,7 +5,7 @@
 
 # Check if the compiler is gfortran
 if echo "$(${FC} --version 2>&1)" | grep -iq gfortran; then
-  # Apply both heap-array fix AND optimization for stack-frame collapsing
+  # We add -O2 at the end to ensure it overrides any previous -O0
   PKG_FFLAGS="-fno-stack-arrays -O2"
   PKG_FCFLAGS="-fno-stack-arrays -O2"
 else
