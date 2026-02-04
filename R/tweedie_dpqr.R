@@ -383,6 +383,11 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   if (any(density < 0 ) )  density[ density < 0 ] <- rep(0, sum(density < 0) )
   density <- as.vector(density)
 
+  # Restore names if supplied
+  if( !is.null(names(y)) ){
+    names(density) <- names(y)
+  }
+
   return(density)
 
 }
@@ -505,8 +510,15 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     }  
   }
   
-  # Sanity fixes
   f <- as.vector(f)
+  # Restore names if supplied
+  if( !is.null(names(q)) ){
+    names(f) <- names(q)
+  }
+  
+  
+  
+  # Sanity fixes
   f[ f < 0 ] <- rep(0, sum(f < 0) )
   f[ f > 1 ] <- rep(1, sum(f > 1) )
   
@@ -732,25 +744,29 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   ### END preliminary work
   
   
+  if (power == 1) {
+    rtw <- stats::poisson( n, 
+                           lambda = mu/phi)
+  }
   if (power == 2) {
     alpha <- (2 - power) / (1 - power)
     gam <- phi * (power - 1) * mu ^ (power - 1)
-    rt <- stats::rgamma( n, 
-                         shape = 1 / phi, 
-                         scale = gam )
+    rtw <- stats::rgamma( n, 
+                          shape = 1 / phi, 
+                          scale = gam )
   }
   
   if ( power > 2) {
-    rt <- qtweedie( stats::runif(n),
-                    mu = mu,
-                    phi = phi, 
-                    power = power)
+    rtw <- qtweedie( stats::runif(n),
+                     mu = mu,
+                     phi = phi, 
+                     power = power)
   }
   
   if ( (power > 1) & (power < 2) ) {
     # Two options:  As above or directly.
     # Directly is faster
-    rt <- array( dim = n, NA)
+    rtw <- array( dim = n, NA)
     
     lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
     alpha <- (2 - power) / (1 - power)
@@ -759,12 +775,13 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
     N <- stats::rpois(n, 
                       lambda = lambda)
     for (i in (1:n) ){
-      rt[i] <- stats::rgamma(1, 
-                             shape = -N[i] * alpha, 
-                             scale = gam[i])
+      rtw[i] <- stats::rgamma(1, 
+                              shape = -N[i] * alpha, 
+                              scale = gam[i])
     }
   }
-  as.vector(rt)
+  #as.vector(rtw)
+  rtw 
 }
 
 
