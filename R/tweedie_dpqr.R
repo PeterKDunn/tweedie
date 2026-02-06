@@ -745,8 +745,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   
   if (power == 1) {
-    rtw <- stats::poisson( n, 
-                           lambda = mu/phi)
+    rtw <- stats::rpois( n, 
+                         lambda = mu/phi)
   }
   if (power == 2) {
     alpha <- (2 - power) / (1 - power)
