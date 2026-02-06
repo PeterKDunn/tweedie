@@ -30,11 +30,11 @@ CONTAINS
     ! Safety check
     IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-pi/2.0E0_C_DOUBLE))) THEN
        ! Error!
-        CALL DBLEPR("ERROR (evaluateRek): Omega out of range:", -1, omega, 1)
-        CALL DBLEPR("ERROR (evaluateRek): t:", -1, t, 1)
-        CALL DBLEPR("         p:", -1, Cp, 1)
-        CALL DBLEPR("        mu:", -1, current_mu, 1)
-        CALL DBLEPR("       phi:", -1, current_phi, 1)
+        ! CALL DBLEPR("ERROR (evaluateRek): Omega out of range:", -1, omega, 1)
+        ! CALL DBLEPR("ERROR (evaluateRek): t:", -1, t, 1)
+        ! CALL DBLEPR("         p:", -1, Cp, 1)
+        ! CALL DBLEPR("        mu:", -1, current_mu, 1)
+        ! CALL DBLEPR("       phi:", -1, current_phi, 1)
        RETURN
     END IF
     

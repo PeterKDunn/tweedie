@@ -32,12 +32,12 @@ CONTAINS
   
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
-      CALL DBLEPR("ERROR (evaluateImk): Omega out of range:", -1, omega, 1)
-      CALL DBLEPR("ERROR (evaluateImk): t:", -1, t, 1)
-      CALL DBLEPR("         p:", -1, Cp, 1)
-      CALL DBLEPR("         y:", -1, current_y, 1)
-      CALL DBLEPR("        mu:", -1, current_mu, 1)
-      CALL DBLEPR("       phi:", -1, current_phi, 1)
+      ! CALL DBLEPR("ERROR (evaluateImk): Omega out of range:", -1, omega, 1)
+      ! CALL DBLEPR("ERROR (evaluateImk): t:", -1, t, 1)
+      ! CALL DBLEPR("         p:", -1, Cp, 1)
+      ! CALL DBLEPR("         y:", -1, current_y, 1)
+      ! CALL DBLEPR("        mu:", -1, current_mu, 1)
+      ! CALL DBLEPR("       phi:", -1, current_phi, 1)
 
       error = .TRUE.
       RETURN

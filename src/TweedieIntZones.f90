@@ -100,7 +100,7 @@ CONTAINS
         converged_Pre = .TRUE.
         
         IF (Cverbose) THEN 
-          CALL DBLEPR("checkStopPreAcc: Pre-accelerating stopping (a). Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
+          ! CALL DBLEPR("checkStopPreAcc: Pre-accelerating stopping (a). Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
         END IF
       END IF
     END IF
@@ -111,7 +111,7 @@ CONTAINS
         converged_Pre = .TRUE.
 
         IF (Cverbose) THEN 
-          CALL DBLEPR("checkStopPreAcc: Pre-accelerating stopping (b). Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
+          ! CALL DBLEPR("checkStopPreAcc: Pre-accelerating stopping (b). Rek(t) small:", -1, (DEXP(Rek)/zeroL), 1)
         END IF
       END IF
     END IF

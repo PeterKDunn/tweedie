@@ -89,10 +89,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   
   IF ( Cverbose ) THEN
     ! Report the current values for this evaluation
-    CALL DBLEPR("*** Computing for p =", -1, Cp, 1)
-    CALL DBLEPR("*** Computing for y =", -1, current_y, 1)
-    CALL DBLEPR("*** Computing for mu =", -1, current_mu, 1)
-    CALL DBLEPR("*** Computing for phi =", -1, current_phi, 1)
+    ! CALL DBLEPR("*** Computing for p =", -1, Cp, 1)
+    ! CALL DBLEPR("*** Computing for y =", -1, current_y, 1)
+    ! CALL DBLEPR("*** Computing for mu =", -1, current_mu, 1)
+    ! CALL DBLEPR("*** Computing for phi =", -1, current_phi, 1)
   END IF
 
 
@@ -206,9 +206,9 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
     IF ( Cverbose ) THEN    
       ! -------- Pre-acceleration zone sub-regions
-      CALL DBLEPR(" Pre-acc subregion:", -1, area1, 1)
-      CALL DBLEPR("      between:", -1, zeroL, 1)
-      CALL DBLEPR("          and:", -1, zeroR, 1)
+      ! CALL DBLEPR(" Pre-acc subregion:", -1, area1, 1)
+      ! CALL DBLEPR("      between:", -1, zeroL, 1)
+      ! CALL DBLEPR("          and:", -1, zeroR, 1)
     END IF
 
     ! Update (zeroL, zeroR and m)
@@ -301,44 +301,44 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! Print things if requested
   IF ( Cverbose ) THEN
     ! -------- Preparatory
-    CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
-    CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
-    CALL INTPR( "  -            mmax:", -1, mmax, 1 )
-    CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
+    ! CALL DBLEPR("  -            kmax:", -1, kmax, 1 )
+    ! CALL DBLEPR("  -            tmax:", -1, tmax, 1 )
+    ! CALL INTPR( "  -            mmax:", -1, mmax, 1 )
+    ! CALL INTPR( "  - first zero at m:", -1, mfirst, 1 )
 
     ! -------- Initial zone
-    CALL DBLEPR("Initial region area:", -1, area0, 1)
-    CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
-    CALL INTPR( "      using right m:", -1, m, 1)
-    CALL INTPR( " # pre-acc regions: ", -1, count_PreAcc_Regions, 1)
+    ! CALL DBLEPR("Initial region area:", -1, area0, 1)
+    ! CALL DBLEPR("      between 0 and:", -1, zeroR, 1)
+    ! CALL INTPR( "      using right m:", -1, m, 1)
+    ! CALL INTPR( " # pre-acc regions: ", -1, count_PreAcc_Regions, 1)
 
     ! -------- Pre-acceleration zone
-    CALL DBLEPR("       Pre-acc AREA:", -1, area1, 1)
-    CALL DBLEPR("            between:", -1, leftPreAccZero, 1)
-    CALL DBLEPR("                and:", -1, zeroR, 1)
-    CALL INTPR( "      using right m:", -1, m,     1)
-    CALL INTPR( "     # acc regions: ", -1, count_Acc_Regions, 1)
+    ! CALL DBLEPR("       Pre-acc AREA:", -1, area1, 1)
+    ! CALL DBLEPR("            between:", -1, leftPreAccZero, 1)
+    ! CALL DBLEPR("                and:", -1, zeroR, 1)
+    ! CALL INTPR( "      using right m:", -1, m,     1)
+    ! CALL INTPR( "     # acc regions: ", -1, count_Acc_Regions, 1)
 
     ! -------- Acceleration zone
     IF (converged_Pre) THEN
-      CALL DBLEPR(" Accelerating not needed; convergence by t =", -1, zeroR, 1)
+      ! CALL DBLEPR(" Accelerating not needed; convergence by t =", -1, zeroR, 1)
     ELSE
-      CALL DBLEPR(" Accelerating starting after t =", -1, zeroR, 1)
-      CALL DBLEPR("         Acc area:", -1, areaA, 1)
-      CALL DBLEPR("          between:", -1, leftAccZero, 1)
-      CALL DBLEPR("              and:", -1, zeroR, 1)
-      CALL INTPR( "         up to m:", -1, m,     1)
+      ! CALL DBLEPR(" Accelerating starting after t =", -1, zeroR, 1)
+      ! CALL DBLEPR("         Acc area:", -1, areaA, 1)
+      ! CALL DBLEPR("          between:", -1, leftAccZero, 1)
+      ! CALL DBLEPR("              and:", -1, zeroR, 1)
+      ! CALL INTPR( "         up to m:", -1, m,     1)
     END IF
     
     ! -------- Summary
-    CALL DBLEPR("*** Initial area0: ", -1, area0, 1)
-    CALL DBLEPR("*** Pre-acc area1: ", -1, area1, 1)
-    CALL DBLEPR("***     Acc area!: ", -1, areaA, 1)
-    CALL DBLEPR("***         TOTAL: ", -1, areaT, 1)
-    CALL INTPR( "   over regions: ", -1, count_Integration_Regions, 1)
+    ! CALL DBLEPR("*** Initial area0: ", -1, area0, 1)
+    ! CALL DBLEPR("*** Pre-acc area1: ", -1, area1, 1)
+    ! CALL DBLEPR("***     Acc area!: ", -1, areaA, 1)
+    ! CALL DBLEPR("***         TOTAL: ", -1, areaT, 1)
+    ! CALL INTPR( "   over regions: ", -1, count_Integration_Regions, 1)
     
     ! -------- Results
-    CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
+    ! CALL DBLEPR("***    Fun. value:", -1, funvalueI, 1)
 
   END IF
 
