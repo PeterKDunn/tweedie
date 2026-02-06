@@ -392,7 +392,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 
 }
 
-
+################################################################################
 
 #' @rdname Tweedie
 #' @export
@@ -448,7 +448,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                     mu      = mu[!special_y_cases],
                                     phi     = phi[!special_y_cases],
                                     power   = power,
-                                    verbose = TRUE,
+                                    verbose = verbose,
                                     details = FALSE)
         f[!special_y_cases] <- f_TMP
       }
@@ -503,7 +503,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                     mu      = mu[!special_y_cases], 
                                     phi     = phi[!special_y_cases],
                                     power   = power,
-                                    verbose = FALSE,
+                                    verbose = verbose,
                                     details = FALSE)
         f[!special_y_cases] <- f_TMP
       }
@@ -526,6 +526,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 }
 
 
+################################################################################
 
 
 #' @rdname Tweedie
@@ -542,7 +543,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
-  
+
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   out <- check_inputs(p, mu, phi, power,
                       type = "quantile")
@@ -553,6 +554,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   
   
   # IDENTIFY SPECIAL CASES
+
   special_y_cases <- rep(FALSE, length(p))
   out <- special_cases(p, mu, phi, power)
   special_p_cases <- out$special_p_cases
@@ -563,10 +565,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   }
   
   ### END preliminary work
-  
-  
-  
-  
   
   len <- length(p) 
   
@@ -581,7 +579,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   p.vec   <- p[ ( (p > 0) & (p < 1) ) ]
   
   for (i in (1 : length(ans)) ) {
-    
     mu.1 <- mu.vec[i]
     phi.1 <- phi.vec[i]
     p.1 <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
@@ -600,12 +597,12 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
     if ( pwr == 2 ) ans[i] <- qg
     
     # Starting values
-    # - for 1<pwr<2, linearly interpolate between Poisson and gamma
+    # - for 1 < pwr < 2, linearly interpolate between Poisson and gamma
     if ( (pwr > 1) & ( pwr < 2) ) {
       start <- (qg - qp) * pwr + (2 * qp - qg)
     }
     
-    # - for pwr>2, start with gamma
+    # - for pwr > 2, start with gamma
     if ( pwr > 2 ) start <- qg
     
     # Solve!
@@ -621,8 +618,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
       }
     }
     
-    if ( is.na(ans[i]) ) { # All cases except Y=0 when 1 < pwr < 2
-      
+    if ( is.na(ans[i]) ) { # All cases except Y = 0 when 1 < pwr < 2
       
       pt2 <- function( q, 
                        mu, 
@@ -656,7 +652,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
                    phi.1, 
                    pwr, 
                    p.given = prob )<0 ) loop = FALSE
-          #      cat(">>> Start.2 =",start.2,"; pt = ",pt2( q=start.2, mu.1, phi.1, pwr, p.given=prob ),"\n")
           # RECALL:  We are only is this part of the loop if  pt>0
         }
       }
@@ -677,11 +672,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
           # RECALL:  We are only is this part of the loop if  pt<0
         }
       }
-      
-      #cat("start, start.2 =",start, start.2,"\n")
-      #cat("pt2(start, start.2) =",
-      #   pt2(start, mu=mu.1, phi=phi.1, pwr=pwr, p.given=prob), 
-      #   pt2(start.2, mu=mu.1, phi=phi.1, pwr=pwr, p.given=prob),"\n")
       
       out <- stats::uniroot(pt2, 
                             c(start, start.2), 
@@ -706,6 +696,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   ans2
 }
 
+################################################################################
 
 
 #' @rdname Tweedie
@@ -713,7 +704,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
 rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   ### BEGIN preliminary work
-  
+
   # SORT OUT THE NOTATION (i.e., xi VS power)
   out <- sort_notation(xi = xi, power = power)
   xi <- out$xi
@@ -731,22 +722,19 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
                       type = "random")
   mu <- out$mu
   phi <- out$phi
-  f <- array(0,
-             dim = length(q) )
-  
+
   
   # IDENTIFY SPECIAL CASES
   out <- special_cases(n, mu, phi, power)
   f <- out$f
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
-  
   ### END preliminary work
   
   
   if (power == 1) {
-    rtw <- stats::rpois( n, 
-                         lambda = mu/phi)
+    rtw <- phi * stats::rpois( n, 
+                               lambda = mu/phi)
   }
   if (power == 2) {
     alpha <- (2 - power) / (1 - power)
@@ -755,7 +743,7 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
                           shape = 1 / phi, 
                           scale = gam )
   }
-  
+
   if ( power > 2) {
     rtw <- qtweedie( stats::runif(n),
                      mu = mu,
