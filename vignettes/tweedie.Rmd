@@ -47,7 +47,7 @@ These distributions are continuous for $Y > 0$ but have a discrete mass at $Y = 
 
 ## Examples
 
-Likelihood computations are not need to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) (@smythStatmodStatisticalModeling2022, @dunnGeneralizedLinearModels2018):
+Likelihood computations are not need to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) (@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018):
 
 ```{r TWexample}
 library(tweedie)
@@ -142,7 +142,8 @@ tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi,
 
 ### Computing the quantile residuals
 
-Quantile residuals [@dunnRandomizedQuantileResiduals1996] can be computed to assess the fit of a glm:
+Quantile residuals [@dunnRandomizedQuantileResiduals1996] can be computed to assess the fit of a glm.
+The functiom **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) (@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018):
 
 ```{r TWqqplot}
 library(tweedie)
