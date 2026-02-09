@@ -25,7 +25,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   INTEGER(C_INT)        :: m, min_Acc_Regions
   LOGICAL(C_BOOL)       :: convergence_Acc
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
-  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, pi, West, Wold, Wold2
+  REAL(KIND=C_DOUBLE)   :: epsilon, areaT, West, Wold, Wold2
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR
   REAL(KIND=C_DOUBLE), ALLOCATABLE   :: Mmatrix(:, :), Nmatrix(:, :), xvec(:), wvec(:)
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
@@ -97,7 +97,6 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
 
   ! --- Initialization ---
-  pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
   aimrerr = 1.0E-12_C_DOUBLE
   mOld = 0
   m = 0
@@ -292,9 +291,9 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! We have the value of the integral in the PDF/CDF calculation, so now work out the actual PDF/CDF
   IF ( Cpdf ) THEN
-    funvalueI = areaT/pi 
+    funvalueI = areaT/PI 
   ELSE
-    funvalueI =  0.5_C_DOUBLE - areaT/pi
+    funvalueI =  0.5_C_DOUBLE - areaT/PI
   END IF  
   
   

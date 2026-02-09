@@ -26,7 +26,7 @@ CONTAINS
     
     ! Local vars
     INTEGER(C_INT)        :: nmax
-    REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, pi
+    REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop
     
     ! NOTE: 
     ! If  stop_PreAccelerate  is  .TRUE.  it means to stop pre-accelerating
@@ -41,9 +41,6 @@ CONTAINS
     !    but  converged_Pre  is  .FALSE.); or
     ! - things are so well behaved that we can go straight to acceleration (stop_PreAccelerate is 
     !    .TRUE.  but  converged_Pre  is still  .FALSE.)
-    
-    
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     
 
     ! Initialise
@@ -82,7 +79,7 @@ CONTAINS
               nmax = FLOOR(MM)
            END IF
            tstop = current_mu**(1.0_C_DOUBLE - Cp) / ((1.0_C_DOUBLE - Cp) * current_phi) *   & 
-                   DTAN( DBLE(nmax) * pi * (1.0_C_DOUBLE - Cp) )
+                   DTAN( DBLE(nmax) * PI * (1.0_C_DOUBLE - Cp) )
            IF (zeroL .GT. tstop) stop_PreAccelerate = .TRUE.
         END IF
       END IF
@@ -142,12 +139,9 @@ CONTAINS
     
     ! Local vars
     INTEGER(C_INT)        :: mOld
-    REAL(KIND=C_DOUBLE)   :: pi
     REAL(KIND=C_DOUBLE)   :: zeroBoundL, zeroBoundR, zeroStartPoint
     REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
 
-    
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
@@ -221,11 +215,8 @@ CONTAINS
 
     ! Local vars
     REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroBoundL, zeroBoundR
-    REAL(KIND=C_DOUBLE)                 :: pi, TMP
+    REAL(KIND=C_DOUBLE)                 :: TMP
     LOGICAL(C_BOOL)                     :: error
-
-
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
 
     ! Initialisation
@@ -235,12 +226,12 @@ CONTAINS
 
     ! Find starting point for the first zero
     IF (left_Of_Max) THEN
-      t_Start_Point = pi / current_y  
+      t_Start_Point = PI / current_y  
       zeroBoundL = 0_C_DOUBLE
       zeroBoundR = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
     ELSE
       ! Searching to the right of tmax
-      t_Start_Point = tmax + pi / current_y  
+      t_Start_Point = tmax + PI / current_y  
       zeroBoundL = tmax
       zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
     END IF

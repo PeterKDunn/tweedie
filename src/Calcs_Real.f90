@@ -18,17 +18,16 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN)    :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)   :: Rek
   
-    REAL(KIND=C_DOUBLE) :: pi, omega, pindex, front, alpha, tanArg
+    REAL(KIND=C_DOUBLE) :: omega, pindex, front, alpha, tanArg
   
     
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     pindex = (2.0E0_C_DOUBLE - Cp)
     front = current_mu ** pindex  / ( current_phi * pindex)
     tanArg = (1.0E0_C_DOUBLE - Cp) * t * current_phi / (current_mu ** (1.0E0_C_DOUBLE - Cp) )
     omega = DATAN( tanArg )
 
     ! Safety check
-    IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-pi/2.0E0_C_DOUBLE))) THEN
+    IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-PI/2.0E0_C_DOUBLE))) THEN
        ! Error!
         ! CALL DBLEPR("ERROR (evaluateRek): Omega out of range:", -1, omega, 1)
         ! CALL DBLEPR("ERROR (evaluateRek): t:", -1, t, 1)

@@ -20,18 +20,17 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
     LOGICAL(C_BOOL), INTENT(OUT)        :: error
     
-    REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha, pi
+    REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha
 
   
     ! Initialisation
     error = .FALSE.
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     front = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
     tanArg = (1.0_C_DOUBLE - Cp) * t * current_phi  / (current_mu ** (1.0_C_DOUBLE - Cp) )
     omega = DATAN( tanArg )
   
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
-        (omega .LT. (-pi/2.0_C_DOUBLE)) ) THEN
+        (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
       ! CALL DBLEPR("ERROR (evaluateImk): Omega out of range:", -1, omega, 1)
       ! CALL DBLEPR("ERROR (evaluateImk): t:", -1, t, 1)
       ! CALL DBLEPR("         p:", -1, Cp, 1)
@@ -61,10 +60,9 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: f, df
     INTEGER(C_INT), INTENT(IN)        :: m
   
-    REAL(KIND=C_DOUBLE)               :: pi, Imk_val
+    REAL(KIND=C_DOUBLE)               :: Imk_val
     LOGICAL(C_BOOL)                   :: error
   
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     CALL evaluateImk(t, Imk_val, error)
     IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, t, 1)
 
@@ -73,9 +71,9 @@ CONTAINS
     ! Thus, the PDF has integrand zeros at Im k(t) = pi/2 + m pi/y;
     !       the CDF has integrand zeros at Im k(t) =        m pi/y.
     IF (Cpdf) THEN
-      f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi - pi/2.0_C_DOUBLE
+      f = Imk_val - REAL(m, KIND=C_DOUBLE) * PI - PI/2.0_C_DOUBLE
     ELSE
-      f = Imk_val - REAL(m, KIND=C_DOUBLE) * pi
+      f = Imk_val - REAL(m, KIND=C_DOUBLE) * PI
     END IF
     CALL evaluateImkd(t, df)
     

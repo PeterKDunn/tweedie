@@ -31,7 +31,7 @@ CONTAINS
     LOGICAL(C_BOOL), INTENT(OUT)        :: left_Of_Max
     INTEGER(C_INT), INTENT(IN)          :: i
   
-    REAL(KIND=C_DOUBLE)     :: pi, t_Start_Point, slope_At_Zero, Imk_value
+    REAL(KIND=C_DOUBLE)     :: t_Start_Point, slope_At_Zero, Imk_value
     REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
     LOGICAL(C_BOOL)         :: error
     
@@ -50,9 +50,9 @@ CONTAINS
     !       a. If p near 1, approximate starting point by p=1 case analytically
     !       b. Otherwise, use standard starting point
   
+    
     ! --- Initialization ---
     aimrerr = 1.0E-09_C_DOUBLE
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
     threshold = 1.0E5_C_DOUBLE ! Threshold for a "large" tmax
   
   
@@ -147,9 +147,9 @@ CONTAINS
       IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, tmax, 1)
       ! Find mmax from kmax
       IF (Cpdf) THEN
-        mmax = FLOOR(2.0_C_DOUBLE * kmax / pi) - 1
+        mmax = FLOOR(2.0_C_DOUBLE * kmax / PI) - 1
       ELSE
-        mmax = FLOOR(kmax / pi)
+        mmax = FLOOR(kmax / PI)
       END IF
 
       ! Establish the first value of m to use, and whether the first zero is to the left of kmax
@@ -176,11 +176,10 @@ CONTAINS
       
         IMPLICIT NONE
     
-        REAL(KIND=C_DOUBLE)     :: t0, pi
+        REAL(KIND=C_DOUBLE)     :: t0
         REAL(KIND=C_DOUBLE)     :: ratio, r, t_small, t_large, c, angle
       
-        pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-      
+
         ! Weighting exponent for interpolation
         r = 4.0E0_C_DOUBLE ! Artibtrary
       
@@ -200,7 +199,7 @@ CONTAINS
         ENDIF
       
         ! --- Large-t approximation ---
-        angle   = 0.5D0 * pi / (Cp - 1.0E0_C_DOUBLE)
+        angle   = 0.5D0 * PI / (Cp - 1.0E0_C_DOUBLE)
         c       = DCOS(angle)**(Cp - 1.0E0_C_DOUBLE)
        t_large = ( current_mu**(2.0_C_DOUBLE*(1.0_C_DOUBLE - Cp)) /   &
                   ((1.0_C_DOUBLE - Cp) * current_phi) ) *             &
@@ -339,13 +338,12 @@ CONTAINS
     IMPLICIT NONE
     
     REAL(KIND=C_DOUBLE)           :: tsmall, tlarge, abs1mp
-    REAL(KIND=C_DOUBLE)           :: omegaInf, slope, pi
+    REAL(KIND=C_DOUBLE)           :: omegaInf, slope
   
 
     ! Initialize
     abs1mp = ABS(1.0_C_DOUBLE - Cp)
-    pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
-  
+
     ! We find a small-t approx, a large-t approx, and a combined approx.
     ! The SP should be the FIRST of these whose slope is NEGATIVE
   
@@ -358,7 +356,7 @@ CONTAINS
       findKmaxSP = tsmall
     ELSE
       ! This should be the CASE: p > 2, AND y < mu
-      omegaInf = (pi / 2.0_C_DOUBLE) * &
+      omegaInf = (PI / 2.0_C_DOUBLE) * &
                  (1.0_C_DOUBLE - Cp)/(2.0_C_DOUBLE*Cp - 1.0_C_DOUBLE)
       tsmall = current_mu**(1.0_C_DOUBLE - Cp) / ( (1.0_C_DOUBLE - Cp)) * &
                DTAN(omegaInf)
