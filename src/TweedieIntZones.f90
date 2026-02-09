@@ -1,5 +1,5 @@
 
-MODULE TweedieIntZones
+MODULE TweedieIntHelpers
   
   USE tweedie_params_mod
   USE Calcs_K
@@ -258,5 +258,5 @@ CONTAINS
 
   END SUBROUTINE findInitialZeroR
 
-END MODULE TweedieIntZones
+END MODULE TweedieIntHelpers
 

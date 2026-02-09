@@ -4,7 +4,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   USE Integrands_MOD, ONLY: Integrands
   USE tweedie_params_mod
-  USE TweedieIntZones
+  USE TweedieIntHelpers
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
   USE rprintf_mod
   USE Calcs_Imag
