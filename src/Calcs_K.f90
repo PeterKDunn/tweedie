@@ -50,13 +50,6 @@ CONTAINS
     !       a. If p near 1, approximate starting point by p=1 case analytically
     !       b. Otherwise, use standard starting point
   
-  
-    ! Grab the relevant scalar values for this iteration:
-    current_y    = Cy(i)    ! Access y value for index i
-    current_mu   = Cmu(i)   ! Access mu value for index i
-    current_phi  = Cphi(i)  ! Access phi value for index i
-    
-    
     ! --- Initialization ---
     aimrerr = 1.0E-09_C_DOUBLE
     pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
