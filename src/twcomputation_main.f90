@@ -1,5 +1,5 @@
 
-SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
   ! Calls FORTRAN to compute the integral; set up common parameters
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -88,4 +88,4 @@ SUBROUTINE twcomputation_main(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
     Int_Regions(i) = Int_RegionsTMP
   END DO
 
-END SUBROUTINE twcomputation_main
+END SUBROUTINE twcomputation_loop

@@ -18,7 +18,7 @@ OBJECTS = init.o \
           accelerate.o \
           findAccelStart.o \
           twcomputation.o \
-          twcomputation_main.o
+          twcomputation_loop.o
 
 all: $(SHLIB)
 
