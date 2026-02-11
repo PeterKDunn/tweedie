@@ -113,6 +113,9 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
                  PACKAGE     = "tweedie")
       cdf[!special_y_cases] <- tmp$funvalue
       regions[!special_y_cases] <- tmp$its
+      if (any(tmp$exitstatus > 0)){
+        cat("Some problem in computation\n")
+      }
     }
   }
   

@@ -199,6 +199,9 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		
 		density[!special_y_cases] <- tmp$funvalue
 		regions[!special_y_cases] <- tmp$its
+		if (any(tmp$exitstatus > 0)){
+		  cat("Some problem in computation\n")
+		}
 		
 		# Reconstruct
 		if (any(optimal_Method == 1)){
