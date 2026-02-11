@@ -86,6 +86,7 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
     CALL TweedieIntegration(i, funvalueTMP, exitstatus(i), relerr(i), Int_RegionsTMP)
     funvalue(i) = funvalueTMP
     Int_Regions(i) = Int_RegionsTMP
+
   END DO
 
 END SUBROUTINE twcomputation_loop
