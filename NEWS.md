@@ -1,4 +1,16 @@
-tweedie 3.0.11 (Release date: 2026-02-07)
+tweedie 3.0.13 (Release dat3)
+==============
+
+Changes:
+
+* Improved the vignette.
+* Some internal renaming.
+* Fix some xi = 1 cases (thanks Milan Bouchet-Valat).
+* Relocate some messages in tweedie_profile().
+* Add poison example to vignette.
+
+
+tweedie 3.0.12 (Release date: 2026-02-07)
 ==============
 
 Changes:
