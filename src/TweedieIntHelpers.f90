@@ -229,7 +229,7 @@ CONTAINS
     zeroBoundR = 0.0_C_DOUBLE
     zeroR = 0.0_C_DOUBLE
     TMP = 0.0_C_DOUBLE
-    
+    errorHere = .FALSE.
     
     ! Find starting point for the first zero
     IF (left_Of_Max) THEN

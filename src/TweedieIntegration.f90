@@ -21,7 +21,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   INTEGER(C_INT), INTENT(OUT)       :: count_Integration_Regions ! Num int regions
 
   ! Local Variables: All local variables defined here
-  LOGICAL(C_BOOL)       :: error          ! TRUE if any computational problem founds
+  LOGICAL(C_BOOL)       :: error          ! TRUE if any computational, numerical problems found
   INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax
   INTEGER(C_INT)        :: m, min_Acc_Regions
   LOGICAL(C_BOOL)       :: convergence_Acc
