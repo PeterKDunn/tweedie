@@ -289,11 +289,11 @@ tweedie_profile <- function(formula,
   mu.vec <- L
   b.mat  <- array( dim = c(xi.len, length(ydata) ) )
 
-  pBar <- txtProgressBar(min = 1, 
+  pBar <- utils::txtProgressBar(min = 1, 
                          max = xi.len,
                          style = 2)
   for (i in (1:xi.len)) {
-    setTxtProgressBar(pBar, i)
+    utils::setTxtProgressBar(pBar, i)
     if ( verbose > 0) {
       cat( paste(index.par," = ", xi.vec[i], "\n", sep="") )
     } else {
