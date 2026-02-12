@@ -7,8 +7,7 @@ test_that("Same values as non-central chi-sq (A)", {
          15, 20, 50, 100) 
   expect_equal(
       ptweedie(y, mu = mu, phi = phi, power = p),
-      pchisq(y, df = 0, ncp = 1),
-      tolerance = 1e-5
+      pchisq(y, df = 0, ncp = 1)
   )
 
   expect_equal(
@@ -23,13 +22,11 @@ test_that("Same values as non-central chi-sq (A)", {
   
   expect_equal(
     dtweedie_inversion(y, mu = mu, phi = phi, power = p),
-    dchisq(y, df = 0, ncp = 1),
-    tolerance = 1e-6
+    dchisq(y, df = 0, ncp = 1)
   )
   expect_equal(
     ptweedie_inversion(y, mu = mu, phi = phi, power = p),
-    pchisq(y, df = 0, ncp = 1),
-    tolerance = 1e-5
+    pchisq(y, df = 0, ncp = 1)
   )
 
 })
@@ -90,8 +87,7 @@ test_that("Same values as inverse Gaussian", {
   
   expect_equal(
     statmod::pinvgauss(y, mean = mu, dispersion = phi), 
-    ptweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE ),
-    tolerance = 1e-6
+    ptweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE )
   )
   
   
@@ -120,8 +116,7 @@ test_that("Same values as inverse Gaussian", {
   
   expect_equal(
     statmod::pinvgauss(y, mean = mu, dispersion = phi), 
-    ptweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE ),
-    tolerance = 1e-6
+    ptweedie_inversion(y, mu = mu, phi = phi, power = p, IGexact = FALSE )
   )  
 })
 
