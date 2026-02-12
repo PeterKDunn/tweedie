@@ -78,9 +78,10 @@
 #' \doi{10.1007/978-1-4419-0118-7}
 #'
 #' @examples 
-#' data(Loblolly)
-#' out <- tweedie_profile(height~age, data = Loblolly, 
-#'           do.plot = FALSE, p.vec = seq(3.5, 4.5, length = 7) )
+#' data(rock)
+#' out <- tweedie_profile(perm~1, data=rock, do.plot=FALSE, 
+#'                        xi.vec=seq(1.5, 2.75, length=11))
+#'
 #' # The estimate for the variance power index (p, or xi) is:
 #' out$p.max
 #' 
@@ -342,8 +343,7 @@ tweedie_profile <- function(formula,
     } else {
       mu <- fitted( fit.model )
     }
-    if (verbose == 2) cat(" Done\n")
-    
+
     ### -- Start:  Estimate phi
     if (verbose >= 1) cat("* Phi estimation, method: ", phi.method)
     
@@ -483,7 +483,6 @@ tweedie_profile <- function(formula,
   }
   
 
-  if ( verbose == 0 ) cat("Done.\n")
   ### Smoothing
   # If there are infs etc in the log-likelihood,
   # the smooth can't happen.  Perhaps this can be worked around.
