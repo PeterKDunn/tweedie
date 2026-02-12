@@ -288,17 +288,20 @@ tweedie_profile <- function(formula,
   mu.vec <- L
   b.mat  <- array( dim = c(xi.len, length(ydata) ) )
 
+  pBar <- txtProgressBar(min = 1, 
+                         max = xi.len,
+                         style = 2)
   for (i in (1:xi.len)) {
-    
+    setTxtProgressBar(pBar, i)
     if ( verbose > 0) {
       cat( paste(index.par," = ", xi.vec[i], "\n", sep="") )
     } else {
-      cat(".")
+#      cat(".")
     }
 
     # We find the mle of phi.
     # We try to bound it as well as we can, 
-    # then use  uniroot to solve for it.
+    # then use  uniroot()  to solve for it.
     
     # Set things up
     p <- xi.vec[i]
