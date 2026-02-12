@@ -723,10 +723,10 @@ CONTAINS
     
       ! When small p and small y, fight harder for good starting bounds
       CALL improveKZeroBounds(m, left_Of_Max, tStart, tL, tR, error)
-      IF (error) THEN
-        IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
-        RETURN
-      END IF
+!      IF (error) THEN
+!        IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+!        RETURN
+!      END IF
       CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
 
       IF (errorHere) THEN
