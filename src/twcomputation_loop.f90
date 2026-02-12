@@ -38,22 +38,30 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
 
   ! Initialization
-  Cp = p
+  exitstatus = 0_C_INT
+  relerr = 0.0_C_DOUBLE
+  funvalueTMP = 0.0_C_DOUBLE
+  funvalue = 0.0_C_DOUBLE
+  Int_Regions = 0_C_INT
+  Int_RegionsTMP = 0_C_INT
+  istat = 0_C_INT
+  
   IF (.NOT. ALLOCATED(Cy)) THEN
       ALLOCATE(Cy(N), Cmu(N), Cphi(N), STAT=istat)
-      IF (istat /= 0) THEN
+      IF (istat .NE. 0) THEN
         ! CALL INTPR("Allocation failed!", 0)
         RETURN
       END IF
   ELSE IF (SIZE(Cy) .NE. N) THEN
       DEALLOCATE(Cy, Cmu, Cphi)
       ALLOCATE(Cy(N), Cmu(N), Cphi(N), STAT=istat)
-      IF (istat /= 0) THEN
+      IF (istat .NE. 0) THEN
         ! CALL INTPR("Allocation failed!", 0)
         RETURN
       END IF
   END IF
   
+  Cp = p
   Cy = y
   Cmu = mu
   Cphi = phi
@@ -70,10 +78,6 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   ELSE
     Cverbose = .FALSE.    ! Minimal feedback
   END IF
-
-  exitstatus = 1
-  relerr = 0.0_C_DOUBLE
-  funvalueTMP = 0.0_C_DOUBLE
 
 
   ! Determine case: pSmall = TRUE means 1 < p < 2

@@ -216,7 +216,10 @@ CONTAINS
         t0 = ratio**r * t_small + (1.0E0_C_DOUBLE - ratio**r) * t_large
       
       END FUNCTION tInitialGuess
+
   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+
       
       SUBROUTINE improveKmaxSPBounds(startTKmax, tmaxL, tmaxR, error)
         ! Crudely improve the bounds that bracket the starting point for finding Kmax.
@@ -372,9 +375,9 @@ CONTAINS
   
   END SUBROUTINE findKmax
   
-  
-  
-  
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+
     
   REAL(KIND=C_DOUBLE) FUNCTION findKmaxSP() 
     ! Find the starting point for finding Kmax
@@ -437,6 +440,7 @@ CONTAINS
   END FUNCTION findKmaxSP
   
   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
   
   
   SUBROUTINE improveKZeroBounds(m, left_Of_Max, zeroMid, zeroL, zeroR, error)
@@ -464,7 +468,11 @@ CONTAINS
 
     ! Initialisation
     maxSearch = 10  ! Don't spend too long, so set limit
-  
+    valueL = 0.0_C_DOUBLE
+    valueR = 0.0_C_DOUBLE
+    df = 0.0_C_DOUBLE
+    valueMid = 0.95_C_DOUBLE
+    
     ! Set multipier: this adjust the sign depending on whether we are
     ! left of the max (so left bound is negative) or to the right of
     ! the max (so left bound is positive)
@@ -483,14 +491,9 @@ CONTAINS
     ! FIND the function value of the starting point (SP)
     zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
     CALL evaluateImkM(zeroMid, valueMid, df, m, error)
-    IF (error) RETURN
-    
-    CALL evaluateImkM(zeroL, valueL, df, m, error)
-    IF (error) RETURN    
-    
-    CALL evaluateImkM(zeroR, valueR, df, m, error)
-    IF (error) RETURN
-  
+    CALL evaluateImkM(zeroL,   valueL,   df, m, error)
+    CALL evaluateImkM(zeroR,   valueR,   df, m, error)
+
     ! CHECK IF BOUNDS REALLY DO BOUND THE ZERO:
     IF ( (valueL * valueR) .GE. 0.0_C_DOUBLE) THEN
       ! Bounds DO NOT trap the zero
@@ -537,11 +540,8 @@ CONTAINS
           ! So we need to go LEFT a little.
           zeroL = (zeroL - 0.1_C_DOUBLE) * 0.95_C_DOUBLE
           CALL evaluateImkM(zeroL, valueL, df, m, error)
-          IF (error) RETURN
         END DO
-  
-  
-  
+
         ! The solution depends on what side of the max we are.
         ! If to the RIGHT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
         DO WHILE ( valueR .GT. 0.0_C_DOUBLE) 
@@ -549,13 +549,9 @@ CONTAINS
           ! So we need to go RIGHT a little.
           zeroR = (zeroR + 0.1_C_DOUBLE) * 1.05_C_DOUBLE
           CALL evaluateImkM(zeroR, valueR, df, m, error)
-          IF (error) RETURN
         END DO
       END IF
-  
-  
-  
-  
+
     ELSE
       ! Bounds DO trap the zero, so improve a little
     
@@ -570,14 +566,9 @@ CONTAINS
       ! And once more ONLY
       zeroMid = (zeroL + zeroR) / 2.0_C_DOUBLE
       CALL evaluateImkM(zeroMid, valueMid, df, m, error)
-      IF (error) RETURN
-    
       CALL evaluateImkM(zeroL, valueL, df, m, error)
-      IF (error) RETURN
-      
       CALL evaluateImkM(zeroR, valueR, df, m, error)
-      IF (error) RETURN
-    
+
       ! Find a point halfway between bounds.
       ! If the new point has same sign as L/R bound, make that the new L/R bounds.
       IF ( (valueMid * valueL) .GE. 0.0_C_DOUBLE) THEN
@@ -595,7 +586,7 @@ CONTAINS
   END SUBROUTINE improveKZeroBounds
   
   
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
   SUBROUTINE advanceM(m, mmax, mOld, left_Of_Max)
@@ -649,7 +640,7 @@ CONTAINS
     END SUBROUTINE advanceM
     
     
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     
     SUBROUTINE findExactZeros(m, tL, tR, tStart, tZero, left_Of_Max, error) 
@@ -670,10 +661,21 @@ CONTAINS
   
     REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
     LOGICAL(C_BOOL)       :: errorHere
-    
+  
+    ! INITIALIZE ALL LOCAL VARIABLES
     errorHere = .FALSE.
+    xacc = 1.0E-11_C_DOUBLE
+    fL = 0.0_C_DOUBLE
+    fR = 0.0_C_DOUBLE
+    dfL = 0.0_C_DOUBLE
+    dfR = 0.0_C_DOUBLE
+    tstart_update = 0.0_C_DOUBLE
+    tMid = 0.0_C_DOUBLE
+    tZero = 0.0_C_DOUBLE  ! Initialize OUT parameter too
+    
     ! Sync the local value of  m  to the shared value.
     m_shared = m
+
     ! Set the accuracy
     xacc = 1.0E-11_C_DOUBLE
   
@@ -763,8 +765,7 @@ CONTAINS
     LOGICAL(C_BOOL), INTENT(INOUT)    :: error
        
     CALL evaluateImkM(x, f, df, m_shared, error) ! Pass the captured 'm' value
-    IF (error) RETURN
-  
+
   END SUBROUTINE evaluateImkM_wrapper
 
   
