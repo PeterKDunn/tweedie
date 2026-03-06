@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 tweedie 3.0.18 (Release date: 2026-??-??)
 ==============
 
@@ -31,7 +29,6 @@ Changes:
 * Add poison example to vignette.
 
 
->>>>>>> 48912774428b0aa87eb0414d86ee870366a882f3
 tweedie 3.0.12 (Release date: 2026-02-07)
 ==============
 
