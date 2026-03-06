@@ -1,3 +1,11 @@
+tweedie 3.0.18 (Release date: 2026-??-??)
+==============
+
+Changes:
+
+* Improvements to tweedie_plot() and passing plotting options
+
+
 tweedie 3.0.17 (Release date: 2026-02-26)
 ==============
 
