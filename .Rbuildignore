@@ -13,3 +13,4 @@
 ^README\.Rmd$
 ^Meta$
 ^doc$
+^src/Makevars$

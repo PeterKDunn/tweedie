@@ -30,6 +30,14 @@ test_that("Other functions work OK", {
              phi = c(0.25, 0.5, 1) )
   })
 
+  test_that("dtweedie power=1 returns 0 and warns", {
+    expect_warning(
+      val <- tweedie::dtweedie(1, mu = 2, phi = 2, power = 1),
+      regexp = "non-integer x"
+    )
+    expect_equal(val, 0)
+  })
+  
 
   # qtweedie
   expect_no_error({
@@ -118,3 +126,25 @@ test_that("Other functions work OK", {
 
 })
 
+test_that("qtweedie and ptweedie are consistent for power=1", {
+  
+  probs <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+  mus   <- c(1, 3, 5)
+  phis  <- c(0.5, 1, 2, 3)  # phi=1: standard Poisson case
+  
+  for (mu in mus) {
+    for (phi in phis) {
+      for (p in probs) {
+        q <- suppressWarnings( # Otherwise warnings when phi \ne 1
+                qtweedie(p, mu = mu, phi = phi, power = 1)
+             )
+        # ptweedie(q) should return something >= p (like qpois/ppois relationship)
+        # ptweedie(q - phi) should return something < p
+        expect_gte(  suppressWarnings(ptweedie(q,       mu = mu, phi = phi, power = 1)), p)
+        if (q > 0) { # q can equal 0 when the probability p is less than or equal to P(Y = 0)
+          expect_lt( suppressWarnings(ptweedie(q - phi, mu = mu, phi = phi, power = 1)), p)
+        }
+      }
+    }
+  }
+})
