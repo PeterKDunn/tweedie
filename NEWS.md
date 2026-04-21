@@ -1,9 +1,11 @@
-tweedie 3.0.18 (Release date: 2026-??-??)
+tweedie 3.0.18 (Release date: 2026-04-21)
 ==============
 
 Changes:
 
 * Improvements to tweedie_plot() and passing plotting options
+* Fix error with accelerate when returning early: return properly
+  (Thanks Jeonghwan Lee)
 
 
 tweedie 3.0.17 (Release date: 2026-02-26)
