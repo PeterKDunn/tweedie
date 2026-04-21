@@ -95,12 +95,12 @@ tweedie_plot <- function(y,
   line_defaults  <- list(col = "black", 
                          lwd = 1)
   
-  plot_dots <- modifyList(plot_defaults, 
-                          list(...))
-  point_dots <- modifyList(point_defaults, 
-                           list(...))
-  line_dots  <- modifyList(line_defaults, 
-                           list(...))
+  plot_dots  <- utils::modifyList(plot_defaults, 
+                                  list(...))
+  point_dots <- utils::modifyList(point_defaults, 
+                                  list(...))
+  line_dots  <- utils::modifyList(line_defaults, 
+                                  list(...))
   
   if (!add) {
     if (is.pg) {
