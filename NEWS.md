@@ -1,4 +1,4 @@
-tweedie 3.0.18 (Release date: 2026-04-21)
+tweedie 3.0.19 (Release date: 2026-04-26)
 ==============
 
 Changes:
