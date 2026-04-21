@@ -13,7 +13,7 @@
 #' @param mu the mean of the distribution \eqn{\mu}{mu}.
 #' @param phi the dispersion parameter \eqn{\phi}{phi}.
 #' @param xi a synonym for \code{power}.
-#' @param type the type of plot, either \code{PDF} (the default) or \code{CDF}.
+#' @param type the type of plot, either \code{pdf} (the default) or \code{cdf}.
 #' @param add logical; if \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.
 #' @param ... plotting parameters passed to \code{plot()}.
 #'
