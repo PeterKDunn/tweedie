@@ -29,7 +29,7 @@
 #' @return A list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively, plus the values of the integrand as \code{IG}.
 #' The main purpose of the function is the side-effect of producing a \eqn{2\times2}{2x2} grid of plots.
 #' The first is the imaginary parts of \eqn{k(t)}{k(t)}.
-#' The second is \eqn{\sin\Im k(t)}{sinIm[k(t)]}.
+#' The second is \eqn{\cos\Im k(t)}{sinIm[k(t)]} (for \code{type=="PDF"}) or \eqn{\sin\Im k(t)}{sinIm[k(t)]} (for \code{type=="CDF"}).
 #' The third is the real part of \eqn{\Re k(t)}{Re[k(t)]}
 #' The fourth is the integrand, with the envelope shown as a dashed line.
 #'
@@ -104,7 +104,10 @@ tweedie_integrand <- function(y, power, mu, phi,
             par( mfrow = c(1, 1))
     )
   }
+
+  ###
   ### PLOT 1: Im k(t) vs t
+  ###
   if (1 %in% whichPlots) {
     plot(k_Imag ~ t,
          main = expression( bold(Imaginary~part~of~italic(k)*(italic(t)))),
@@ -139,24 +142,36 @@ tweedie_integrand <- function(y, power, mu, phi,
          labels = mValues )
   }
   
-  
-  ### PLOT 2: sin( Im k(t) ) vs t
+  ###
+  ### PLOT 2: cos( Im k(t) ) (PDF) or sin( Im k(t) ) (CDF) vs t
+  ###
   if (2 %in% whichPlots){
-    plot(sin(k_Imag) ~ t,
-         main = expression(sin(Im*"("*italic(k)*")")),
-         xlab = expression(Values~of~italic(t)),
-         ylab = expression(sin(Im*"("*italic(k)*")")),
-         las = 1,
-         lwd = 2,
-         type = "l")
+    if (type == "PDF"){
+      plot(cos(k_Imag) ~ t,
+           main = expression(cos(Im*"("*italic(k)*")")),
+           xlab = expression(Values~of~italic(t)),
+           ylab = expression(cos(Im*"("*italic(k)*")")),
+           las = 1,
+           lwd = 2,
+           type = "l")
+    } else {
+      plot(sin(k_Imag) ~ t,
+           main = expression(sin(Im*"("*italic(k)*")")),
+           xlab = expression(Values~of~italic(t)),
+           ylab = expression(sin(Im*"("*italic(k)*")")),
+           las = 1,
+           lwd = 2,
+           type = "l")
+    }
     abline(h = 0, 
            col="grey")
   }
   
   
-  
+  ###
   ### PLOT 3: sin( Re k(t) ) vs t
-    if (3 %in% whichPlots) {
+  ###
+  if (3 %in% whichPlots) {
     plot(k_Real ~ t,
          main = "Real part of k(t)",
          xlab = expression(Values~of~italic(t)),
@@ -169,7 +184,9 @@ tweedie_integrand <- function(y, power, mu, phi,
     }
   
   
+  ###
   ### PLOT 4: Integrand
+  ###
   if (4 %in% whichPlots) {  
     plot(  igrand ~ t,
           main = "Integrand",
