@@ -1,3 +1,18 @@
+tweedie 3.1.0 (Release date: )
+==============
+
+## Summary
+Minor fixes and improvements
+
+## Changed
+* Added  details  input to dtweedie_series(), that returns the  lo  and  hi  index for the summing of terms.
+  Other necessary changes made downstream.
+
+## Fixed
+* Fixed tweedie_intgerand: Plot 2 now plots cos( Im k(t) ) for the PDF (not sin).
+
+
+
 tweedie 3.0.19 (Release date: 2026-04-26)
 ==============
 
