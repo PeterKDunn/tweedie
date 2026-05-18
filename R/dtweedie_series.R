@@ -5,13 +5,12 @@
 #' for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 #'
-#' @usage dtweedie_series(y, power, mu, phi, verbose = FALSE, details = FALSE)
+#' @usage dtweedie_series(y, power, mu, phi, details = FALSE)
 #'
 #' @param y vector of quantiles.
 #' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^power}.
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
-#' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
 #' 
 #' @return A numeric vector of densities.
@@ -35,7 +34,7 @@
 #' @keywords distribution
 #'
 #' @export
-dtweedie_series <- function(y, power, mu, phi, verbose = FALSE, details = FALSE){ 
+dtweedie_series <- function(y, power, mu, phi, details = FALSE){ 
   # Evaluates the Tweedie density using a series expansion
   
   if ( power < 1) stop("power must be between 1 and 2.")
@@ -58,7 +57,7 @@ dtweedie_series <- function(y, power, mu, phi, verbose = FALSE, details = FALSE)
   
   y0 <- (y == 0)
   yp <- (y != 0)
-  density <- array( dim = length(y))
+  density <- lo <- hi <-array( dim = length(y))
   
   if ( (power == 2) | (power == 1) ) { # Special cases
     if ( power == 2 ){
@@ -93,17 +92,23 @@ dtweedie_series <- function(y, power, mu, phi, verbose = FALSE, details = FALSE)
     
     if ( any( y!= 0 ) ) { 
       if (power > 2) {
-        density[yp] <- dtweedie_series_bigp(power = power,
-                                            mu = mu[yp], 
-                                            y = y[yp],
-                                            phi = phi[yp])$density
+        out <- dtweedie_series_bigp(power = power,
+                                    mu = mu[yp], 
+                                    y = y[yp],
+                                    phi = phi[yp])
+        density[yp] <- out$density 
+        lo[yp] <- out$lo
+        hi[yp] <- out$hi
       }
       
       if ( ( power > 1 ) && ( power < 2 ) ) {
-        density[yp] <- dtweedie_series_smallp(power = power,
-                                              mu = mu[yp], 
-                                              y = y[yp],
-                                              phi = phi[yp])$density
+        out <- dtweedie_series_smallp(power = power,
+                                      mu = mu[yp], 
+                                      y = y[yp],
+                                      phi = phi[yp])
+        density[yp] <- out$density 
+        lo[yp] <- out$lo
+        hi[yp] <- out$hi
       }
     }
   }
@@ -111,7 +116,7 @@ dtweedie_series <- function(y, power, mu, phi, verbose = FALSE, details = FALSE)
   if (details) {
     return(list( density = density,
                  lo = lo,
-                 hi = hi)
+                 hi = hi) )
   } else {
     return(density)
   }
