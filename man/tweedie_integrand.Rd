@@ -28,7 +28,7 @@ tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 200),
 A list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively, plus the values of the integrand as \code{IG}.
 The main purpose of the function is the side-effect of producing a \eqn{2\times2}{2x2} grid of plots.
 The first is the imaginary parts of \eqn{k(t)}{k(t)}.
-The second is \eqn{\sin\Im k(t)}{sinIm[k(t)]}.
+The second is \eqn{\cos\Im k(t)}{sinIm[k(t)]} (for \code{type=="PDF"}) or \eqn{\sin\Im k(t)}{sinIm[k(t)]} (for \code{type=="CDF"}).
 The third is the real part of \eqn{\Re k(t)}{Re[k(t)]}
 The fourth is the integrand, with the envelope shown as a dashed line.
 }
