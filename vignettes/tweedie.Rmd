@@ -124,20 +124,25 @@ However, the function **tweedie_plot()** is sometimes more convenient (especiall
 
 ```{r TWplotsPDF2}
 tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi,
-                      ylab = "Density function",
-                      xlab = expression(italic(y)),
-                      las = 1,
-                      lwd = 2)
+                      plot_args = list(
+                        ylab = "Density function",
+                        xlab = expression(italic(y)),
+                        las = 1,
+                        lwd = 2
+                        ) 
+)
 ```
 
 ```{r TWplotsCDF2}
 tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi, 
-                      ylab = "Distribution function",
-                      xlab = expression(italic(y)),
-                      las = 1, 
-                      lwd = 2, 
-                      ylim = c(0, 1), 
-                      type = "cdf")
+                      type = "cdf",
+                      plot_args = list(
+                        ylab = "Distribution function",
+                        xlab = expression(italic(y)),
+                        las = 1, 
+                        lwd = 2, 
+                        ylim = c(0, 1)) 
+                        )
 ```
 
 ### Computing the quantile residuals
