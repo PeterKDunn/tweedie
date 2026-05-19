@@ -4,7 +4,9 @@
 #' @name tweedie_plot
 #' @description This function produced a plot of the specified Tweedie distribution.
 #'
-#' @usage tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, add = FALSE, ...)
+#' @usage tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
+#'                     add = FALSE, 
+#'                     plot_args = list(), point_args = list(), line_args = list())
 #'
 #' @details If \eqn{1 < p < 2}{1 < power < 2}, the mass at \eqn{Y=0}{Y = 0} is automatically added.
 #'
@@ -15,7 +17,12 @@
 #' @param xi a synonym for \code{power}.
 #' @param type the type of plot, either \code{pdf} (the default) or \code{cdf}.
 #' @param add logical; if \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.
-#' @param ... plotting parameters passed to \code{plot()}.
+#' @param plot_args A named list of arguments controlling the main plot.
+#'   These are passed to \code{\link[graphics]{plot}}.
+#' @param point_args A named list of graphical parameters for plotted points.
+#'   These are passed to \code{\link[graphics]{points}}.
+#' @param line_args A named list of graphical parameters for plotted lines.
+#'   These are passed to \code{\link[graphics]{lines}}.
 #'
 #' @examples
 #' y <- seq(0, 4, length = 50)
@@ -32,7 +39,9 @@ tweedie_plot <- function(y,
                          type = "pdf",
                          power = NULL,
                          add = FALSE,
-                         ...) {
+                         plot_args  = list(),
+                         point_args = list(),
+                         line_args  = list()) {
   # Sort out the xi/power notation
   if (is.null(power) &
       is.null(xi))
@@ -82,7 +91,7 @@ tweedie_plot <- function(y,
     )
   }
   
-  # Check for some given parameters supplied via ...
+  # BEGIN: Check for some given parameters supplied via args
   plot_defaults <- list(
     col = "black",
     main = "Tweedie distribution",
@@ -95,12 +104,14 @@ tweedie_plot <- function(y,
   line_defaults  <- list(col = "black", 
                          lwd = 1)
   
-  plot_dots  <- utils::modifyList(plot_defaults, 
-                                  list(...))
-  point_dots <- utils::modifyList(point_defaults, 
-                                  list(...))
-  line_dots  <- utils::modifyList(line_defaults, 
-                                  list(...))
+  plot_args  <- utils::modifyList(plot_defaults, 
+                                  plot_args)
+  point_args <- utils::modifyList(point_defaults, 
+                                  point_args)
+  line_args  <- utils::modifyList(line_defaults, 
+                                  line_args)
+  # END: Check for some given parameters supplied via args
+  
   
   if (!add) {
     if (is.pg) {
@@ -110,20 +121,20 @@ tweedie_plot <- function(y,
                 y = range(fy),
                 type = "n"
                 ), 
-                plot_dots))
+                plot_args))
       if (any(y == 0)) {
         # The exact zero
         do.call(points, 
                 c(list(x = y[y == 0], 
                        y = fy[y == 0]), 
-                  point_dots))
+                  point_args))
       }
       if (any(y > 0)) {
         # The exact zero
         do.call(lines, 
                 c(list(x = y[y > 0], 
                        y = fy[y > 0]), 
-                  line_dots))
+                  line_args))
       }
     } else {
       # Not a Poison-gamma dist
@@ -133,11 +144,11 @@ tweedie_plot <- function(y,
                 y = range(fy),
                 type = "n"
                 ), 
-                plot_dots))
+                plot_args))
       do.call(lines, 
               c(list(x = y, 
                      y = fy), 
-                line_dots))
+                line_args))
     }
   } else {
     # Add; no new plot
@@ -147,21 +158,21 @@ tweedie_plot <- function(y,
         do.call(points, 
                 c(list(x = y[y == 0], 
                        y = fy[y == 0]), 
-                  point_dots))
+                  point_args))
       }
       if (any(y > 0)) {
         # The exact zero
         do.call(lines, 
                 c(list(x = y[y > 0], 
                        y = fy[y > 0]), 
-                  line_dots))
+                  line_args))
       }
     } else {
       # Not a Poison-gamma dist
       do.call(lines, 
               c(list(x = y, 
                      y = fy), 
-                line_dots))
+                line_args))
     }
     
   }
@@ -194,7 +205,6 @@ tweedie.plot <- function(y,
     mu = mu,
     phi = phi,
     type = type,
-    add = add,
-    ...
+    add = add
   )
 }

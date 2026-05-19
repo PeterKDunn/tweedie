@@ -5,7 +5,9 @@
 \alias{tweedie.plot}
 \title{Plot Tweedie Models}
 \usage{
-tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, add = FALSE, ...)
+tweedie_plot(y, xi = NULL, mu, phi, type = "pdf", power = NULL, 
+                    add = FALSE, 
+                    plot_args = list(), point_args = list(), line_args = list())
 
 tweedie.plot(
   y,
@@ -33,7 +35,14 @@ tweedie.plot(
 
 \item{add}{logical; if \code{TRUE}, the plot is added to the current plot; if \code{FALSE} (the default) the plot is produced on a fresh plot.}
 
-\item{...}{plotting parameters passed to \code{plot()}.}
+\item{plot_args}{A named list of arguments controlling the main plot.
+These are passed to \code{\link[graphics]{plot}}.}
+
+\item{point_args}{A named list of graphical parameters for plotted points.
+These are passed to \code{\link[graphics]{points}}.}
+
+\item{line_args}{A named list of graphical parameters for plotted lines.
+These are passed to \code{\link[graphics]{lines}}.}
 }
 \description{
 This function produced a plot of the specified Tweedie distribution.

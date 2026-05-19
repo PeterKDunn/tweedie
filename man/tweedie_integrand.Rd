@@ -5,7 +5,8 @@
 \title{Display Integrand Information for Tweedie Fourier inversion}
 \usage{
 tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 200), 
-                  type = "PDF", whichPlots = 1:4, yLimits = NULL)
+                  type = "PDF", whichPlots = 1:4, 
+                  plot_args  = list())
 }
 \arguments{
 \item{y}{vector of quantiles.}
@@ -22,7 +23,8 @@ tweedie_integrand(y, power, mu, phi, t = seq(0, 5, length = 200),
 
 \item{whichPlots}{which combination of the four plots (described below) are produced; by default, all four are produced (i.e., \code{whichPlots = 1:4}).}
 
-\item{yLimits}{the \eqn{y}{y}-limits to use when plotting the integrand; the default is \code{NULL} which uses R defaults.}
+\item{plot_args}{A named list of arguments controlling the main plot.
+These are passed to \code{\link[graphics]{plot}}.}
 }
 \value{
 A list containing the real and imaginary parts of \eqn{k(t)}{k(t)}, \code{Real} and \code{Imag} respectively, plus the values of the integrand as \code{IG}.
