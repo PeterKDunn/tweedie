@@ -52,7 +52,7 @@
 #'
 #' @examples
 #' tweedie_integrand(2, power = 3, mu = 1, phi = 1,
-#'                   plot_args = list(lwd = 2)))
+#'                   plot_args = list(lwd = 2))
 #'
 #' @seealso \code{\link{dtweedie}}
 #' 
