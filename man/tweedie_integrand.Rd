@@ -50,7 +50,8 @@ When \eqn{1 < p < 2}{1 < power < 2}, the distribution are continuous for \eqn{Y}
 This function displays the integrand that is evaluated for computing the Fourier inversion, for the PDF or CDF.
 }
 \examples{
-tweedie_integrand(2, power = 3, mu = 1, phi = 1)
+tweedie_integrand(2, power = 3, mu = 1, phi = 1,
+                  plot_args = list(lwd = 2)))
 
 }
 \references{

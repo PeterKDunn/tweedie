@@ -52,7 +52,8 @@ If \eqn{1 < p < 2}{1 < power < 2}, the mass at \eqn{Y=0}{Y = 0} is automatically
 }
 \examples{
 y <- seq(0, 4, length = 50)
-tweedie_plot(y, power = 1.1, mu = 1, phi = 1)
+tweedie_plot(y, power = 1.1, mu = 1, phi = 1,
+             line_args = list(lwd = 2))
 
 
 }
