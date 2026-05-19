@@ -26,7 +26,8 @@
 #'
 #' @examples
 #' y <- seq(0, 4, length = 50)
-#' tweedie_plot(y, power = 1.1, mu = 1, phi = 1)
+#' tweedie_plot(y, power = 1.1, mu = 1, phi = 1,
+#'              line_args = list(lwd = 2))
 #'
 #'
 #' @importFrom graphics lines rug par mtext abline axis  points plot
