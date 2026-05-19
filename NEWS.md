@@ -7,9 +7,10 @@ Minor fixes and improvements
 ## Changed
 * Added  details  input to dtweedie_series(), that returns the  lo  and  hi  index for the summing of terms.
   Other necessary changes made downstream.
+* Added (tweedie_integrand()) and improved (tweedie_plot()) the passing of plotting parameters.
 
 ## Fixed
-* Fixed tweedie_intgerand: Plot 2 now plots cos( Im k(t) ) for the PDF (not sin).
+* Fixed tweedie_integrand: Plot 2 now plots cos( Im k(t) ) for the PDF (not sin).
 
 
 
