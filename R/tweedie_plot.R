@@ -1,5 +1,4 @@
 
-
 #' @title Plot Tweedie Models
 #' @name tweedie_plot
 #' @description This function produced a plot of the specified Tweedie distribution.
@@ -186,6 +185,9 @@ tweedie_plot <- function(y,
 
 
 #' @rdname tweedie_plot
+#' @param ... Additional graphical arguments, passed to \code{plot_args} for 
+#'   backward compatibility. Deprecated; use \code{plot_args} in 
+#'   \code{\link{tweedie_plot}} instead.
 #' @export
 tweedie.plot <- function(y,
                          xi = NULL,
@@ -200,12 +202,17 @@ tweedie.plot <- function(y,
                             with = "tweedie_plot()")
   if (is.null(power))
     power <- xi
+  
+  # Capture ... and pass to plot_args for backward compatibility
+  dots <- list(...)
+  
   tweedie_plot(
     y = y,
     power = power,
     mu = mu,
     phi = phi,
     type = type,
-    add = add
+    add = add,
+    plot_args = dots
   )
 }

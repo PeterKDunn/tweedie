@@ -43,6 +43,10 @@ These are passed to \code{\link[graphics]{points}}.}
 
 \item{line_args}{A named list of graphical parameters for plotted lines.
 These are passed to \code{\link[graphics]{lines}}.}
+
+\item{...}{Additional graphical arguments, passed to \code{plot_args} for 
+backward compatibility. Deprecated; use \code{plot_args} in 
+\code{\link{tweedie_plot}} instead.}
 }
 \description{
 This function produced a plot of the specified Tweedie distribution.
