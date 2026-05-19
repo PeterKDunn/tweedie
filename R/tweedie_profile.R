@@ -643,7 +643,7 @@ tweedie_profile <- function(formula,
       if (do.points) {
         do.call(points,
                 c(list(
-                  x = xi,vec,
+                  x = xi.vec,
                   y - L),
                 point_args))
         }
