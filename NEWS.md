@@ -1,4 +1,14 @@
-tweedie 3.1.0 (Release date: )
+tweedie 3.1.1 (Release date: )
+==============
+
+## Summary
+Minor fixes and improvements
+
+## Changed
+* Fixed typo in README.Rmd.
+
+
+tweedie 3.1.0 (Release date: 2026-05-20)
 ==============
 
 ## Summary
