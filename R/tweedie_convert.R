@@ -2,7 +2,8 @@
 #' @name tweedie_convert
 #' @description
 #' Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}
-#' and the corresponding underlying Poisson and gamma parameters (when \eqn{1 < p < 2}).
+#' and the corresponding underlying Poisson (\eqn{\lambda}{lambda}) 
+#' and gamma parameters (\eqn{\alpha}{alpha} and \eqn{\beta}{beta}, when \eqn{1 < p < 2}.
 #'
 #' @param xi a synonym for \code{power}.
 #' @param mu the mean parameter \eqn{\mu}{mu}.
