@@ -12,24 +12,24 @@ SUBROUTINE GaussQuadrature(i, a, b, integral_result)
   INTEGER(C_INT), INTENT(IN)        :: i
 
   INTEGER(C_INT)                                 :: j, npoints
-  REAL(KIND=C_DOUBLE)                            :: xu, xl, fl, fu
+  REAL(KIND=C_DOUBLE)                            :: xminus, xplus, fplus, fminus
   
   !!! NOTE: Guassian abscicca and weights in gaussian_data_mod
   
   ! Set up initial parameters
   integral_result = 0.0E0_C_DOUBLE
-  npoints = 256 ! For 512-pt quadrature: symmetry
+  npoints = SIZE(absc) ! For 512-pt quadrature (e.g.): symmetry
   
   ! Compute
   DO j = 1, npoints
     ! Adjust abscissae
-    xl = ( b - a ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
-    xu = ( a - b ) / 2.0E0_C_DOUBLE * absc(j) + ( b + a ) / 2.0E0_C_DOUBLE
+    xplus  = ( b + a ) / 2.0E0_C_DOUBLE + ( b - a ) / 2.0E0_C_DOUBLE * absc(j) 
+    xminus = ( b + a ) / 2.0E0_C_DOUBLE - ( b - a ) / 2.0E0_C_DOUBLE * absc(j) 
 
     ! Evaluate
-    fl = Integrands(i, xl)
-    fu = Integrands(i, xu)
-    integral_result = integral_result + wts(j) * (fl + fu)
+    fplus  = Integrands(i, xplus)
+    fminus = Integrands(i, xminus)
+    integral_result = integral_result + wts(j) * (fplus + fminus)
   END DO
   
   integral_result = integral_result * (b - a) / 2.0E0_C_DOUBLE
