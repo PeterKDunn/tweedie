@@ -2,7 +2,9 @@ tweedie 3.1.1 (Release date: )
 ==============
 
 ## Summary
-Minor fixes and improvements
+* Minor fixes and improvements
+* Use the re-scaling identity to simplify
+
 
 ## Changed
 * Fixed typo in README.Rmd.
