@@ -95,25 +95,59 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
                        FALSE )
   
     ### END SET UP
-  
-    if (N_nonSpecial > 0 ) {
-      tmp <- .C( "twcomputation",
-                 N           = as.integer(N_nonSpecial),              # number of observations
-                 power       = as.double(power),                      # p
-                 phi         = as.double(phi[!special_y_cases]),      # phi
-                 y           = as.double(q[!special_y_cases]),        # y
-                 mu          = as.double(mu[!special_y_cases]),       # mu
-                 verbose     = as.integer(verbose),                   # verbosity
-                 pdf         = as.integer(0),                         # 0: FALSE, as this is the CDF not PDF
-                 # THE OUTPUTS:
-                 funvalue    = numeric(N_nonSpecial),                 # funvalue
-                 exitstatus  = integer(N_nonSpecial),                 # exitstatus
-                 relerr      = numeric(N_nonSpecial),                 # relerr
-                 its         = integer(N_nonSpecial),                 # its
-                 PACKAGE     = "tweedie")
-      cdf[!special_y_cases] <- tmp$funvalue
-      regions[!special_y_cases] <- tmp$its
+    
+    ### Use re-scaling identity:
+    ###  F(y; mu, phi) = F(y/mu; mu = 1, phi = mu^(p-2) * phi)
+    mu_F  <- rep(1, length(q))
+    q_F   <- q / mu
+    phi_F <- mu^(power - 2) * phi
+    
+    # Scaling is numerically unsafe for extremely small q_F
+    cut_off <- 1e-307
+    use_scaled <- !special_y_cases & (q_F >= cut_off)
+    use_direct <- !special_y_cases & (q_F <  cut_off)
+    
+    if (any(use_scaled)) {
+      tmp <- .C(
+        "twcomputation",
+        N          = as.integer(sum(use_scaled)),
+        power      = as.double(power),
+        phi        = as.double(phi_F[use_scaled]),
+        y          = as.double(q_F[use_scaled]),
+        mu         = as.double(mu_F[use_scaled]),
+        verbose    = as.integer(verbose),
+        pdf        = as.integer(0),
+        funvalue   = numeric(sum(use_scaled)),
+        exitstatus = integer(sum(use_scaled)),
+        relerr     = numeric(sum(use_scaled)),
+        its        = integer(sum(use_scaled)),
+        PACKAGE    = "tweedie"
+      )
+      
+      cdf[use_scaled] <- tmp$funvalue
+      regions[use_scaled] <- tmp$its
     }
+    if (any(use_direct)) {
+      tmp <- .C(
+        "twcomputation",
+        N          = as.integer(sum(use_direct)),
+        power      = as.double(power),
+        phi        = as.double(phi[use_direct]),
+        y          = as.double(q[use_direct]),
+        mu         = as.double(mu[use_direct]),
+        verbose    = as.integer(verbose),
+        pdf        = as.integer(0),
+        funvalue   = numeric(sum(use_direct)),
+        exitstatus = integer(sum(use_direct)),
+        relerr     = numeric(sum(use_direct)),
+        its        = integer(sum(use_direct)),
+        PACKAGE    = "tweedie"
+      )
+      
+      cdf[use_direct] <- tmp$funvalue
+      regions[use_direct] <- tmp$its
+    }    
+
   }
   
   if (details) {
