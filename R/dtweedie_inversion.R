@@ -147,14 +147,14 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		dev <- tweedie_dev(y = y, 
 											 mu = mu,
 											 power = power )
-		
+
 		# Method 2
 		m2 <- 1 / mu
-	
+
 		# Method 3
 		m3 <- exp( -dev/(2 * phi) ) / y
-			
-		# Select method: this is an n x 3 array of the vaklues of [m1, m2, m3], 
+
+		# Select method: this is an n x 3 array of the values of [m1, m2, m3], 
 		# and from this we chose the method (i.e., column) containing the minimum
 		method_List <- array(c(m1, m2, m3), 
 												 dim = c(length(y), 3))
