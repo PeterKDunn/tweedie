@@ -380,7 +380,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   density2[ !special_y_cases ] <- density
   density <- density2
 
-  if (any(density < 0 ) )  density[ density < 0 ] <- rep(0, sum(density < 0) )
+  if (any(density < 0 ) )  density[ density < 0 ] <- 0
   density <- as.vector(density)
 
   # Restore names if supplied
@@ -519,8 +519,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   
   
   # Sanity fixes
-  f[ f < 0 ] <- rep(0, sum(f < 0) )
-  f[ f > 1 ] <- rep(1, sum(f > 1) )
+  f[ f < 0 ] <- 0
+  f[ f > 1 ] <- 1
   
   return(f)
 }
