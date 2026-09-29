@@ -10,13 +10,7 @@
 \usage{
 dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
 
-ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
-
-qtweedie(p, xi = NULL, mu, phi, power = NULL)
-
-rtweedie(n, xi = NULL, mu, phi, power = NULL)
-
-ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE)
 
 qtweedie(p, xi = NULL, mu, phi, power = NULL)
 
@@ -40,6 +34,8 @@ rtweedie(n, xi = NULL, mu, phi, power = NULL)
 \item{p}{vector of probabilities.}
 
 \item{n}{number of observations.}
+
+\item{lower.tail}{logical; if \code{TRUE} (the default), computes the lower tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.}
 }
 \value{
 \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \code{qtweedie} gives the quantile function, 

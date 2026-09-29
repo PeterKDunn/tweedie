@@ -6,12 +6,13 @@
 #' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
-#' @usage ptweedie_inversion(q, mu, phi, power, verbose = FALSE, details = FALSE, IGexact = TRUE)
+#' @usage ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE)
 #'
 #' @param q vector of quantiles.
 #' @param power the power parameter \eqn{p}{power}.
 #' @param mu the mean parameter.
 #' @param phi the dispersion parameter.
+#' @param lower.tail logical; if \code{TRUE} (the default) computes the distribution function \eqn{F(y)}; if \code{FALSE}, computes \eqn{1 - F(y)}. 
 #' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.
 #' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
@@ -41,7 +42,7 @@
 #' @keywords distribution
 #' 
 #' @export
-ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FALSE, IGexact = TRUE ){ 
+ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE ){ 
   ### NOTE: No notation checks
   
   # Check
@@ -66,7 +67,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power,
                        IGexact = IGexact,
-                       type = "CDF")
+                       type = "CDF",
+                       lower.tail = lower.tail)
   
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
@@ -93,7 +95,7 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
     pSmall  <- ifelse( (power > 1) & (power < 2),
                        TRUE, 
                        FALSE )
-  
+
     ### END SET UP
     
     ### Use re-scaling identity:
@@ -117,6 +119,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
         mu         = as.double(mu_F[use_scaled]),
         verbose    = as.integer(verbose),
         pdf        = as.integer(0),
+        tail       = as.integer(!lower.tail),
+          # THE OUTPUTS:
         funvalue   = numeric(sum(use_scaled)),
         exitstatus = integer(sum(use_scaled)),
         relerr     = numeric(sum(use_scaled)),
@@ -137,6 +141,8 @@ ptweedie_inversion <- function(q, mu, phi, power, verbose = FALSE, details = FAL
         mu         = as.double(mu[use_direct]),
         verbose    = as.integer(verbose),
         pdf        = as.integer(0),
+        tail       = as.integer(!lower.tail),
+          # THE OUTPUTS:
         funvalue   = numeric(sum(use_direct)),
         exitstatus = integer(sum(use_direct)),
         relerr     = numeric(sum(use_direct)),

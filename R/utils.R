@@ -146,7 +146,7 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
 ################################################################################
 
 #' @noRd
-special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE){
+special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE, lower.tail = TRUE){
   # Special cases may be one of two types:
   # - based on the value of p:
   #   - p = 0: use Normal distribution
@@ -182,7 +182,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       } else {
         f <- stats::pnorm( y, 
                            mean = mu, 
-                           sd = sqrt(phi))
+                           sd = sqrt(phi), 
+                           lower.tail = lower.tail)
       }
     }
     
@@ -194,7 +195,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
                           lambda = mu / phi )
       } else {
         f <- stats::ppois(y/phi, 
-                          lambda = mu / phi )
+                          lambda = mu / phi,
+                          lower.tail = lower.tail)
       }
     }
     
@@ -208,7 +210,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       } else {
         f <- stats::pgamma( y, 
                      scale = mu * phi, 
-                     shape = 1 / phi)
+                     shape = 1 / phi, 
+                     lower.tail = lower.tail)
       }
     }
     
@@ -223,7 +226,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
         } else {
           f <- statmod::pinvgauss(q = y, 
                                   mean = mu, 
-                                  dispersion = phi)
+                                  dispersion = phi, 
+                                  lower.tail = lower.tail)
         }
       } else {
         special_p_cases = FALSE
@@ -241,9 +245,9 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (any(y_Negative) ) f[y_Negative] <- 0
       y_Zero <- (y == 0)
       if (any(y_Zero)) {
-
         if ( (power > 0) & (power < 2) ) {
-          f[y_Zero] <- exp( -tweedie_lambda(mu[y_Zero], phi[y_Zero], power) )
+          pt_mass   <- exp( -tweedie_lambda(mu[y_Zero], phi[y_Zero], power) )
+          f[y_Zero] <- if (lower.tail) { pt_mass } else { 1 - pt_mass }
         } else {
           f[y_Zero] <- 0  
         }

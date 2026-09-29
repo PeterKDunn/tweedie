@@ -32,7 +32,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(KIND=C_DOUBLE)   :: zeroStartPoint
   LOGICAL(C_BOOL)       :: left_Of_Max, flip_To_Other_Side
   
-  INTEGER, PARAMETER :: MAX_ACC = 200
+  INTEGER, PARAMETER :: MAX_ACC = 400
   INTEGER, PARAMETER :: VEC_SIZE = MAX_ACC + 2
   REAL(C_DOUBLE), PARAMETER :: EPS = 1.0E-12_C_DOUBLE
 
@@ -94,12 +94,16 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! --- Initialization ---
   aimrerr = 1.0E-12_C_DOUBLE
+  epsilon = 1.0E-12_C_DOUBLE
+  IF ( .NOT.(Cpdf) .AND. Ctail) THEN     !ONLY RESET if CDF requested and UPPER tail requested
+    aimrerr = 1.0E-15_C_DOUBLE
+    epsilon = 1.0E-15_C_DOUBLE
+  END IF
   mOld = 0
   m = 0
   exitstatus = 0
   relerr = 1.0_C_DOUBLE
   convergence_Acc = .FALSE.
-  epsilon = 1.0E-12_C_DOUBLE
   mmax = 0_C_INT
   count_Integration_Regions = 0_C_INT   ! Counter for number of integration regions
   zeroStartPoint = 0.0_C_DOUBLE
@@ -198,6 +202,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     ! Integrate
     CALL GaussQuadrature(i, zeroL, zeroR, sumA)
     area1 = area1 + sumA
+    
+    relerr = DABS(sumA) / (DABS(area0 + area1) + epsilon) 
 
     ! Update (zeroL, zeroR and m)
     CALL updateTM( i, tmax, mmax, left_Of_Max, &
@@ -271,6 +277,11 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   END IF
 
 
+  ! ADD: if convergence was never actually achieved by either phase, flag it
+  IF ( .NOT.(converged_Pre) .AND. .NOT.(converged_Accelerating) ) THEN
+     error = .TRUE.
+  END IF
+
 
   ! --- WIND THINGS UP ---
   count_Integration_Regions = 1_C_INT  +              &   ! Initial zone has one integration region
@@ -279,10 +290,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   areaT = area0 + area1 + areaA
 
   ! We have the value of the integral in the PDF/CDF calculation, so now work out the actual PDF/CDF
-  IF ( Cpdf ) THEN
+  IF ( Cpdf ) THEN                                        ! THE PDF
     funvalueI = areaT/PI 
-  ELSE
-    funvalueI =  0.5_C_DOUBLE - areaT/PI
+  ELSE                                                    ! THE CDF
+    IF ( .NOT. Ctail ) THEN
+      funvalueI =  0.5_C_DOUBLE - areaT/PI                ! This computes the *lower* tail: F(y)
+    ELSE 
+      funvalueI =  0.5_C_DOUBLE + areaT/PI                ! This computes the *upper* tail: S(y) = 1 - F(y)
+    END IF
   END IF
   
   IF (error) exitstatus = 1_C_INT

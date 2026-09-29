@@ -195,7 +195,8 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 							mu         = as.double(mu_F[!special_y_cases]),
 							verbose    = as.integer( verbose ),
 							pdf        = as.integer(1),          # 1: TRUE, as this is the PDF
-							# THE OUTPUTS:
+							tail       = as.integer(0),          # This input is only relevant for the CDF
+						    # THE OUTPUTS:
 							funvalue   = numeric(N_nonSpecial),  # funvalue
 							exitstatus = integer(N_nonSpecial),  # exitstatus
 							relerr     = numeric(N_nonSpecial),  # relerr

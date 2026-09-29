@@ -1,5 +1,5 @@
 
-SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstatus, relerr, Int_Regions)
+SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, tail, funvalue, exitstatus, relerr, Int_Regions)
   ! Calls FORTRAN to compute the integral; set up common parameters
   USE tweedie_params_mod
   USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE
@@ -7,7 +7,7 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
 
   IMPLICIT NONE
 
-  INTEGER(C_INT), INTENT(IN)        :: N, verbose, pdf
+  INTEGER(C_INT), INTENT(IN)        :: N, verbose, pdf, tail
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: p
   REAL(KIND=C_DOUBLE), INTENT(IN)   :: phi(N), y(N), mu(N)
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: funvalue(N)
@@ -72,6 +72,8 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, funvalue, exitstat
   ELSE
     Cpdf = .TRUE.         ! Computing the PDF
   END IF
+  
+  Ctail = (tail .EQ. 1_C_INT)   ! 0 = lower tail; 1 = upper tail
   
   IF (verbose .EQ. 1) THEN
     Cverbose = .TRUE.     ! Verbose feedback

@@ -5,7 +5,7 @@
 \alias{ptweedie.inversion}
 \title{Fourier Inversion Evaluation for the Tweedie Distribution Function}
 \usage{
-ptweedie_inversion(q, mu, phi, power, verbose = FALSE, details = FALSE, IGexact = TRUE)
+ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE)
 
 ptweedie.inversion(q, power, mu, phi, verbose, details)
 }
@@ -17,6 +17,8 @@ ptweedie.inversion(q, power, mu, phi, verbose, details)
 \item{phi}{the dispersion parameter.}
 
 \item{power}{the power parameter \eqn{p}{power}.}
+
+\item{lower.tail}{logical; if \code{TRUE} (the default) computes the distribution function \eqn{F(y)}; if \code{FALSE}, computes \eqn{1 - F(y)}.}
 
 \item{verbose}{logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.}
 

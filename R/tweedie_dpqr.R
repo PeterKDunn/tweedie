@@ -5,7 +5,7 @@
 #' @description Density, distribution function, quantile function and random generation for the the Tweedie family of distributions, with mean \code{mu}, dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, a synonym for \code{power}).
 #' 
 #' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
-#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE)
 #' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
@@ -39,6 +39,7 @@
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
 #' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
+#' @param lower.tail logical; if \code{TRUE} (the default), computes the lower tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
 #' @param verbose logical; if \code{TRUE}, some details of the algorithms used is shown. The default is \code{FALSE}.
 #'
 #' @return
@@ -394,9 +395,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 
 ################################################################################
 
-#' @rdname Tweedie
 #' @export
-ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
+ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
@@ -444,12 +444,13 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       if ( any(!special_y_cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
         
-        f_TMP <- ptweedie_inversion(q       = q[!special_y_cases],
-                                    mu      = mu[!special_y_cases],
-                                    phi     = phi[!special_y_cases],
-                                    power   = power,
-                                    verbose = verbose,
-                                    details = FALSE)
+        f_TMP <- ptweedie_inversion(q          = q[!special_y_cases],
+                                    mu         = mu[!special_y_cases],
+                                    phi        = phi[!special_y_cases],
+                                    power      = power,
+                                    lower.tail = lower.tail,
+                                    verbose    = verbose,
+                                    details    = FALSE)
         f[!special_y_cases] <- f_TMP
       }
     } else {
@@ -500,11 +501,12 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       if ( any(!special_y_cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
         f_TMP <- ptweedie_inversion(q       = q[!special_y_cases], 
-                                    mu      = mu[!special_y_cases], 
-                                    phi     = phi[!special_y_cases],
-                                    power   = power,
-                                    verbose = verbose,
-                                    details = FALSE)
+                                    mu         = mu[!special_y_cases], 
+                                    phi        = phi[!special_y_cases],
+                                    power      = power,
+                                    lower.tail = lower.tail,
+                                    verbose    = verbose,
+                                    details    = FALSE)
         f[!special_y_cases] <- f_TMP
       }
     }  
@@ -529,7 +531,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 ################################################################################
 
 
-#' @rdname Tweedie
 #' @export
 qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   
@@ -699,7 +700,6 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
 ################################################################################
 
 
-#' @rdname Tweedie
 #' @export
 rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   

@@ -5,13 +5,13 @@
 // DECLARATION: This declares the function twcomputation as a standard C function.
 // Since the Fortran routine uses BIND(C), it exports this exact symbol name
 // with the C calling convention (no hidden arguments).
-extern void twcomputation(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *); 
+extern void twcomputation(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *); 
 // Arguments are declared as void* to match R's .C interface for simple vectors.
 
 /* .C calls */
 static const R_CMethodDef CEntries[] = {
   // REGISTRATION: The name MUST be exactly "twcomputation"
-  {"twcomputation", (DL_FUNC) &twcomputation, 11},
+  {"twcomputation", (DL_FUNC) &twcomputation, 12},
   {NULL, NULL, 0}
 };
 
