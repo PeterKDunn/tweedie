@@ -205,7 +205,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
     ! Check for convergence
     CALL checkStopPreAcc(tmax, zeroR, stop_PreAccelerate, converged_Pre, error)
-    IF (count_Acc_Regions .GT. accMax) THEN
+    IF (count_PreAcc_Regions .GT. accMax) THEN
       stop_PreAccelerate = .TRUE.
       converged_Pre      = .FALSE.
     END IF
