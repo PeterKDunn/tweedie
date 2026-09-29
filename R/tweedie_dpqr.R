@@ -2,7 +2,10 @@
 #' @name Tweedie
 #' @aliases dtweedie ptweedie qtweedie rtweedie
 #'   
-#' @description Density, distribution function, quantile function and random generation for the the Tweedie family of distributions, with mean \code{mu}, dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, a synonym for \code{power}).
+#' @description Density, distribution function, quantile function and random 
+#' generation for the the Tweedie family of distributions, with mean \code{mu}, 
+#' dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, 
+#' a synonym for \code{power}).
 #' 
 #' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
 #' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE)
@@ -10,11 +13,14 @@
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
 #' @details
-#' The Tweedie \acronym{edm}s belong to the class of exponential dispersion models (\acronym{edm}s), known for their role in generalized linear models (\acronym{glm}s). 
-#' The Tweedie distributions are the \acronym{edm}s with a variance of the form \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
+#' The Tweedie \acronym{edm}s belong to the class of exponential dispersion models 
+#' (\acronym{edm}s), known for their role in generalized linear models (\acronym{glm}s). 
+#' The Tweedie distributions are the \acronym{edm}s with a variance of the form 
+#' \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
 #' \emph{This function only evaluates for \eqn{p \ge 1}{p >= 1}.}
 #'
-#' Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
+#' Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), 
+#' gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
 #' Evaluation is difficult for \eqn{p}{p} outside of \eqn{p = 0, 1, 2, 3}{power = 0, 1, 2, 3}. 
 #' This function uses one of two primary methods, depending on the combination of parameters:
 #' \enumerate{
@@ -25,22 +31,26 @@
 #' the density for some parts of the parameter space from previously computed
 #' values (interpolation) and uses the series solution for others.
 #'
-#' When \eqn{1<p<2}{1 < power < 2}, the density function include a positive probably for \eqn{Y = 0}.
+#' When \eqn{1<p<2}{1 < power < 2}, the density function include a positive 
+#' probability for \eqn{Y = 0}.
 #'
 #' @section Note:
 #' \code{dtweedie} and \code{ptweedie} are the only functions generally to be called by users. 
-#' Consequently, all checks on the function inputs are performed in these functions.
+#' Consequently, all checks on the function inputs are only performed in these functions.
 #'
 #' @param y vector of quantiles.
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
 #' @param n number of observations. 
-#' @param xi scalar; the value of \eqn{\xi}{xi} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
+#' @param xi scalar; the value of \eqn{\xi}{xi} such that the variance is 
+#'    \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
 #' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
-#' @param lower.tail logical; if \code{TRUE} (the default), computes the lower tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
-#' @param verbose logical; if \code{TRUE}, some details of the algorithms used is shown. The default is \code{FALSE}.
+#' @param lower.tail logical; if \code{TRUE} (the default), computes the lower 
+#'    tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
+#' @param verbose logical; if \code{TRUE}, some details of the algorithms used is
+#'    shown. The default is \code{FALSE}.
 #'
 #' @return
 #' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \code{qtweedie} gives the quantile function, 

@@ -152,6 +152,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
   #   - p = 0: use Normal distribution
   #   - p = 1: use Poisson distribution
   #   - p = 2: use gamma distribution
+  #   - p = 3: use inverse Gaussian distribution, via
   #   In this case, special_p_cases is a scalar and is TRUE
   #
   # - other values of p, and hence based on value of y:

@@ -13,6 +13,11 @@ This package provides maximum likelihood computations for Tweedie
 \author{
 \strong{Maintainer}: Peter K. Dunn \email{pdunn2@usc.edu.au}
 
+Authors:
+\itemize{
+  \item Peter K. Dunn \email{pdunn2@usc.edu.au}
+}
+
 }
 \keyword{distribution}
 \keyword{models}

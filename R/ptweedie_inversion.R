@@ -1,9 +1,9 @@
 #' @title Fourier Inversion Evaluation for the Tweedie Distribution Function
 #' @name ptweedie_inversion
 #' @description
-#' Evaluates the distribution function (\acronym{df}) for Tweedie distributions using Fourier inversion, 
-#' for given values of the dependent variable \code{y}, 
-#' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+#' Evaluates the distribution function (\acronym{df}) for Tweedie distributions 
+#' using Fourier inversion, for given values of the dependent variable 
+#' \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
 #' @usage ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE)
@@ -23,8 +23,9 @@
 #' For special cases of \code{q} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} is set to \code{NA}.
 #'
 #' @note
-#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
-#' for which very good numerical approximation are available in R.
+#' The 'exact' values for the inverse Gaussian distribution are not really exact, 
+#' but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
+#' (Giner & Smyth, 2016).
 #' 
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).
@@ -32,6 +33,12 @@
 #' \emph{Statistics and Computing}, 
 #' \bold{18}, 73--86.
 #' \doi{10.1007/s11222-007-9039-6}
+#' 
+#' Giner G., Smyth G. K. (2016). 
+#' statmod: probability calculations for the inverse Gaussian distribution. 
+#' \emph{The R Journal},
+#' \bold{8}(1), 339--351. 
+#' \doi{doi:10.32614/RJ-2016-024}
 #'
 #' @examples
 #' # Plot a Tweedie distribution function
@@ -56,7 +63,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, verbose = F
   mu <- out$mu
   phi <- out$phi
 
-  # cdf    is the whole vector; the same length as  y.
+  # cdf    is the whole vector; the same length as  q.
   # All is resolved in the end.
   cdf <- numeric(length = length(q) )
   regions <- rep(NA, length(q)) 
