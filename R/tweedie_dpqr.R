@@ -53,15 +53,18 @@
 #'    shown. The default is \code{FALSE}.
 #'
 #' @return
-#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \code{qtweedie} gives the quantile function, 
+#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \
+#' code{qtweedie} gives the quantile function, 
 #' and \code{rtweedie} generates random deviates.
 #' 
-#' The length of the result is determined by \code{n} for \code{rtweedie}, and by the length of \code{mu} for other functions.
+#' The length of the result is determined by \code{n} for \code{rtweedie}, 
+#' and by the length of \code{mu} for other functions.
 #' 
 #' @importFrom stats dgamma dnorm dpois
 #' @importFrom graphics lines legend plot
 #' 
-#' @seealso \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, \code{\link{ptweedie_series}}, \code{\link{ptweedie_inversion}}, \code{\link{dtweedie_saddle}}, \code{\link{tweedie_lambda}}
+#' @seealso \code{\link{dtweedie_series}}, \code{\link{dtweedie_inversion}}, 
+#' \code{\link{ptweedie_series}}, \code{\link{ptweedie_inversion}}, \code{\link{dtweedie_saddle}}, \code{\link{tweedie_lambda}}
 #'
 #' @references
 #' Dunn, P. K. and Smyth, G. K. (2008).

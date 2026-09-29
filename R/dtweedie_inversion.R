@@ -20,8 +20,9 @@
 #' @return A numeric vector of densities if \code{details=FALSE}; if \code{details = TRUE}, a list containing \code{denisty} (a vector of the values of the density), \code{regions} (a vector of the number of integration regions used),\code{method} (a vector giving the evaluation method used; see the Note below on the three methods), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
 #' 
 #' @note
-#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
-#' for which very good numerical approximation are available in R.
+#' The 'exact' values for the inverse Gaussian distribution are not really exact, 
+#' but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
+#' (Giner & Smyth, 2016).
 
 #' For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} and \code{method} are set to \code{NA} for all values of \code{y}.
 #' For special cases of \code{y} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} and \code{method} are set to \code{NA}.
@@ -35,7 +36,13 @@
 #' \emph{Statistics and Computing}, 
 #' \bold{18}, 73--86.
 #' \doi{10.1007/s11222-007-9039-6}
-
+#' 
+#' #' Giner G., Smyth G. K. (2016). 
+#' statmod: probability calculations for the inverse Gaussian distribution. 
+#' \emph{The R Journal},
+#' \bold{8}(1), 339--351. 
+#' \doi{doi:10.32614/RJ-2016-024}
+#' 
 #' @examples
 #' # Plot a Tweedie density
 #' y <- seq(0.02, 4, length = 50)
