@@ -33,14 +33,15 @@ For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is
 For special cases of \code{q} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} is set to \code{NA}.
 }
 \description{
-Evaluates the distribution function (\acronym{df}) for Tweedie distributions using Fourier inversion, 
-for given values of the dependent variable \code{y}, 
-the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
+Evaluates the distribution function (\acronym{df}) for Tweedie distributions 
+using Fourier inversion, for given values of the dependent variable 
+\code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 }
 \note{
-The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
-for which very good numerical approximation are available in R.
+The 'exact' values for the inverse Gaussian distribution are not really exact, 
+but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
+(Giner & Smyth, 2016).
 }
 \examples{
 # Plot a Tweedie distribution function
@@ -55,5 +56,11 @@ Evaluation of Tweedie exponential dispersion model densities by Fourier inversio
 \emph{Statistics and Computing}, 
 \bold{18}, 73--86.
 \doi{10.1007/s11222-007-9039-6}
+
+Giner G., Smyth G. K. (2016). 
+statmod: probability calculations for the inverse Gaussian distribution. 
+\emph{The R Journal},
+\bold{8}(1), 339--351. 
+\doi{doi:10.32614/RJ-2016-024}
 }
 \keyword{distribution}
