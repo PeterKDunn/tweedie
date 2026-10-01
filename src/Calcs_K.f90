@@ -718,10 +718,20 @@ CONTAINS
     
       CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
       IF (errorHere) THEN
-        error = .TRUE.
-        IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
-        RETURN
-      END IF  
+        ! rtsafe can fail its step-size convergence tolerance at very large t
+        ! even when tZero is already essentially a root. Re-check the actual
+        ! function value AT tZero before treating this as a genuine failure.
+        CALL evaluateImkM(tZero, fL, dfL, m, errorHere)
+        IF ( DABS(fL) .LT. 1.0E-08_C_DOUBLE ) THEN
+          ! Near-miss only: tZero is good enough, do not flag error
+          errorHere = .FALSE.
+        ELSE
+          error = .TRUE.
+          IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+
+          RETURN
+        END IF
+      END IF 
     ELSE IF ( (Cpsmall) .AND. (current_y .LT. current_mu) ) THEN
     
       ! When small p and small y, fight harder for good starting bounds

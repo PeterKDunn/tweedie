@@ -72,10 +72,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     
     SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, NMatrix, West)
       USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
-      IMPORT :: VEC_SIZE  ! Bring the parameter into the interface scope
+
       INTEGER(C_INT), INTENT(IN)          :: nzeros
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(VEC_SIZE), wvec(VEC_SIZE)
-      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, VEC_SIZE), Nmatrix(2, VEC_SIZE)
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: xvec(:), wvec(:)
+      REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(:,:), Nmatrix(:,:)
       REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
     END SUBROUTINE accelerate
 

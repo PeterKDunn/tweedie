@@ -5,11 +5,11 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   
   IMPLICIT NONE
   
-  INTEGER, PARAMETER                  :: VEC_SIZE = 202
   INTEGER(C_INT), INTENT(IN)          :: nzeros
-  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(VEC_SIZE), wvec(VEC_SIZE)
-  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(2, VEC_SIZE), Nmatrix(2, VEC_SIZE)
+  REAL(KIND=C_DOUBLE), INTENT(IN)     :: xvec(:), wvec(:)
+  REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(:,:), Nmatrix(:,:)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
+  
   INTEGER(C_INT)                  :: p, q, l_nzeros, maxSize
   REAL(KIND=C_DOUBLE)             :: denom, psi_new, FF_current, sumw
   REAL(KIND=C_DOUBLE)             :: tinyDenom, scale_denom
@@ -19,7 +19,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
   REAL(KIND=C_DOUBLE), ALLOCATABLE :: xscaled(:)
 
-  maxSize  = 200
+  maxSize  = SIZE(xvec)        ! derived from the actual array, never duplicated
   l_nzeros = MIN(nzeros, maxSize)
   ALLOCATE(xscaled(l_nzeros))
 
