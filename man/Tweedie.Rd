@@ -44,8 +44,8 @@ tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.}
 The default is \code{FALSE}.}
 }
 \value{
-\code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \
-code{qtweedie} gives the quantile function, 
+\code{dtweedie} gives the density, \code{ptweedie} gives the distribution function,
+\code{qtweedie} gives the quantile function, 
 and \code{rtweedie} generates random deviates.
 
 The length of the result is determined by \code{n} for \code{rtweedie}, 
