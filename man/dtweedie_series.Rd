@@ -21,7 +21,7 @@ dtweedie.series(y, power, mu, phi)
 \item{details}{logical; if \code{TRUE}, returns the value of the distribution function and some details.}
 }
 \value{
-A numeric vector of densities.
+A numeric vector of probabilities.
 }
 \description{
 Evaluates the probability density function (\acronym{pdf}) for Tweedie distributions using an infinite series, 

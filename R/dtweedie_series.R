@@ -13,7 +13,7 @@
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
 #' 
-#' @return A numeric vector of densities.
+#' @return A numeric vector of probabilities.
 #' 
 #' @references
 #' Dunn, Peter K and Smyth, Gordon K (2005).
