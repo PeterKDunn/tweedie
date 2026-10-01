@@ -6,16 +6,20 @@
 #' \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
-#' @usage ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE)
+#' @usage ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE, IGexact = TRUE, 
+#'                           verbose = FALSE, details = FALSE)
 #'
 #' @param q vector of quantiles.
 #' @param power the power parameter \eqn{p}{power}.
 #' @param mu the mean parameter.
 #' @param phi the dispersion parameter.
 #' @param lower.tail logical; if \code{TRUE} (the default) computes the distribution function \eqn{F(y)}; if \code{FALSE}, computes \eqn{1 - F(y)}. 
+#' @param log.p logical; if \code{TRUE}, probabilities are returned as \eqn{\log(p)}, computed
+#'   directly from the already-correctly-computed tail probability rather than as
+#'   \code{log(ptweedie_inversion(...))} after the fact. The default is \code{FALSE}.
+#' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
 #' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.
-#' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
 #' 
 #' @return If \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{CDF} (a vector of the values of the distribution function), \code{regions} (a vector of the number of integration regions used), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
 #' 
@@ -49,7 +53,8 @@
 #' @keywords distribution
 #' 
 #' @export
-ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE ){ 
+ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE, IGexact = TRUE,
+                               verbose = FALSE, details = FALSE){ 
   ### NOTE: No notation checks
   
   # Check
@@ -75,7 +80,9 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, verbose = F
   out <- special_cases(q, mu, phi, power,
                        IGexact = IGexact,
                        type = "CDF",
-                       lower.tail = lower.tail)
+                       lower.tail = lower.tail,
+                       log.p = log.p)
+  
   
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
@@ -161,6 +168,24 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, verbose = F
       regions[use_direct] <- tmp$its
     }    
 
+  }
+  
+  # CDF at this point is already the directly-computed
+  # requested tail (per `tail`/lower.tail above), so log() here is safe and does not
+  # involve any (1 - p) style subtraction.
+  
+  if ( special_p_cases ) {
+    cdf <- out$f
+      # cdf is already on the correct scale (log, if log.p was requested) --
+      # special_cases() was called with log.p above, so do NOT log() again here.
+  } else {
+      # special_y_cases entries (if any) are already correctly scaled via
+      # special_cases(); only the Fortran-computed entries are linear-scale
+      # and need log() applied now.
+    fortran_idx <- which(!special_y_cases)
+    if (log.p && length(fortran_idx) > 0) {
+      cdf[fortran_idx] <- log(cdf[fortran_idx])
+    }
   }
   
   if (details) {

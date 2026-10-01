@@ -8,7 +8,7 @@
 #' a synonym for \code{power}).
 #' 
 #' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
-#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE)
+#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log.p = FALSE, verbose = FALSE)
 #' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
@@ -49,6 +49,8 @@
 #' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
 #' @param lower.tail logical; if \code{TRUE} (the default), computes the lower 
 #'    tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
+#' @param log.p logical; if \code{TRUE}, probabilities are returned as \eqn{\log(p)}.
+#'    The default is \code{FALSE}.
 #' @param verbose logical; if \code{TRUE}, some details of the algorithms used is
 #'    shown. The default is \code{FALSE}.
 #'
@@ -409,7 +411,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 ################################################################################
 
 #' @export
-ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE){
+ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log.p = FALSE, 
+                     verbose = FALSE){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
@@ -434,7 +437,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, ver
   special_y_cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power, 
-                       type = "CDF")
+                       type = "CDF",
+                       lower.tail = lower.tail,
+                       log.p = log.p)
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
   
@@ -462,6 +467,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, ver
                                     phi        = phi[!special_y_cases],
                                     power      = power,
                                     lower.tail = lower.tail,
+                                    log.p      = log.p,
                                     verbose    = verbose,
                                     details    = FALSE)
         f[!special_y_cases] <- f_TMP
@@ -518,6 +524,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, ver
                                     phi        = phi[!special_y_cases],
                                     power      = power,
                                     lower.tail = lower.tail,
+                                    log.p      = log.p,
                                     verbose    = verbose,
                                     details    = FALSE)
         f[!special_y_cases] <- f_TMP
@@ -533,11 +540,15 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, ver
   
   
   
-  # Sanity fixes
-  f[ f < 0 ] <- 0
-  f[ f > 1 ] <- 1
+  # Sanity fixes are only meaningful on the linear scale; log-probabilities
+  # are negative by construction and must not be clamped to [0, 1].
+  if (!log.p) {
+    f[ f < 0 ] <- 0
+    f[ f > 1 ] <- 1
+  }
   
   return(f)
+    
 }
 
 

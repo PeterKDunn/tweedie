@@ -5,7 +5,8 @@
 \alias{ptweedie.inversion}
 \title{Fourier Inversion Evaluation for the Tweedie Distribution Function}
 \usage{
-ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, verbose = FALSE, details = FALSE, IGexact = TRUE)
+ptweedie_inversion(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE, IGexact = TRUE, 
+                          verbose = FALSE, details = FALSE)
 
 ptweedie.inversion(q, power, mu, phi, verbose, details)
 }
@@ -20,11 +21,15 @@ ptweedie.inversion(q, power, mu, phi, verbose, details)
 
 \item{lower.tail}{logical; if \code{TRUE} (the default) computes the distribution function \eqn{F(y)}; if \code{FALSE}, computes \eqn{1 - F(y)}.}
 
+\item{log.p}{logical; if \code{TRUE}, probabilities are returned as \eqn{\log(p)}, computed
+directly from the already-correctly-computed tail probability rather than as
+\code{log(ptweedie_inversion(...))} after the fact. The default is \code{FALSE}.}
+
+\item{IGexact}{logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.}
+
 \item{verbose}{logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.}
 
 \item{details}{logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.}
-
-\item{IGexact}{logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.}
 }
 \value{
 If \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{CDF} (a vector of the values of the distribution function), \code{regions} (a vector of the number of integration regions used), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).

@@ -5,7 +5,7 @@
 \alias{ptweedie.series}
 \title{Series Evaluation for the Tweedie Distribution Function}
 \usage{
-ptweedie_series(q, power, mu, phi, verbose = FALSE, details = FALSE)
+ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, verbose = FALSE, details = FALSE)
 
 ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
@@ -18,12 +18,21 @@ ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 
 \item{phi}{the dispersion parameter \eqn{\phi}{phi}.}
 
+\item{lower.tail}{logical; if \code{TRUE} (the default), computes \eqn{F(y)=\Pr(Y\le y)};
+if \code{FALSE}, computes the upper tail \eqn{S(y)=\Pr(Y>y)} directly, rather than as
+\code{1 - ptweedie_series(...)}.}
+
+\item{log.p}{logical; if \code{TRUE}, the logarithm of the probability is returned,
+computed directly via log-sum-exp accumulation over the series terms rather than as
+\code{log(ptweedie_series(...))}. This retains accuracy even when the probability
+itself would underflow to zero.}
+
 \item{verbose}{logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.}
 
 \item{details}{logical; if \code{TRUE}, returns the value of the distribution function and some details.}
 }
 \value{
-A numeric vector of densities.
+A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
 }
 \description{
 Evaluates the distribution function (\acronym{df}) for Tweedie distributions 

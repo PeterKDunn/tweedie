@@ -146,7 +146,8 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
 ################################################################################
 
 #' @noRd
-special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE, lower.tail = TRUE){
+special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGexact = TRUE, 
+                          lower.tail = TRUE, log.p = FALSE){
   # Special cases may be one of two types:
   # - based on the value of p:
   #   - p = 0: use Normal distribution
@@ -184,7 +185,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
         f <- stats::pnorm( y, 
                            mean = mu, 
                            sd = sqrt(phi), 
-                           lower.tail = lower.tail)
+                           lower.tail = lower.tail,
+                           log.p = log.p)
       }
     }
     
@@ -197,7 +199,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       } else {
         f <- stats::ppois(y/phi, 
                           lambda = mu / phi,
-                          lower.tail = lower.tail)
+                          lower.tail = lower.tail,
+                          log.p = log.p)
       }
     }
     
@@ -212,7 +215,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
         f <- stats::pgamma( y, 
                      scale = mu * phi, 
                      shape = 1 / phi, 
-                     lower.tail = lower.tail)
+                     lower.tail = lower.tail,
+                     log.p = log.p)
       }
     }
     
@@ -228,7 +232,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
           f <- statmod::pinvgauss(q = y, 
                                   mean = mu, 
                                   dispersion = phi, 
-                                  lower.tail = lower.tail)
+                                  lower.tail = lower.tail,
+                                  log.p = log.p)
         }
       } else {
         special_p_cases = FALSE
@@ -243,14 +248,24 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
     if (any(special_y_cases)) {
       # NEGATIVE VALUES
       y_Negative <- (y < 0)
-      if (any(y_Negative) ) f[y_Negative] <- 0
+      if (any(y_Negative) ) f[y_Negative] <- if (log.p ) {-Inf} else {0}
       y_Zero <- (y == 0)
       if (any(y_Zero)) {
         if ( (power > 0) & (power < 2) ) {
-          pt_mass   <- exp( -tweedie_lambda(mu[y_Zero], phi[y_Zero], power) )
-          f[y_Zero] <- if (lower.tail) { pt_mass } else { 1 - pt_mass }
+          lambda_z <- tweedie_lambda(mu[y_Zero], phi[y_Zero], power)
+          if (lower.tail) {
+            f[y_Zero] <- if (log.p) -lambda_z else exp(-lambda_z)
+          } else {
+            # S(0) = 1 - exp(-lambda); use log1p(-exp(-lambda)) directly for log.p,
+            # not log(1 - exp(-lambda)) after forming the linear value
+            f[y_Zero] <- if (log.p) {
+              log1p(-exp(-lambda_z))
+            } else {
+              -expm1(-lambda_z)   # = 1 - exp(-lambda), computed via expm1 for precision when lambda_z is small
+            }
+          }
         } else {
-          f[y_Zero] <- 0  
+          f[y_Zero] <- if (log.p) -Inf else 0
         }
       }
     }

@@ -10,7 +10,7 @@
 \usage{
 dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
 
-ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, verbose = FALSE)
+ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log.p = FALSE, verbose = FALSE)
 
 qtweedie(p, xi = NULL, mu, phi, power = NULL)
 
@@ -39,6 +39,9 @@ shown. The default is \code{FALSE}.}
 
 \item{lower.tail}{logical; if \code{TRUE} (the default), computes the lower 
 tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.}
+
+\item{log.p}{logical; if \code{TRUE}, probabilities are returned as \eqn{\log(p)}.
+The default is \code{FALSE}.}
 }
 \value{
 \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \

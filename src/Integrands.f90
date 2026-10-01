@@ -38,10 +38,16 @@ CONTAINS
     IF (ABS(t) .LT. 1.0E-14_C_DOUBLE) THEN
       ! This should ideally be handled by the integrator (limits), 
       ! but returning the analytic limit is safest.
-      integrand_result = current_mu - current_y
-  
-      RETURN
-    ELSE
+      IF (Cpdf .OR. .NOT. CpSmall) THEN
+          integrand_result = current_mu - current_y   ! unchanged
+        ELSE
+          ! NEW: CDF, CpSmall -- extra pi0*y term from L'Hopital on the added sin(ty) piece
+          CALL evaluateLambda(lambda)
+          integrand_result = (current_mu - current_y) + DEXP(-lambda) * current_y
+        END IF
+        
+        RETURN
+  ELSE
       CALL evaluateRek(t, Rek, errorHere)
       IF (errorHere) error = .TRUE.
 !CALL INTPR("Integrands1: error", -1, MERGE(1, 0, error), 1)
@@ -52,15 +58,20 @@ CONTAINS
 !CALL INTPR("Integrands1: error", -1, MERGE(1, 0, error), 1)
       IF (error) RETURN 
 
-      IF (Cpdf) THEN
+      IF (Cpdf) THEN          ! PDF branch
         IF (CpSmall) THEN
           CALL evaluateLambda(lambda)
           integrand_result = DEXP( Rek ) * DCOS( Imk ) - DEXP( -lambda ) * DCOS(t * current_y )
         ELSE
           integrand_result = DEXP( Rek ) * DCOS( Imk )
         END IF
-      ELSE
-        integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
+      ELSE                   ! CDF branch
+        IF (CpSmall) THEN
+          CALL evaluateLambda(lambda)
+          integrand_result = ( DEXP( Rek ) * DSIN( Imk ) + DEXP( -lambda ) * DSIN(t * current_y) ) / t
+        ELSE
+          integrand_result = DEXP( Rek ) * DSIN( Imk ) / t
+        END IF
       END IF
     END IF
     
