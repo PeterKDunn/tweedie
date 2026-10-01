@@ -24,7 +24,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   LOGICAL(C_BOOL)       :: error          ! TRUE if any computational, numerical problems found
   INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax
   INTEGER(C_INT)        :: m, min_Acc_Regions
+  INTEGER(C_INT) :: consecSmallCount     ! Count of consecutive pre-acc regions where the
+                                         !   conditional envelope (condEnvelope/zeroL) has been
+                                         !   below the 1e-7 threshold in checkStopPreAcc; requiring
+                                         !   several in a row avoids stopping early at a point where
+                                         !   the oscillating numerator happens to be near zero,
+                                         !   rather than the envelope having genuinely decayed  
   LOGICAL(C_BOOL)       :: convergence_Acc
+  REAL(KIND=C_DOUBLE)   :: lambda
   REAL(KIND=C_DOUBLE)   :: kmax, tmax, aimrerr
   REAL(KIND=C_DOUBLE)   :: epsilon, areaT, West, Wold, Wold2
   REAL(KIND=C_DOUBLE)   :: zeroL, zeroR
@@ -95,6 +102,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! --- Initialization ---
   aimrerr = 1.0E-12_C_DOUBLE
   epsilon = 1.0E-12_C_DOUBLE
+  consecSmallCount = 0_C_INT
   IF ( .NOT.(Cpdf) .AND. Ctail) THEN     !ONLY RESET if CDF requested and UPPER tail requested
     aimrerr = 1.0E-15_C_DOUBLE
     epsilon = 1.0E-15_C_DOUBLE
@@ -210,7 +218,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                    m, zeroL, zeroR, error)
 
     ! Check for convergence
-    CALL checkStopPreAcc(tmax, zeroR, stop_PreAccelerate, converged_Pre, error)
+    CALL checkStopPreAcc(tmax, zeroR, consecSmallCount, stop_PreAccelerate, converged_Pre, error)
     IF (count_PreAcc_Regions .GT. accMax) THEN
       stop_PreAccelerate = .TRUE.
       converged_Pre      = .FALSE.
@@ -293,10 +301,19 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   IF ( Cpdf ) THEN                                        ! THE PDF
     funvalueI = areaT/PI 
   ELSE                                                    ! THE CDF
-    IF ( .NOT. Ctail ) THEN
-      funvalueI =  0.5_C_DOUBLE - areaT/PI                ! This computes the *lower* tail: F(y)
-    ELSE 
-      funvalueI =  0.5_C_DOUBLE + areaT/PI                ! This computes the *upper* tail: S(y) = 1 - F(y)
+    IF (CpSmall) THEN
+      CALL evaluateLambda(lambda)
+      IF ( .NOT. Ctail ) THEN
+        funvalueI = 0.5_C_DOUBLE * (1.0_C_DOUBLE + DEXP(-lambda)) - areaT/PI
+      ELSE
+        funvalueI = 0.5_C_DOUBLE * (1.0_C_DOUBLE - DEXP(-lambda)) + areaT/PI
+      END IF
+    ELSE
+      IF ( .NOT. Ctail ) THEN
+        funvalueI =  0.5_C_DOUBLE - areaT/PI
+      ELSE
+        funvalueI =  0.5_C_DOUBLE + areaT/PI
+      END IF
     END IF
   END IF
   

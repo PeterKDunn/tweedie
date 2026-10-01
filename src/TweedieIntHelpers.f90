@@ -14,7 +14,7 @@ CONTAINS
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  SUBROUTINE checkStopPreAcc(tmax, zeroL, &
+  SUBROUTINE checkStopPreAcc(tmax, zeroL, consecSmallCount, &
                              stop_PreAccelerate, converged_Pre, error)
     ! Determine if it is OK to stop pre-accelerating, and start using acceleration
     
@@ -24,10 +24,12 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN) :: zeroL
     LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate, converged_Pre
     LOGICAL(C_BOOL), INTENT(INOUT)  :: error
+    INTEGER(C_INT), INTENT(INOUT)   :: consecSmallCount
 
     ! Local vars
     INTEGER(C_INT)        :: nmax
-    REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop
+    REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, Imk, lambda
+    REAL(KIND=C_DOUBLE)   :: condEnvelope
     LOGICAL(C_BOOL)       :: errorHere
     
     ! NOTE: 
@@ -103,19 +105,49 @@ CONTAINS
       RETURN
     END IF
     
-    IF (zeroL .GT. 0.0_C_DOUBLE) THEN
-      IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND.          & 
-          (Rekd .LT. 0.0_C_DOUBLE) ) then
-        stop_PreAccelerate = .TRUE.
-        converged_Pre = .TRUE.
+    IF (CpSmall) THEN
+      CALL evaluateLambda(lambda)
+      CALL evaluateImk(zeroL, Imk, errorHere)
+      IF (errorHere) THEN
+        error = .TRUE.
+        RETURN
       END IF
+      condEnvelope = DABS( DEXP(Rek)*DSIN(Imk) + DEXP(-lambda)*DSIN(zeroL*current_y) )
+    ELSE
+      condEnvelope = DEXP(Rek)
     END IF
 
     IF (zeroL .GT. 0.0_C_DOUBLE) THEN
-      IF ( ( (DEXP(Rek)/zeroL) .LT. 1.0E-15_C_DOUBLE)  ) THEN
-        stop_PreAccelerate = .TRUE.
-        converged_Pre = .TRUE.
+
+      IF (CpSmall) THEN
+        ! For CpSmall, never declare convergence at the loose 1e-7 level --
+        ! only at a threshold tight enough to match aimrerr, so pre-acceleration
+        ! doesn't exit early and skip the properly-checked acceleration phase.
+        IF ( (condEnvelope/zeroL) .LT. 1.0E-07_C_DOUBLE ) THEN
+          consecSmallCount = consecSmallCount + 1_C_INT
+        ELSE
+          consecSmallCount = 0_C_INT
+        END IF
+
+        IF ( (consecSmallCount .GE. 3_C_INT) .AND. &
+             ((condEnvelope/zeroL) .LT. 1.0E-13_C_DOUBLE) ) THEN
+          stop_PreAccelerate = .TRUE.
+          converged_Pre = .TRUE.
+        END IF
+
+      ELSE
+        ! Unchanged existing logic for non-CpSmall cases
+        IF ( ( (condEnvelope/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND. (Rekd .LT. 0.0_C_DOUBLE) ) THEN
+          stop_PreAccelerate = .TRUE.
+          converged_Pre = .TRUE.
+        END IF
+
+        IF ( (condEnvelope/zeroL) .LT. 1.0E-15_C_DOUBLE ) THEN
+          stop_PreAccelerate = .TRUE.
+          converged_Pre = .TRUE.
+        END IF
       END IF
+
     END IF
     
     ! If converged, then always stop pre-accelerating
