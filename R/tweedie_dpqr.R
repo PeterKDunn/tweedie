@@ -55,8 +55,8 @@
 #'    shown. The default is \code{FALSE}.
 #'
 #' @return
-#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function, \
-#' code{qtweedie} gives the quantile function, 
+#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function,
+#' \code{qtweedie} gives the quantile function, 
 #' and \code{rtweedie} generates random deviates.
 #' 
 #' The length of the result is determined by \code{n} for \code{rtweedie}, 
