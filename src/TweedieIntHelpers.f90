@@ -136,15 +136,28 @@ CONTAINS
         END IF
 
       ELSE
-        ! Unchanged existing logic for non-CpSmall cases
-        IF ( ( (condEnvelope/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND. (Rekd .LT. 0.0_C_DOUBLE) ) THEN
-          stop_PreAccelerate = .TRUE.
-          converged_Pre = .TRUE.
-        END IF
+        ! Guard: require several consecutive regions past tmax satisfying
+        ! the envelope/slope test before declaring convergence, not just
+        ! one. A single region immediately after crossing tmax can satisfy
+        ! the loose 1e-7 test by chance for this (p>2, y<mu) regime,
+        ! causing catastrophic truncation of the integral.
+        IF ( zeroL .GT. tmax ) THEN
+          IF ( ( (condEnvelope/zeroL) .LT. 1.0E-07_C_DOUBLE) .AND. (Rekd .LT. 0.0_C_DOUBLE) ) THEN
+            consecSmallCount = consecSmallCount + 1_C_INT
+          ELSE
+            consecSmallCount = 0_C_INT
+          END IF
 
-        IF ( (condEnvelope/zeroL) .LT. 1.0E-15_C_DOUBLE ) THEN
-          stop_PreAccelerate = .TRUE.
-          converged_Pre = .TRUE.
+          IF ( consecSmallCount .GE. 3_C_INT ) THEN
+            stop_PreAccelerate = .TRUE.
+            converged_Pre = .TRUE.
+          END IF
+
+          IF ( (condEnvelope/zeroL) .LT. 1.0E-15_C_DOUBLE .AND. &
+               (consecSmallCount .GE. 3_C_INT) ) THEN
+            stop_PreAccelerate = .TRUE.
+            converged_Pre = .TRUE.
+          END IF
         END IF
       END IF
 
@@ -213,6 +226,7 @@ CONTAINS
       ! leftOfMax is FALSE, and the lower bound is tmax. 
       zeroBoundL = tmax
       zeroBoundR = zeroBoundL * 20.0_C_DOUBLE
+
     END IF
     
     ! With these bounds, we can now find the right-side zero,  zeroR
@@ -228,7 +242,7 @@ CONTAINS
     CALL findExactZeros(m, zeroBoundL, zeroBoundR, &
                         zeroStartPoint, zeroR, left_Of_Max, error)
     ! The zero just found  (zeroR)  is the right-side zero
-
+CALL DBLEPR("DIAG: peak-cross tZero found =", -1, zeroR, 1)
     ! RETURNING: m, zeroL, zeroR
     
   END SUBROUTINE updateTM
