@@ -2,11 +2,13 @@ tweedie 3.1.1 (Release date: )
 ==============
 
 ## Summary
-* Add lower.tail argument for ptweedie() functions
+* Add lower.tail argument for ptweedie() functions and ptweedie_series()
 * Minor fixes and improvements
 * Use the re-scaling identity to simplify CDF computations
 * Minor improvements and typo fixes in man pages
 * Increased a computation limit
+* Add log.p input to ptweedie()
+* New tests for the log.p and lower.tail changes in ptweedie()
 
 
 ## Changed

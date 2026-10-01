@@ -52,6 +52,7 @@ importFrom(stats,
   glm.control,
   glm.fit,
   optimize,
+  pchisq,
   splinefun,
   uniroot
 )
