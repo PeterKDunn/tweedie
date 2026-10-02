@@ -123,7 +123,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
 
 
-  ! Initialise for pre acceleration
+  ! Initialise for pre-acceleration
   area1 = 0.0_C_DOUBLE
   stop_PreAccelerate = .FALSE.        ! Stop pre-accelerating (and perhaps move to accelerating)
   converged_Pre = .FALSE.             ! If convergence detected during pre-acceleration
