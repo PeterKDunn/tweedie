@@ -242,7 +242,7 @@ CONTAINS
     CALL findExactZeros(m, zeroBoundL, zeroBoundR, &
                         zeroStartPoint, zeroR, left_Of_Max, error)
     ! The zero just found  (zeroR)  is the right-side zero
-CALL DBLEPR("DIAG: peak-cross tZero found =", -1, zeroR, 1)
+
     ! RETURNING: m, zeroL, zeroR
     
   END SUBROUTINE updateTM
