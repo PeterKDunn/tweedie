@@ -747,14 +747,26 @@ CONTAINS
         IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
         RETURN
       END IF
-    ELSE
-      ! Default to rtnewton for "easy" cases (e.g., initial zeros)
-      tstart_update = (tL + tR) / 2.0_C_DOUBLE
-      CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
+        ELSE
+        ! Default to rtnewton for "easy" cases (e.g., initial zeros)
+        tstart_update = (tL + tR) / 2.0_C_DOUBLE
+  !      CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
+        CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
       
-      IF (errorHere) THEN
-        error = .TRUE.
-        RETURN
+        IF (errorHere) THEN
+          ! Same near-miss check as the m <= -3 branch above: rtsafe can fail
+          ! its step-size convergence tolerance at very large t even when
+          ! tZero is already essentially a root. Re-check the actual function
+          ! value AT tZero before treating this as a genuine failure.
+          CALL evaluateImkM(tZero, fL, dfL, m, errorHere)
+          IF ( DABS(fL) .LT. 1.0E-08_C_DOUBLE ) THEN
+            ! Near-miss only: tZero is good enough, do not flag error
+            errorHere = .FALSE.
+          ELSE
+            error = .TRUE.
+            IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+          RETURN
+        END IF
       END IF
     END IF
     
