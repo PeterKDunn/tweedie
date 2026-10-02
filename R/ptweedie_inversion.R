@@ -72,6 +72,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   # All is resolved in the end.
   cdf <- numeric(length = length(q) )
   regions <- rep(NA, length(q)) 
+  tmp <- NULL
   
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, 
@@ -189,9 +190,14 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   }
   
   if (details) {
+    if (is.null(tmp)) {
+      exitstatus_out <- rep(0L, length(cdf))
+    } else {
+      exitstatus_out <- tmp$exitstatus
+    }
     return( list( cdf = cdf,
                   regions = regions,
-                  exitstatus = tmp$exitstatus))
+                  exitstatus = exitstatus_out))
   } else {
     return(cdf)
   }
