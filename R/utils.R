@@ -279,3 +279,65 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
 
 
 ################################################################################
+
+#' @noRd
+write_f90_gauss_table <- function(n, digits = 17,
+                                  array_name_nodes = "absc",
+                                  array_name_wts   = "wts",
+                                  values_per_line = 3,
+                                  file = NULL) {
+  
+  # USAGE:  write_f90_gauss_table(200, array_name_nodes = "absc200", array_name_wts = "wts200")
+  # Written so I can easily explore using different numbers of quadrature nodes  
+  
+  gq <- statmod::gauss.quad(n, kind = "legendre")
+  
+  pos <- gq$nodes > 0
+  ord <- order(gq$nodes[pos])
+  nodes_half   <- gq$nodes[pos][ord]
+  weights_half <- gq$weights[pos][ord]
+  
+  half_n <- length(nodes_half)
+  
+  fmt_f90_block <- function(x, array_name, half_n) {
+    lits <- sprintf(paste0("%.", digits - 1, "fD00"), x)
+    
+    chunks <- split(lits, ceiling(seq_along(lits) / values_per_line))
+    n_chunks <- length(chunks)
+    
+    body_lines <- character(n_chunks)
+    for (i in seq_len(n_chunks)) {
+      vals <- chunks[[i]]
+      if (i < n_chunks) {
+        # more values follow: comma after last value on this line, then continue
+        body_lines[i] <- paste0("    ", paste(vals, collapse = ", "), ", &")
+      } else {
+        # last chunk: no comma after the final value, but STILL continue
+        # onto the next line, since '/)' is on its own separate line
+        body_lines[i] <- paste0("    ", paste(vals, collapse = ", "), " &")
+      }
+    }
+    
+    header <- sprintf("  REAL(KIND=C_DOUBLE), PARAMETER, DIMENSION(%d) :: %s = (/ &",
+                      half_n, array_name)
+    footer <- "  /)"
+    c(header, body_lines, footer)
+  }
+  
+  out <- c(
+    fmt_f90_block(nodes_half,   array_name_nodes, half_n),
+    "",
+    fmt_f90_block(weights_half, array_name_wts,   half_n)
+  )
+  
+  cat(paste(out, collapse = "\n"), "\n")
+  
+  if (!is.null(file)) {
+    writeLines(out, file)
+    message("Written to: ", file)
+  }
+  
+  invisible(out)
+}
+
+################################################################################
