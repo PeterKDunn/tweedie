@@ -646,7 +646,7 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     
-    SUBROUTINE findExactZeros(m, tL, tR, tStart, tZero, left_Of_Max, error) 
+    SUBROUTINE findExactZeros(m, tL, tR, tStart, tZero, left_Of_Max, error, xacc_in) 
   ! Find the exact zeros of the integrand
   
     USE tweedie_params_mod
@@ -661,13 +661,20 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: tZero
     LOGICAL(C_BOOL), INTENT(IN)         :: left_Of_Max
     LOGICAL(C_BOOL), INTENT(INOUT)      :: error
+    REAL(KIND=C_DOUBLE), INTENT(IN)     :: xacc_in
+      ! Caller-supplied root-finding tolerance. Pass a loose value (e.g. 1e-7)
+      ! for zeros that only bound a summed quadrature region; pass a tight
+      ! value (e.g. 1e-11) for any zero that will be used directly by the
+      ! Sidi acceleration (xvec/wvec entries), since those are used
+      ! arithmetically (via 1/x_i terms) and imprecision there corrupts the
+      ! extrapolation itself, not just a quadrature boundary.
   
     REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
     LOGICAL(C_BOOL)       :: errorHere
   
     ! INITIALIZE ALL LOCAL VARIABLES
     errorHere = .FALSE.
-    xacc = 1.0E-11_C_DOUBLE
+    xacc = xacc_in
     fL = 0.0_C_DOUBLE
     fR = 0.0_C_DOUBLE
     dfL = 0.0_C_DOUBLE
@@ -678,9 +685,6 @@ CONTAINS
     
     ! Sync the local value of  m  to the shared value.
     m_shared = m
-
-    ! Set the accuracy
-    xacc = 1.0E-11_C_DOUBLE
   
     ! Find mmax, which depends on whether we are working with the PDF or the CDF.
     ! The PDF uses cos Im k(t) in the integrand; the CDF has sin Im k(t) in the integrand.
@@ -736,10 +740,6 @@ CONTAINS
     
       ! When small p and small y, fight harder for good starting bounds
       CALL improveKZeroBounds(m, left_Of_Max, tStart, tL, tR, error)
-!      IF (error) THEN
-!        IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
-!        RETURN
-!      END IF
       CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
 
       IF (errorHere) THEN
@@ -750,7 +750,6 @@ CONTAINS
     ELSE
       ! Default to rtnewton for "easy" cases (e.g., initial zeros)
       tstart_update = (tL + tR) / 2.0_C_DOUBLE
-  !    CALL rtnewton(i, evaluateImkM_wrapper, tstart_update, xacc, tZero)
       CALL rtsafe(evaluateImkM_wrapper, tL, tR, xacc, tZero, errorHere)
       
       IF (errorHere) THEN

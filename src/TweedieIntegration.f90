@@ -22,7 +22,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! Local Variables: All local variables defined here
   LOGICAL(C_BOOL)       :: error          ! TRUE if any computational, numerical problems found
-  INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax
+  INTEGER(C_INT)        :: mmax, mfirst, mOld, accMax, mOld_local
+  REAL(KIND=C_DOUBLE)   :: zeroBoundL_local, zeroBoundR_local
   INTEGER(C_INT)        :: m, min_Acc_Regions
   INTEGER(C_INT) :: consecSmallCount     ! Count of consecutive pre-acc regions where the
                                          !   conditional envelope (condEnvelope/zeroL) has been
@@ -42,7 +43,12 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   INTEGER, PARAMETER :: MAX_ACC = 400
   INTEGER, PARAMETER :: VEC_SIZE = MAX_ACC + 2
   REAL(C_DOUBLE), PARAMETER :: EPS = 1.0E-12_C_DOUBLE
-
+  REAL(C_DOUBLE), PARAMETER :: XACC_TIGHT = 1.0E-11_C_DOUBLE
+  REAL(C_DOUBLE), PARAMETER :: XACC_LOOSE = 1.0E-07_C_DOUBLE
+    ! XACC_LOOSE is used for zero-finds whose result only bounds a summed
+    ! quadrature region (pre-acceleration). XACC_TIGHT is used for the
+    ! initial zero, and for any zero that will be used directly by the
+    ! Sidi acceleration (xvec/wvec entries).
   ! Zone 1: initial region
   REAL(C_DOUBLE)  :: area0
 
@@ -181,14 +187,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   
   ! Find the value of  zeroR  for the initial region (zeroL is always 0.0)
   CALL findInitialZeroR(mfirst, left_Of_Max, tmax, &
-                        zeroR, error)
+                        zeroR, error, XACC_TIGHT)
   ! Integrate:
   CALL GaussQuadrature(i, zeroL, zeroR, area0)   ! area0  is the area of the initial region
 
   ! Update
   CALL updateTM( i, tmax, mmax, left_Of_Max, &
-                 m, zeroL, zeroR, error)
-
+                 m, zeroL, zeroR, error, XACC_TIGHT, mOld_local, &
+                 zeroBoundL_local, zeroBoundR_local)
 
   ! ----------------------------------------------------------------------------
   ! --- 2. INTEGRATE: the PRE-ACCELERATION regions: area1 ---
@@ -213,10 +219,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     
     relerr = DABS(sumA) / (DABS(area0 + area1) + epsilon) 
 
-    ! Update (zeroL, zeroR and m)
+    ! Update (zeroL, zeroR and m) -- loose tolerance: this zero only bounds
+    ! a summed quadrature region, UNLESS it turns out to be one of the two
+    ! zeros that seed acceleration, in which case it is re-solved tightly
+    ! immediately after this loop exits (see below).
     CALL updateTM( i, tmax, mmax, left_Of_Max, &
-                   m, zeroL, zeroR, error)
-
+                   m, zeroL, zeroR, error, XACC_LOOSE, mOld_local, &
+                   zeroBoundL_local, zeroBoundR_local)
+                   
     ! Check for convergence
     CALL checkStopPreAcc(tmax, zeroR, consecSmallCount, stop_PreAccelerate, converged_Pre, error)
     IF (count_PreAcc_Regions .GT. accMax) THEN
@@ -231,6 +241,17 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! ----------------------------------------------------------------------------
   ! --- 3. INTEGRATE: the ACCELERATION regions: areaA ---
+
+  IF ( .NOT.(converged_Pre) ) THEN
+    !   IF ( .NOT.(converged_Pre) ) THEN
+    ! The last pre-acceleration zero (zeroR, now about to become an
+    ! acceleration seed) was found at XACC_LOOSE. Re-find it using the
+    ! EXACT SAME bracket that already worked (zeroBoundL_local,
+    ! zeroBoundR_local, from the last updateTM call), just at tight
+    ! tolerance. No new bracket logic.
+    CALL findExactZeros(m, zeroBoundL_local, zeroBoundR_local, &
+                        zeroStartPoint, zeroR, left_Of_Max, error, XACC_TIGHT)
+  END IF
 
   ! Retain the value of  t  where acceleration starts
   leftAccZero = zeroL
@@ -260,10 +281,12 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       ! Accelerate (i.e., update West, the best area estimate)
       CALL accelerate(xvec, wvec, count_Acc_Regions, Mmatrix, Nmatrix, West)
 
-      ! Update (zeroL, zeroR and m)
+      ! Update (zeroL, zeroR and m) -- tight tolerance: this zero will
+      ! become an xvec/wvec entry used directly by Sidi acceleration.
       CALL updateTM( i, tmax, mmax, left_Of_Max, &
-                     m, zeroL, zeroR, error)
-
+                     m, zeroL, zeroR, error, XACC_TIGHT, mOld_local, &
+                     zeroBoundL_local, zeroBoundR_local)
+                     
       ! Check for convergence
       relerr = ( DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
       IF ( (count_Acc_Regions .GE. min_Acc_Regions) .AND. &

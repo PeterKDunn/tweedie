@@ -171,7 +171,8 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE updateTM(i, tmax, mmax, left_Of_Max, &
-                      m, zeroL, zeroR, error)
+                      m, zeroL, zeroR, error, xacc_in, mOld_out, &
+                      zeroBoundL_out, zeroBoundR_out)
                   
     ! Update the values of  t  and  m  to the values needed
     ! for the next integration region.
@@ -186,6 +187,14 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)          :: i, mmax
     INTEGER(C_INT), INTENT(INOUT)       :: m
     LOGICAL(C_BOOL), INTENT(INOUT)      :: left_Of_Max, error
+    REAL(KIND=C_DOUBLE), INTENT(IN)     :: xacc_in
+    INTEGER(C_INT), INTENT(OUT)         :: mOld_out
+    REAL(KIND=C_DOUBLE), INTENT(OUT)    :: zeroBoundL_out, zeroBoundR_out
+      ! The exact bracket [zeroBoundL_out, zeroBoundR_out] used to find
+      ! zeroR this call, after improveKZeroBounds refined it. Exposed so
+      ! that, if this turns out to be the final pre-acceleration call, the
+      ! caller can re-run findExactZeros on this SAME bracket at a tighter
+      ! tolerance, rather than guessing a new one.
     
     ! Local vars
     INTEGER(C_INT)        :: mOld
@@ -193,57 +202,35 @@ CONTAINS
     REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
 
     
-    ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)
     current_mu   = Cmu(i)
     current_phi  = Cphi(i)
 
-
-    ! NEXT LEFT-SIDE ZERO: 
-    ! Move the previous right-side zero to be the next left zero
     zeroL = zeroR
-    ! Move the current m to mOld
     mOld = m
     
-    ! NEXT RIGHT-SIDE ZERO
-    ! Now work out the value of the next right zero
-    
-    ! - First: update to the next value of m
     CALL advanceM(m, mmax, mOld, left_Of_Max)
 
-    ! - Secondly, find the next zero, corresponding to this value of m,
-    !   which becomes  zeroR.
-    !   So first find some bounds on this next zero.
     IF ( left_Of_Max ) THEN
-      ! left_Of_Max is  TRUE  if the just-found value of m is to the left of mmax
-      !
-      ! If the value of m for the right-side zero is still to the left of tmax,
-      ! leftOfMax is TRUE, and the upper bound is tmax. 
       zeroBoundR = tmax
       zeroBoundL = zeroR
     ELSE 
-      ! If the value of zeroL is to the right of tmax,
-      ! leftOfMax is FALSE, and the lower bound is tmax. 
       zeroBoundL = tmax
       zeroBoundR = zeroBoundL * 20.0_C_DOUBLE
-
     END IF
     
-    ! With these bounds, we can now find the right-side zero,  zeroR
-    ! Find a reasonable starting point for the algorithm:
     zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
 
-    ! Improve the starting point (sometimes very useful):
     CALL improveKZeroBounds(m, left_Of_Max, zeroStartPoint, &
                             zeroBoundL, zeroBoundR, error)
     zeroStartPoint = (zeroBoundL + zeroBoundR)/2.0_C_DOUBLE
 
-    ! Now find the zero, within the bounds, with this starting point
     CALL findExactZeros(m, zeroBoundL, zeroBoundR, &
-                        zeroStartPoint, zeroR, left_Of_Max, error)
-    ! The zero just found  (zeroR)  is the right-side zero
+                        zeroStartPoint, zeroR, left_Of_Max, error, xacc_in)
 
-    ! RETURNING: m, zeroL, zeroR
+    mOld_out = mOld
+    zeroBoundL_out = zeroBoundL
+    zeroBoundR_out = zeroBoundR
     
   END SUBROUTINE updateTM
   
@@ -252,7 +239,7 @@ CONTAINS
   
   
   SUBROUTINE findInitialZeroR(mfirst, left_Of_Max, tmax, &
-                              zeroR, error)
+                              zeroR, error, xacc_in)
   
     USE tweedie_params_mod
     
@@ -263,6 +250,7 @@ CONTAINS
     LOGICAL(C_BOOL), INTENT(INOUT)      :: left_Of_Max
     REAL(KIND=C_DOUBLE), INTENT(IN)     :: tmax
     LOGICAL(C_BOOL), INTENT(INOUT)      :: error
+    REAL(KIND=C_DOUBLE), INTENT(IN)     :: xacc_in
 
     ! Local vars
     REAL(KIND=C_DOUBLE)                 :: t_Start_Point, zeroBoundL, zeroBoundR
@@ -295,7 +283,7 @@ CONTAINS
   
     ! Find the zero
     CALL findExactZeros(mfirst, zeroBoundL, zeroBoundR, t_Start_Point, zeroR, & 
-                        left_Of_Max, errorHere)
+                        left_Of_Max, errorHere, xacc_in)
     ! findExactZeros may change the value of  left_Of_Max
 
     CALL evaluateImk(zeroR, TMP, errorHere)
