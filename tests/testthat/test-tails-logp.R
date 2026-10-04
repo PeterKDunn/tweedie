@@ -275,11 +275,14 @@ test_that("exitstatus flags non-convergence when it genuinely occurs", {
 })
 
 test_that("ptweedie_series errors for p outside its valid domain (1<p<2)", {
-  # ptweedie_series is documented for 1 < p < 2 only. It currently errors with
-  # an unclear message ("missing value where TRUE/FALSE needed") rather than
-  # a informative one for p outside that range -- this test only confirms an
-  # error occurs, pending a clearer validation message being added upstream.
-  expect_error(ptweedie_series(1, power = 3, mu = 1, phi = 1))
+  # ptweedie_series is documented for 1 < p < 2 only, and checks this before
+  # doing any arithmetic (so no NaN warnings are produced on the way).
+  msg <- "requires 1 < power < 2"
+  expect_error(ptweedie_series(1, power = 3,   mu = 1, phi = 1), msg)
+  expect_error(ptweedie_series(1, power = 2,   mu = 1, phi = 1), msg)
+  expect_error(ptweedie_series(1, power = 1,   mu = 1, phi = 1), msg)
+  expect_error(ptweedie_series(1, power = 0.5, mu = 1, phi = 1), msg)
+  expect_no_warning(try(ptweedie_series(1, power = 3, mu = 1, phi = 1), silent = TRUE))
 })
 
 

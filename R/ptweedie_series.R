@@ -51,6 +51,11 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
                             verbose = FALSE, details = FALSE) {
   ### NOTE: No notation checks
   ### NOTE: Only for 1 < p < 2
+  if ( (length(power) != 1) || !is.finite(power) || (power <= 1) || (power >= 2) ) {
+    stop("ptweedie_series() requires 1 < power < 2; ",
+         "use ptweedie() or ptweedie_inversion() for other values of power.",
+         call. = FALSE)
+  }
 
     # SET UP
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
