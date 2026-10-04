@@ -36,6 +36,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE)     :: t_Start_Point, slope_At_Zero
     REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
     LOGICAL(C_BOOL)         :: errorHere
+    LOGICAL(C_BOOL)         :: tmaxIsPlaceholder
     
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)    ! Access y value for index i
@@ -55,6 +56,7 @@ CONTAINS
     ! --- Initialization ---
     aimrerr = 1.0E-09_C_DOUBLE
     threshold = 1.0E5_C_DOUBLE ! Threshold for a "large" tmax
+    tmaxIsPlaceholder = .FALSE.
   
   
     ! Find starting points
@@ -100,6 +102,7 @@ CONTAINS
         ! This hopefully will flag potentially problematically large kmax/tmax/mmax:
   
         tmax = threshold
+        tmaxIsPlaceholder = .TRUE.        ! tmax (and so kmax, mmax) are NOT the true values
         t_Start_Point = tInitialGuess()   ! This computes large-t approx
         CALL evaluateImk(tmax, kmax, errorHere)    ! Now find the corresponding value of kmax
         IF (errorHere) THEN
@@ -158,10 +161,22 @@ CONTAINS
 
       ! Find mmax from kmax
       IF (Cpdf) THEN
-        mmax = FLOOR(2.0_C_DOUBLE * kmax / PI) - 1
+        ! PDF zeros are at  Im k(t) = pi/2 + m pi  (see evaluateImkM), so the
+        ! last zero to the left of the max is the largest m with
+        ! pi/2 + m pi <= kmax.  (This gives -1 when kmax < pi/2.)
+        mmax = FLOOR(kmax / PI - 0.5_C_DOUBLE)
       ELSE
         mmax = FLOOR(kmax / PI)
       END IF
+
+      ! In the 'very large tmax' case (B.1), tmax is only a placeholder, so the
+      ! true maximum of Im k(t) lies far beyond it and mmax computed from the
+      ! placeholder kmax is far too small. Never switch to the right of the max
+      ! in that case: keep stepping up the left side until convergence or the
+      ! region cap. (Switching at the placeholder mmax searches for zeros on
+      ! the wrong side and returns garbage; see e.g. y=0.001, mu=0.01,
+      ! phi=0.01, p=3.5.)
+      IF (tmaxIsPlaceholder) mmax = HUGE(mmax) - 1_C_INT
 
       ! Establish the first value of m to use, and whether the first zero is to the left of kmax
       IF (mmax .GT. 0) THEN
@@ -465,6 +480,11 @@ CONTAINS
     REAL(KIND=C_DOUBLE)     :: valueL, valueR, multiplier
     REAL(KIND=C_DOUBLE)     :: df, valueMid
     INTEGER(C_INT)          :: maxSearch,its
+    INTEGER(C_INT), PARAMETER :: maxWiden = 2000_C_INT
+      ! Cap on bracket-widening steps. Each step multiplies the distance from
+      ! the origin by 1.05 (or 0.95), so 2000 steps covers a factor of ~1e42:
+      ! far more than any genuine bracket needs. Hitting it means the zero
+      ! being sought does not exist (e.g. m beyond mmax), so flag an error.
     LOGICAL(C_BOOL)         :: stopIterating
   
   
@@ -522,15 +542,17 @@ CONTAINS
         ! The solution depends on what side of the max we are.
         ! If to the LEFT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
         its = 0_C_INT
-        stopIterating = .FALSE.
         DO WHILE ( valueR .LT. 0.0_C_DOUBLE) 
           ! We are on the LEFT of the maximum of Im k(t), but the R bound gives a -ive value.
           ! So we need to go RIGHT a little.
+          its = its + 1_C_INT
+          IF (its .GT. maxWiden) THEN
+            error = .TRUE.
+            IF (Cverbose) CALL INTPR("ERROR: improveKZeroBounds: no right bound (left of max), m =", -1, m, 1)
+            EXIT
+          END IF
           zeroR = (zeroR + 0.1_C_DOUBLE) * 1.05_C_DOUBLE
           CALL evaluateImkM(zeroR, valueR, df, m, error)
-
-          IF (its .GE. 100_C_INT) stopIterating = .TRUE.
-          IF( valueR .GE. 0.0_C_DOUBLE) stopIterating = .TRUE.
         END DO
         
       END IF
@@ -538,18 +560,32 @@ CONTAINS
       ! The solution depends on what side of the max we are.
       ! If to the RIGHT of the max of Im k(t), zeroL should give a +ive value; zeroR a -ive value.
       IF ( .NOT.(left_Of_Max) ) THEN
+        its = 0_C_INT
         DO WHILE ( valueL .LT. 0.0_C_DOUBLE) 
           ! We are on the RIGHT of the maximum of Im k(t), but the L bound gives a -ive value.
           ! So we need to go LEFT a little.
+          its = its + 1_C_INT
+          IF (its .GT. maxWiden) THEN
+            error = .TRUE.
+            IF (Cverbose) CALL INTPR("ERROR: improveKZeroBounds: no left bound (right of max), m =", -1, m, 1)
+            EXIT
+          END IF
           zeroL = (zeroL - 0.1_C_DOUBLE) * 0.95_C_DOUBLE
           CALL evaluateImkM(zeroL, valueL, df, m, error)
         END DO
 
         ! The solution depends on what side of the max we are.
         ! If to the RIGHT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
+        its = 0_C_INT
         DO WHILE ( valueR .GT. 0.0_C_DOUBLE) 
           ! We are on the RIGHT of the maximum of Im k(t), but the R bound gives a +ive value.
           ! So we need to go RIGHT a little.
+          its = its + 1_C_INT
+          IF (its .GT. maxWiden) THEN
+            error = .TRUE.
+            IF (Cverbose) CALL INTPR("ERROR: improveKZeroBounds: no right bound (right of max), m =", -1, m, 1)
+            EXIT
+          END IF
           zeroR = (zeroR + 0.1_C_DOUBLE) * 1.05_C_DOUBLE
           CALL evaluateImkM(zeroR, valueR, df, m, error)
         END DO
