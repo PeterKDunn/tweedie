@@ -57,6 +57,30 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
          call. = FALSE)
   }
 
+  # The summation below shares one range of N across all elements, and is not
+  # correct when mu or phi vary between elements (it returned wrong values,
+  # with a recycling warning, or stopped with an error). In that case,
+  # evaluate element by element.
+  n <- max(length(q), length(mu), length(phi))
+  if ( (n > 1) && ( (length(unique(mu)) > 1) || (length(unique(phi)) > 1) ) ) {
+    q   <- rep_len(q, n)
+    mu  <- rep_len(mu, n)
+    phi <- rep_len(phi, n)
+    one <- lapply(seq_len(n), function(i)
+             ptweedie_series(q[i], power = power, mu = mu[i], phi = phi[i],
+                             lower.tail = lower.tail, log.p = log.p,
+                             verbose = verbose, details = details))
+    if (details) {
+      out <- lapply(names(one[[1]]), function(nm) sapply(one, `[[`, nm))
+      names(out) <- names(one[[1]])
+      return(out)
+    }
+    return( vapply(one, as.numeric, numeric(1)) )
+  }
+  # Here mu and phi are each constant: the summation below expects scalars.
+  mu  <- mu[1]
+  phi <- phi[1]
+
     # SET UP
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
   tau    <- phi * (power - 1) * mu ^ ( power - 1 )
@@ -72,7 +96,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   
   while ( ( estlogf > (logfmax - drop) ) & ( N > 1 ) ) {
     N <- max(1, N - 2)
-    estlogf <- -lambda + N * ( log(lambda) - log(N) + 1 ) - log(N)/2
+    estlogf <- -lambda_bound + N * ( log(lambda_bound) - log(N) + 1 ) - log(N)/2
   }
   lo.N <- max(1, floor(N) )
   

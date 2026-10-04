@@ -248,7 +248,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
     if (any(special_y_cases)) {
       # NEGATIVE VALUES
       y_Negative <- (y < 0)
-      if (any(y_Negative) ) f[y_Negative] <- if (log.p ) {-Inf} else {0}
+      # P(Y <= y) = 0 and P(Y > y) = 1 for y < 0
+      if (any(y_Negative) ) f[y_Negative] <- if (lower.tail) { if (log.p) -Inf else 0 } else { if (log.p) 0 else 1 }
       y_Zero <- (y == 0)
       if (any(y_Zero)) {
         if ( (power > 0) & (power < 2) ) {
@@ -265,7 +266,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
             }
           }
         } else {
-          f[y_Zero] <- if (log.p) -Inf else 0
+          # p >= 2: no point mass at zero, so P(Y <= 0) = 0 and P(Y > 0) = 1
+          f[y_Zero] <- if (lower.tail) { if (log.p) -Inf else 0 } else { if (log.p) 0 else 1 }
         }
       }
     }

@@ -387,10 +387,13 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
         use_sad <- use_inv & is.nan(density) & (xi < 0.01)
         if (any(use_sad)) {
           if (verbose) cat("- Inversion failed for", sum(use_sad), "value(s) with small xi: using saddlepoint\n")
-          density[use_sad] <- dtweedie_saddle(y = y[use_sad],
-                                              mu = mu[use_sad],
-                                              phi = phi[use_sad],
-                                              power = power)
+          # Saddlepoint density for p > 2, on the log scale: when y^(2-p)
+          # overflows the deviance is Inf, and the direct formula gives
+          # Inf * 0 = NaN, whereas the density is 0.
+          dev_sad <- tweedie_dev(power = power, mu = mu[use_sad], y = y[use_sad])
+          density[use_sad] <- exp( -0.5 * log(2 * pi * phi[use_sad]) -
+                                    (power / 2) * log(y[use_sad]) -
+                                    dev_sad / (2 * phi[use_sad]) )
         }
       }
     }
@@ -419,7 +422,8 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   density2[ !special_y_cases ] <- density
   density <- density2
 
-  if (any(density < 0 ) )  density[ density < 0 ] <- 0
+  neg <- !is.na(density) & (density < 0)
+  if (any(neg))  density[neg] <- 0
   density <- as.vector(density)
 
   # Restore names if supplied
@@ -549,8 +553,26 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                     lower.tail = lower.tail,
                                     log.p      = log.p,
                                     verbose    = verbose,
-                                    details    = FALSE)
-        f[!special_y_cases] <- f_TMP
+                                    details    = TRUE)
+        f[!special_y_cases] <- f_TMP$cdf
+        
+        # Where the inversion fails (NaN, or not converged), use the series:
+        # for 1 < p < 2 it sums positive terms, so it is reliable, provided
+        # lambda is well within its limit of 1e6 terms. (E.g. far in the upper
+        # tail the inversion can return NaN, while the series gives ~0.)
+        idx <- which(!special_y_cases)
+        lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
+        use_ser <- (is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1)) & (lambda <= 1e5)
+        if (any(use_ser)) {
+          if (verbose) cat("- Inversion failed for", sum(use_ser), "value(s): using the series\n")
+          j <- idx[use_ser]
+          f[j] <- as.numeric( ptweedie_series(q          = q[j],
+                                              mu         = mu[j],
+                                              phi        = phi[j],
+                                              power      = power,
+                                              lower.tail = lower.tail,
+                                              log.p      = log.p) )
+        }
       }
     }  
   }
@@ -566,8 +588,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   # Sanity fixes are only meaningful on the linear scale; log-probabilities
   # are negative by construction and must not be clamped to [0, 1].
   if (!log.p) {
-    f[ f < 0 ] <- 0
-    f[ f > 1 ] <- 1
+    f[ !is.na(f) & (f < 0) ] <- 0
+    f[ !is.na(f) & (f > 1) ] <- 1
   }
   
   return(f)
