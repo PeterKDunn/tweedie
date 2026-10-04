@@ -15,7 +15,8 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE checkStopPreAcc(tmax, zeroL, consecSmallCount, &
-                             stop_PreAccelerate, converged_Pre, error)
+                             stop_PreAccelerate, converged_Pre, error, &
+                             tDone, areaSoFar, absArea, aimrerr)
     ! Determine if it is OK to stop pre-accelerating, and start using acceleration
     
     IMPLICIT NONE
@@ -25,11 +26,15 @@ CONTAINS
     LOGICAL(C_BOOL), INTENT(OUT)    :: stop_PreAccelerate, converged_Pre
     LOGICAL(C_BOOL), INTENT(INOUT)  :: error
     INTEGER(C_INT), INTENT(INOUT)   :: consecSmallCount
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: tDone      ! Integration so far covers [0, tDone]
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: areaSoFar  ! Current estimate of the integral over [0, tDone]
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: absArea    ! Sum of |region areas| over [0, tDone]
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: aimrerr    ! Target relative error
 
     ! Local vars
     INTEGER(C_INT)        :: nmax
     REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, Imk, lambda
-    REAL(KIND=C_DOUBLE)   :: condEnvelope
+    REAL(KIND=C_DOUBLE)   :: condEnvelope, logTail, tailTol
     LOGICAL(C_BOOL)       :: errorHere
     
     ! NOTE: 
@@ -50,6 +55,43 @@ CONTAINS
     ! Initialise
     stop_PreAccelerate = .FALSE.
     converged_Pre = .FALSE.
+
+    ! For p > 2: a rigorous, closed-form upper bound on the remaining tail.
+    ! Re k(t) is strictly decreasing and Re k(t) <= C - B t^alpha for all t > 0,
+    ! so  |int_{tDone}^inf integrand dt|  <=  int_{tDone}^inf exp(Re k(t)) dt  (PDF),
+    ! with an extra factor 1/tDone for the CDF (integrand carries 1/t).
+    ! This does not depend on tmax (which, in the 'very large tmax' fallback of
+    ! findKmax, is only a placeholder), so it detects convergence long before
+    ! zeroL > tmax in cases like p=3, mu=5, phi=0.01, y=0.001.
+    ! Because the bound is rigorous and monotone in tDone, one pass is enough:
+    ! no consecutive-region guard is needed.
+    IF ( (Cp .GT. 2.0_C_DOUBLE) .AND. (tDone .GT. 0.0_C_DOUBLE) ) THEN
+      logTail = logTailBoundPgt2(tDone)
+      IF (.NOT. Cpdf) logTail = logTail - DLOG(tDone)
+      ! Tolerance: relative to the quantity actually returned (on the scale of
+      ! the integral), but never below the roundoff level of the summation
+      ! (cancellation can leave the result itself at noise level, e.g. when the
+      ! true density is ~ 0).
+      !   PDF:  result = area/pi                 -> scale |area|
+      !   CDF:  result = 0.5 -/+ area/pi (p > 2)  -> scale pi |0.5 -/+ area/pi|
+      IF (Cpdf) THEN
+        tailTol = aimrerr * MAX( DABS(areaSoFar), 1.0E-16_C_DOUBLE * absArea )
+      ELSE
+        IF (Ctail) THEN
+          tailTol = PI * DABS(0.5_C_DOUBLE + areaSoFar / PI)
+        ELSE
+          tailTol = PI * DABS(0.5_C_DOUBLE - areaSoFar / PI)
+        END IF
+        tailTol = aimrerr * MAX( tailTol, 1.0E-16_C_DOUBLE * (absArea + 0.5_C_DOUBLE * PI) )
+      END IF
+      IF ( tailTol .GT. 0.0_C_DOUBLE ) THEN
+        IF ( logTail .LT. DLOG(tailTol) ) THEN
+          stop_PreAccelerate = .TRUE.
+          converged_Pre = .TRUE.
+          RETURN
+        END IF
+      END IF
+    END IF
 
     ! Stop condition for pre-acceleration.
     ! Ensure that we have passed the peak of Im k(t), so that acceleration can be used
@@ -167,6 +209,46 @@ CONTAINS
     IF (converged_Pre) stop_PreAccelerate = .TRUE.
 
   END SUBROUTINE checkStopPreAcc
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+  FUNCTION logTailBoundPgt2(t0) RESULT(lb)
+    ! log of a rigorous upper bound on  int_{t0}^inf exp(Re k(t)) dt,  valid for p > 2.
+    !
+    ! With  alpha = (p-2)/(p-1)  in (0,1),  C = mu^(2-p) / (phi (p-2)),
+    !       c = (p-1) phi mu^(p-1):
+    !   Re k(t) = C - C Re[(1 - i c t)^alpha]  <=  C - B t^alpha,
+    !   B = C cos(alpha pi/2) c^alpha,
+    ! because |arg(1 - i c t)| < pi/2  and  |1 - i c t| >= c t.
+    ! Substituting  x = B t^alpha:
+    !   int_{t0}^inf exp(C - B t^alpha) dt = exp(C) Gamma(s, x0) / (alpha B^s),  s = 1/alpha,
+    ! and  Gamma(s, x) <= x^(s-1) exp(-x) * x / (x - s + 1)  for  x > s - 1.
+    ! Computed on the log scale (B^s can overflow when p is near 2).
+    ! Returns HUGE when the bound is not yet usable (x <= s).
+
+    IMPLICIT NONE
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: t0
+    REAL(KIND=C_DOUBLE)             :: lb
+    REAL(KIND=C_DOUBLE)             :: alpha, C, cc, B, s, x
+
+    lb = HUGE(1.0_C_DOUBLE)
+    IF ( (Cp .LE. 2.0_C_DOUBLE) .OR. (t0 .LE. 0.0_C_DOUBLE) ) RETURN
+
+    alpha = (Cp - 2.0_C_DOUBLE) / (Cp - 1.0_C_DOUBLE)
+    C     = current_mu**(2.0_C_DOUBLE - Cp) / (current_phi * (Cp - 2.0_C_DOUBLE))
+    cc    = (Cp - 1.0_C_DOUBLE) * current_phi * current_mu**(Cp - 1.0_C_DOUBLE)
+    B     = C * DCOS(0.5_C_DOUBLE * alpha * PI) * cc**alpha
+    s     = 1.0_C_DOUBLE / alpha
+    IF ( B .LE. 0.0_C_DOUBLE ) RETURN
+    x     = B * t0**alpha
+    IF ( x .LE. s ) RETURN
+
+    lb = C - x + (s - 1.0_C_DOUBLE) * DLOG(x) + DLOG( x / (x - s + 1.0_C_DOUBLE) ) &
+         - DLOG(alpha) - s * DLOG(B)
+
+  END FUNCTION logTailBoundPgt2
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

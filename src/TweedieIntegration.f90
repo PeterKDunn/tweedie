@@ -54,6 +54,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
   ! Zone 2: pre-acceleration
   REAL(C_DOUBLE) :: area1, sumA
+  REAL(C_DOUBLE) :: absArea        ! Running sum of |region areas|: sets the roundoff floor
+                                   !   for the p > 2 tail-bound convergence test
   INTEGER(C_INT) :: count_PreAcc_Regions
   LOGICAL(C_BOOL):: stop_PreAccelerate, converged_Pre
   REAL(C_DOUBLE) :: leftPreAccZero
@@ -190,6 +192,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                         zeroR, error, XACC_TIGHT)
   ! Integrate:
   CALL GaussQuadrature(i, zeroL, zeroR, area0)   ! area0  is the area of the initial region
+  absArea = DABS(area0)
 
   ! Update
   CALL updateTM( i, tmax, mmax, left_Of_Max, &
@@ -216,6 +219,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     ! Integrate
     CALL GaussQuadrature(i, zeroL, zeroR, sumA)
     area1 = area1 + sumA
+    absArea = absArea + DABS(sumA)
     
     relerr = DABS(sumA) / (DABS(area0 + area1) + epsilon) 
 
@@ -228,7 +232,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                    zeroBoundL_local, zeroBoundR_local)
                    
     ! Check for convergence
-    CALL checkStopPreAcc(tmax, zeroR, consecSmallCount, stop_PreAccelerate, converged_Pre, error)
+    ! NOTE: zeroL is now the right end of what has been integrated so far
+    ! (area0 + area1 covers [0, zeroL]); zeroR is the end of the NEXT region.
+    CALL checkStopPreAcc(tmax, zeroR, consecSmallCount, stop_PreAccelerate, converged_Pre, error, &
+                         zeroL, area0 + area1, absArea, aimrerr)
     IF (count_PreAcc_Regions .GT. accMax) THEN
       stop_PreAccelerate = .TRUE.
       converged_Pre      = .FALSE.
