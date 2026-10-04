@@ -78,6 +78,9 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
   # All is resolved in the end.
   density <- numeric(length = length(y) )
   regions <- rep(NA, length(y)) 
+  # exitstatus: 0 for values computed exactly (special cases); filled from the
+  # Fortran for the rest. Always the same length as  y.
+  exitstatus_out <- integer(length(y))
   
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, length(y))
@@ -212,6 +215,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		
 		density[!special_y_cases] <- tmp$funvalue
 		regions[!special_y_cases] <- tmp$its
+		exitstatus_out[!special_y_cases] <- tmp$exitstatus
 
 		# Reconstruct
 		if (any(optimal_Method == 1)){
@@ -234,7 +238,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
     return( list( density = density,
                   regions = regions,
                   method = optimal_Method,
-                  exitstatus = tmp$exitstatus))
+                  exitstatus = exitstatus_out))
   } else {
     return(density)
   }

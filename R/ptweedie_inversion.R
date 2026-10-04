@@ -72,7 +72,9 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   # All is resolved in the end.
   cdf <- numeric(length = length(q) )
   regions <- rep(NA, length(q)) 
-  tmp <- NULL
+  # exitstatus: 0 for values computed exactly (special cases); filled from the
+  # Fortran for the rest. Always the same length as  q.
+  exitstatus_out <- integer(length(q))
   
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, 
@@ -145,6 +147,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
       
       cdf[use_scaled] <- tmp$funvalue
       regions[use_scaled] <- tmp$its
+      exitstatus_out[use_scaled] <- tmp$exitstatus
     }
     if (any(use_direct)) {
       tmp <- .C(
@@ -167,6 +170,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
       
       cdf[use_direct] <- tmp$funvalue
       regions[use_direct] <- tmp$its
+      exitstatus_out[use_direct] <- tmp$exitstatus
     }    
 
   }
@@ -190,11 +194,6 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   }
   
   if (details) {
-    if (is.null(tmp)) {
-      exitstatus_out <- rep(0L, length(cdf))
-    } else {
-      exitstatus_out <- tmp$exitstatus
-    }
     return( list( cdf = cdf,
                   regions = regions,
                   exitstatus = exitstatus_out))
