@@ -20,7 +20,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
     LOGICAL(C_BOOL), INTENT(OUT)        :: errorHere
     
-    REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha
+    REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha, zRe, zIm
 
   
     ! Initialisation
@@ -39,8 +39,10 @@ CONTAINS
     END IF
     alpha = (2.0_C_DOUBLE - Cp)/(1.0_C_DOUBLE - Cp)
   
-    Imk = front *   &
-          DSIN(omega * alpha)/(DCOS(omega) ** alpha) - t * current_y
+    ! Im k(t) = front * Im[(1 + i tanArg)^alpha] - t y
+    ! (= front * sin(alpha omega)/cos(omega)^alpha - t y, computed stably: see zPow)
+    CALL zPow(tanArg, alpha, zRe, zIm)
+    Imk = front * zIm - t * current_y
   
     RETURN
   
@@ -101,7 +103,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
     LOGICAL(C_BOOL), INTENT(OUT)      :: errorHere
-    REAL(KIND=C_DOUBLE) :: omega, pindex
+    REAL(KIND=C_DOUBLE) :: omega, pindex, tanArg, zRe, zIm
 
   
     ! Initlaise
@@ -109,7 +111,8 @@ CONTAINS
     errorHere = .FALSE.
     
     pindex = 1.0_C_DOUBLE / (1.0_C_DOUBLE - Cp)
-    omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
+    tanArg = ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) )
+    omega = DATAN( tanArg )
 
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
@@ -119,7 +122,9 @@ CONTAINS
       RETURN
     END IF
     
-    Imkd = current_mu * (DCOS(omega * pindex) / (DCOS(omega) ** pindex)) - current_y
+    ! Im k'(t) = mu * Re[(1 + i tanArg)^pindex] - y   (stably: see zPow)
+    CALL zPow(tanArg, pindex, zRe, zIm)
+    Imkd = current_mu * zRe - current_y
   
   END SUBROUTINE evaluateImkd
 
@@ -136,7 +141,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkdd
     LOGICAL(C_BOOL), INTENT(INOUT)    :: errorHere
     
-    REAL(KIND=C_DOUBLE)    :: front, omega, pindex
+    REAL(KIND=C_DOUBLE)    :: front, omega, pindex, tanArg, zRe, zIm
 
     
     ! Initialise
@@ -145,7 +150,8 @@ CONTAINS
     
     pindex = Cp / (1.0_C_DOUBLE - Cp)
     front = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))
-    omega = DATAN( ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) ) )
+    tanArg = ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) )
+    omega = DATAN( tanArg )
     
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
@@ -155,7 +161,9 @@ CONTAINS
     END IF
 
   
-    Imkdd = front * (DSIN(omega * pindex) / (DCOS(omega) ** pindex) )
+    ! Im k''(t) = front * Im[(1 + i tanArg)^pindex]   (stably: see zPow)
+    CALL zPow(tanArg, pindex, zRe, zIm)
+    Imkdd = front * zIm
 
 
   END SUBROUTINE evaluateImkdd

@@ -51,6 +51,8 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     ! Sidi acceleration (xvec/wvec entries).
   ! Zone 1: initial region
   REAL(C_DOUBLE)  :: area0
+  REAL(C_DOUBLE)  :: tStar, tLo, tHi   ! for splitting the initial region into decades
+  INTEGER(C_INT)  :: nSeg
 
   ! Zone 2: pre-acceleration
   REAL(C_DOUBLE) :: area1, sumA
@@ -191,7 +193,31 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   CALL findInitialZeroR(mfirst, left_Of_Max, tmax, &
                         zeroR, error, XACC_TIGHT)
   ! Integrate:
-  CALL GaussQuadrature(i, zeroL, zeroR, area0)   ! area0  is the area of the initial region
+  ! The integrand changes character at  t ~ tStar = 1/c,  where
+  ! c = |(1-p) phi mu^(p-1)|  (|tanArg| = c t): it is smooth for t << tStar,
+  ! but behaves like a power t^(alpha-1) (a near-singularity) for t >> tStar.
+  ! When the first region [0, zeroR] spans many decades beyond tStar, a single
+  ! Gauss rule cannot resolve that, so split it into decades
+  ! [zeroR/10, zeroR], [zeroR/100, zeroR/10], ..., down to ~ tStar, then
+  ! [0, that]. When zeroR < 10 tStar (the usual case) this is a single rule,
+  ! exactly as before.
+  ! (E.g. ptweedie(0.05, mu=50, phi=10, power=8): c ~ 1e12, and the single
+  !  rule over [0, 379] was in error by ~1e-5.)
+  tStar = 1.0_C_DOUBLE / DABS( (1.0_C_DOUBLE - Cp) * current_phi /  &
+                               current_mu**(1.0_C_DOUBLE - Cp) )
+  area0 = 0.0_C_DOUBLE
+  tHi   = zeroR
+  nSeg  = 0_C_INT
+  DO WHILE ( (tHi .GT. 10.0_C_DOUBLE * tStar) .AND. (nSeg .LT. 400_C_INT) )
+    nSeg = nSeg + 1_C_INT
+    tLo  = tHi / 10.0_C_DOUBLE
+    CALL GaussQuadrature(i, tLo, tHi, sumA)
+    area0 = area0 + sumA
+    tHi   = tLo
+  END DO
+  CALL GaussQuadrature(i, zeroL, tHi, sumA)
+  area0 = area0 + sumA                          ! area0  is the area of the initial region
+  sumA  = 0.0_C_DOUBLE
   absArea = DABS(area0)
 
   ! Update
