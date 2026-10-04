@@ -154,7 +154,7 @@ dtweedie_dlogfdphi <- function(y, mu, phi, power)
     logv <- out.logv$logv
     
     # Now detect problem computing  logv  and remedy them
-    probs <- (is.infinite(logv)) | (is.nan(logv)) | (y < 1)
+    probs <- (is.infinite(logv)) | (is.nan(logv)) | (is.nan(kv)) | (y < 1)
     
     if(any(probs)) {
       

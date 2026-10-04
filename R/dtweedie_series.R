@@ -113,6 +113,13 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
     }
   }
   
+  n_nan <- sum(is.nan(density))
+  if (n_nan > 0) {
+    warning("dtweedie_series: the series cannot be summed accurately for ", n_nan,
+            " value(s) (catastrophic cancellation, p > 2); NaN returned. ",
+            "Use dtweedie() or dtweedie_inversion() for these.", call. = FALSE)
+  }
+  
   if (details) {
     return(list( density = density,
                  lo = lo,
@@ -318,6 +325,22 @@ dtweedie_kv_bigp <- function(y, phi, power){
   a <- (2 - p) / (1 - p)
   a1 <- 1 - a
   
+  # For p > 2 the series alternates in sign. Its terms peak near
+  # k = y^(2-p) / (phi (p-2)), at a size of about exp(k (1-a)), while the sum
+  # can be far smaller, so the sum suffers cancellation. Once that peak index
+  # is large, the cancellation is beyond double precision (and for very large
+  # values the search for the summation limits below never terminates, since
+  # k + 2 == k). Values that cannot be summed reliably are returned as NaN.
+  n_all <- length(y)
+  kv_all <- rep(NaN, n_all)
+  kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
+  can_try <- is.finite(kmax_each) & (kmax_each <= 1e6)
+  if ( !any(can_try) ) {
+    return( list(lo = NA, hi = NA, kv = kv_all, k.max = NA) )
+  }
+  y   <- y[can_try]
+  phi <- phi[can_try]
+  
   r <- -a1 * log(phi) - log(p - 2) - a * log(y) + a * log(p - 1)
   drop <- 37
   
@@ -391,12 +414,23 @@ dtweedie_kv_bigp <- function(y, phi, power){
   m <- apply(A, 1, max)
   ve <- exp(A - m)
   sum.ve <- apply( ve*C, 1, sum )
-  kv <- sum.ve * exp( m )
+  # Estimate the rounding error in the sum: each term carries a relative
+  # error of about eps * (|A| + 1) (from forming it via exp(A)), and summing
+  # n terms adds about eps * n, all relative to the sum of the absolute
+  # terms. If that error is not small compared to the sum itself, the result
+  # is noise (previously returned as 0, a huge value, or Inf): give NaN.
+  abs.sum.ve <- apply( abs(ve * C), 1, sum )
+  max.abs.A  <- apply( abs(A), 1, max )
+  err.est    <- .Machine$double.eps * (length(k) + max.abs.A + 1) * abs.sum.ve
+  reliable   <- (err.est < 1e-6 * abs(sum.ve))
+  kv <- rep(NaN, length(sum.ve))
+  kv[reliable] <- sum.ve[reliable] * exp( m[reliable] )
   # Since derivs may be negative, can't use log-scale
+  kv_all[can_try] <- kv
   
   list(lo = lo.k, 
        hi = hi.k, 
-       kv = kv, 
+       kv = kv_all, 
        k.max = k.max )
   
 }
@@ -430,6 +464,22 @@ dtweedie_logv_bigp <- function( y, phi, power){
   p <- power
   a <- (2 - p) / (1 - p)
   a1 <- 1 - a
+  
+  # For p > 2 the series alternates in sign. Its terms peak near
+  # k = y^(2-p) / (phi (p-2)), at a size of about exp(k (1-a)), while the sum
+  # can be far smaller, so the sum suffers cancellation. Once that peak index
+  # is large, the cancellation is beyond double precision (and for very large
+  # values the search for the summation limits below never terminates, since
+  # k + 2 == k). Values that cannot be summed reliably are returned as NaN.
+  n_all <- length(y)
+  logv_all <- rep(NaN, n_all)
+  kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
+  can_try <- is.finite(kmax_each) & (kmax_each <= 1e6)
+  if ( !any(can_try) ) {
+    return( list(lo = NA, hi = NA, logv = logv_all) )
+  }
+  y   <- y[can_try]
+  phi <- phi[can_try]
   
   r <- -a1 * log(phi) - log(p - 2) - a * log(y) + a * log(p - 1)
   drop <- 37
@@ -500,20 +550,24 @@ dtweedie_logv_bigp <- function( y, phi, power){
   sum.ve <- apply( ve * C, 1, sum )
   
   # Now be careful!  Because of the +/- nature of the sin term,
-  # sum.ve can be very small but negative  due to subtractive
-  # cancellation.  Treat those carefully and separately.
-  
-  neg.sum.ve <- (sum.ve <= 0)
-  pos.sum.ve <- (sum.ve > 0)
-  
-  logv <- sum.ve
-  sum.ve[neg.sum.ve] <- 0
-  logv[neg.sum.ve] <- -Inf
-  logv[pos.sum.ve] <- log( sum.ve[pos.sum.ve] ) + m[pos.sum.ve]
+  # sum.ve can be very small (or even negative) due to subtractive
+  # cancellation.
+  # Estimate the rounding error in the sum: each term carries a relative
+  # error of about eps * (|A| + 1) (from forming it via exp(A)), and summing
+  # n terms adds about eps * n, all relative to the sum of the absolute
+  # terms. If that error is not small compared to the sum itself, the result
+  # is noise (previously returned as 0, a huge value, or Inf): give NaN.
+  abs.sum.ve <- apply( abs(ve * C), 1, sum )
+  max.abs.A  <- apply( abs(A), 1, max )
+  err.est    <- .Machine$double.eps * (length(k) + max.abs.A + 1) * abs.sum.ve
+  reliable   <- (sum.ve > 0) & (err.est < 1e-6 * sum.ve)
+  logv <- rep(NaN, length(sum.ve))
+  logv[reliable] <- log( sum.ve[reliable] ) + m[reliable]
+  logv_all[can_try] <- logv
   
   list(lo = lo.k, 
        hi = hi.k, 
-       logv = logv, 
+       logv = logv_all, 
        k.max = k.max )
   
 }

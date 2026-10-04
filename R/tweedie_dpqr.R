@@ -366,10 +366,33 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     }
     
     if (any(id.series)) {
-      density[id.series] <- dtweedie_series(y = y[id.series],
-                                            mu = mu[id.series], 
-                                            phi = phi[id.series],
-                                            power = power)
+      density[id.series] <- suppressWarnings(
+                              dtweedie_series(y = y[id.series],
+                                              mu = mu[id.series], 
+                                              phi = phi[id.series],
+                                              power = power) )
+      # For p > 2 the series returns NaN where it cannot be summed accurately
+      # (catastrophic cancellation); use the inversion for those values.
+      use_inv <- id.series & is.nan(density)
+      if (any(use_inv)) {
+        if (verbose) cat("- Series unreliable for", sum(use_inv), "value(s): using inversion\n")
+        density[use_inv] <- dtweedie_inversion(y = y[use_inv],
+                                               mu = mu[use_inv],
+                                               phi = phi[use_inv],
+                                               power = power)
+        # Last resort: if the inversion also fails, use the saddlepoint
+        # approximation where it is accurate (relative error O(xi), so for
+        # xi small). This covers e.g. extremely small y with large p, where
+        # the density underflows to 0.
+        use_sad <- use_inv & is.nan(density) & (xi < 0.01)
+        if (any(use_sad)) {
+          if (verbose) cat("- Inversion failed for", sum(use_sad), "value(s) with small xi: using saddlepoint\n")
+          density[use_sad] <- dtweedie_saddle(y = y[use_sad],
+                                              mu = mu[use_sad],
+                                              phi = phi[use_sad],
+                                              power = power)
+        }
+      }
     }
     
     if (any(id.interp)) {
