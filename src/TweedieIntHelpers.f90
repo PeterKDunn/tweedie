@@ -55,7 +55,7 @@ CONTAINS
 
     ! Initialise
     stop_PreAccelerate = .FALSE.
-    converged_Pre = .FALSE.
+    converged_Pre      = .FALSE.
 
     ! For p > 2: a rigorous, closed-form upper bound on the remaining tail.
     ! Re k(t) is strictly decreasing and Re k(t) <= C - B t^alpha for all t > 0,
@@ -101,7 +101,7 @@ CONTAINS
       IF (current_y .GT. current_mu) THEN
         ! Stop pre-accelerating, and go straight to acceleration 
         stop_PreAccelerate = .TRUE.
-        converged_Pre = .FALSE.
+        converged_Pre      = .FALSE.
       ELSE
         IF (zeroL .GT. tmax) THEN
           ! past tmax, we can usually stop pre-accelerating, and go straight to acceleration 
@@ -126,7 +126,7 @@ CONTAINS
               nmax = FLOOR(MM)
            END IF
            tstop = current_mu**(1.0_C_DOUBLE - Cp) / ((1.0_C_DOUBLE - Cp) * current_phi) *   & 
-                   DTAN( DBLE(nmax) * PI * (1.0_C_DOUBLE - Cp) )
+                      DTAN( DBLE(nmax) * PI * (1.0_C_DOUBLE - Cp) )
            IF (zeroL .GT. tstop) stop_PreAccelerate = .TRUE.
         END IF
       END IF
@@ -138,6 +138,7 @@ CONTAINS
     IF (errorHere) THEN
       error = .TRUE.
       IF (Cverbose) CALL DBLEPR("ERROR: cSPreAcc: Rek not found at", -1, zeroL, 1)
+      
       RETURN
     END IF
 
@@ -145,6 +146,7 @@ CONTAINS
     IF (errorHere) THEN
       error = .TRUE.
       IF (Cverbose) CALL DBLEPR("ERROR: cSPreAcc: Rekd not found at", -1, zeroL, 1)
+      
       RETURN
     END IF
     
@@ -168,10 +170,10 @@ CONTAINS
       !   w = (Re k + lambda) + i (Im k + t y),
       ! computed without cancellation as
       !   Re(exp(w) - 1) = expm1(a) cos(b) - 2 sin^2(b/2),  Im = exp(a) sin(b).
-      wRe = Rek + lambda
-      wIm = Imk + zeroL * current_y
-      eRe = expm1Local(wRe) * DCOS(wIm) - 2.0_C_DOUBLE * DSIN(0.5_C_DOUBLE * wIm)**2
-      eIm = DEXP(wRe) * DSIN(wIm)
+      wRe          = Rek + lambda
+      wIm          = Imk + zeroL * current_y
+      eRe          = expm1Local(wRe) * DCOS(wIm) - 2.0_C_DOUBLE * DSIN(0.5_C_DOUBLE * wIm)**2
+      eIm          = DEXP(wRe) * DSIN(wIm)
       condEnvelope = DEXP(-lambda) * DSQRT(eRe*eRe + eIm*eIm)
     ELSE
       condEnvelope = DEXP(Rek)
@@ -210,13 +212,13 @@ CONTAINS
 
           IF ( consecSmallCount .GE. 3_C_INT ) THEN
             stop_PreAccelerate = .TRUE.
-            converged_Pre = .TRUE.
+            converged_Pre      = .TRUE.
           END IF
 
           IF ( (condEnvelope/zeroL) .LT. 1.0E-15_C_DOUBLE .AND. &
                (consecSmallCount .GE. 3_C_INT) ) THEN
             stop_PreAccelerate = .TRUE.
-            converged_Pre = .TRUE.
+            converged_Pre      = .TRUE.
           END IF
         END IF
       END IF
@@ -376,11 +378,11 @@ CONTAINS
 
     ! Initialisation
     t_Start_Point = 0.0_C_DOUBLE
-    zeroBoundL = 0.0_C_DOUBLE
-    zeroBoundR = 0.0_C_DOUBLE
-    zeroR = 0.0_C_DOUBLE
-    TMP = 0.0_C_DOUBLE
-    errorHere = .FALSE.
+    zeroBoundL    = 0.0_C_DOUBLE
+    zeroBoundR    = 0.0_C_DOUBLE
+    zeroR         = 0.0_C_DOUBLE
+    TMP           = 0.0_C_DOUBLE
+    errorHere     = .FALSE.
     
     ! Find starting point for the first zero
     IF (left_Of_Max) THEN
@@ -390,8 +392,8 @@ CONTAINS
     ELSE
       ! Searching to the right of tmax
       t_Start_Point = tmax + PI / current_y  
-      zeroBoundL = tmax
-      zeroBoundR = t_Start_Point * 2.0_C_DOUBLE
+      zeroBoundL    = tmax
+      zeroBoundR    = t_Start_Point * 2.0_C_DOUBLE
     END IF
 
     IF ( (t_Start_Point .GT. zeroBoundR) .OR. (t_Start_Point .LT. zeroBoundL) ) Then

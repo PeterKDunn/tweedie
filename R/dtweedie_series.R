@@ -103,9 +103,9 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
       
       if ( ( power > 1 ) && ( power < 2 ) ) {
         out <- dtweedie_series_smallp(power = power,
-                                      mu = mu[yp], 
-                                      y = y[yp],
-                                      phi = phi[yp])
+                                      mu    = mu[yp], 
+                                      y     = y[yp],
+                                      phi   = phi[yp])
         density[yp] <- out$density 
         lo[yp] <- out$lo
         hi[yp] <- out$hi
@@ -113,6 +113,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
     }
   }
   
+  # Problematic evaluations:
   n_nan <- sum(is.nan(density))
   if (n_nan > 0) {
     warning("dtweedie_series: the series cannot be summed accurately for ", n_nan,
@@ -122,8 +123,8 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
   
   if (details) {
     return(list( density = density,
-                 lo = lo,
-                 hi = hi) )
+                 lo      = lo,
+                 hi      = hi) )
   } else {
     return(density)
   }
@@ -189,9 +190,9 @@ dtweedie_series_smallp <- function(power, y, mu, phi){
   f <- exp( logf )
   
   list(density = f, 
-       logw = logw, 
-       hi = result$hi, 
-       lo = result$lo)
+       logw    = logw, 
+       hi      = result$hi, 
+       lo      = result$lo)
   
 }
 
@@ -282,9 +283,9 @@ dtweedie_jw_smallp <- function(y, phi, power){
   jw <- sum.we * exp( m )                # now restore max.
   # Since derivs may be negative, can't use log-scale
   
-  list(lo = lo.j, 
-       hi = hi.j, 
-       jw = jw, 
+  list(lo    = lo.j, 
+       hi    = hi.j, 
+       jw    = jw, 
        j.max = j.max )
   
 }
@@ -428,9 +429,9 @@ dtweedie_kv_bigp <- function(y, phi, power){
   # Since derivs may be negative, can't use log-scale
   kv_all[can_try] <- kv
   
-  list(lo = lo.k, 
-       hi = hi.k, 
-       kv = kv_all, 
+  list(lo    = lo.k, 
+       hi    = hi.k, 
+       kv    = kv_all, 
        k.max = k.max )
   
 }
@@ -565,9 +566,9 @@ dtweedie_logv_bigp <- function( y, phi, power){
   logv[reliable] <- log( sum.ve[reliable] ) + m[reliable]
   logv_all[can_try] <- logv
   
-  list(lo = lo.k, 
-       hi = hi.k, 
-       logv = logv_all, 
+  list(lo    = lo.k, 
+       hi    = hi.k, 
+       logv  = logv_all, 
        k.max = k.max )
   
 }
@@ -663,9 +664,9 @@ dtweedie_logw_smallp <- function(y, phi, power){
   sum.we <- apply( we, 1, sum) # sum terms
   logw <- log( sum.we ) + m    # now restore max.
   
-  list(lo = lo.j, 
-       hi = hi.j, 
-       logw = logw, 
+  list(lo    = lo.j, 
+       hi    = hi.j, 
+       logw  = logw, 
        j.max = j.max )
   
 }
@@ -716,11 +717,8 @@ dtweedie_series_bigp <- function(power, y, mu, phi){
   f <- exp( logfnew )
   
   return( list(density = f,
-               logv = logv, 
-               lo = result$lo, 
-               hi = result$hi ) )
+               logv    = logv, 
+               lo      = result$lo, 
+               hi      = result$hi ) )
   
 }
-
-
-

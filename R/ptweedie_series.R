@@ -85,14 +85,14 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
   tau    <- phi * (power - 1) * mu ^ ( power - 1 )
   alpha  <- (2 - power) / (1 - power)
-  drop <- 39
+  drop   <- 39
 
   # FIND THE LIMITS ON N, the summation index
   # The *lower* limit on N
   lambda_bound <- max(lambda )
-  logfmax <-  -log(lambda_bound)/2
-  estlogf <- logfmax
-  N <- max( lambda_bound )
+  logfmax      <-  -log(lambda_bound)/2
+  estlogf      <- logfmax
+  N            <- max( lambda_bound )
   
   while ( ( estlogf > (logfmax - drop) ) & ( N > 1 ) ) {
     N <- max(1, N - 2)
@@ -103,9 +103,9 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   
   # The *upper* limit on N
   lambda_bound <- min( lambda )
-  logfmax <-  -log(lambda_bound) / 2
-  estlogf <- logfmax
-  N <- max( lambda_bound )
+  logfmax      <- -log(lambda_bound) / 2
+  estlogf      <- logfmax
+  N            <- max( lambda_bound )
   
   while ( estlogf > (logfmax - drop) ) {
     N <- N + 1
@@ -140,7 +140,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # log of the incomplete-gamma (via the chi-square relationship already used here),
   # computed directly on the log scale -- never via log(pchisq(...))
   df_vec <- -2 * alpha * N_vec
-  x_vec  <- 2 * q / tau
+  x_vec  <-  2 * q / tau
   
   
   # The incomplete Gamma values

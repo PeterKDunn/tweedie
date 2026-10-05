@@ -8,8 +8,8 @@ dtweedie_dldphi_saddle <- function(phi, mu, power, y){
   # 13 August 2002
   
   dev <- tweedie_dev( power = power, 
-                      y = y, 
-                      mu = mu)
+                      y     = y, 
+                      mu    = mu)
   l <-  (-1) / (2 * phi) + dev / (2 * phi ^ 2)
   
   -2 * sum(l)
@@ -27,9 +27,9 @@ dtweedie_logl <- function(phi, y, mu, power) {
   
   # Peter Dunn
   # 26 April 2001
-  sum( log( dtweedie( y = y, 
-                      mu = mu, 
-                      phi = phi, 
+  sum( log( dtweedie( y     = y, 
+                      mu    = mu, 
+                      phi   = phi, 
                       power = power) ) )
   
 }
@@ -46,10 +46,10 @@ dtweedie_logl_saddle <- function( phi, power, y, mu, eps=0){
   # Peter Dunn
   # 01 May 2001
   sum( log( dtweedie_saddle(power = power, 
-                            phi = phi, 
-                            y = y, 
-                            mu = mu,
-                            eps = eps) ) )
+                            phi   = phi, 
+                            y     = y, 
+                            mu    = mu,
+                            eps   = eps) ) )
   
 }
 
@@ -80,31 +80,31 @@ dtweedie_dldphi <- function(phi, mu, power, y ){
       # Use the transform f(y; mu, phi) = c f(c*y; c*mu, c^(2-p)*phi)
       # and differentiate with c=phi^(1/(p-2)):
       #    d log f / d phi = c^(2-p) * {df(cy; c*mu, 1)/dphi} / f(cy; c*mu, 1)
-      f <- dtweedie( y = k * y, 
+      f <- dtweedie( y     = k * y, 
                      power = power, 
-                     mu = k * mu, 
-                     phi = 1 )
-      d <- dtweedie_dlogfdphi( y = k * y, 
+                     mu    = k * mu, 
+                     phi   = 1 )
+      d <- dtweedie_dlogfdphi( y     = k * y, 
                                power = power, 
-                               mu = k * mu, 
-                               phi = 1 )
+                               mu    = k * mu, 
+                               phi   = 1 )
       # Note:  We need dlogf/dphi = dlogf.dphi * f
       top <- d * f
       d <- -2* sum( top / f * k ^ (2 - power) )
       
     } else{
       # Compute directly
-      d <- -2 * sum( dtweedie_dlogfdphi(y = y, 
+      d <- -2 * sum( dtweedie_dlogfdphi(y     = y, 
                                         power = power, 
-                                        mu = mu, 
-                                        phi = phi) )
+                                        mu    = mu, 
+                                        phi   = phi) )
     }
   } else{
     # Cases p == 1 and  p == 2 
-    d <- -2 * sum( dtweedie_dlogfdphi(y = y, 
+    d <- -2 * sum( dtweedie_dlogfdphi(y     = y, 
                                       power = power, 
-                                      mu = mu, 
-                                      phi = phi) )
+                                      mu    = mu, 
+                                      phi   = phi) )
   }
   d
 }
@@ -143,12 +143,12 @@ dtweedie_dlogfdphi <- function(y, mu, phi, power)
     # If logv has infinite values then we resort to other tactics.
     
     kv <- dtweedie_kv_bigp(power = power, 
-                           phi = phi, 
-                           y = y)$kv
+                           phi   = phi, 
+                           y     = y)$kv
     dv.dphi <- (kv * (a - 1)) / phi
     out.logv <- dtweedie_logv_bigp(power = power, 
-                                   phi = phi, 
-                                   y = y)
+                                   phi   = phi, 
+                                   y     = y)
     
     # Now see if this causes problems.
     logv <- out.logv$logv
@@ -162,13 +162,13 @@ dtweedie_dlogfdphi <- function(y, mu, phi, power)
       # best we can do is use definition I think.
       delta <- 1.0e-5
       a1 <- dtweedie(power = power, 
-                     phi = phi[probs], 
-                     mu = mu[probs], 
-                     y = y[probs])
+                     phi   = phi[probs], 
+                     mu    = mu[probs], 
+                     y     = y[probs])
       a2 <- dtweedie(power = power, 
-                     phi = phi[probs] + delta, 
-                     mu = mu[probs], 
-                     y = y[probs])
+                     phi   = phi[probs] + delta, 
+                     mu    = mu[probs], 
+                     y     = y[probs])
       f[probs] <- (log(a2) - log(a1) ) / delta
       
     }
@@ -198,8 +198,8 @@ dtweedie_dlogfdphi <- function(y, mu, phi, power)
                              y = y[y > 0])$jw
     dw.dphi <- (jw * (a - 1)) / phi[y > 0]
     logw <- dtweedie_logw_smallp(power = power, 
-                                 phi = phi[y > 0], 
-                                 y = y[y > 0])$logw
+                                 phi   = phi[y > 0], 
+                                 y     = y[y > 0])$logw
     f[y>0] <- A[y > 0] + B[y > 0] + dw.dphi / exp(logw)
   }
   f

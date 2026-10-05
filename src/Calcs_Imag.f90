@@ -25,11 +25,11 @@ CONTAINS
   
     ! Initialisation
     errorHere = .FALSE.
-    Imk = 0.0_C_DOUBLE
+    Imk       = 0.0_C_DOUBLE
     
-    front = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
+    front  = current_mu ** (2.0_C_DOUBLE - Cp) / ( current_phi * (2.0_C_DOUBLE - Cp))
     tanArg = (1.0_C_DOUBLE - Cp) * t * current_phi  / (current_mu ** (1.0_C_DOUBLE - Cp) )
-    omega = DATAN( tanArg )
+    omega  = DATAN( tanArg )
   
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
@@ -64,14 +64,15 @@ CONTAINS
   
     
     ! Initialise
-    f = 0.0_C_DOUBLE
-    df = 0.0_C_DOUBLE
+    f         =  0.0_C_DOUBLE
+    df        = 0.0_C_DOUBLE
     errorHere = .FALSE.
     
     CALL evaluateImk(t, Imk_val, errorHere)
     IF (errorHere) THEN
       IF (Cverbose) CALL DBLEPR("ERROR: error evaluating evaluate Im k(t) =", -1, t, 1)
       error = .TRUE.
+      
       RETURN
     END IF
   
@@ -84,6 +85,7 @@ CONTAINS
     ELSE
       f = Imk_val - REAL(m, KIND=C_DOUBLE) * PI
     END IF
+    
     CALL evaluateImkd(t, df, errorHere)
     IF (errorHere) THEN
       error = .TRUE.
@@ -107,12 +109,12 @@ CONTAINS
 
   
     ! Initlaise
-    Imkd = 0.0_C_DOUBLE
+    Imkd      = 0.0_C_DOUBLE
     errorHere = .FALSE.
     
     pindex = 1.0_C_DOUBLE / (1.0_C_DOUBLE - Cp)
     tanArg = ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) )
-    omega = DATAN( tanArg )
+    omega  = DATAN( tanArg )
 
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
@@ -145,13 +147,13 @@ CONTAINS
 
     
     ! Initialise
-    Imkdd = 0.0_C_DOUBLE
+    Imkdd     = 0.0_C_DOUBLE
     errorHere = .FALSE.
     
     pindex = Cp / (1.0_C_DOUBLE - Cp)
-    front = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))
+    front  = -current_phi * current_mu ** (Cp/(1.0_C_DOUBLE - Cp))
     tanArg = ( (1.0_C_DOUBLE - Cp) * t * current_phi) / (current_mu ** (1.0_C_DOUBLE - Cp) )
-    omega = DATAN( tanArg )
+    omega  = DATAN( tanArg )
     
     IF ((omega .GT. 0.0_C_DOUBLE ) .OR.    &    
         (omega .LT. (-PI/2.0_C_DOUBLE)) ) THEN
@@ -185,7 +187,7 @@ CONTAINS
     LOGICAL(C_BOOL)       :: errorHere
   
     ! Initialise
-    f = 0.0_C_DOUBLE
+    f  = 0.0_C_DOUBLE
     df = 0.0_C_DOUBLE
     
     CALL evaluateImkd( t, Imkd, errorHere)

@@ -63,10 +63,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(C_DOUBLE) :: leftPreAccZero
 
   ! Zone 3: acceleration
-  REAL(C_DOUBLE) :: areaA, psi
-  INTEGER(C_INT) :: count_Acc_Regions
-  LOGICAL(C_BOOL):: keep_Accelerating, converged_Accelerating
-  REAL(C_DOUBLE) :: leftAccZero
+  REAL(C_DOUBLE)   :: areaA, psi
+  INTEGER(C_INT)   :: count_Acc_Regions
+  LOGICAL(C_BOOL)  :: keep_Accelerating, converged_Accelerating
+  REAL(C_DOUBLE)   :: leftAccZero
 
 
   INTERFACE
@@ -117,50 +117,48 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     aimrerr = 1.0E-15_C_DOUBLE
     epsilon = 1.0E-15_C_DOUBLE
   END IF
-  mOld = 0
-  m = 0
-  exitstatus = 0
-  relerr = 1.0_C_DOUBLE
-  convergence_Acc = .FALSE.
-  mmax = 0_C_INT
+  
+  mOld               = 0
+  m                  = 0
+  exitstatus         = 0
+  relerr             = 1.0_C_DOUBLE
+  convergence_Acc    = .FALSE.
+  mmax               = 0_C_INT
   count_Integration_Regions = 0_C_INT   ! Counter for number of integration regions
-  zeroStartPoint = 0.0_C_DOUBLE
+  zeroStartPoint     = 0.0_C_DOUBLE
   flip_To_Other_Side = .FALSE.
-  zeroR = 0.0_C_DOUBLE
-  zeroL = 0.0_C_DOUBLE
-  left_Of_Max = .TRUE.
-  area0 = 0.0_C_DOUBLE
-
+  zeroR              = 0.0_C_DOUBLE
+  zeroL              = 0.0_C_DOUBLE
+  left_Of_Max        = .TRUE.
+  area0              = 0.0_C_DOUBLE
 
 
   ! Initialise for pre-acceleration
-  area1 = 0.0_C_DOUBLE
-  stop_PreAccelerate = .FALSE.        ! Stop pre-accelerating (and perhaps move to accelerating)
-  converged_Pre = .FALSE.             ! If convergence detected during pre-acceleration
-  sumA = 0.0_C_DOUBLE                 ! Total pre-acceleration area
-  West = 3.0_C_DOUBLE                 ! The current estimate of the tail area
-  Wold = 2.0_C_DOUBLE                 ! Wold and Wold2 are the previous two estimates of the tail area,
-  Wold2 = 1.0_C_DOUBLE                !   to allow testing for convergence
-  count_PreAcc_Regions = 0_C_INT      ! Number of pre-acceleratioin regions
+  area1                = 0.0_C_DOUBLE
+  stop_PreAccelerate   = .FALSE.          ! Stop pre-accelerating (and perhaps move to accelerating)
+  converged_Pre        = .FALSE.          ! If convergence detected during pre-acceleration
+  sumA                 = 0.0_C_DOUBLE     ! Total pre-acceleration area
+  West                 = 3.0_C_DOUBLE     ! The current estimate of the tail area
+  Wold                 = 2.0_C_DOUBLE     ! Wold and Wold2 are the previous two estimates of the tail area,
+  Wold2                = 1.0_C_DOUBLE     !   to allow testing for convergence
+  count_PreAcc_Regions = 0_C_INT          ! Number of pre-acceleratioin regions
 
 
   ! Initialise for acceleration
   count_Acc_Regions = 0_C_INT
   keep_Accelerating = .TRUE.
-  Mmatrix = 0.0_C_DOUBLE
-  Nmatrix = 0.0_C_DOUBLE
-  xvec = 0.0_C_DOUBLE
-  wvec = 0.0_C_DOUBLE
-  areaA = 0.0_C_DOUBLE
+  Mmatrix           = 0.0_C_DOUBLE
+  Nmatrix           = 0.0_C_DOUBLE
+  xvec              = 0.0_C_DOUBLE
+  wvec              = 0.0_C_DOUBLE
+  areaA             = 0.0_C_DOUBLE
   count_Acc_Regions = 0_C_INT
-  accMax = MAX_ACC                      ! Max acceleration regions
-  min_Acc_Regions = 3_C_INT             ! Min preacceleration regions
+  accMax            = MAX_ACC             ! Max acceleration regions
+  min_Acc_Regions   = 3_C_INT             ! Min preacceleration regions
 
 
   ! --- Integration initialization ---
   area0 = 0.0_C_DOUBLE ! Initial area
-
-
 
   ! FIND THE VALUES OF  kmax, tmax, mmax
   CALL findKmax(i, kmax, tmax, mmax, mfirst, left_Of_Max, error)
@@ -244,7 +242,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
 
     ! Integrate
     CALL GaussQuadrature(i, zeroL, zeroR, sumA)
-    area1 = area1 + sumA
+    area1   = area1 + sumA
     absArea = absArea + DABS(sumA)
     
     relerr = DABS(sumA) / (DABS(area0 + area1) + epsilon) 
@@ -291,7 +289,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   
   ! Initialise the acceleration
   count_Acc_Regions = 0_C_INT
-  xvec(1) = zeroL
+  xvec(1)           = zeroL
   
   IF ( .NOT.(converged_Pre) ) THEN
     converged_Accelerating = .FALSE.

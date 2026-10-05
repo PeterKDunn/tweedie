@@ -55,8 +55,8 @@ CONTAINS
   
     
     ! --- Initialization ---
-    aimrerr = 1.0E-09_C_DOUBLE
-    threshold = 1.0E5_C_DOUBLE ! Threshold for a "large" tmax
+    aimrerr           = 1.0E-09_C_DOUBLE
+    threshold         = 1.0E5_C_DOUBLE ! Threshold for a "large" tmax
     tmaxIsPlaceholder = .FALSE.
   
   
@@ -73,10 +73,10 @@ CONTAINS
       !
       !    This includes the case 'IF y >= mu'
       !    Nothing to do; easy-peasy:
-      mmax = 0
-      mfirst = -1
-      kmax = 0.0_C_DOUBLE
-      tmax = 0.0_C_DOUBLE
+      mmax        = 0
+      mfirst      = -1
+      kmax        = 0.0_C_DOUBLE
+      tmax        = 0.0_C_DOUBLE
       left_Of_Max = .FALSE.
       
       RETURN
@@ -275,16 +275,17 @@ CONTAINS
         IMPLICIT NONE
         REAL(KIND=C_DOUBLE), INTENT(OUT) :: tOut
         LOGICAL(C_BOOL), INTENT(OUT)     :: failed
+        
         REAL(KIND=C_DOUBLE) :: al, Cc, cc0, t0, tL, tR, dL, dR
         LOGICAL(C_BOOL)     :: errH
         INTEGER(C_INT)      :: j
 
         failed = .TRUE.
-        tOut = threshold
-        al  = (Cp - 2.0_C_DOUBLE) / (Cp - 1.0_C_DOUBLE)
-        Cc  = current_mu**(2.0_C_DOUBLE - Cp) / (current_phi * (Cp - 2.0_C_DOUBLE))
-        cc0 = (Cp - 1.0_C_DOUBLE) * current_phi * current_mu**(Cp - 1.0_C_DOUBLE)
-        t0  = DEXP( ( DLOG(al) + DLOG(Cc) + al * DLOG(cc0) + DLOG(DSIN(0.5_C_DOUBLE * al * PI)) &
+        tOut   = threshold
+        al     = (Cp - 2.0_C_DOUBLE) / (Cp - 1.0_C_DOUBLE)
+        Cc     = current_mu**(2.0_C_DOUBLE - Cp) / (current_phi * (Cp - 2.0_C_DOUBLE))
+        cc0    = (Cp - 1.0_C_DOUBLE) * current_phi * current_mu**(Cp - 1.0_C_DOUBLE)
+        t0      = DEXP( ( DLOG(al) + DLOG(Cc) + al * DLOG(cc0) + DLOG(DSIN(0.5_C_DOUBLE * al * PI)) &
                       - DLOG(current_y) ) / (1.0_C_DOUBLE - al) )
         IF ( .NOT. ( (t0 .GT. 0.0_C_DOUBLE) .AND. (t0 .LT. HUGE(t0)) ) ) RETURN
 
@@ -333,7 +334,7 @@ CONTAINS
         
 
         max_Search = 10
-        errorHere = .FALSE._C_BOOL
+        errorHere  = .FALSE._C_BOOL
         
         !!!!! LOWER BOUND
         !   - If slope at SP is *positive* (which it should be), only need to creep to the right
@@ -361,7 +362,7 @@ CONTAINS
         keep_Searching = .TRUE.
         DO WHILE (keep_Searching)
           oldBoundL = boundL
-          boundL = (boundL + 1.0E-2_C_DOUBLE) * 1.250E0_C_DOUBLE
+          boundL    = (boundL + 1.0E-2_C_DOUBLE) * 1.250E0_C_DOUBLE
           CALL evaluateImkd(boundL, slopeL, error)
           CALL evaluateImk(boundL, Imk_value, error)
           IF (error) CALL DBLEPR("ERROR: integrand zero =", -1, boundL, 1)
@@ -406,18 +407,19 @@ CONTAINS
         ! - If slope at SP is *positive*, and kmax positive, need bold steps to the right
         IF ( (slopeR .GT. 0.0E0_C_DOUBLE) .AND.  &
              (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
-          boundR = startTKmax
+          boundR         = startTKmax
           keep_Searching = .TRUE.
           
           DO WHILE (keep_Searching)
             ! - If slope at SP is positive, take bold steps right to find upper bound
             search_Its = search_Its + 1
-            boundR = (boundR + 0.1_C_DOUBLE) * 2.0E0_C_DOUBLE
+            boundR     = (boundR + 0.1_C_DOUBLE) * 2.0E0_C_DOUBLE
       
             CALL evaluateImkd(boundR, slopeR, errorHere)
             IF (errorHere) THEN
               error = .TRUE.
               IF (Cverbose) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
+              
               RETURN          
             END IF
 
@@ -425,6 +427,7 @@ CONTAINS
             IF (errorHere) THEN
               error = .TRUE.
               IF (Cverbose) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
+              
               RETURN          
             END IF
 
@@ -441,11 +444,12 @@ CONTAINS
         keep_Searching = .TRUE.
         DO WHILE (keep_Searching)
           oldBoundR = boundR
-          boundR = boundR * 0.90E0_C_DOUBLE
+          boundR    = boundR * 0.90E0_C_DOUBLE
           CALL evaluateImkd(boundR, slopeR, errorHere)
           IF (errorHere) THEN
             error = .TRUE.
             IF (Cverbose) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
+            
             RETURN          
           END IF
 
@@ -453,6 +457,7 @@ CONTAINS
           IF (errorHere) THEN
             error = .TRUE.
             IF (Cverbose) CALL DBLEPR("ERROR: integrand zero =", -1, boundR, 1)
+            
             RETURN          
           END IF
 
@@ -461,7 +466,7 @@ CONTAINS
                (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
             ! - Gone too far, so keep previous bound
             keep_Searching = .FALSE.
-            boundR = oldBoundR
+            boundR         = oldBoundR
           END IF
         END DO
         tmaxR = boundR
@@ -489,7 +494,7 @@ CONTAINS
     LOGICAL(C_BOOL)               :: error
 
     ! Initialize
-    abs1mp = ABS(1.0_C_DOUBLE - Cp)
+    abs1mp     = ABS(1.0_C_DOUBLE - Cp)
     findKmaxSP = 0.0_C_DOUBLE
     
     ! We find a small-t approx, a large-t approx, and a combined approx.
@@ -499,15 +504,15 @@ CONTAINS
       ! CASE: 1 < p < 2, AND y < mu
   
       ! Try small-t approximation
-      tsmall = DSQRT(2.0_C_DOUBLE * (current_mu - current_y)/current_mu) * &
-               current_mu**(1.0_C_DOUBLE - Cp) / current_phi
+      tsmall     = DSQRT(2.0_C_DOUBLE * (current_mu - current_y)/current_mu) * &
+                     current_mu**(1.0_C_DOUBLE - Cp) / current_phi
       findKmaxSP = tsmall
     ELSE
       ! This should be the CASE: p > 2, AND y < mu
       omegaInf = (PI / 2.0_C_DOUBLE) * &
-                 (1.0_C_DOUBLE - Cp)/(2.0_C_DOUBLE*Cp - 1.0_C_DOUBLE)
-      tsmall = current_mu**(1.0_C_DOUBLE - Cp) / ( (1.0_C_DOUBLE - Cp)) * &
-               DTAN(omegaInf)
+                    (1.0_C_DOUBLE - Cp)/(2.0_C_DOUBLE*Cp - 1.0_C_DOUBLE)
+      tsmall   = current_mu**(1.0_C_DOUBLE - Cp) / ( (1.0_C_DOUBLE - Cp)) * &
+                    DTAN(omegaInf)
       
       CALL evaluateImkd(tsmall, slope, error)
       IF (error) RETURN
@@ -569,10 +574,10 @@ CONTAINS
 
     ! Initialisation
     maxSearch = 10  ! Don't spend too long, so set limit
-    valueL = 0.0_C_DOUBLE
-    valueR = 0.0_C_DOUBLE
-    df = 0.0_C_DOUBLE
-    valueMid = 0.95_C_DOUBLE
+    valueL    = 0.0_C_DOUBLE
+    valueR    = 0.0_C_DOUBLE
+    df        = 0.0_C_DOUBLE
+    valueMid  = 0.95_C_DOUBLE
     
     ! Set multipier: this adjust the sign depending on whether we are
     ! left of the max (so left bound is negative) or to the right of
@@ -788,14 +793,14 @@ CONTAINS
   
     ! INITIALIZE ALL LOCAL VARIABLES
     errorHere = .FALSE.
-    xacc = xacc_in
-    fL = 0.0_C_DOUBLE
-    fR = 0.0_C_DOUBLE
-    dfL = 0.0_C_DOUBLE
-    dfR = 0.0_C_DOUBLE
+    xacc          = xacc_in
+    fL            = 0.0_C_DOUBLE
+    fR            = 0.0_C_DOUBLE
+    dfL           = 0.0_C_DOUBLE
+    dfR           = 0.0_C_DOUBLE
     tstart_update = 0.0_C_DOUBLE
-    tMid = 0.0_C_DOUBLE
-    tZero = 0.0_C_DOUBLE  ! Initialize OUT parameter too
+    tMid          = 0.0_C_DOUBLE
+    tZero         = 0.0_C_DOUBLE  ! Initialize OUT parameter too
     
     ! Sync the local value of  m  to the shared value.
     m_shared = m
@@ -809,12 +814,14 @@ CONTAINS
     CALL evaluateImkM(tL, fL, dfL, m, errorHere)
     IF (errorHere) THEN
       error = .TRUE.
+      
       RETURN
     END IF
 
     CALL evaluateImkM(tR, fR, dfR, m, errorHere)
     IF (errorHere) THEN
       error = .TRUE.
+      
       RETURN
     END IF
 
@@ -826,6 +833,7 @@ CONTAINS
       IF (errorHere) THEN
         IF (Cverbose) CALL DBLEPR("Bounds do not bracket the zero (findExactZeros)", -1, fR, 1)
         error = .TRUE.
+        
         RETURN
       END IF
     END IF
@@ -859,6 +867,7 @@ CONTAINS
       IF (errorHere) THEN
         error = .TRUE.
         IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+        
         RETURN
       END IF
         ELSE
@@ -879,6 +888,7 @@ CONTAINS
           ELSE
             error = .TRUE.
             IF (Cverbose) CALL DBLEPR("ERROR: cannot solve", -1, tZero, 1)
+            
           RETURN
         END IF
       END IF

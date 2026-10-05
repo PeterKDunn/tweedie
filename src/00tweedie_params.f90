@@ -26,10 +26,11 @@ MODULE tweedie_params_mod
 CONTAINS
 
   PURE SUBROUTINE zPow(x, e, re, im)
-    ! Real and imaginary parts of  z^e,  where  z = 1 + i x  (x real).
+    ! Real and imaginary parts of  z^e,  where  z = 1 + i x  (for x real).
     !
     ! Equivalently, with  omega = atan(x):
-    !   re = cos(e*omega) / cos(omega)^e,   im = sin(e*omega) / cos(omega)^e,
+    !   re = cos(e*omega) / cos(omega)^e,   
+    !   im = sin(e*omega) / cos(omega)^e,
     ! which is how Re k, Im k and their derivatives were written before.
     ! Computing them that way loses all accuracy for large |x|:
     !  - once |x| > ~1e16, DATAN(x) rounds to exactly +/- pi/2, so DCOS(omega)

@@ -133,7 +133,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   #                              | Saddlepoint approximation if xix<= 0.03 (NEEDS FIXING)
   #
   
-  ### BEGIN preliminary work
+  ### BEGIN: preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
   if (verbose) cat("- Checking notation\n")
@@ -147,7 +147,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_inputs(y, mu, phi, power)
-  mu <- out$mu
+  mu  <- out$mu
   phi <- out$phi
 
   # density2 is the whole vector; the same length as  y.
@@ -176,10 +176,10 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
 
   # Set things up for the interpolation/series; i.e., not special_y_cases
   density <- density2[ !special_y_cases ]
-  mu <- mu[ !special_y_cases ]
-  phi <- phi[ !special_y_cases ]
-  y <- y[ !special_y_cases ]
-  ### END preliminary work
+  mu      <- mu[ !special_y_cases ]
+  phi     <- phi[ !special_y_cases ]
+  y       <- y[ !special_y_cases ]
+  ### END: preliminary work
   
 
   
@@ -188,10 +188,10 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     density <- out$f
   } else {
     # Set up
-    id.type0 <- array( FALSE, dim = length(y) )
+    id.type0  <- array( FALSE, dim = length(y) )
     id.series <- id.type0
     id.interp <- id.type0
-    density <- density2[ !special_y_cases ]
+    density   <- density2[ !special_y_cases ]
     
 
     
@@ -223,19 +223,19 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     }
     
     if ( power == 1 ) { # AND phi not equal to one here
-      id.series <- rep(TRUE, length(id.series))
+      id.series <- rep(TRUE,  length(id.series))
       id.interp <- rep(FALSE, length(id.series))
     }
     if ( (power > 1.1) && (power <= 1.2) ) {
       id.interp <- ( (xix > 0) & (xix < 0.1) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 1.1
-        p.hi <- 1.2
+        grid   <- stored_grids(power)
+        p.lo   <- 1.1
+        p.hi   <- 1.2
         xix.lo <- 0
         xix.hi <- 0.1
-        np <- 15
+        np     <- 15
         nx <- 25
       }
     }
@@ -244,12 +244,12 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       id.interp <- ( (xix > 0) & (xix < 0.3) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 1.2
-        p.hi <- 1.3
+        grid   <- stored_grids(power)
+        p.lo   <- 1.2
+        p.hi   <- 1.3
         xix.lo <- 0
         xix.hi <- 0.3
-        np <- 15
+        np     <- 15
         nx <- 25
       }
     }
@@ -257,38 +257,38 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       id.interp <- ( (xix > 0) & (xix < 0.5) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 1.3
-        p.hi <- 1.4
+        grid   <- stored_grids(power)
+        p.lo   <- 1.3
+        p.hi   <- 1.4
         xix.lo <- 0
         xix.hi <- 0.5
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power > 1.4) && (power <= 1.5) ) {
       id.interp <- ( (xix > 0) & (xix < 0.8) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 1.4
-        p.hi <- 1.5
+        grid   <- stored_grids(power)
+        p.lo   <- 1.4
+        p.hi   <- 1.5
         xix.lo <- 0
         xix.hi <- 0.8
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power > 1.5) && (power < 2) ) {
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 1.5
-        p.hi <- 2
+        grid   <- stored_grids(power)
+        p.lo   <- 1.5
+        p.hi   <- 2
         xix.lo <- 0
         xix.hi <- 0.9
-        np <- 15
+        np     <- 15
         nx <- 25
       }
     }
@@ -298,65 +298,65 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 2
-        p.hi <- 3
+        grid   <- stored_grids(power)
+        p.lo   <- 2
+        p.hi   <- 3
         xix.lo <- 0
         xix.hi <- 0.9
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power >= 3) && (power < 4) ) {
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 3
-        p.hi <- 4
+        grid   <- stored_grids(power)
+        p.lo   <- 3
+        p.hi   <- 4
         xix.lo <- 0
         xix.hi <- 0.9
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power >= 4) && (power < 5) ) {
       id.interp <- ( (xix > 0) & (xix < 0.9) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 4
-        p.hi <- 5
+        grid   <- stored_grids(power)
+        p.lo   <- 4
+        p.hi   <- 5
         xix.lo <- 0
         xix.hi <- 0.9
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power >= 5) && (power < 7) ) {
       id.interp <- ( (xix > 0) & (xix < 0.5) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 5
-        p.hi <- 7
+        grid   <- stored_grids(power)
+        p.lo   <- 5
+        p.hi   <- 7
         xix.lo <- 0
         xix.hi <- 0.5
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     if ( (power >= 7) && (power <= 10) ) {
       id.interp <- ( (xix > 0) & (xix < 0.3) )
       id.series <- (!(id.interp | id.type0))
       if ( any(id.interp)) {
-        grid <- stored_grids(power)
-        p.lo <- 7
-        p.hi <- 10
+        grid   <- stored_grids(power)
+        p.lo   <- 7
+        p.hi   <- 10
         xix.lo <- 0
         xix.hi <- 0.3
-        np <- 15
-        nx <- 25
+        np     <- 15
+        nx     <- 25
       }
     }
     
@@ -574,7 +574,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       if ( any(!special_y_cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
         f_TMP <- suppressWarnings(
-                   ptweedie_inversion(q       = q[!special_y_cases], 
+                   ptweedie_inversion(q          = q[!special_y_cases], 
                                       mu         = mu[!special_y_cases], 
                                       phi        = phi[!special_y_cases],
                                       power      = power,
@@ -678,16 +678,16 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   if ( any(p == 0) ) ans2[p == 0] <- 0
   
   ans     <-  ans[ ( (p > 0) & (p < 1) ) ]
-  mu.vec  <-  mu[ ( (p > 0) & (p < 1) ) ]
+  mu.vec  <-  mu[  ( (p > 0) & (p < 1) ) ]
   phi.vec <-  phi[ ( (p > 0) & (p < 1) ) ]
-  p.vec   <- p[ ( (p > 0) & (p < 1) ) ]
+  p.vec   <-  p[   ( (p > 0) & (p < 1) ) ]
   
   for (i in (1 : length(ans)) ) {
     mu.1 <- mu.vec[i]
     phi.1 <- phi.vec[i]
-    p.1 <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
-    pwr <- power     # This is the Tweedie power, xi
-    prob <- p.1 # Rename p to avoid confusion with  pwr: This is the  qtweedie()  input p (a probability)
+    p.1   <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
+    pwr   <- power     # This is the Tweedie power, xi
+    prob  <- p.1 # Rename p to avoid confusion with  pwr: This is the  qtweedie()  input p (a probability)
     
     if ( pwr < 2 ) {
       qp <- stats::qpois(prob, 
@@ -730,16 +730,16 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
                        pwr, 
                        p.given = prob ){ 
         
-        ptweedie(q = q, 
-                 mu = mu, 
-                 phi = phi, 
+        ptweedie(q     = q, 
+                 mu    = mu, 
+                 phi   = phi, 
                  power = pwr ) - p.given
       }
       
-      pt <- pt2( q = start, 
-                 mu = mu.1, 
-                 phi = phi.1, 
-                 pwr = pwr,
+      pt <- pt2( q       = start, 
+                 mu      = mu.1, 
+                 phi     = phi.1, 
+                 pwr     = pwr,
                  p.given = prob)
       
       if ( pt == 0 ) ans2[i] <- start
@@ -779,19 +779,19 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
       
       out <- stats::uniroot(pt2, 
                             c(start, start.2), 
-                            mu = mu.1, 
-                            phi = phi.1, 
-                            p = pwr, 
-                            p.given = prob )
+                              mu      = mu.1, 
+                              phi     = phi.1, 
+                              p       = pwr, 
+                              p.given = prob )
       #print(out)
       
       ans[i] <- uniroot(pt2, 
                         c(start, start.2), 
-                        mu = mu.1, 
-                        phi = phi.1, 
-                        p = pwr, 
-                        p.given = prob, 
-                        tol = 0.000000000001 )$root
+                          mu      = mu.1, 
+                          phi     = phi.1, 
+                          p       = pwr, 
+                          p.given = prob, 
+                          tol     = 0.000000000001 )$root
     }
     
   }
@@ -818,12 +818,12 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  out <- check_inputs(y = n, 
-                      mu = mu, 
-                      phi = phi, 
+  out <- check_inputs(y     = n, 
+                      mu    = mu, 
+                      phi   = phi, 
                       power = power,
-                      type = "random")
-  mu <- out$mu
+                      type  = "random")
+  mu  <- out$mu
   phi <- out$phi
 
   
@@ -841,8 +841,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   }
   if (power == 2) {
     alpha <- (2 - power) / (1 - power)
-    gam <- phi * (power - 1) * mu ^ (power - 1)
-    rtw <- stats::rgamma( n, 
+    gam   <- phi * (power - 1) * mu ^ (power - 1)
+    rtw   <- stats::rgamma( n, 
                           shape = 1 / phi, 
                           scale = gam )
   }
@@ -860,8 +860,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
     rtw <- array( dim = n, NA)
     
     lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
-    alpha <- (2 - power) / (1 - power)
-    gam <- phi * (power - 1) * mu ^ (power - 1)
+    alpha  <- (2 - power) / (1 - power)
+    gam    <- phi * (power - 1) * mu ^ (power - 1)
     
     N <- stats::rpois(n, 
                       lambda = lambda)

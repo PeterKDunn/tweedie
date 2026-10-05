@@ -23,18 +23,19 @@ CONTAINS
   
     
     errorHere = .FALSE.
-    Rek = 0.0E0_C_DOUBLE
+    Rek       = 0.0E0_C_DOUBLE
     
     pindex = (2.0E0_C_DOUBLE - Cp)
-    front = current_mu ** pindex  / ( current_phi * pindex)
+    front  = current_mu ** pindex  / ( current_phi * pindex)
     tanArg = (1.0E0_C_DOUBLE - Cp) * t * current_phi / (current_mu ** (1.0E0_C_DOUBLE - Cp) )
-    omega = DATAN( tanArg )
+    omega  = DATAN( tanArg )
     
     ! Safety check
     IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-PI/2.0E0_C_DOUBLE))) THEN
       ! Error!
       errorHere = .TRUE.
       IF (Cverbose) CALL DBLEPR("ERROR: Rek: omega out of bounds =", -1, omega, 1)
+      
       RETURN
     END IF
     
@@ -59,12 +60,12 @@ CONTAINS
 
     ! Initialise
     errorHere = .FALSE.
-    Rekd = 0.0E0_C_DOUBLE
+    Rekd      = 0.0E0_C_DOUBLE
     
     pindex = 1.0E0_C_DOUBLE / (1.0E0_C_DOUBLE - Cp)
     tanArg = ( (1.0E0_C_DOUBLE - Cp) * t * current_phi) / &
              (current_mu ** (1.0E0_C_DOUBLE - Cp) )
-    omega = DATAN( tanArg )
+    omega  = DATAN( tanArg )
     
     ! Safety check
     IF ((omega .GT. 0.0E0_C_DOUBLE ) .OR. (omega .LT. (-PI/2.0E0_C_DOUBLE))) THEN
@@ -104,9 +105,5 @@ CONTAINS
     END IF
     
   END SUBROUTINE evaluateLambda
-     
-      
-      
-      
 
 END MODULE Calcs_Real

@@ -172,7 +172,7 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
     if (verbose) cat("Special cases in p found ")
     # Special cases based on the value of p  
     
-    special_p_cases = TRUE
+    special_p_cases <- TRUE
     
     # CASE: Normal (p=0)
     if ( power == 0) {
@@ -180,13 +180,13 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (type == "PDF") {
         f <- stats::dnorm( y, 
                            mean = mu, 
-                           sd = sqrt(phi))
+                           sd   = sqrt(phi))
       } else {
         f <- stats::pnorm( y, 
-                           mean = mu, 
-                           sd = sqrt(phi), 
+                           mean       = mu, 
+                           sd         = sqrt(phi), 
                            lower.tail = lower.tail,
-                           log.p = log.p)
+                           log.p      = log.p)
       }
     }
     
@@ -198,9 +198,9 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
                           lambda = mu / phi )
       } else {
         f <- stats::ppois(y/phi, 
-                          lambda = mu / phi,
+                          lambda     = mu / phi,
                           lower.tail = lower.tail,
-                          log.p = log.p)
+                          log.p      = log.p)
       }
     }
     
@@ -209,14 +209,14 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (verbose) cat("power = 2 (gamma case)\n")
       if (type == "PDF") {
         f <- stats::dgamma( y,
-                     scale = mu * phi, 
-                     shape = 1 / phi)
+                            scale = mu * phi, 
+                            shape = 1 / phi)
       } else {
-        f <- stats::pgamma( y, 
-                     scale = mu * phi, 
-                     shape = 1 / phi, 
-                     lower.tail = lower.tail,
-                     log.p = log.p)
+        f <- stats::pgamma( y,
+                            scale      = mu * phi, 
+                            shape      = 1 / phi, 
+                            lower.tail = lower.tail,
+                            log.p      = log.p)
       }
     }
     
@@ -225,15 +225,15 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (IGexact) {
         if (verbose) cat("power = 3 (inverse Gaussian case)\n")
         if (type == "PDF") {
-          f <- statmod::dinvgauss(x = y, 
-                                  mean = mu, 
+          f <- statmod::dinvgauss(x          = y, 
+                                  mean       = mu, 
                                   dispersion = phi)
         } else {
-          f <- statmod::pinvgauss(q = y, 
-                                  mean = mu, 
+          f <- statmod::pinvgauss(q          = y, 
+                                  mean       = mu, 
                                   dispersion = phi, 
                                   lower.tail = lower.tail,
-                                  log.p = log.p)
+                                  log.p      = log.p)
         }
       } else {
         special_p_cases = FALSE
@@ -283,19 +283,20 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
 ################################################################################
 
 #' @noRd
-write_f90_gauss_table <- function(n, digits = 17,
+write_f90_gauss_table <- function(n, 
+                                  digits           = 17,
                                   array_name_nodes = "absc",
                                   array_name_wts   = "wts",
-                                  values_per_line = 3,
-                                  file = NULL) {
+                                  values_per_line  = 3,
+                                  file             = NULL) {
   
   # USAGE:  write_f90_gauss_table(200, array_name_nodes = "absc200", array_name_wts = "wts200")
   # Written so I can easily explore using different numbers of quadrature nodes  
   
   gq <- statmod::gauss.quad(n, kind = "legendre")
   
-  pos <- gq$nodes > 0
-  ord <- order(gq$nodes[pos])
+  pos          <- gq$nodes > 0
+  ord          <- order(gq$nodes[pos])
   nodes_half   <- gq$nodes[pos][ord]
   weights_half <- gq$weights[pos][ord]
   
@@ -304,7 +305,8 @@ write_f90_gauss_table <- function(n, digits = 17,
   fmt_f90_block <- function(x, array_name, half_n) {
     lits <- sprintf(paste0("%.", digits - 1, "fD00"), x)
     
-    chunks <- split(lits, ceiling(seq_along(lits) / values_per_line))
+    chunks <- split(lits, 
+                    ceiling(seq_along(lits) / values_per_line))
     n_chunks <- length(chunks)
     
     body_lines <- character(n_chunks)
@@ -327,9 +329,13 @@ write_f90_gauss_table <- function(n, digits = 17,
   }
   
   out <- c(
-    fmt_f90_block(nodes_half,   array_name_nodes, half_n),
+    fmt_f90_block(nodes_half,   
+                  array_name_nodes, 
+                  half_n),
     "",
-    fmt_f90_block(weights_half, array_name_wts,   half_n)
+    fmt_f90_block(weights_half, 
+                  array_name_wts,   
+                  half_n)
   )
   
   cat(paste(out, collapse = "\n"), "\n")

@@ -65,26 +65,26 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_inputs(q, mu, phi, power)
-  mu <- out$mu
+  mu  <- out$mu
   phi <- out$phi
 
   # cdf    is the whole vector; the same length as  q.
   # All is resolved in the end.
   cdf <- numeric(length = length(q) )
   regions <- rep(NA, length(q)) 
+  exitstatus_out <- integer(length(q))
   # exitstatus: 0 for values computed exactly (special cases); filled from the
   # Fortran for the rest. Always the same length as  q.
-  exitstatus_out <- integer(length(q))
   
   # IDENTIFY SPECIAL CASES
   special_y_cases <- rep(FALSE, 
                          length(q) )
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power,
-                       IGexact = IGexact,
-                       type = "CDF",
+                       IGexact    = IGexact,
+                       type       = "CDF",
                        lower.tail = lower.tail,
-                       log.p = log.p)
+                       log.p      = log.p)
   
   
   special_p_cases <- out$special_p_cases
@@ -108,7 +108,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
       
     
     
-    ### BEGIN SET UP
+    ### BEGIN: SET UP
     pSmall  <- ifelse( (power > 1) & (power < 2),
                        TRUE, 
                        FALSE )
@@ -126,6 +126,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
     use_scaled <- !special_y_cases & (q_F >= cut_off)
     use_direct <- !special_y_cases & (q_F <  cut_off)
     
+    
+    # CALL FORTRAN ROUTINES
     if (any(use_scaled)) {
       tmp <- .C(
         "twcomputation",
@@ -135,8 +137,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
         y          = as.double(q_F[use_scaled]),
         mu         = as.double(mu_F[use_scaled]),
         verbose    = as.integer(verbose),
-        pdf        = as.integer(0),
-        tail       = as.integer(!lower.tail),
+        pdf        = as.integer(0),               # 0: FALSE, as this is the PDF
+        tail       = as.integer(!lower.tail),     # 'tail' in the FORTRAN flags the UPPER tail (1 = Pr(Y > q)), hence !lower.tail
           # THE OUTPUTS:
         funvalue   = numeric(sum(use_scaled)),
         exitstatus = integer(sum(use_scaled)),
@@ -158,8 +160,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
         y          = as.double(q[use_direct]),
         mu         = as.double(mu[use_direct]),
         verbose    = as.integer(verbose),
-        pdf        = as.integer(0),
-        tail       = as.integer(!lower.tail),
+        pdf        = as.integer(0),               # 0: FALSE, as this is the PDF
+        tail       = as.integer(!lower.tail),     # 'tail' in the FORTRAN flags the UPPER tail (1 = Pr(Y > q)), hence !lower.tail
           # THE OUTPUTS:
         funvalue   = numeric(sum(use_direct)),
         exitstatus = integer(sum(use_direct)),
@@ -201,8 +203,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
   }
 
   if (details) {
-    return( list( cdf = cdf,
-                  regions = regions,
+    return( list( cdf        = cdf,
+                  regions    = regions,
                   exitstatus = exitstatus_out))
   } else {
     return(cdf)
@@ -215,10 +217,10 @@ ptweedie.inversion <- function(q, power, mu, phi, verbose, details){
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "ptweedie.inversion()", 
                             with = "ptweedie_inversion()")
-  ptweedie_inversion(q = q, 
-                     power = power,
-                     mu = mu, 
-                     phi = phi, 
+  ptweedie_inversion(q       = q, 
+                     power   = power,
+                     mu      = mu, 
+                     phi     = phi, 
                      verbose = FALSE, 
                      details = FALSE)
 }

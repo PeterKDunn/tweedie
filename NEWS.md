@@ -9,6 +9,8 @@ tweedie 3.1.1 (Release date: )
 * Increased a computation limit
 * Add log.p input to ptweedie()
 * New tests for the log.p and lower.tail changes in ptweedie()
+* Numerous new warnings
+* Numerous new tests
 
 
 ## Changed
