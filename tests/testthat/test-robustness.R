@@ -57,12 +57,44 @@ test_that("p near 1 with small phi: no longer converges falsely (was silently wr
 })
 
 test_that("non-convergence is reported by a warning, not only through exitstatus", {
-  expect_warning(ptweedie(0.999, mu = 1, phi = 1e-6, power = 2.5),
+  # (p just above 2 with a tiny dispersion: a case the inversion still fails on)
+  expect_warning(ptweedie(2, mu = 1, phi = 1e-6, power = 2.001),
                  "did not reach the target accuracy")
-  expect_warning(o <- ptweedie_inversion(0.999, mu = 1, phi = 1e-6, power = 2.5, details = TRUE),
+  expect_warning(o <- ptweedie_inversion(2, mu = 1, phi = 1e-6, power = 2.001, details = TRUE),
                  "did not reach the target accuracy")
   expect_equal(o$exitstatus, 1L)
+  # ... while this one, which used to fail (returning 0.5), now converges:
+  # with sd = 1e-3 the distribution is near-normal, and F(mu) exceeds 1/2 by
+  # the skewness correction gamma / (6 sqrt(2 pi)), gamma = p sqrt(phi).
+  expect_silent(F <- ptweedie(c(0.999, 1, 1.001), mu = 1, phi = 1e-6, power = 2.5))
+  expect_equal(F, c(pnorm(-1), 0.5 + 2.5e-3 / (6 * sqrt(2 * pi)), pnorm(1)), tolerance = 1e-4)
   # no warning when everything converges
   expect_silent(ptweedie(c(0.5, 1, 2), mu = 1, phi = 1, power = 2.5))
   expect_silent(dtweedie(c(0.5, 1, 2), mu = 1, phi = 1, power = 1.5))
+})
+
+test_that("p = 3 by inversion (IGexact = FALSE) matches the exact inverse Gaussian", {
+  # The trigger for the 'very large tmax' branch of findKmax (y^(1-p)/phi > 1e6)
+  # does not imply that tmax is large: here tmax = 3.75e5 and kmax = 25, and
+  # using a placeholder tmax made the zero search fail (F = 0.485, flagged;
+  # the true value is 1.5e-23).
+  o <- ptweedie_inversion(0.001, power = 3, mu = 15, phi = 10, details = TRUE, IGexact = FALSE)
+  expect_equal(o$exitstatus, 0L)
+  expect_equal(o$cdf, statmod::pinvgauss(0.001, mean = 15, dispersion = 10), tolerance = 1e-12)
+  # and over a grid, both tails
+  g <- expand.grid(y = c(1e-4, 0.01, 0.5, 2, 20), mu = c(0.1, 1, 15), phi = c(0.01, 1, 10))
+  for (lt in c(TRUE, FALSE)) {
+    inv <- mapply(function(y, m, f) ptweedie_inversion(y, power = 3, mu = m, phi = f,
+                                                       lower.tail = lt, IGexact = FALSE),
+                  g$y, g$mu, g$phi)
+    ex  <- mapply(function(y, m, f) statmod::pinvgauss(y, mean = m, dispersion = f, lower.tail = lt),
+                  g$y, g$mu, g$phi)
+    expect_lt(max(abs(inv - ex)), 1e-10)
+  }
+})
+
+test_that("an unreachable maximum (huge kmax) is still handled", {
+  # Here kmax ~ 2e30; using it directly overflowed mmax and returned 0.5.
+  # The CDF is ~0 (y far below the mean).
+  expect_lt(ptweedie(0.001, mu = 0.01, phi = 0.01, power = 8), 1e-12)
 })

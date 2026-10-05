@@ -37,6 +37,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
     LOGICAL(C_BOOL)         :: errorHere
     LOGICAL(C_BOOL)         :: tmaxIsPlaceholder
+    REAL(KIND=C_DOUBLE)     :: mmaxD
     
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)    ! Access y value for index i
@@ -101,8 +102,34 @@ CONTAINS
         !
         ! This hopefully will flag potentially problematically large kmax/tmax/mmax:
   
-        tmax = threshold
-        tmaxIsPlaceholder = .TRUE.        ! tmax (and so kmax, mmax) are NOT the true values
+        ! For p > 2, locate the maximum properly rather than using a placeholder.
+        ! For large t, (1 - i c t)^alpha ~ (c t)^alpha exp(-i alpha pi/2), so
+        !   Im k(t) ~ C c^alpha sin(alpha pi/2) t^alpha - y t,
+        ! (alpha = (p-2)/(p-1), C = mu^(2-p)/(phi (p-2)), c = (p-1) phi mu^(p-1)),
+        ! which is maximised at
+        !   t0 = ( alpha C c^alpha sin(alpha pi/2) / y )^(1/(1 - alpha)).
+        ! Refine t0 by solving Im k'(t) = 0 on a bracket around it. (The large
+        ! y^(1-p)/phi that triggers this branch does not imply a large tmax: e.g.
+        ! p = 3, mu = 1, phi = 150, y = 6.7e-5 has tmax = 3.75e5, kmax = 25,
+        ! and treating 1e5 as tmax made the zero search fail.)
+        ! But when the maximum is so far out that it lies beyond hundreds of
+        ! thousands of zeros (k_max/pi > 1e4, far more than the region cap), it
+        ! is never reached; then keep the placeholder (and mmax = HUGE below), so
+        ! that the zeros are followed up the left side until the tail bound
+        ! declares convergence. (Using the true, astronomically large k_max there,
+        ! e.g. ~2e30 for p = 8, phi = 1e-14, y = 0.001, overflowed mmax.)
+        tmaxIsPlaceholder = .TRUE.
+        IF (Cp .GT. 2.0_C_DOUBLE) THEN
+          CALL findTmaxLargeT(tmax, errorHere)
+          IF (.NOT. errorHere) THEN
+            CALL evaluateImk(tmax, kmax, errorHere)
+            IF ( (.NOT. errorHere) .AND. (kmax / PI .LE. 1.0E4_C_DOUBLE) ) THEN
+              tmaxIsPlaceholder = .FALSE.
+            END IF
+          END IF
+          errorHere = .FALSE.
+        END IF
+        IF (tmaxIsPlaceholder) tmax = threshold    ! fall back to the placeholder
         t_Start_Point = tInitialGuess()   ! This computes large-t approx
         CALL evaluateImk(tmax, kmax, errorHere)    ! Now find the corresponding value of kmax
         IF (errorHere) THEN
@@ -160,13 +187,20 @@ CONTAINS
       END IF
 
       ! Find mmax from kmax
+      ! (Computed in double precision first: an astronomically large kmax
+      !  would overflow the integer.)
       IF (Cpdf) THEN
         ! PDF zeros are at  Im k(t) = pi/2 + m pi  (see evaluateImkM), so the
         ! last zero to the left of the max is the largest m with
         ! pi/2 + m pi <= kmax.  (This gives -1 when kmax < pi/2.)
-        mmax = FLOOR(kmax / PI - 0.5_C_DOUBLE)
+        mmaxD = kmax / PI - 0.5_C_DOUBLE
       ELSE
-        mmax = FLOOR(kmax / PI)
+        mmaxD = kmax / PI
+      END IF
+      IF (mmaxD .GE. DBLE(HUGE(mmax) - 2_C_INT)) THEN
+        mmax = HUGE(mmax) - 1_C_INT
+      ELSE
+        mmax = FLOOR(mmaxD)
       END IF
 
       ! In the 'very large tmax' case (B.1), tmax is only a placeholder, so the
@@ -232,6 +266,50 @@ CONTAINS
         t0 = ratio**r * t_small + (1.0E0_C_DOUBLE - ratio**r) * t_large
       
       END FUNCTION tInitialGuess
+
+
+      SUBROUTINE findTmaxLargeT(tOut, failed)
+        ! p > 2 only: tmax from the large-t asymptotic form of Im k(t), refined
+        ! by rtsafe on Im k'(t) = 0. Sets failed = .TRUE. if no sign change of
+        ! Im k'(t) can be bracketed around the asymptotic value.
+        IMPLICIT NONE
+        REAL(KIND=C_DOUBLE), INTENT(OUT) :: tOut
+        LOGICAL(C_BOOL), INTENT(OUT)     :: failed
+        REAL(KIND=C_DOUBLE) :: al, Cc, cc0, t0, tL, tR, dL, dR
+        LOGICAL(C_BOOL)     :: errH
+        INTEGER(C_INT)      :: j
+
+        failed = .TRUE.
+        tOut = threshold
+        al  = (Cp - 2.0_C_DOUBLE) / (Cp - 1.0_C_DOUBLE)
+        Cc  = current_mu**(2.0_C_DOUBLE - Cp) / (current_phi * (Cp - 2.0_C_DOUBLE))
+        cc0 = (Cp - 1.0_C_DOUBLE) * current_phi * current_mu**(Cp - 1.0_C_DOUBLE)
+        t0  = DEXP( ( DLOG(al) + DLOG(Cc) + al * DLOG(cc0) + DLOG(DSIN(0.5_C_DOUBLE * al * PI)) &
+                      - DLOG(current_y) ) / (1.0_C_DOUBLE - al) )
+        IF ( .NOT. ( (t0 .GT. 0.0_C_DOUBLE) .AND. (t0 .LT. HUGE(t0)) ) ) RETURN
+
+        ! Bracket: Im k'(t) > 0 to the left of the maximum, < 0 to the right
+        tL = t0 / 2.0_C_DOUBLE
+        tR = t0 * 2.0_C_DOUBLE
+        DO j = 1, 60
+          CALL evaluateImkd(tL, dL, errH); IF (errH) RETURN
+          IF (dL .GT. 0.0_C_DOUBLE) EXIT
+          tL = tL / 2.0_C_DOUBLE
+        END DO
+        DO j = 1, 60
+          CALL evaluateImkd(tR, dR, errH); IF (errH) RETURN
+          IF (dR .LT. 0.0_C_DOUBLE) EXIT
+          tR = tR * 2.0_C_DOUBLE
+        END DO
+        IF ( .NOT. ( (dL .GT. 0.0_C_DOUBLE) .AND. (dR .LT. 0.0_C_DOUBLE) ) ) RETURN
+
+        CALL rtsafe(evaluateImkdZero, tL, tR, aimrerr, tOut, errH)
+        IF (errH .OR. .NOT. (tOut .GT. 0.0_C_DOUBLE)) THEN
+          tOut = threshold
+          RETURN
+        END IF
+        failed = .FALSE.
+      END SUBROUTINE findTmaxLargeT
 
   
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
