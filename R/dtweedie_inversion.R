@@ -234,6 +234,13 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
   }
 
   # Return
+  n_bad <- sum(exitstatus_out == 1L)
+  if (n_bad > 0) {
+    warning("dtweedie_inversion: the numerical integration did not reach the target accuracy for ", n_bad,
+            " of ", length(exitstatus_out), " value(s); these may be inaccurate ",
+            "(use details = TRUE to see which: exitstatus = 1).", call. = FALSE)
+  }
+
   if (details) {
     return( list( density = density,
                   regions = regions,

@@ -39,3 +39,29 @@ test_that("ptweedie_series handles vector mu and phi", {
   expect_equal(v, s)
   expect_silent(ptweedie_series(c(0.5, 1, 2), power = 1.5, mu = c(1, 1, 1), phi = 1))
 })
+
+test_that("p near 1 with small phi: no longer converges falsely (was silently wrong)", {
+  # The convergence test used the integrand's value at a zero (~0 by
+  # construction) instead of its amplitude, and stopped after 4 regions with
+  # F wrong by ~0.02 and exitstatus = 0. The series is the reference here.
+  for (z in list(c(0.3, 0.001, 1.05), c(0.05, 0.01, 1.01), c(0.3, 0.01, 1.2))) {
+    o <- suppressWarnings(ptweedie_inversion(z[1], mu = 1, phi = z[2], power = z[3], details = TRUE))
+    s <- as.numeric(ptweedie_series(z[1], mu = 1, phi = z[2], power = z[3]))
+    expect_true(abs(o$cdf - s) < 1e-6 || o$exitstatus == 1L)   # accurate, or else flagged
+  }
+  # and this one, from an earlier fix, must still converge quickly
+  o <- ptweedie_inversion(1, mu = 5, phi = 2, power = 1.01, details = TRUE)
+  expect_lt(o$regions, 50)
+  expect_equal(o$cdf, as.numeric(ptweedie_series(1, mu = 5, phi = 2, power = 1.01)), tolerance = 1e-8)
+})
+
+test_that("non-convergence is reported by a warning, not only through exitstatus", {
+  expect_warning(ptweedie(0.999, mu = 1, phi = 1e-6, power = 2.5),
+                 "did not reach the target accuracy")
+  expect_warning(o <- ptweedie_inversion(0.999, mu = 1, phi = 1e-6, power = 2.5, details = TRUE),
+                 "did not reach the target accuracy")
+  expect_equal(o$exitstatus, 1L)
+  # no warning when everything converges
+  expect_silent(ptweedie(c(0.5, 1, 2), mu = 1, phi = 1, power = 2.5))
+  expect_silent(dtweedie(c(0.5, 1, 2), mu = 1, phi = 1, power = 1.5))
+})

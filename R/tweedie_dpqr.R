@@ -376,15 +376,20 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
       use_inv <- id.series & is.nan(density)
       if (any(use_inv)) {
         if (verbose) cat("- Series unreliable for", sum(use_inv), "value(s): using inversion\n")
-        density[use_inv] <- dtweedie_inversion(y = y[use_inv],
-                                               mu = mu[use_inv],
-                                               phi = phi[use_inv],
-                                               power = power)
-        # Last resort: if the inversion also fails, use the saddlepoint
+        inv_out <- suppressWarnings(
+                     dtweedie_inversion(y = y[use_inv],
+                                        mu = mu[use_inv],
+                                        phi = phi[use_inv],
+                                        power = power,
+                                        details = TRUE) )
+        density[use_inv] <- inv_out$density
+        not_conv <- rep(FALSE, length(density))
+        not_conv[use_inv] <- (inv_out$exitstatus == 1L)
+        # Last resort: if the inversion also fails (NaN, or not converged), use the saddlepoint
         # approximation where it is accurate (relative error O(xi), so for
         # xi small). This covers e.g. extremely small y with large p, where
         # the density underflows to 0.
-        use_sad <- use_inv & is.nan(density) & (xi < 0.01)
+        use_sad <- use_inv & (is.nan(density) | not_conv) & (xi < 0.01)
         if (any(use_sad)) {
           if (verbose) cat("- Inversion failed for", sum(use_sad), "value(s) with small xi: using saddlepoint\n")
           # Saddlepoint density for p > 2, on the log scale: when y^(2-p)
@@ -394,6 +399,12 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
           density[use_sad] <- exp( -0.5 * log(2 * pi * phi[use_sad]) -
                                     (power / 2) * log(y[use_sad]) -
                                     dev_sad / (2 * phi[use_sad]) )
+          not_conv[use_sad] <- FALSE
+        }
+        n_bad <- sum(not_conv)
+        if (n_bad > 0) {
+          warning("dtweedie: the computation did not reach the target accuracy for ", n_bad,
+                  " value(s); these may be inaccurate.", call. = FALSE)
         }
       }
     }
@@ -489,15 +500,21 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       if ( any(!special_y_cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
         
-        f_TMP <- ptweedie_inversion(q          = q[!special_y_cases],
-                                    mu         = mu[!special_y_cases],
-                                    phi        = phi[!special_y_cases],
-                                    power      = power,
-                                    lower.tail = lower.tail,
-                                    log.p      = log.p,
-                                    verbose    = verbose,
-                                    details    = FALSE)
-        f[!special_y_cases] <- f_TMP
+        f_TMP <- suppressWarnings(
+                   ptweedie_inversion(q          = q[!special_y_cases],
+                                      mu         = mu[!special_y_cases],
+                                      phi        = phi[!special_y_cases],
+                                      power      = power,
+                                      lower.tail = lower.tail,
+                                      log.p      = log.p,
+                                      verbose    = verbose,
+                                      details    = TRUE) )
+        f[!special_y_cases] <- f_TMP$cdf
+        n_bad <- sum(f_TMP$exitstatus == 1L)
+        if (n_bad > 0) {
+          warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
+                  " value(s); these may be inaccurate.", call. = FALSE)
+        }
       }
     } else {
       # CASE 1 < p < 2
@@ -546,14 +563,15 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       
       if ( any(!special_y_cases)) {
         if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
-        f_TMP <- ptweedie_inversion(q       = q[!special_y_cases], 
-                                    mu         = mu[!special_y_cases], 
-                                    phi        = phi[!special_y_cases],
-                                    power      = power,
-                                    lower.tail = lower.tail,
-                                    log.p      = log.p,
-                                    verbose    = verbose,
-                                    details    = TRUE)
+        f_TMP <- suppressWarnings(
+                   ptweedie_inversion(q       = q[!special_y_cases], 
+                                      mu         = mu[!special_y_cases], 
+                                      phi        = phi[!special_y_cases],
+                                      power      = power,
+                                      lower.tail = lower.tail,
+                                      log.p      = log.p,
+                                      verbose    = verbose,
+                                      details    = TRUE) )
         f[!special_y_cases] <- f_TMP$cdf
         
         # Where the inversion fails (NaN, or not converged), use the series:
@@ -572,6 +590,12 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                               power      = power,
                                               lower.tail = lower.tail,
                                               log.p      = log.p) )
+        }
+        # Anything the inversion could not do, and the series could not rescue
+        n_bad <- sum( (is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)) & !use_ser )
+        if (n_bad > 0) {
+          warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
+                  " value(s); these may be inaccurate.", call. = FALSE)
         }
       }
     }  

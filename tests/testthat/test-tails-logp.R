@@ -41,8 +41,10 @@ test_that("lower.tail and upper.tail sum to 1 (ptweedie_inversion directly)", {
   
   for (i in seq_len(nrow(cases))) {
     p <- cases$power[i]; m <- cases$mu[i]; f <- cases$phi[i]
-    lo_full <- ptweedie_inversion(y, power = p, mu = m, phi = f, lower.tail = TRUE)
-    hi_full <- ptweedie_inversion(y, power = p, mu = m, phi = f, lower.tail = FALSE)
+    # Some of these hit the region cap and are flagged (with a warning) even
+    # though the values are accurate; this test checks consistency only.
+    lo_full <- suppressWarnings(ptweedie_inversion(y, power = p, mu = m, phi = f, lower.tail = TRUE))
+    hi_full <- suppressWarnings(ptweedie_inversion(y, power = p, mu = m, phi = f, lower.tail = FALSE))
     
     # Known limitation (see "KNOWN LIMITATION" test below): extreme upper-tail
     # values can be slightly negative for p near 1 with small mu/phi at large y.
@@ -269,8 +271,8 @@ test_that("exitstatus flags non-convergence when it genuinely occurs", {
   # A deliberately awkward corner of the parameter space; this is a smoke
   # test that exitstatus is a valid 0/1 vector, not a check for a specific
   # failure, since failure cases may change as the algorithm is refined.
-  out <- ptweedie_inversion(c(0.001, 1, 1000), mu = 0.01, phi = 0.01, power = 6,
-                            details = TRUE)
+  out <- suppressWarnings(ptweedie_inversion(c(0.001, 1, 1000), mu = 0.01, phi = 0.01, power = 6,
+                                             details = TRUE))
   expect_true(all(out$exitstatus %in% c(0L, 1L)))
 })
 
@@ -291,8 +293,10 @@ test_that("KNOWN LIMITATION: extreme upper tail can return small negative values
   # silently returned a small negative value with exitstatus=0. It now
   # correctly flags non-convergence (exitstatus=1) rather than returning an
   # unreliable value silently -- this is the intended effect of that fix.
-  hi <- ptweedie_inversion(20, power = 1.01, mu = 0.5, phi = 0.5,
-                           lower.tail = FALSE, details = TRUE)
+  # ...and it now also warns, so the failure is visible without details = TRUE.
+  expect_warning(hi <- ptweedie_inversion(20, power = 1.01, mu = 0.5, phi = 0.5,
+                                          lower.tail = FALSE, details = TRUE),
+                 "did not reach the target accuracy")
   expect_true(hi$exitstatus == 1)
 })
 

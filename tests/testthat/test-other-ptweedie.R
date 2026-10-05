@@ -13,8 +13,10 @@ test_that("No common errors", {
   expect_no_error(
     ptweedie_inversion(0.095095, mu = 1, phi = 1, power = 4.5, verbose=FALSE) 
   )
+  # This one does not converge (effective dispersion phi*mu^(p-2) = 1e-10)
+  # and now says so with a warning; the test only checks it does not error.
   expect_no_error(
-    ptweedie_inversion(0.001, mu = 0.01, phi = 0.01, power = 6, verbose=FALSE)
+    suppressWarnings(ptweedie_inversion(0.001, mu = 0.01, phi = 0.01, power = 6, verbose=FALSE))
   )
   expect_no_error(
     ptweedie_inversion(0.001, mu = 5, phi = 0.01, power = 6, verbose=FALSE) 
@@ -23,7 +25,7 @@ test_that("No common errors", {
     ptweedie_inversion(0.075075, mu = 1, phi = 1, power = 4.5, verbose=FALSE)  
   )
   expect_no_error(
-    ptweedie_inversion(0.001, power = 6, mu = 0.01, phi = 0.01)  
+    suppressWarnings(ptweedie_inversion(0.001, power = 6, mu = 0.01, phi = 0.01))
   )
   expect_no_error(
    ptweedie_inversion(0.001, phi = 10, p = 1.01, mu = 5)

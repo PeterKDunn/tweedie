@@ -193,6 +193,13 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
     }
   }
   
+  n_bad <- sum(exitstatus_out == 1L)
+  if (n_bad > 0) {
+    warning("ptweedie_inversion: the numerical integration did not reach the target accuracy for ", n_bad,
+            " of ", length(exitstatus_out), " value(s); these may be inaccurate ",
+            "(use details = TRUE to see which: exitstatus = 1).", call. = FALSE)
+  }
+
   if (details) {
     return( list( cdf = cdf,
                   regions = regions,

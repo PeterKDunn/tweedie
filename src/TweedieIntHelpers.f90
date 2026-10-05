@@ -35,6 +35,7 @@ CONTAINS
     INTEGER(C_INT)        :: nmax
     REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, Imk, lambda
     REAL(KIND=C_DOUBLE)   :: condEnvelope, logTail, tailTol
+    REAL(KIND=C_DOUBLE)   :: wRe, wIm, eRe, eIm
     LOGICAL(C_BOOL)       :: errorHere
     
     ! NOTE: 
@@ -154,7 +155,24 @@ CONTAINS
         error = .TRUE.
         RETURN
       END IF
-      condEnvelope = DABS( DEXP(Rek)*DSIN(Imk) + DEXP(-lambda)*DSIN(zeroL*current_y) )
+      ! Use the AMPLITUDE of the oscillation, not the integrand's value here:
+      ! zeroL is (close to) a zero of the integrand, so its value there is ~0
+      ! whatever the amplitude, which made convergence look reached after a
+      ! few regions (e.g. p = 1.05, phi = 0.001: declared converged at t = 22,
+      ! where |exp(k(t))| is still ~0.6; F was then wrong by ~2e-2, unflagged).
+      !
+      ! With K(t) = k(t) + i t y, the numerator of the integrand is
+      !   Im or Re of  (exp(K) - exp(-lambda)) * exp(-i t y),
+      ! and K(t) -> -lambda as t -> infinity, so the two parts cancel. Its
+      ! amplitude is therefore  exp(-lambda) * |exp(w) - 1|,
+      !   w = (Re k + lambda) + i (Im k + t y),
+      ! computed without cancellation as
+      !   Re(exp(w) - 1) = expm1(a) cos(b) - 2 sin^2(b/2),  Im = exp(a) sin(b).
+      wRe = Rek + lambda
+      wIm = Imk + zeroL * current_y
+      eRe = expm1Local(wRe) * DCOS(wIm) - 2.0_C_DOUBLE * DSIN(0.5_C_DOUBLE * wIm)**2
+      eIm = DEXP(wRe) * DSIN(wIm)
+      condEnvelope = DEXP(-lambda) * DSQRT(eRe*eRe + eIm*eIm)
     ELSE
       condEnvelope = DEXP(Rek)
     END IF
@@ -209,6 +227,23 @@ CONTAINS
     IF (converged_Pre) stop_PreAccelerate = .TRUE.
 
   END SUBROUTINE checkStopPreAcc
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+  PURE FUNCTION expm1Local(x) RESULT(v)
+    ! exp(x) - 1, accurate also for small |x|
+    REAL(KIND=C_DOUBLE), INTENT(IN) :: x
+    REAL(KIND=C_DOUBLE)             :: v, u
+    IF (DABS(x) .GT. 1.0E-5_C_DOUBLE) THEN
+      v = DEXP(x) - 1.0_C_DOUBLE
+    ELSE
+      ! Taylor series: x + x^2/2 + x^3/6 is exact to double precision here
+      u = x
+      v = u * (1.0_C_DOUBLE + u * (0.5_C_DOUBLE + u / 6.0_C_DOUBLE))
+    END IF
+  END FUNCTION expm1Local
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
