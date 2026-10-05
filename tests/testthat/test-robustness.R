@@ -13,8 +13,9 @@ test_that("ptweedie upper tail at y <= 0 is 1 when there is no mass there", {
 
 test_that("dtweedie with very large p and tiny y returns 0, not an error", {
   # y^(2-p) overflows, so the deviance is Inf and the density is 0
-  expect_equal(dtweedie(1e-10, mu = 1, phi = 1, power = 50), 0)
-  expect_equal(dtweedie(1e-10, mu = 1e3, phi = 1e3, power = 50), 0)
+  expect_silent(f1 <- dtweedie(1e-10, mu = 1, phi = 1, power = 50))
+  expect_silent(f2 <- dtweedie(1e-10, mu = 1e3, phi = 1e3, power = 50))
+  expect_equal(c(f1, f2), c(0, 0))
 })
 
 test_that("ptweedie far in the upper tail (1 < p < 2) is not NaN", {

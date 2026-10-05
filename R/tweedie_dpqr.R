@@ -385,21 +385,31 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
         density[use_inv] <- inv_out$density
         not_conv <- rep(FALSE, length(density))
         not_conv[use_inv] <- (inv_out$exitstatus == 1L)
-        # Last resort: if the inversion also fails (NaN, or not converged), use the saddlepoint
-        # approximation where it is accurate (relative error O(xi), so for
-        # xi small). This covers e.g. extremely small y with large p, where
-        # the density underflows to 0.
+        # Last resort: if the inversion also fails (NaN, or not converged), use the
+        # saddlepoint approximation where xi = phi y^(p-2) < 0.01. Its relative
+        # error is roughly proportional to xi, with a constant that grows with p
+        # (measured: ~5e-4 at p = 2.5, ~4e-3 at p = 5, ~3e-2 at p = 12, all at
+        # xi = 0.01). Since dtweedie() only uses the series for p <= 10 when xi
+        # is large, in practice this applies only for p > 10. It is computed on
+        # the log scale: when y^(2-p) overflows, the deviance is Inf and the
+        # direct formula gives Inf * 0 = NaN, whereas the density is 0.
+        # A warning is given, except where the density underflows to 0 (then the
+        # result is 0 whatever the approximation's relative error).
         use_sad <- use_inv & (is.nan(density) | not_conv) & (xi < 0.01)
         if (any(use_sad)) {
           if (verbose) cat("- Inversion failed for", sum(use_sad), "value(s) with small xi: using saddlepoint\n")
-          # Saddlepoint density for p > 2, on the log scale: when y^(2-p)
-          # overflows the deviance is Inf, and the direct formula gives
-          # Inf * 0 = NaN, whereas the density is 0.
           dev_sad <- tweedie_dev(power = power, mu = mu[use_sad], y = y[use_sad])
-          density[use_sad] <- exp( -0.5 * log(2 * pi * phi[use_sad]) -
-                                    (power / 2) * log(y[use_sad]) -
-                                    dev_sad / (2 * phi[use_sad]) )
+          logf_sad <- -0.5 * log(2 * pi * phi[use_sad]) -
+                       (power / 2) * log(y[use_sad]) -
+                       dev_sad / (2 * phi[use_sad])
+          density[use_sad] <- exp(logf_sad)
           not_conv[use_sad] <- FALSE
+          n_sad <- sum(logf_sad > -740)
+          if (n_sad > 0) {
+            warning("dtweedie: the series and the Fourier inversion both failed for ", n_sad,
+                    " value(s); the saddlepoint approximation was used for these instead ",
+                    "(relative error roughly proportional to phi * y^(power - 2)).", call. = FALSE)
+          }
         }
         n_bad <- sum(not_conv)
         if (n_bad > 0) {
