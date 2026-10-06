@@ -536,10 +536,17 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
           if (verbose) cat("- Small tail probabilities:", sum(small), "value(s) recomputed by integrating the density\n")
           for (k in which(small)) {
             j <- idx[k]
-            ti <- ptweedie_tail_integrate(q = q[j], mu = mu[j], phi = phi[j],
-                                          power = power, lower.tail = lower.tail)
+            ti <- ptweedie_tail_integrate(q = q[j], 
+                                          mu = mu[j], 
+                                          phi = phi[j],
+                                          power = power, 
+                                          lower.tail = lower.tail)
             if (ti$ok) {
-              f[j] <- if (log.p) ti$logp else exp(ti$logp)
+              f[j] <- if (log.p) {
+                ti$logp 
+              } else {
+                 exp(ti$logp)
+              }
               not_conv[k] <- FALSE
             } else {
               not_rel[k] <- TRUE
