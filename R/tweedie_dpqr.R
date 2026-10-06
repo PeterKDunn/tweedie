@@ -611,36 +611,22 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       #  }
       #} else{
       
+      # Since 2026 the SERIES is used first. For 1 < p < 2 it sums positive
+      # terms (no cancellation), and its summation limits follow the largest
+      # terms into either tail, so it has full relative accuracy everywhere it
+      # can be used; it is also faster than the inversion unless lambda is very
+      # large. The inversion, by contrast, has only absolute accuracy, and can be
+      # silently wrong (errors to about 1e-2) when the point mass at zero is
+      # large (small lambda) and p is near 1. So:
+      #  - lambda <= 1e5: use the series (well within its cap of 1e6 terms);
+      #  - lambda >  1e5, or where the series fails: use the inversion.
       if ( any(!special_y_cases)) {
-        if (verbose) cat("- With 1 < p < 2: use inversion TEMPORARILY")
-        f_TMP <- suppressWarnings(
-                   ptweedie_inversion(q          = q[!special_y_cases], 
-                                      mu         = mu[!special_y_cases], 
-                                      phi        = phi[!special_y_cases],
-                                      power      = power,
-                                      lower.tail = lower.tail,
-                                      log.p      = log.p,
-                                      verbose    = verbose,
-                                      details    = TRUE) )
-        f[!special_y_cases] <- f_TMP$cdf
-        
-        # Use the series where the inversion fails (NaN, or not converged), and
-        # also where the requested tail is small (below 1e-5): the inversion's
-        # error is ABSOLUTE (about 1e-15), so its relative error can exceed about
-        # 1e-10 below this, whereas the series sums positive terms and keeps its
-        # relative accuracy far into either tail. (The series is cheap, so the
-        # threshold can be generous; for p > 2 the alternative, integrating the
-        # density, is costly, so 1e-10 is used there.) The series is used only
-        # when lambda is well within its limit of 1e6 terms.
-        idx      <- which(!special_y_cases)
-        lambda   <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
-        failed   <- is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)
-        tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
-        small    <- !is.na(tail_lin) & (tail_lin < 1e-5)
-        use_ser  <- (failed | small) & (lambda <= 1e5)
+        idx    <- which(!special_y_cases)
+        lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
+        use_ser <- (lambda <= 1e5)
+
         if (any(use_ser)) {
-          if (verbose) cat("- Using the series for", sum(use_ser),
-                           "value(s) (inversion failed, or small tail probability)\n")
+          if (verbose) cat("- With 1 < p < 2: using the series for", sum(use_ser), "value(s)\n")
           j <- idx[use_ser]
           f[j] <- as.numeric( ptweedie_series(q          = q[j],
                                               mu         = mu[j],
@@ -648,19 +634,41 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                               power      = power,
                                               lower.tail = lower.tail,
                                               log.p      = log.p) )
+          # In case the series could not be evaluated, fall back to the inversion
+          use_ser[use_ser] <- !is.na(f[j])
         }
-        # Anything the inversion could not do, and the series could not rescue
-        n_bad <- sum( failed & !use_ser )
-        if (n_bad > 0) {
-          warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
-                  " value(s); these may be inaccurate.", call. = FALSE)
-        }
-        # Small tail probabilities the series could not take over (lambda too large)
-        n_rel <- sum( small & !failed & !use_ser )
-        if (n_rel > 0) {
-          warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
-                  "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
-                  call. = FALSE)
+
+        use_inv <- !use_ser
+        if (any(use_inv)) {
+          if (verbose) cat("- With 1 < p < 2: using the inversion for", sum(use_inv), "value(s)\n")
+          j <- idx[use_inv]
+          f_TMP <- suppressWarnings(
+                     ptweedie_inversion(q          = q[j],
+                                        mu         = mu[j],
+                                        phi        = phi[j],
+                                        power      = power,
+                                        lower.tail = lower.tail,
+                                        log.p      = log.p,
+                                        verbose    = verbose,
+                                        details    = TRUE) )
+          f[j] <- f_TMP$cdf
+
+          failed <- is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)
+          n_bad  <- sum(failed)
+          if (n_bad > 0) {
+            warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
+                    " value(s); these may be inaccurate.", call. = FALSE)
+          }
+          # The inversion's error is ABSOLUTE (about 1e-15): small tail
+          # probabilities have little relative accuracy, and here the series
+          # cannot take over (lambda too large)
+          tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
+          n_rel <- sum( !failed & !is.na(tail_lin) & (tail_lin < 1e-5) )
+          if (n_rel > 0) {
+            warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
+                    "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
+                    call. = FALSE)
+          }
         }
       }
     }  
