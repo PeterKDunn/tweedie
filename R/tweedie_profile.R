@@ -91,7 +91,7 @@
 #'                        line_arg = list(lwd = 2))
 #'
 #' # The estimate for the variance power index (p, or xi) is:
-#' out$p.max
+#' out$xi.max
 #' 
 #' @importFrom graphics lines rug points par mtext abline axis  points
 #' @importFrom stats contrasts fitted optimize glm.fit splinefun glm.control deviance deviance uniroot
