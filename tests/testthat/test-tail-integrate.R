@@ -30,3 +30,29 @@ test_that("ptweedie is unchanged where the tail is not small", {
   expect_identical(ptweedie(y, mu = 1, phi = 1, power = 2.5),
                    suppressWarnings(ptweedie_inversion(y, mu = 1, phi = 1, power = 2.5)))
 })
+
+test_that("upper tails for p > 2 (Gauss-Laguerre path) match the exact inverse Gaussian", {
+  # The general algorithm (IGexact = FALSE) against statmod::pinvgauss, for
+  # upper-tail probabilities from 1e-10 down to about 1e-290
+  cases <- expand.grid(q = c(5, 10, 20, 50, 100, 150, 300), mu = c(0.5, 1.4, 5), phi = c(0.1, 0.74, 2))
+  cases$exact <- statmod::pinvgauss(cases$q, cases$mu, dispersion = cases$phi, lower.tail = FALSE)
+  cases <- cases[cases$exact < 1e-10 & cases$exact > 1e-300, ]
+  expect_gt(nrow(cases), 20)
+  for (i in seq_len(nrow(cases))) {
+    r <- tweedie:::ptweedie_tail_integrate(cases$q[i], cases$mu[i], cases$phi[i], 3,
+                                           lower.tail = FALSE, IGexact = FALSE)
+    expect_true(r$ok)
+    expect_lt(abs(expm1(r$logp - log(cases$exact[i]))), 1e-10)
+  }
+})
+
+test_that("upper tails for p > 2 need few density evaluations", {
+  # Gauss-Laguerre with 10 and 20 nodes: 30 evaluations, plus one at q
+  n <- 0
+  trace("dtweedie_inversion", function() n <<- n + length(get("y", parent.frame())),
+        print = FALSE, where = asNamespace("tweedie"))
+  on.exit(untrace("dtweedie_inversion", where = asNamespace("tweedie")))
+  r <- tweedie:::ptweedie_tail_integrate(150, 1.4, 0.74, 3, lower.tail = FALSE, IGexact = FALSE)
+  expect_true(r$ok)
+  expect_lte(n, 31)
+})

@@ -58,6 +58,38 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
                  ok = TRUE) )
   }
 
+  # UPPER TAIL: Gauss-Laguerre quadrature.
+  # Beyond q the density decays roughly like exp(-r (t - q)), where
+  #   r = |mu^(1-p) - q^(1-p)| / (phi (p - 1))
+  # is the local decay rate of the log density (from the saddlepoint form,
+  # log f ~ -d(t, mu)/(2 phi)). With t = q + x/r,
+  #   Pr(Y > q) = (1/r) int_0^Inf exp(-x) [exp(x) f(q + x/r)] dx,
+  # which is the form Gauss-Laguerre quadrature is built for: n nodes give
+  # S ~ (1/r) sum_i w_i exp(x_i) f(q + x_i/r). Rules of 10 and 20 nodes are
+  # compared, and the result is accepted only if they agree to 1e-10; this
+  # needs 30 density evaluations instead of the several hundred used by the
+  # piecewise adaptive integration below, which remains the fallback.
+  if (!lower.tail) {
+    r_gl <- abs(mu^(1 - power) - q^(1 - power)) / (phi * (power - 1))
+    if ( is.finite(r_gl) && (r_gl > 0) ) {
+      gl_logS <- function(n) {
+        gq <- statmod::gauss.quad(n, kind = "laguerre")
+        d  <- dens(q + gq$nodes / r_gl)
+        if ( any(d$exitstatus != 0L) || any(!is.finite(d$density)) || any(d$density < 0) ) return(NA_real_)
+        lt <- log(gq$weights) + gq$nodes + log(d$density)   # log of each term
+        m  <- max(lt)
+        if (!is.finite(m)) return(NA_real_)
+        m + log(sum(exp(lt - m))) - log(r_gl)
+      }
+      l10 <- gl_logS(10L)
+      l20 <- gl_logS(20L)
+      if ( is.finite(l10) && is.finite(l20) && (abs(expm1(l10 - l20)) < 1e-10) ) {
+        return( list(logp = l20, ok = TRUE) )
+      }
+      # otherwise fall through to the adaptive integration
+    }
+  }
+
   # The tail mass lies within a few multiples of 1/r of q, where r is the
   # local decay rate of the log density, |d/dy log f|, taken from the
   # saddlepoint form (log f ~ -d(y, mu)/(2 phi)):
