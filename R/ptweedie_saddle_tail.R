@@ -16,7 +16,12 @@ ptweedie_saddle_tail <- function(q, mu, phi, power, lower.tail = TRUE) {
   
   ratio <- abs(corr_term / leading)   # diagnostic: should be << 1 for a trustworthy result
   
-  if (!lower.tail) Fy <- 1 - Fy
+  if (lower.tail) {
+    Fy <- stats::pnorm(w) + stats::dnorm(w) * (1/w - 1/u)
+  } else {
+    Fy <- stats::pnorm(w, lower.tail = FALSE) - stats::dnorm(w) * (1/w - 1/u)
+  }
   
-  list(cdf = Fy, ratio = ratio)
+  list(cdf = Fy, 
+       ratio = ratio)
 }
