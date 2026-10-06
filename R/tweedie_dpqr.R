@@ -628,8 +628,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # for 1 < p < 2 it sums positive terms, so it is reliable, provided
         # lambda is well within its limit of 1e6 terms. (E.g. far in the upper
         # tail the inversion can return NaN, while the series gives ~0.)
-        idx <- which(!special_y_cases)
-        lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
+        idx     <- which(!special_y_cases)
+        lambda  <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
         use_ser <- (is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1)) & (lambda <= 1e5)
         if (any(use_ser)) {
           if (verbose) cat("- Inversion failed for", sum(use_ser), "value(s): using the series\n")
