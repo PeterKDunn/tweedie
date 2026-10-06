@@ -24,3 +24,13 @@ test_that("series keeps relative accuracy far in the lower tail", {
 test_that("series warns when truncated at the term cap", {
   expect_warning(ptweedie_series(1, mu = 1, phi = 1e-4, power = 1.99), "truncated")
 })
+
+test_that("series follows rising terms below the Poisson range (far lower tail, large lambda)", {
+  # lambda ~ 105: the Poisson range starts near N = 40, but the terms that
+  # matter are at small N; the point mass exp(-lambda) ~ 2e-46 is far smaller.
+  # References: 50-digit series and 50-digit inversion, agreeing to 28+ digits.
+  expect_equal(ptweedie_series(0.05, mu = 1, phi = 0.01, power = 1.05),
+               5.3770368198611647265e-38, tolerance = 1e-12)
+  expect_equal(ptweedie_series(0.05, mu = 1, phi = 0.01, power = 1.2),
+               2.145118266660732397e-42, tolerance = 1e-12)
+})

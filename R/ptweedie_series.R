@@ -158,11 +158,17 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   log_atom <- if (lower.tail) -lambda else -Inf
   rowmax <- function(M) pmax(apply(M, 1, max), log_atom)
   negligible <- function(col, rm) all( !is.finite(rm) | !(col > rm - drop) )
+  # Terms still rising towards the end of the range (in any row) mean the
+  # largest terms lie beyond it, even if the end term itself is small (e.g.
+  # far in the lower tail with large lambda, where the terms that matter are
+  # at small N while the range starts near N = lambda)
+  rising <- function(end, nxt) any( is.finite(end) & (end > nxt) )
 
   # widen upwards
   repeat {
     rm <- rowmax(M)
-    if (negligible(M[, ncol(M)], rm)) break
+    k <- ncol(M)
+    if ( negligible(M[, k], rm) && !(k > 1 && rising(M[, k], M[, k - 1])) ) break
     if (N_hi >= max_terms) { capped <- TRUE; break }
     step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
     new_N <- (N_hi + 1):min(max_terms, N_hi + step)
@@ -172,7 +178,8 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # widen downwards
   repeat {
     rm <- rowmax(M)
-    if ( (N_lo <= 1) || negligible(M[, 1], rm) ) break
+    if ( N_lo <= 1 ) break
+    if ( negligible(M[, 1], rm) && !(ncol(M) > 1 && rising(M[, 1], M[, 2])) ) break
     step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
     new_N <- max(1, N_lo - step):(N_lo - 1)
     M     <- cbind(log_terms(new_N), M)
