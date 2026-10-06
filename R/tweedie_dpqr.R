@@ -624,15 +624,23 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                       details    = TRUE) )
         f[!special_y_cases] <- f_TMP$cdf
         
-        # Where the inversion fails (NaN, or not converged), use the series:
-        # for 1 < p < 2 it sums positive terms, so it is reliable, provided
-        # lambda is well within its limit of 1e6 terms. (E.g. far in the upper
-        # tail the inversion can return NaN, while the series gives ~0.)
-        idx     <- which(!special_y_cases)
-        lambda  <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
-        use_ser <- (is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1)) & (lambda <= 1e5)
+        # Use the series where the inversion fails (NaN, or not converged), and
+        # also where the requested tail is small (below 1e-5): the inversion's
+        # error is ABSOLUTE (about 1e-15), so its relative error can exceed about
+        # 1e-10 below this, whereas the series sums positive terms and keeps its
+        # relative accuracy far into either tail. (The series is cheap, so the
+        # threshold can be generous; for p > 2 the alternative, integrating the
+        # density, is costly, so 1e-10 is used there.) The series is used only
+        # when lambda is well within its limit of 1e6 terms.
+        idx      <- which(!special_y_cases)
+        lambda   <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
+        failed   <- is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)
+        tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
+        small    <- !is.na(tail_lin) & (tail_lin < 1e-5)
+        use_ser  <- (failed | small) & (lambda <= 1e5)
         if (any(use_ser)) {
-          if (verbose) cat("- Inversion failed for", sum(use_ser), "value(s): using the series\n")
+          if (verbose) cat("- Using the series for", sum(use_ser),
+                           "value(s) (inversion failed, or small tail probability)\n")
           j <- idx[use_ser]
           f[j] <- as.numeric( ptweedie_series(q          = q[j],
                                               mu         = mu[j],
@@ -642,10 +650,17 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                               log.p      = log.p) )
         }
         # Anything the inversion could not do, and the series could not rescue
-        n_bad <- sum( (is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)) & !use_ser )
+        n_bad <- sum( failed & !use_ser )
         if (n_bad > 0) {
           warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
                   " value(s); these may be inaccurate.", call. = FALSE)
+        }
+        # Small tail probabilities the series could not take over (lambda too large)
+        n_rel <- sum( small & !failed & !use_ser )
+        if (n_rel > 0) {
+          warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
+                  "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
+                  call. = FALSE)
         }
       }
     }  
