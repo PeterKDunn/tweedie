@@ -520,10 +520,43 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                       verbose    = verbose,
                                       details    = TRUE) )
         f[!special_y_cases] <- f_TMP$cdf
-        n_bad <- sum(f_TMP$exitstatus == 1L)
+        not_conv <- (f_TMP$exitstatus == 1L)
+        
+        # The inversion's error is ABSOLUTE (about 1e-15), so a small tail
+        # probability has little or no relative accuracy. Where the requested
+        # tail is below 1e-10, recompute it by integrating the density, which
+        # keeps its relative accuracy far into the tails (see
+        # ptweedie_tail_integrate). Values that cannot be recomputed keep the
+        # inversion result and are reported below.
+        idx     <- which(!special_y_cases)
+        tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
+        small   <- is.na(tail_lin) | (tail_lin < 1e-10)
+        not_rel <- rep(FALSE, length(idx))
+        if (any(small)) {
+          if (verbose) cat("- Small tail probabilities:", sum(small), "value(s) recomputed by integrating the density\n")
+          for (k in which(small)) {
+            j <- idx[k]
+            ti <- ptweedie_tail_integrate(q = q[j], mu = mu[j], phi = phi[j],
+                                          power = power, lower.tail = lower.tail)
+            if (ti$ok) {
+              f[j] <- if (log.p) ti$logp else exp(ti$logp)
+              not_conv[k] <- FALSE
+            } else {
+              not_rel[k] <- TRUE
+            }
+          }
+        }
+        
+        n_bad <- sum(not_conv & !not_rel)
         if (n_bad > 0) {
           warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
                   " value(s); these may be inaccurate.", call. = FALSE)
+        }
+        n_rel <- sum(not_rel)
+        if (n_rel > 0) {
+          warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
+                  "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
+                  call. = FALSE)
         }
       }
     } else {
