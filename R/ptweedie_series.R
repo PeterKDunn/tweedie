@@ -114,13 +114,6 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   hi.N <- max( ceiling(N) )
   if (verbose) cat("Summing over", lo.N, "to", hi.N, "\n")
   
-  # Add a safety check:
-  hi.N <- min(hi.N, 1e6)
-  if (hi.N < lo.N) hi.N <- lo.N
-  
-  N_vec <- lo.N : hi.N
-  
-
   # ---- Row-wise log-sum-exp helper: never forms the sum in linear space first ----
   rowLogSumExp <- function(M) {
     m <- apply(M, 1, max)
@@ -132,51 +125,76 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   }
   
   
-  # log of the Poisson weights for N = lo.N, ..., hi.N
-  log_pois <- dpois(N_vec, 
-                    lambda, 
-                    log = TRUE)
-  
-  # log of the incomplete-gamma (via the chi-square relationship already used here),
-  # computed directly on the log scale -- never via log(pchisq(...))
-  df_vec <- -2 * alpha * N_vec
-  x_vec  <-  2 * q / tau
-  
-  
-  # The incomplete Gamma values
-  # We want a matrix where rows = q and columns = N
-  log_incgamma_lower <- outer(x_vec, 
-                              df_vec, 
-                              function(x, df) {stats::pchisq(x, df, log.p = TRUE)} )
-  log_incgamma_upper <- outer(x_vec, 
-                              df_vec, 
-                              function(x, df) {stats::pchisq(x, df, lower.tail = FALSE, log.p = TRUE)})
-  
-  
-  # add the (column-wise) log Poisson weights to each column
-  log_terms_lower <- sweep(log_incgamma_lower, 
-                           2, 
-                           log_pois, "+")
-  log_terms_upper <- sweep(log_incgamma_upper, 
-                           2, 
-                           log_pois, "+")
-  
-  if (!lower.tail) {
-    # Upper tail: S(y) = sum_{N=lo.N}^{hi.N} Pr(N) * Q_G(y; N) -- no atom term,
-    # since P(Y>y | N=0) = 0 for y>0.
-    logS <- rowLogSumExp(log_terms_upper)
-    its <- hi.N - lo.N + 1
-    result <- if (log.p) logS else exp(logS)
-  } else {
-    # Lower tail: F(y) = exp(-lambda) [the N=0 atom] + sum_{N=lo.N}^{hi.N} Pr(N) * F_G(y; N)
-    log_atom <- -lambda
-    # augment with the atom as one extra "term" per row, then logsumexp across all of them
-    augmented <- cbind(log_terms_lower, rep(log_atom, length(q)))
-    logF <- rowLogSumExp(augmented)
-    its <- hi.N - lo.N + 1
-    result <- if (log.p) logF else exp(logF)
+  # The Poisson weights alone do not locate the terms that matter: each term
+  # is T_N = Pr(N) * G(N), where G is the lower (F_G) or upper (Q_G) incomplete
+  # gamma function for the requested tail. Far in the upper tail Q_G grows
+  # quickly with N, so the largest T_N lie beyond the largest Poisson weights;
+  # likewise, far in the lower tail F_G falls quickly with N, so they lie
+  # below them. So start from the Poisson range, then widen it, at either end,
+  # until the terms at the ends are negligible (below exp(-drop)) relative to
+  # the largest term in each row. The total number of terms is capped.
+  max_terms <- 1e6
+  capped <- FALSE
+  if (hi.N > max_terms) {
+    hi.N <- max_terms
+    capped <- TRUE
   }
-  
+  if (hi.N < lo.N) hi.N <- lo.N
+
+  df_of <- function(N) -2 * alpha * N
+  x_vec <- 2 * q / tau
+  log_terms <- function(N) {
+    # Matrix of log T_N: rows = q, columns = N
+    lp <- stats::dpois(N, lambda, log = TRUE)
+    lg <- outer(x_vec, df_of(N),
+                function(x, df) stats::pchisq(x, df, lower.tail = lower.tail, log.p = TRUE))
+    sweep(lg, 2, lp, "+")
+  }
+
+  N_lo <- lo.N
+  N_hi <- hi.N
+  M <- log_terms(N_lo:N_hi)
+  # the N = 0 atom, exp(-lambda), belongs to the lower tail only
+  log_atom <- if (lower.tail) -lambda else -Inf
+  rowmax <- function(M) pmax(apply(M, 1, max), log_atom)
+  negligible <- function(col, rm) all( !is.finite(rm) | !(col > rm - drop) )
+
+  # widen upwards
+  repeat {
+    rm <- rowmax(M)
+    if (negligible(M[, ncol(M)], rm)) break
+    if (N_hi >= max_terms) { capped <- TRUE; break }
+    step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
+    new_N <- (N_hi + 1):min(max_terms, N_hi + step)
+    M     <- cbind(M, log_terms(new_N))
+    N_hi  <- max(new_N)
+  }
+  # widen downwards
+  repeat {
+    rm <- rowmax(M)
+    if ( (N_lo <= 1) || negligible(M[, 1], rm) ) break
+    step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
+    new_N <- max(1, N_lo - step):(N_lo - 1)
+    M     <- cbind(log_terms(new_N), M)
+    N_lo  <- min(new_N)
+  }
+  if (verbose) cat("Summing over", N_lo, "to", N_hi, "\n")
+  if (capped) {
+    warning("ptweedie_series: the series was truncated at ", max_terms,
+            " terms (lambda = ", signif(lambda, 3), " is too large); ",
+            "the result may be inaccurate. Use ptweedie() or ptweedie_inversion() instead.",
+            call. = FALSE)
+  }
+  its <- N_hi - N_lo + 1
+
+  if (lower.tail) {
+    # F(y) = exp(-lambda) [the N = 0 atom] + sum_N Pr(N) F_G(y; N)
+    M <- cbind(M, rep(log_atom, length(q)))
+  }
+  # S(y) = sum_N Pr(N) Q_G(y; N): no atom term, since P(Y > y | N = 0) = 0 for y > 0
+  logP <- rowLogSumExp(M)
+  result <- if (log.p) logP else exp(logP)
+
   if (details) {
     return( list( cdf = result,
                   iterations = its) )
