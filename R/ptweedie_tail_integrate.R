@@ -108,16 +108,26 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
     a <- (2^k - 1) * L
     b <- (2^(k + 1) - 1) * L
     if (lower.tail) {
-      lo <- max(0, q - b); hi <- q - a
+      lo <- max(0, q - b)
+      hi <- q - a
     } else {
-      lo <- q + a;         hi <- q + b
+      lo <- q + a
+      hi <- q + b
     }
-    piece <- tryCatch(stats::integrate(g, lower = lo, upper = hi,
-                                       rel.tol = 1e-10, abs.tol = 0, subdivisions = 200L),
+    piece <- tryCatch(stats::integrate(g, 
+                                       lower = lo, 
+                                       upper = hi,
+                                       rel.tol = 1e-10, 
+                                       abs.tol = 0, 
+                                       subdivisions = 200L),
                       error = function(e) NULL)
-    if (is.null(piece)) { ok <- FALSE; break }
+    if (is.null(piece)) { 
+      ok <- FALSE
+      break 
+    }
     total <- total + piece$value
     err   <- err + piece$abs.error
+    
     if (lower.tail && (lo <= 0)) break                     # reached 0
     if ( (piece$value < 1e-14 * total) && (k >= 2L) ) break # negligible
     k <- k + 1L
@@ -126,7 +136,8 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
       break 
     }
   }
-  out <- list(value = total, abs.error = err)
+  out <- list(value = total, 
+              abs.error = err)
 
   if ( !ok || bad_density || 
        !(out$value > 0) ||
