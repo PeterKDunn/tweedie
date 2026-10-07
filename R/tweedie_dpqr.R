@@ -522,25 +522,39 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         f[!special_y_cases] <- f_TMP$cdf
         not_conv <- (f_TMP$exitstatus == 1L)
         
-        # The inversion's error is ABSOLUTE (about 1e-15), so a small tail
-        # probability has little or no relative accuracy. Where the requested
-        # tail is below 1e-10, recompute it by integrating the density, which
-        # keeps its relative accuracy far into the tails (see
-        # ptweedie_tail_integrate). Values that cannot be recomputed keep the
-        # inversion result and are reported below.
+        # The inversion's error is ABSOLUTE (about 1e-16), so a tail
+        # probability P has a relative error of about 1e-16/P. Where the
+        # requested tail is below 1e-5, recompute it by integrating the
+        # density, which keeps its relative accuracy far into the tails (see
+        # ptweedie_tail_integrate); upper tails use Gauss-Laguerre quadrature,
+        # so this is cheap. Between 1e-10 and 1e-5 the inversion still has
+        # about 6 or more correct digits, so there the integrated value is
+        # used only if it agrees with the inversion to within 1e-12 (absolute),
+        # and otherwise the inversion value is kept, silently. Below 1e-10,
+        # values that cannot be recomputed keep the inversion result and are
+        # reported below.
+        tail_switch <- 1e-5
         idx     <- which(!special_y_cases)
         tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
-        small   <- is.na(tail_lin) | (tail_lin < 1e-10)
+        small   <- is.na(tail_lin) | (tail_lin < tail_switch)
         not_rel <- rep(FALSE, length(idx))
         if (any(small)) {
           if (verbose) cat("- Small tail probabilities:", sum(small), "value(s) recomputed by integrating the density\n")
           for (k in which(small)) {
             j <- idx[k]
+            # Between 1e-10 and 1e-5 only the cheap Gauss-Laguerre rules are
+            # tried, since the inversion value is a good fallback there
+            very_small <- is.na(tail_lin[k]) || (tail_lin[k] < 1e-10)
             ti <- ptweedie_tail_integrate(q = q[j], 
                                           mu = mu[j], 
                                           phi = phi[j],
                                           power = power, 
-                                          lower.tail = lower.tail)
+                                          lower.tail = lower.tail,
+                                          fallback = very_small)
+            if (ti$ok && !very_small &&
+                !(abs(exp(ti$logp) - tail_lin[k]) < 1e-12)) {
+              next   # disagrees with the inversion: keep the inversion value
+            }
             if (ti$ok) {
               f[j] <- if (log.p) {
                 ti$logp 
@@ -548,7 +562,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                  exp(ti$logp)
               }
               not_conv[k] <- FALSE
-            } else {
+            } else if (very_small) {
               not_rel[k] <- TRUE
             }
           }

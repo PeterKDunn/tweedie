@@ -1,5 +1,6 @@
 #' @noRd
-ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE) {
+ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
+                                    fallback = TRUE) {
   # Tail probability for p > 2 by integrating the density; for scalar q, mu, phi.
   #
   # The Fourier inversion gives F(q) = 1/2 -/+ I/pi, with an error that is
@@ -9,12 +10,16 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
   # out exp(-d(y, mu)/(2 phi))). So small tails are computed as
   #   upper: Pr(Y > q)  = f(q) * int_q^Inf f(t)/f(q) dt
   #   lower: Pr(Y <= q) = f(q) * int_0^q   f(t)/f(q) dt
+# (both first by Gauss-Laguerre quadrature; see below).
   # Scaling by f(q) makes the integrand O(1) near q, so that integrate()'s
   # relative tolerance is meaningful however small the tail is.
   #
   # Returns a list:
   #   logp: log of the tail probability (on the log scale, so it cannot underflow)
   #   ok:   TRUE if the density and the integration both succeeded
+  # If fallback = FALSE, only the Gauss-Laguerre rules are tried (cheap); the
+  # slower piecewise adaptive integration is skipped, and ok = FALSE returned
+  # if they fail.
   # (IGexact is passed to dtweedie_inversion; it matters only for p = 3, and
   #  is set to FALSE in the tests to check against the exact inverse Gaussian.)
 
@@ -82,13 +87,50 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
         m + log(sum(exp(lt - m))) - log(r_gl)
       }
       l10 <- gl_logS(10L)
-      l20 <- gl_logS(20L)
+      l20 <- if (is.finite(l10)) gl_logS(20L) else NA_real_
       if ( is.finite(l10) && is.finite(l20) && (abs(expm1(l10 - l20)) < 1e-10) ) {
         return( list(logp = l20, ok = TRUE) )
       }
       # otherwise fall through to the adaptive integration
     }
   }
+
+  # LOWER TAIL: Gauss-Laguerre quadrature after the substitution u = t^(2-p).
+  # As t -> 0 (p > 2), log f(t) ~ -d(t, mu)/(2 phi), and d(t, mu) is
+  # dominated by 2 t^(2-p)/((p-1)(p-2)), so in u the density decays roughly
+  # exponentially, at the local rate
+  #   r_u = (1 - (q/mu)^(p-1)) / (phi (p-1) (p-2))
+  # (the derivative of d/(2 phi) with respect to u, at t = q). With
+  # u = q^(2-p) + x/r_u, t = u^(1/(2-p)) and dt = -t^(p-1)/(p-2) du,
+  #   Pr(Y <= q) = (1/r_u) int_0^Inf exp(-x) [exp(x) f(t) t^(p-1)/(p-2)] dx.
+  # As for the upper tail, rules of 10 and 20 nodes are compared, and the
+  # adaptive integration below is the fallback.
+  if (lower.tail && (q < mu)) {
+    r_u <- (1 - (q / mu)^(power - 1)) / (phi * (power - 1) * (power - 2))
+    u_q <- q^(2 - power)
+    if ( is.finite(r_u) && (r_u > 0) && is.finite(u_q) ) {
+      gl_logF <- function(n) {
+        gq <- statmod::gauss.quad(n, kind = "laguerre")
+        tt <- (u_q + gq$nodes / r_u)^(1 / (2 - power))
+        if ( any(!is.finite(tt)) || any(tt <= 0) ) return(NA_real_)
+        d  <- dens(tt)
+        if ( any(d$exitstatus != 0L) || any(!is.finite(d$density)) || any(d$density < 0) ) return(NA_real_)
+        lt <- log(gq$weights) + gq$nodes + log(d$density) +
+              (power - 1) * log(tt) - log(power - 2)
+        m  <- max(lt)
+        if (!is.finite(m)) return(NA_real_)
+        m + log(sum(exp(lt - m))) - log(r_u)
+      }
+      l10 <- gl_logF(10L)
+      l20 <- if (is.finite(l10)) gl_logF(20L) else NA_real_
+      if ( is.finite(l10) && is.finite(l20) && (abs(expm1(l10 - l20)) < 1e-10) ) {
+        return( list(logp = l20, ok = TRUE) )
+      }
+      # otherwise fall through to the adaptive integration
+    }
+  }
+
+  if (!fallback) return( list(logp = NA_real_, ok = FALSE) )
 
   # The tail mass lies within a few multiples of 1/r of q, where r is the
   # local decay rate of the log density, |d/dy log f|, taken from the
