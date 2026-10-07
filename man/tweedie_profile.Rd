@@ -136,7 +136,7 @@ out <- tweedie_profile(perm~1, data=rock, do.plot=FALSE,
                        line_arg = list(lwd = 2))
 
 # The estimate for the variance power index (p, or xi) is:
-out$p.max
+out$xi.max
 
 }
 \references{
