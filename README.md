@@ -16,7 +16,8 @@ distributions.
 
 Apart from special cases (the normal, Poisson, gamma, inverse Gaussian
 distributions), Tweedie distributions do not have closed-form density
-functions or distribution functions. This package uses fast numerical
+functions or distribution functions. 
+This package uses fast numerical
 algorithms (infinite oscillation integrals; infinite series) to evaluate
 the Tweedie density functions and distribution functions.
 

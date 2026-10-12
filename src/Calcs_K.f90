@@ -33,11 +33,11 @@ CONTAINS
     INTEGER(C_INT), INTENT(IN)          :: i
     LOGICAL(C_BOOL)                     :: error
   
-    REAL(KIND=C_DOUBLE)     :: t_Start_Point, slope_At_Zero
-    REAL(KIND=C_DOUBLE)     :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
-    LOGICAL(C_BOOL)         :: errorHere
-    LOGICAL(C_BOOL)         :: tmaxIsPlaceholder
-    REAL(KIND=C_DOUBLE)     :: mmaxD
+    REAL(KIND=C_DOUBLE)                 :: t_Start_Point, slope_At_Zero
+    REAL(KIND=C_DOUBLE)                 :: aimrerr, tmaxL, tmaxR, ratio, threshold, t_small
+    LOGICAL(C_BOOL)                     :: errorHere
+    LOGICAL(C_BOOL)                     :: tmaxIsPlaceholder
+    REAL(KIND=C_DOUBLE)                 :: mmaxD
     
     ! Grab the relevant scalar values for this iteration:
     current_y    = Cy(i)    ! Access y value for index i
@@ -273,12 +273,12 @@ CONTAINS
         ! by rtsafe on Im k'(t) = 0. Sets failed = .TRUE. if no sign change of
         ! Im k'(t) can be bracketed around the asymptotic value.
         IMPLICIT NONE
-        REAL(KIND=C_DOUBLE), INTENT(OUT) :: tOut
-        LOGICAL(C_BOOL), INTENT(OUT)     :: failed
+        REAL(KIND=C_DOUBLE), INTENT(OUT)  :: tOut
+        LOGICAL(C_BOOL), INTENT(OUT)      :: failed
         
-        REAL(KIND=C_DOUBLE) :: al, Cc, cc0, t0, tL, tR, dL, dR
-        LOGICAL(C_BOOL)     :: errH
-        INTEGER(C_INT)      :: j
+        REAL(KIND=C_DOUBLE)               :: al, Cc, cc0, t0, tL, tR, dL, dR
+        LOGICAL(C_BOOL)                   :: errH
+        INTEGER(C_INT)                    :: j
 
         failed = .TRUE.
         tOut   = threshold
@@ -310,6 +310,7 @@ CONTAINS
           RETURN
         END IF
         failed = .FALSE.
+        
       END SUBROUTINE findTmaxLargeT
 
   
@@ -400,7 +401,7 @@ CONTAINS
         
   
         ! A valid upper bound:
-        ! - must have a negative SLOPE (must be negative)i.e., heading down), *AND*
+        ! - must have a negative SLOPE (must be negative) i.e., heading down), *AND*
         ! - must have a positive vale of kmax (or we may have a local maximum only) 
       
         search_Its = 0
@@ -460,7 +461,6 @@ CONTAINS
             
             RETURN          
           END IF
-
 
           IF ( (slopeR .GT. 0.0E0_C_DOUBLE) .AND.   &
                (Imk_value .GT. 0.0_C_DOUBLE) ) THEN
@@ -560,16 +560,15 @@ CONTAINS
     LOGICAL(C_BOOL), INTENT(IN)         :: left_Of_Max
     LOGICAL(C_BOOL), INTENT(INOUT)      :: error
   
-    REAL(KIND=C_DOUBLE)     :: valueL, valueR, multiplier
-    REAL(KIND=C_DOUBLE)     :: df, valueMid
-    INTEGER(C_INT)          :: maxSearch,its
-    INTEGER(C_INT), PARAMETER :: maxWiden = 2000_C_INT
+    REAL(KIND=C_DOUBLE)                 :: valueL, valueR, multiplier
+    REAL(KIND=C_DOUBLE)                 :: df, valueMid
+    LOGICAL(C_BOOL)                     :: stopIterating
+    INTEGER(C_INT)                      :: maxSearch,its
+    INTEGER(C_INT), PARAMETER           :: maxWiden = 2000_C_INT
       ! Cap on bracket-widening steps. Each step multiplies the distance from
       ! the origin by 1.05 (or 0.95), so 2000 steps covers a factor of ~1e42:
       ! far more than any genuine bracket needs. Hitting it means the zero
       ! being sought does not exist (e.g. m beyond mmax), so flag an error.
-    LOGICAL(C_BOOL)         :: stopIterating
-  
   
 
     ! Initialisation
@@ -619,8 +618,6 @@ CONTAINS
           IF (its .GE. 100_C_INT) stopIterating = .TRUE.
           IF( valueL .LE. 0.0_C_DOUBLE) stopIterating = .TRUE.
         END DO
-  
-  
   
         ! The solution depends on what side of the max we are.
         ! If to the LEFT of the max of Im k(t), zeroL should give a -ive value; zeroR a +ive value.
@@ -788,11 +785,11 @@ CONTAINS
       ! arithmetically (via 1/x_i terms) and imprecision there corrupts the
       ! extrapolation itself, not just a quadrature boundary.
   
-    REAL(KIND=C_DOUBLE)   :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
-    LOGICAL(C_BOOL)       :: errorHere
+    REAL(KIND=C_DOUBLE)                 :: xacc, fL, fR, dfL, dfR, tstart_update, tMid
+    LOGICAL(C_BOOL)                     :: errorHere
   
     ! INITIALIZE ALL LOCAL VARIABLES
-    errorHere = .FALSE.
+    errorHere     = .FALSE.
     xacc          = xacc_in
     fL            = 0.0_C_DOUBLE
     fR            = 0.0_C_DOUBLE

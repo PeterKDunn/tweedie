@@ -7,7 +7,8 @@
 #' the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
-#' @usage ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, verbose = FALSE, details = FALSE)
+#' @usage ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, 
+#'                        verbose = FALSE, details = FALSE)
 #' 
 #' @param q vector of quantiles.
 #' @param power the power parameter \eqn{p}{power}.
@@ -20,14 +21,16 @@
 #'   computed directly via log-sum-exp accumulation over the series terms rather than as
 #'   \code{log(ptweedie_series(...))}. This retains accuracy even when the probability
 #'   itself would underflow to zero.
-#' @param verbose logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.
-#' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
+#' @param verbose logical; if \code{TRUE}, displays some internal computation details. 
+#'   The default is \code{FALSE}.
+#' @param details logical; if \code{TRUE}, returns the value of the distribution function 
+#'   and some details.
 #' 
 #' @return A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
 #' 
 #' @note
-#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
-#' for which very good numerical approximation are available in R.
+#' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using 
+#' inverse normal distributions, for which very good numerical approximation are available in R.
 #' 
 #' @references
 #' Dunn, Peter K and Smyth, Gordon K (2005).

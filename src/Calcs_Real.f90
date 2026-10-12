@@ -19,7 +19,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Rek
     LOGICAL(C_BOOL), INTENT(OUT)        :: errorHere    ! TRUE if any computational problem founds
 
-    REAL(KIND=C_DOUBLE) :: omega, pindex, front, alpha, tanArg, zRe, zIm
+    REAL(KIND=C_DOUBLE)                 :: omega, pindex, front, alpha, tanArg, zRe, zIm
   
     
     errorHere = .FALSE.
@@ -45,7 +45,6 @@ CONTAINS
     Rek = front * ( zRe - 1.0E0_C_DOUBLE )
 
   END SUBROUTINE evaluateRek
-
 
 
   SUBROUTINE evaluateRekd(t, Rekd, errorHere)
@@ -80,8 +79,6 @@ CONTAINS
     Rekd = current_mu * zIm
     
   END SUBROUTINE evaluateRekd
-  
-  
   
   
     

@@ -15,8 +15,8 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, tail, funvalue, ex
   REAL(KIND=C_DOUBLE), INTENT(OUT)  :: relerr(N)
   INTEGER(C_INT), INTENT(OUT)       :: Int_Regions(N)
   
-  INTEGER(C_INT)        :: i, Int_RegionsTMP, istat
-  REAL(KIND=C_DOUBLE)   :: funvalueTMP
+  INTEGER(C_INT)                    :: i, Int_RegionsTMP, istat
+  REAL(KIND=C_DOUBLE)               :: funvalueTMP
 
   INTERFACE
   
@@ -38,13 +38,13 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, tail, funvalue, ex
 
 
   ! Initialization
-  exitstatus = 0_C_INT
-  relerr = 0.0_C_DOUBLE
-  funvalueTMP = 0.0_C_DOUBLE
-  funvalue = 0.0_C_DOUBLE
-  Int_Regions = 0_C_INT
-  Int_RegionsTMP = 0_C_INT
-  istat = 0_C_INT
+  exitstatus      = 0_C_INT
+  relerr          = 0.0_C_DOUBLE
+  funvalueTMP     = 0.0_C_DOUBLE
+  funvalue        = 0.0_C_DOUBLE
+  Int_Regions     = 0_C_INT
+  Int_RegionsTMP  = 0_C_INT
+  istat           = 0_C_INT
   
   IF (.NOT. ALLOCATED(Cy)) THEN
       ALLOCATE(Cy(N), Cmu(N), Cphi(N), STAT=istat)
@@ -61,11 +61,11 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, tail, funvalue, ex
       END IF
   END IF
   
-  Cp = p
-  Cy = y
-  Cmu = mu
-  Cphi = phi
-  CN = N
+  Cp    = p
+  Cy    = y
+  Cmu   = mu
+  Cphi  = phi
+  CN    = N
 
   IF (pdf .EQ. 0) THEN 
     Cpdf = .FALSE.        ! Computing the CDF
@@ -90,8 +90,9 @@ SUBROUTINE twcomputation_loop(N, p, phi, y, mu, verbose, pdf, tail, funvalue, ex
   ! Loop over N values
   DO i = 1, N
     CALL TweedieIntegration(i, funvalueTMP, exitstatus(i), relerr(i), Int_RegionsTMP)
-    funvalue(i) = funvalueTMP
-    Int_Regions(i) = Int_RegionsTMP
+    
+    funvalue(i)     = funvalueTMP
+    Int_Regions(i)  = Int_RegionsTMP
 
   END DO
 

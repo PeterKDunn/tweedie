@@ -32,11 +32,11 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN) :: aimrerr    ! Target relative error
 
     ! Local vars
-    INTEGER(C_INT)        :: nmax
-    REAL(KIND=C_DOUBLE)   :: MM, Rek, Rekd, tstop, Imk, lambda
-    REAL(KIND=C_DOUBLE)   :: condEnvelope, logTail, tailTol
-    REAL(KIND=C_DOUBLE)   :: wRe, wIm, eRe, eIm
-    LOGICAL(C_BOOL)       :: errorHere
+    INTEGER(C_INT)                  :: nmax
+    REAL(KIND=C_DOUBLE)             :: MM, Rek, Rekd, tstop, Imk, lambda
+    REAL(KIND=C_DOUBLE)             :: condEnvelope, logTail, tailTol
+    REAL(KIND=C_DOUBLE)             :: wRe, wIm, eRe, eIm
+    LOGICAL(C_BOOL)                 :: errorHere
     
     ! NOTE: 
     ! If  stop_PreAccelerate  is  .TRUE.  it means to stop pre-accelerating
@@ -87,8 +87,8 @@ CONTAINS
       END IF
       IF ( tailTol .GT. 0.0_C_DOUBLE ) THEN
         IF ( logTail .LT. DLOG(tailTol) ) THEN
-          stop_PreAccelerate = .TRUE.
-          converged_Pre = .TRUE.
+          stop_PreAccelerate  = .TRUE.
+          converged_Pre       = .TRUE.
           RETURN
         END IF
       END IF
@@ -316,9 +316,9 @@ CONTAINS
       ! tolerance, rather than guessing a new one.
     
     ! Local vars
-    INTEGER(C_INT)        :: mOld
-    REAL(KIND=C_DOUBLE)   :: zeroBoundL, zeroBoundR, zeroStartPoint
-    REAL(KIND=C_DOUBLE)   :: current_y, current_mu, current_phi
+    INTEGER(C_INT)                      :: mOld
+    REAL(KIND=C_DOUBLE)                 :: zeroBoundL, zeroBoundR, zeroStartPoint
+    REAL(KIND=C_DOUBLE)                 :: current_y, current_mu, current_phi
 
     
     current_y    = Cy(i)
@@ -326,7 +326,7 @@ CONTAINS
     current_phi  = Cphi(i)
 
     zeroL = zeroR
-    mOld = m
+    mOld  = m
     
     CALL advanceM(m, mmax, mOld, left_Of_Max)
 
@@ -347,9 +347,9 @@ CONTAINS
     CALL findExactZeros(m, zeroBoundL, zeroBoundR, &
                         zeroStartPoint, zeroR, left_Of_Max, error, xacc_in)
 
-    mOld_out = mOld
-    zeroBoundL_out = zeroBoundL
-    zeroBoundR_out = zeroBoundR
+    mOld_out        = mOld
+    zeroBoundL_out  = zeroBoundL
+    zeroBoundR_out  = zeroBoundR
     
   END SUBROUTINE updateTM
   
@@ -387,8 +387,8 @@ CONTAINS
     ! Find starting point for the first zero
     IF (left_Of_Max) THEN
       t_Start_Point = PI / current_y  
-      zeroBoundL = 0_C_DOUBLE
-      zeroBoundR = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
+      zeroBoundL    = 0_C_DOUBLE
+      zeroBoundR    = tmax   ! WAS: t_Start_Point * 2.0_C_DOUBLE
     ELSE
       ! Searching to the right of tmax
       t_Start_Point = tmax + PI / current_y  

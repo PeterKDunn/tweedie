@@ -29,6 +29,7 @@ CONTAINS
   
   SUBROUTINE rtsafe(funcd, x1, x2, xacc, root, errorHere)
     ! Adapted from NUMERICAL RECIPES Sect. 9.4.
+    !
     ! Uses a combination of Newton-Raphson and bisection, find the root of a function bracketed
     ! between x1 and x2. The root is refined until its accuracy is known within plus/minus xacc. 
     !

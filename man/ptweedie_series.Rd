@@ -5,7 +5,8 @@
 \alias{ptweedie.series}
 \title{Series Evaluation for the Tweedie Distribution Function}
 \usage{
-ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, verbose = FALSE, details = FALSE)
+ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, 
+                       verbose = FALSE, details = FALSE)
 
 ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
@@ -27,9 +28,11 @@ computed directly via log-sum-exp accumulation over the series terms rather than
 \code{log(ptweedie_series(...))}. This retains accuracy even when the probability
 itself would underflow to zero.}
 
-\item{verbose}{logical; if \code{TRUE}, displays some internal computation details. The default is \code{FALSE}.}
+\item{verbose}{logical; if \code{TRUE}, displays some internal computation details. 
+The default is \code{FALSE}.}
 
-\item{details}{logical; if \code{TRUE}, returns the value of the distribution function and some details.}
+\item{details}{logical; if \code{TRUE}, returns the value of the distribution function 
+and some details.}
 }
 \value{
 A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
@@ -42,8 +45,8 @@ the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 }
 \note{
-The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using inverse normal distributions,
-for which very good numerical approximation are available in R.
+The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using 
+inverse normal distributions, for which very good numerical approximation are available in R.
 }
 \examples{
 # Plot a Tweedie distribution function

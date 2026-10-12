@@ -10,16 +10,16 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
   REAL(KIND=C_DOUBLE), INTENT(INOUT)  :: Mmatrix(:,:), Nmatrix(:,:)
   REAL(KIND=C_DOUBLE), INTENT(OUT)    :: West
   
-  INTEGER(C_INT)                  :: p, q, l_nzeros, maxSize
-  REAL(KIND=C_DOUBLE)             :: denom, psi_new, FF_current, sumw
-  REAL(KIND=C_DOUBLE)             :: tinyDenom, scale_denom
-  REAL(KIND=C_DOUBLE)             :: inv_x_i, inv_x_l
-  REAL(KIND=C_DOUBLE)             :: s, maxinv, invx
-  REAL(KIND=C_DOUBLE), PARAMETER  :: SAFETY_SCALE = 1.0D-12
-  REAL(KIND=C_DOUBLE), PARAMETER  :: HUGE_LIMIT   = 1.0D300
-  REAL(KIND=C_DOUBLE), ALLOCATABLE :: xscaled(:)
+  INTEGER(C_INT)                      :: p, q, l_nzeros, maxSize
+  REAL(KIND=C_DOUBLE)                 :: denom, psi_new, FF_current, sumw
+  REAL(KIND=C_DOUBLE)                 :: tinyDenom, scale_denom
+  REAL(KIND=C_DOUBLE)                 :: inv_x_i, inv_x_l
+  REAL(KIND=C_DOUBLE)                 :: s, maxinv, invx
+  REAL(KIND=C_DOUBLE), PARAMETER      :: SAFETY_SCALE = 1.0D-12
+  REAL(KIND=C_DOUBLE), PARAMETER      :: HUGE_LIMIT   = 1.0D300
+  REAL(KIND=C_DOUBLE), ALLOCATABLE    :: xscaled(:)
 
-  maxSize  = SIZE(xvec)        ! derived from the actual array, never duplicated
+  maxSize  = SIZE(xvec)        ! derived from the actual array
   l_nzeros = MIN(nzeros, maxSize)
   ALLOCATE(xscaled(l_nzeros))
 
@@ -28,6 +28,7 @@ SUBROUTINE accelerate(xvec, wvec, nzeros, Mmatrix, Nmatrix, West)
      invx = DABS(1.0E0_C_DOUBLE / xvec(p))
      IF (invx .GT. maxinv) maxinv = invx
   END DO
+  
   s = MAX(1.0E0_C_DOUBLE, 1.0E0_C_DOUBLE / maxinv)
   DO p = 1, l_nzeros
      xscaled(p) = xvec(p) / s

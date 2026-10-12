@@ -30,9 +30,9 @@ CONTAINS
     current_mu   = Cmu(i)
     
     ! Initialise
-    integrand_result = 0.0_C_DOUBLE
-    Rek = 0.0_C_DOUBLE
-    Imk = 0.0_C_DOUBLE
+    integrand_result  = 0.0_C_DOUBLE
+    Rek               = 0.0_C_DOUBLE
+    Imk               = 0.0_C_DOUBLE
 
     ! Check for when t = 0 (t is very close to zero)
     IF (ABS(t) .LT. 1.0E-14_C_DOUBLE) THEN

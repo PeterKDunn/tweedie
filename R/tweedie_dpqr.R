@@ -8,7 +8,8 @@
 #' a synonym for \code{power}).
 #' 
 #' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
-#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log.p = FALSE, verbose = FALSE)
+#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
+#'   log.p = FALSE, verbose = FALSE)
 #' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'

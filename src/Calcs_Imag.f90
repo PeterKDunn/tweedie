@@ -20,7 +20,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: Imk
     LOGICAL(C_BOOL), INTENT(OUT)        :: errorHere
     
-    REAL(KIND=C_DOUBLE)   :: tanArg, omega, front, alpha, zRe, zIm
+    REAL(KIND=C_DOUBLE)                 :: tanArg, omega, front, alpha, zRe, zIm
 
   
     ! Initialisation
@@ -105,7 +105,8 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(IN)   :: t
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkd  ! The result of the calculation
     LOGICAL(C_BOOL), INTENT(OUT)      :: errorHere
-    REAL(KIND=C_DOUBLE) :: omega, pindex, tanArg, zRe, zIm
+    
+    REAL(KIND=C_DOUBLE)               :: omega, pindex, tanArg, zRe, zIm
 
   
     ! Initlaise
@@ -143,7 +144,7 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)  :: Imkdd
     LOGICAL(C_BOOL), INTENT(INOUT)    :: errorHere
     
-    REAL(KIND=C_DOUBLE)    :: front, omega, pindex, tanArg, zRe, zIm
+    REAL(KIND=C_DOUBLE)               :: front, omega, pindex, tanArg, zRe, zIm
 
     
     ! Initialise
@@ -167,7 +168,6 @@ CONTAINS
     CALL zPow(tanArg, pindex, zRe, zIm)
     Imkdd = front * zIm
 
-
   END SUBROUTINE evaluateImkdd
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -183,8 +183,8 @@ CONTAINS
     REAL(KIND=C_DOUBLE), INTENT(OUT)    :: f, df
     LOGICAL(C_BOOL), INTENT(INOUT)      :: error
   
-    REAL(KIND=C_DOUBLE)   :: Imkd, Imkdd
-    LOGICAL(C_BOOL)       :: errorHere
+    REAL(KIND=C_DOUBLE)                 :: Imkd, Imkdd
+    LOGICAL(C_BOOL)                     :: errorHere
   
     ! Initialise
     f  = 0.0_C_DOUBLE
@@ -203,8 +203,6 @@ CONTAINS
     f  = Imkd
     df = Imkdd
   END SUBROUTINE evaluateImkdZero
-
-
 
 END MODULE Calcs_Imag
 
