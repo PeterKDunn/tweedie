@@ -13,7 +13,7 @@
 #' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
 #'
 #' @details
-#' The Tweedie \acronym{edm}s belong to the class of exponential dispersion models 
+#' Tweedie \acronym{edm}s belong to the class of exponential dispersion models 
 #' (\acronym{edm}s), known for their role in generalized linear models (\acronym{glm}s). 
 #' The Tweedie distributions are the \acronym{edm}s with a variance of the form 
 #' \eqn{\mbox{var}[Y] = \phi\mu^p}{var[Y] = phi*mu^p} where \eqn{p \ge 1}{p >= 1}.
@@ -35,7 +35,7 @@
 #' probability for \eqn{Y = 0}.
 #'
 #' @section Note:
-#' \code{dtweedie} and \code{ptweedie} are the only functions generally to be called by users. 
+#' \code{dtweedie()} and \code{ptweedie()} are the only functions generally to be called by users. 
 #' Consequently, all checks on the function inputs are only performed in these functions.
 #'
 #' @param y vector of quantiles.
@@ -55,11 +55,11 @@
 #'    shown. The default is \code{FALSE}.
 #'
 #' @return
-#' \code{dtweedie} gives the density, \code{ptweedie} gives the distribution function,
-#' \code{qtweedie} gives the quantile function, 
+#' \code{dtweedie()} gives the density, \code{ptweedie()} gives the distribution function,
+#' \code{qtweedie()} gives the quantile function, 
 #' and \code{rtweedie} generates random deviates.
 #' 
-#' The length of the result is determined by \code{n} for \code{rtweedie}, 
+#' The length of the result is determined by \code{n} for \code{rtweedie()}, 
 #' and by the length of \code{mu} for other functions.
 #' 
 #' @importFrom stats dgamma dnorm dpois
