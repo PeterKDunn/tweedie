@@ -71,14 +71,19 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     phi <- rep_len(phi, n)
     one <- lapply(seq_len(n), function(i)
              ptweedie_series(q[i], power = power, mu = mu[i], phi = phi[i],
-                             lower.tail = lower.tail, log.p = log.p,
-                             verbose = verbose, details = details))
+                             lower.tail = lower.tail, 
+                             log.p = log.p,
+                             verbose = verbose, 
+                             details = details))
     if (details) {
-      out <- lapply(names(one[[1]]), function(nm) sapply(one, `[[`, nm))
+      out <- lapply(names(one[[1]]), 
+                    function(nm) sapply(one, `[[`, nm))
       names(out) <- names(one[[1]])
       return(out)
     }
-    return( vapply(one, as.numeric, numeric(1)) )
+    return( vapply(one, 
+                   as.numeric, 
+                   numeric(1)) )
   }
   # Here mu and phi are each constant: the summation below expects scalars.
   mu  <- mu[1]
@@ -93,7 +98,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # FIND THE LIMITS ON N, the summation index
   # The *lower* limit on N
   lambda_bound <- max(lambda )
-  logfmax      <-  -log(lambda_bound)/2
+  logfmax      <- -log(lambda_bound)/2
   estlogf      <- logfmax
   N            <- max( lambda_bound )
   
@@ -118,11 +123,13 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   if (verbose) cat("Summing over", lo.N, "to", hi.N, "\n")
   
   # ---- Row-wise log-sum-exp helper: never forms the sum in linear space first ----
+  # Row-wise log(sum(exp(M))), stabilised by subtracting each row's max
+  # (avoids overflow/underflow); rows that are all -Inf return -Inf.
   rowLogSumExp <- function(M) {
     m <- apply(M, 1, max)
     # guard against a row that is entirely -Inf (e.g. q so small every term underflows)
     m[!is.finite(m)] <- -Inf
-    out <- m + log(rowSums(exp(M - m)))
+    out <- m + log(rowSums(exp(M - m))) # m recycles by row
     out[!is.finite(m)] <- -Inf
     out
   }
@@ -144,50 +151,58 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   }
   if (hi.N < lo.N) hi.N <- lo.N
 
-  df_of <- function(N) -2 * alpha * N
+  df_of <- function(N) {-2 * alpha * N}
   x_vec <- 2 * q / tau
   log_terms <- function(N) {
     # Matrix of log T_N: rows = q, columns = N
     lp <- stats::dpois(N, lambda, log = TRUE)
     lg <- outer(x_vec, df_of(N),
-                function(x, df) stats::pchisq(x, df, lower.tail = lower.tail, log.p = TRUE))
+                function(x, df) {stats::pchisq(x, df, lower.tail = lower.tail, log.p = TRUE)}
+                )
     sweep(lg, 2, lp, "+")
   }
 
   N_lo <- lo.N
   N_hi <- hi.N
-  M <- log_terms(N_lo:N_hi)
+  M    <- log_terms(N_lo:N_hi)
   # the N = 0 atom, exp(-lambda), belongs to the lower tail only
-  log_atom <- if (lower.tail) -lambda else -Inf
-  rowmax <- function(M) pmax(apply(M, 1, max), log_atom)
-  negligible <- function(col, rm) all( !is.finite(rm) | !(col > rm - drop) )
+  log_atom <- if (lower.tail) {-lambda} else {-Inf}
+  rowmax <- function(M) {pmax(apply(M, 1, max), log_atom)}
+  negligible <- function(col, rm) {all( !is.finite(rm) | !(col > rm - drop) )}
   # Terms still rising towards the end of the range (in any row) mean the
   # largest terms lie beyond it, even if the end term itself is small (e.g.
   # far in the lower tail with large lambda, where the terms that matter are
   # at small N while the range starts near N = lambda)
-  rising <- function(end, nxt) any( is.finite(end) & (end > nxt) )
+  rising <- function(end, nxt) {any( is.finite(end) & (end > nxt) )}
 
   # widen upwards
   repeat {
     rm <- rowmax(M)
-    k <- ncol(M)
+    k  <- ncol(M)
+    
+    # Break conditions
     if ( negligible(M[, k], rm) && !(k > 1 && rising(M[, k], M[, k - 1])) ) break
     if (N_hi >= max_terms) { capped <- TRUE; break }
+
     step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
-    new_N <- (N_hi + 1):min(max_terms, N_hi + step)
+    new_N <- (N_hi + 1) : min(max_terms, N_hi + step)
     M     <- cbind(M, log_terms(new_N))
     N_hi  <- max(new_N)
   }
   # widen downwards
   repeat {
     rm <- rowmax(M)
+    
+    # Break conditions:
     if ( N_lo <= 1 ) break
     if ( negligible(M[, 1], rm) && !(ncol(M) > 1 && rising(M[, 1], M[, 2])) ) break
+
     step  <- max(10, ceiling((N_hi - N_lo + 1) / 2))
     new_N <- max(1, N_lo - step):(N_lo - 1)
     M     <- cbind(log_terms(new_N), M)
     N_lo  <- min(new_N)
   }
+  
   if (verbose) cat("Summing over", N_lo, "to", N_hi, "\n")
   if (capped) {
     warning("ptweedie_series: the series was truncated at ", max_terms,
