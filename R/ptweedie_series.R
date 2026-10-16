@@ -96,30 +96,27 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   drop   <- 39
 
   # FIND THE LIMITS ON N, the summation index
+  # (Stirling's approximation to log Pr(N); peak near N = lambda)
+  logfmax <- -log(lambda) / 2
+  
   # The *lower* limit on N
-  lambda_bound <- max(lambda )
-  logfmax      <- -log(lambda_bound)/2
-  estlogf      <- logfmax
-  N            <- max( lambda_bound )
-  
-  while ( ( estlogf > (logfmax - drop) ) & ( N > 1 ) ) {
+  estlogf <- logfmax
+  N       <- lambda
+  while ( (estlogf > (logfmax - drop)) && (N > 1) ) {
     N <- max(1, N - 2)
-    estlogf <- -lambda_bound + N * ( log(lambda_bound) - log(N) + 1 ) - log(N)/2
+    estlogf <- -lambda + N * ( log(lambda) - log(N) + 1 ) - log(N) / 2
   }
-  lo.N <- max(1, floor(N) )
-  
+  lo.N <- max(1, floor(N))
   
   # The *upper* limit on N
-  lambda_bound <- min( lambda )
-  logfmax      <- -log(lambda_bound) / 2
-  estlogf      <- logfmax
-  N            <- max( lambda_bound )
-  
+  estlogf <- logfmax
+  N       <- lambda
   while ( estlogf > (logfmax - drop) ) {
     N <- N + 1
-    estlogf <- -lambda_bound + N * ( log(lambda_bound) - log(N) + 1 ) - log(N)/2
+    estlogf <- -lambda + N * ( log(lambda) - log(N) + 1 ) - log(N) / 2
   }
-  hi.N <- max( ceiling(N) )
+  hi.N <- ceiling(N)
+
   if (verbose) cat("Summing over", lo.N, "to", hi.N, "\n")
   
   # ---- Row-wise log-sum-exp helper: never forms the sum in linear space first ----
@@ -221,8 +218,12 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   result <- if (log.p) logP else exp(logP)
 
   if (details) {
-    return( list( cdf = result,
-                  iterations = its) )
+    return( list( cdf          = result,
+                  iterations   = its,
+                  N.lo         = N_lo,
+                  N.hi         = N_hi,
+                  N.lo.initial = lo.N,
+                  N.hi.initial = hi.N) )
   } else {
     return(result)
   }
@@ -237,6 +238,6 @@ ptweedie.series <- function(q, power, mu, phi, verbose = FALSE, details = FALSE)
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "ptweedie.series()", 
                             with = "ptweedie_series()")
-  ptweedie_series(q, power, mu, phi, verbose = FALSE, details = FALSE)
+  ptweedie_series(q, power, mu, phi, verbose = verbose, details = details)
 }
 
