@@ -627,18 +627,23 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       #} else{
       
       # Since 2026 the SERIES is used first. For 1 < p < 2 it sums positive
-      # terms (no cancellation), and its summation limits follow the largest
-      # terms into either tail, so it has full relative accuracy everywhere it
-      # can be used; it is also faster than the inversion unless lambda is very
-      # large. The inversion, by contrast, has only absolute accuracy, and can be
-      # silently wrong (errors to about 1e-2) when the point mass at zero is
-      # large (small lambda) and p is near 1. So:
-      #  - lambda <= 1e5: use the series (well within its cap of 1e6 terms);
-      #  - lambda >  1e5, or where the series fails: use the inversion.
+      # terms (no cancellation), and it sums exactly the terms that matter
+      # (their logs are concave in N, so the peak is found and the sum
+      # extended outwards from it), so it has full relative accuracy wherever
+      # it can be used. The inversion, by contrast, has only absolute
+      # accuracy; it can be silently wrong (errors to about 1e-2) when the
+      # point mass at zero is large (small lambda) and p is near 1, and it
+      # degrades as lambda grows (relative errors near 5e-8 at lambda = 1e7,
+      # and some values of 0.5 in place of the answer for lambda >= 1e7).
+      # The number of terms grows only like sqrt(lambda) (about 18 sqrt(lambda)),
+      # so the series stays within its cap of 1e6 terms up to lambda of about
+      # 3e9. So:
+      #  - lambda <= 1e9: use the series;
+      #  - lambda >  1e9, or where the series fails: use the inversion.
       if ( any(!special_y_cases)) {
         idx    <- which(!special_y_cases)
         lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
-        use_ser <- (lambda <= 1e5)
+        use_ser <- (lambda <= 1e9)
 
         if (any(use_ser)) {
           if (verbose) cat("- With 1 < p < 2: using the series for", sum(use_ser), "value(s)\n")

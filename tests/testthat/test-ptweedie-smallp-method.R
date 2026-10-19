@@ -31,3 +31,13 @@ test_that("ptweedie: agrees with pchisq for p = 1.5 in both tails and on the log
   expect_equal(ptweedie(y[1:20], mu = 1, phi = 4, power = 1.5, lower.tail = FALSE),
                pchisq(y[1:20], df = 0, ncp = 1, lower.tail = FALSE), tolerance = 1e-12)
 })
+
+test_that("ptweedie (1 < p < 2) uses the series for large lambda, keeping relative accuracy", {
+  # p = 1.5, mu = 1, lambda = 1e7 (phi = 2e-7), y three standard deviations
+  # below the mean. Reference: with gamma shape 1, F(y) = Pr(X >= N) for
+  # independent X ~ Poisson(y/gamma) and N ~ Poisson(lambda), summed exactly
+  # in 40-digit arithmetic. (The inversion is in error by 5e-8 here.)
+  y <- 0.9986583592135001
+  expect_equal(ptweedie(y, mu = 1, phi = 2e-7, power = 1.5),
+               0.001345936559797094375, tolerance = 1e-12)
+})
