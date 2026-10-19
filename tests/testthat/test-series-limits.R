@@ -1,6 +1,7 @@
 # The summation limits of ptweedie_series() must follow the terms
 # Pr(N) * F_G (or Q_G), not just the Poisson weights; otherwise terms that
-# matter are omitted far in either tail. References: 50-60 digit sums of the
+# matter are omitted far in either tail. The terms are log-concave in N, so
+# the code finds their peak and sums outwards from it. References: 50-60 digit sums of the
 # Poisson-gamma series (mpmath).
 
 test_that("series keeps relative accuracy far in the upper tail", {
@@ -22,7 +23,34 @@ test_that("series keeps relative accuracy far in the lower tail", {
 })
 
 test_that("series warns when truncated at the term cap", {
-  expect_warning(ptweedie_series(1, mu = 1, phi = 1e-4, power = 1.99), "truncated")
+  # lambda = 1e11: about 5.6 million terms matter, more than the cap of 1e6
+  expect_warning(ptweedie_series(1, mu = 1, phi = 1e-9, power = 1.99), "truncated")
+})
+
+test_that("series handles large lambda without truncation (lambda = 1e6)", {
+  # Reference: direct sum of all terms N = 1, ..., 3e6 (and the atom)
+  expect_silent(v <- ptweedie_series(0.1, mu = 0.1, phi = 0.001, power = 1.999, log.p = TRUE))
+  expect_equal(v, -0.6847664295, tolerance = 1e-9)
+})
+
+test_that("series finds the terms that matter beyond N = 1e6 (far upper tail)", {
+  # lambda = 55700, but the largest term is at N = 1188959.
+  # Reference: direct sum of all terms N = 1, ..., 5e6
+  d <- ptweedie_series(3e4, mu = 1000, phi = 0.01, power = 1.1, lower.tail = FALSE,
+                       log.p = TRUE, details = TRUE)
+  expect_equal(d$cdf, -3201730.8260874483, tolerance = 1e-12)
+  expect_true(d$N.lo <= 1188959 && d$N.hi >= 1188959)
+  expect_lt(d$iterations, 1e4)                 # only the terms that matter
+})
+
+test_that("series sums only the terms that matter, separately for each value", {
+  d <- ptweedie_series(c(0.05, 1, 3), mu = 1, phi = 0.01, power = 1.05, details = TRUE)
+  expect_length(d$iterations, 3)
+  expect_true(all(d$N.lo <= d$N.hi))
+  expect_lt(max(d$iterations), 400)
+  # probabilities never exceed one, even when the sum rounds above it
+  expect_true(all(ptweedie_series(c(1.5, 3, 10) * 1000, mu = 1000, phi = 0.001,
+                                  power = 1.001, log.p = TRUE) <= 0))
 })
 
 test_that("series follows rising terms below the Poisson range (far lower tail, large lambda)", {
