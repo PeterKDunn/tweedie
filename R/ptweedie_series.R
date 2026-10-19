@@ -60,9 +60,8 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
          call. = FALSE)
   }
 
-  # The summation below shares one range of N across all elements, and is not
-  # correct when mu or phi vary between elements (it returned wrong values,
-  # with a recycling warning, or stopped with an error). In that case,
+  # The summation cannot share one range of N across all elements: iot is not
+  # correct when mu or phi vary between elements. So, in that case,
   # evaluate element by element.
   n <- max(length(q), length(mu), length(phi))
   if ( (n > 1) && ( (length(unique(mu)) > 1) || (length(unique(phi)) > 1) ) ) {
@@ -70,11 +69,14 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     mu  <- rep_len(mu, n)
     phi <- rep_len(phi, n)
     one <- lapply(seq_len(n), function(i)
-             ptweedie_series(q[i], power = power, mu = mu[i], phi = phi[i],
+             ptweedie_series(q[i], 
+                             power      = power, 
+                             mu         = mu[i], 
+                             phi        = phi[i],
                              lower.tail = lower.tail, 
-                             log.p = log.p,
-                             verbose = verbose, 
-                             details = details))
+                             log.p      = log.p,
+                             verbose    = verbose, 
+                             details    = details))
     if (details) {
       out <- lapply(names(one[[1]]), 
                     function(nm) sapply(one, `[[`, nm))
@@ -117,8 +119,13 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # Each value of q gets its own range; only the terms that matter are summed.
   # logT(N, x): N and x vectors of the same length (or one of them length 1)
   logT <- function(N, x) {
-    stats::dpois(N, lambda, log = TRUE) +
-      stats::pchisq(x, -2 * alpha * N, lower.tail = lower.tail, log.p = TRUE)
+    stats::dpois(N, 
+                 lambda, 
+                 log = TRUE) +
+      stats::pchisq(x, 
+                    -2 * alpha * N, 
+                    lower.tail = lower.tail, 
+                    log.p = TRUE)
   }
   log_atom <- if (lower.tail) -lambda else -Inf   # the N = 0 term (lower tail only)
 
@@ -146,10 +153,10 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
 
     # 1. Peak of each concave sequence: the first N >= 1 with
     #    logT(N + 1) <= logT(N); found for all values at once
-    falls <- function(N, xx) !(logT(N + 1, xx) > logT(N, xx))
-    N0 <- rep(max(1, round(lambda)), m)
-    f0 <- falls(N0, x)
-    lo <- hi <- N0
+    falls <- function(N, xx) { !(logT(N + 1, xx) > logT(N, xx)) }
+    N0    <- rep(max(1, round(lambda)), m)
+    f0    <- falls(N0, x)
+    lo    <- hi <- N0
     # peak above N0 (f0 FALSE): gallop up, keeping falls(lo) FALSE
     # peak at/below N0 (f0 TRUE): gallop down, keeping falls(hi) TRUE
     step <- rep(1, m)
@@ -157,17 +164,19 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     act  <- rep(TRUE, m)
     peak <- rep(NA_real_, m)
     while (any(act)) {
-      i <- which(act)
+      i     <- which(act)
       trial <- ifelse(up[i], hi[i] + step[i], pmax(1, lo[i] - step[i]))
-      ft <- falls(trial, x[i])
+      ft    <- falls(trial, x[i])
+      
       # upwards: if it falls there, the bracket is (lo, trial]; else move lo up
-      u <- up[i]
+      u               <- up[i]
       hi[i][u &  ft]  <- trial[u & ft]
       lo[i][u & !ft]  <- trial[u & !ft]
+      
       # downwards: if it does not fall there, the bracket is (trial, hi]; else move hi down
-      lo[i][!u & !ft] <- trial[!u & !ft]
-      hi[i][!u &  ft] <- trial[!u & ft]
-      done_dn1 <- !u & ft & (trial == 1)       # falls already at N = 1: peak is 1
+      lo[i][!u & !ft]   <- trial[!u & !ft]
+      hi[i][!u &  ft]   <- trial[!u & ft]
+      done_dn1          <- !u & ft & (trial == 1)       # falls already at N = 1: peak is 1
       peak[i[done_dn1]] <- 1
       act[i[(u & ft) | (!u & !ft) | done_dn1]] <- FALSE
       step[i] <- 2 * step[i]
@@ -175,45 +184,61 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     # bisect where not already settled: falls(lo) FALSE, falls(hi) TRUE
     act <- is.na(peak)
     while (any(act & (hi - lo > 1))) {
-      i   <- which(act & (hi - lo > 1))
-      mid <- (lo[i] + hi[i]) %/% 2
-      fm  <- falls(mid, x[i])
+      i          <- which(act & (hi - lo > 1))
+      mid        <- (lo[i] + hi[i]) %/% 2
+      fm         <- falls(mid, x[i])
       hi[i][fm]  <- mid[fm]
       lo[i][!fm] <- mid[!fm]
     }
     peak[act] <- hi[act]
-    Lmax <- logT(peak, x)
+    Lmax      <- logT(peak, x)
 
     # 2. Sum outwards from the peak, in chunks, all values at once. Running
     #    log-sum-exp: S = log(sum exp(L - Lmax)) relative to the peak term.
-    acc <- rep(1, m)                  # sum of exp(L - Lmax), starting with the peak
-    cnt <- rep(1, m)
-    nlo <- nhi <- peak
+    acc   <- rep(1, m)                  # sum of exp(L - Lmax), starting with the peak
+    cnt   <- rep(1, m)
+    nlo   <- nhi <- peak
     chunk <- max(16, ceiling(2 * sqrt(lambda)))
+
     for (dir in c(1, -1)) {
       act  <- is.finite(Lmax)
+      
       if (dir < 0) act <- act & (peak > 1)
       N    <- peak
       prev <- Lmax
       while (any(act)) {
-        i  <- which(act)
-        off <- seq_len(chunk)
-        NN <- outer(N[i], dir * off, "+")                     # rows: values; cols: steps
+        i     <- which(act)
+        off   <- seq_len(chunk)
+        NN    <- outer(N[i], dir * off, "+")                     # rows: values; cols: steps
         valid <- NN >= 1
         NN[!valid] <- 1
-        L  <- matrix(logT(as.vector(NN), rep(x[i], chunk)), nrow = length(i))
+        L  <- matrix(logT(as.vector(NN), 
+                          rep(x[i], 
+                              chunk)), 
+                     nrow = length(i))
         L[!valid] <- -Inf
-        Lp <- cbind(prev[i], L[, -chunk, drop = FALSE])       # the term before each one
-        r  <- exp(L - Lp)
+        Lp        <- cbind(prev[i], L[, -chunk, drop = FALSE])       # the term before each one
+        r         <- exp(L - Lp)
         # bound on the remaining terms from each one on: T_k / (1 - r), on the log scale
-        bnd <- ifelse(is.finite(L) & (r < 1), L - log1p(-r), ifelse(is.finite(L), Inf, -Inf))
+        bnd <- ifelse(is.finite(L) & (r < 1), 
+                      L - log1p(-r), 
+                      ifelse(is.finite(L), 
+                             Inf, 
+                             -Inf))
         stop_here <- (bnd < Lmax[i] - drop) | !valid
-        has_stop <- rowSums(stop_here) > 0
-        k   <- ifelse(has_stop, max.col(stop_here, ties.method = "first"), chunk)
-        use <- (col(L) <= k) & is.finite(L)                  # terms included, per row
+        has_stop  <- rowSums(stop_here) > 0
+        
+        k      <- ifelse(has_stop, 
+                         max.col(stop_here, ties.method = "first"), 
+                         chunk)
+        use    <- (col(L) <= k) & is.finite(L)                  # terms included, per row
         acc[i] <- acc[i] + rowSums(ifelse(use, exp(L - Lmax[i]), 0))
         cnt[i] <- cnt[i] + rowSums(use)
-        if (dir > 0) nhi[i] <- N[i] + k else nlo[i] <- pmax(1, N[i] - k)
+        if (dir > 0) {
+          nhi[i] <- N[i] + k
+        } else {
+          nlo[i] <- pmax(1, N[i] - k)
+        }
         N[i]    <- N[i] + dir * chunk
         prev[i] <- L[, chunk]
         over    <- cnt[i] > max_terms
@@ -221,7 +246,9 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
         act[i]  <- !has_stop & !over
       }
     }
-    lp <- ifelse(is.finite(Lmax), Lmax + log(acc), -Inf)
+    lp <- ifelse(is.finite(Lmax), 
+                 Lmax + log(acc), 
+                 -Inf)
     # add the atom (lower tail): log(exp(lp) + exp(log_atom))
     if (is.finite(log_atom)) {
       mx <- pmax(lp, log_atom)
