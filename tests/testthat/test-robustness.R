@@ -57,12 +57,18 @@ test_that("p near 1 with small phi: no longer converges falsely (was silently wr
 })
 
 test_that("non-convergence is reported by a warning, not only through exitstatus", {
-  # (p just above 2 with a tiny dispersion: a case the inversion still fails on)
-  expect_warning(ptweedie(2, mu = 1, phi = 1e-6, power = 2.001),
+  # (p = 6 with effective dispersion phi mu^(p-2) = 1e-11: a case the
+  # inversion still fails on)
+  expect_warning(ptweedie(0.001, mu = 0.01, phi = 0.001, power = 6),
                  "did not reach the target accuracy")
-  expect_warning(o <- ptweedie_inversion(2, mu = 1, phi = 1e-6, power = 2.001, details = TRUE),
+  expect_warning(o <- ptweedie_inversion(0.001, mu = 0.01, phi = 0.001, power = 6, details = TRUE),
                  "did not reach the target accuracy")
   expect_equal(o$exitstatus, 1L)
+  # p just above 2 with a tiny dispersion: this used to be flagged, only
+  # because the acceleration could not converge on tail areas that were
+  # rounding noise; y = 2 is 1000 sd above the mean, so F = 1
+  expect_silent(F <- ptweedie_inversion(2, mu = 1, phi = 1e-6, power = 2.001))
+  expect_equal(F, 1)
   # ... while this one, which used to fail (returning 0.5), now converges:
   # with sd = 1e-3 the distribution is near-normal, and F(mu) exceeds 1/2 by
   # the skewness correction gamma / (6 sqrt(2 pi)), gamma = p sqrt(phi).

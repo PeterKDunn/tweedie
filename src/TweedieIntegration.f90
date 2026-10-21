@@ -54,6 +54,9 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   REAL(C_DOUBLE)                    :: area0
   REAL(C_DOUBLE)                    :: tStar, tLo, tHi   ! for splitting the initial region into decades
   INTEGER(C_INT)                    :: nSeg
+  LOGICAL(C_BOOL)                   :: okAdapt      ! .FALSE. if GaussAdaptive missed its target
+  REAL(C_DOUBLE)                    :: floorScale   ! GaussAdaptive's error scale, at least
+  REAL(C_DOUBLE)                    :: relerrTot    ! change in the tail estimate, relative to the whole
 
   ! Zone 2: pre-acceleration
   REAL(C_DOUBLE)                    :: area1, sumA
@@ -79,6 +82,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       INTEGER(C_INT), INTENT(IN)            :: i
       
     END SUBROUTINE GaussQuadrature
+
+    SUBROUTINE GaussAdaptive(i, a, b, absScale, aimrerr, area, ok)
+      USE ISO_C_BINDING, ONLY: C_INT, C_DOUBLE, C_BOOL
+      INTEGER(C_INT), INTENT(IN)        :: i
+      REAL(KIND=C_DOUBLE), INTENT(IN)   :: a, b, absScale, aimrerr
+      REAL(KIND=C_DOUBLE), INTENT(OUT)  :: area
+      LOGICAL(C_BOOL), INTENT(OUT)      :: ok
+    END SUBROUTINE GaussAdaptive
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
@@ -204,6 +215,15 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   ! exactly as before.
   ! (E.g. ptweedie(0.05, mu=50, phi=10, power=8): c ~ 1e12, and the single
   !  rule over [0, 379] was in error by ~1e-5.)
+  ! Scale for the error test in GaussAdaptive. For the CDF the result is
+  ! (constant of order 1/2) -/+ area/pi, so the area need only be accurate
+  ! relative to pi/2; for the PDF (result = area/pi) no such floor exists.
+  IF (Cpdf) THEN
+    floorScale = 0.0_C_DOUBLE
+  ELSE
+    floorScale = 0.5_C_DOUBLE * PI
+  END IF
+
   tStar = 1.0_C_DOUBLE / DABS( (1.0_C_DOUBLE - Cp) * current_phi /  &
                                current_mu**(1.0_C_DOUBLE - Cp) )
   area0 = 0.0_C_DOUBLE
@@ -212,11 +232,13 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   DO WHILE ( (tHi .GT. 10.0_C_DOUBLE * tStar) .AND. (nSeg .LT. 400_C_INT) )
     nSeg = nSeg + 1_C_INT
     tLo  = tHi / 10.0_C_DOUBLE
-    CALL GaussQuadrature(i, tLo, tHi, sumA)
+    CALL GaussAdaptive(i, tLo, tHi, MAX(floorScale, DABS(area0)), aimrerr, sumA, okAdapt)
+    IF (.NOT. okAdapt) error = .TRUE.
     area0 = area0 + sumA
     tHi   = tLo
   END DO
-  CALL GaussQuadrature(i, zeroL, tHi, sumA)
+  CALL GaussAdaptive(i, zeroL, tHi, MAX(floorScale, DABS(area0)), aimrerr, sumA, okAdapt)
+  IF (.NOT. okAdapt) error = .TRUE.
   area0 = area0 + sumA                          ! area0  is the area of the initial region
   sumA  = 0.0_C_DOUBLE
   absArea = DABS(area0)
@@ -241,8 +263,10 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   DO WHILE ( .NOT.(stop_PreAccelerate ) )
     count_PreAcc_Regions = count_PreAcc_Regions + 1_C_INT    ! Update count
 
-    ! Integrate
-    CALL GaussQuadrature(i, zeroL, zeroR, sumA)
+    ! Integrate (adaptively: for p near 1, a region between the zeros found
+    ! can hold many oscillations of the integrand; see GaussAdaptive)
+    CALL GaussAdaptive(i, zeroL, zeroR, MAX(floorScale, absArea), aimrerr, sumA, okAdapt)
+    IF (.NOT. okAdapt) error = .TRUE.
     area1   = area1 + sumA
     absArea = absArea + DABS(sumA)
     
@@ -298,8 +322,11 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
       
       xvec(count_Acc_Regions + 1_C_INT) = zeroR  ! Update xvec
 
-      ! Integrate
-      CALL GaussQuadrature(i, zeroL, zeroR, psi)
+      ! Integrate (adaptively for 1 < p < 4/3, as in pre-acceleration: the
+      ! first acceleration regions can also hold many oscillations)
+      CALL GaussAdaptive(i, zeroL, zeroR, MAX(floorScale, absArea), aimrerr, psi, okAdapt)
+      IF (.NOT. okAdapt) error = .TRUE.
+      absArea = absArea + DABS(psi)
 
       ! Prepare for acceleration
       wvec(count_Acc_Regions) = psi   
@@ -318,8 +345,17 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                      m, zeroL, zeroR, error, XACC_TIGHT, mOld_local, &
                      zeroBoundL_local, zeroBoundR_local)
                      
-      ! Check for convergence
-      relerr = ( DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
+      ! Check for convergence: the change in the estimate of the tail area
+      ! must be small relative to the tail area itself, OR relative to the
+      ! whole integral (or pi/2 for the CDF, as in GaussAdaptive). The second
+      ! matters when the tail is negligible: its areas are then rounding noise
+      ! (e.g. 1e-17, depending on the compiler and CPU), the first ratio is
+      ! noise / (noise + 1e-12) and never falls to 1e-12, and the integration
+      ! ran to accMax regions and flagged an answer that was correct.
+      relerr    = ( DABS(West - Wold) + DABS(West - Wold2)) / (DABS(West) + epsilon)
+      relerrTot = ( DABS(West - Wold) + DABS(West - Wold2)) /   &
+                  MAX( DABS(area0 + area1 + West), floorScale, epsilon )
+      relerr    = MIN(relerr, relerrTot)
       IF ( (count_Acc_Regions .GE. min_Acc_Regions) .AND. &
            (relerr .LT. aimrerr) ) THEN
         keep_Accelerating       = .FALSE.

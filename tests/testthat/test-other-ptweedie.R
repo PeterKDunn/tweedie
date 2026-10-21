@@ -27,10 +27,10 @@ test_that("No common errors", {
   expect_no_error(
     suppressWarnings(ptweedie_inversion(0.001, power = 6, mu = 0.01, phi = 0.01))
   )
-  # Inversion is inaccurate here (p near 1, y far below the mean); it may warn,
-  # depending on the platform. ptweedie() uses the series, which is exact here.
+  # Before 3.2.1 the inversion was wrong here (2e-5), and warned on some
+  # platforms only; see test-inversion-psmall-oscillations.R
   expect_no_error(
-    suppressWarnings(ptweedie_inversion(0.001, phi = 10, p = 1.01, mu = 5))
+    ptweedie_inversion(0.001, phi = 10, power = 1.01, mu = 5)
   )
   expect_equal(ptweedie(0.001, phi = 10, power = 1.01, mu = 5),
                exp(-5^0.99 / (10 * 0.99)), tolerance = 1e-14)
