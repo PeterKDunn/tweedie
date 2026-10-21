@@ -27,9 +27,13 @@ test_that("No common errors", {
   expect_no_error(
     suppressWarnings(ptweedie_inversion(0.001, power = 6, mu = 0.01, phi = 0.01))
   )
+  # Inversion is inaccurate here (p near 1, y far below the mean); it may warn,
+  # depending on the platform. ptweedie() uses the series, which is exact here.
   expect_no_error(
-   ptweedie_inversion(0.001, phi = 10, p = 1.01, mu = 5)
+    suppressWarnings(ptweedie_inversion(0.001, phi = 10, p = 1.01, mu = 5))
   )
+  expect_equal(ptweedie(0.001, phi = 10, power = 1.01, mu = 5),
+               exp(-5^0.99 / (10 * 0.99)), tolerance = 1e-14)
   expect_no_error(
     ptweedie_inversion(0.001, mu = 1, phi = 0.01, p = 1.01)
   )
