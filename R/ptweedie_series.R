@@ -76,7 +76,10 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # variance). 
   #
   # So, for each value of q:
-  #   1. find the peak N* by solving d log T_N / dN = 0 (a single root);
+  #   1. find the peak: the terms increase while
+  #        Delta(N) = log T_{N+1} - log T_N
+  #      is positive, and Delta is decreasing (by concavity), so solve
+  #      Delta(N) = 0 (a single root, N0) and take the peak at ceiling(N0);
   #   2. sum outwards from the integer peak in each direction (as for the
   #      pdf series), stopping once a term falls below exp(-drop) times the
   #      peak term; by concavity, every term beyond that point is smaller still.
@@ -122,39 +125,30 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     x   <- 2 * q[todo] / tau[todo]
     lam <- lambda[todo]
     
-    # log T_N, and d log T_N / dN (N continuous), for values i: the Poisson
-    # part exactly; the incomplete-gamma part by a central difference
-    # (pchisq(log.p = TRUE) is accurate far into both tails)
+    # log T_N for values i (N an integer). dpois() is used here, rather than
+    # N log(lambda) - lambda - lgamma(N + 1), to avoid cancellation for large lambda
     logT <- function(N, i) {
-      stats::dpois(N, 
-                   lam[i], 
-                   log = TRUE) +
-        stats::pchisq(x[i], 
-                      -2 * alpha * N, 
-                      lower.tail = lower.tail, 
-                      log.p = TRUE)
+      stats::dpois(N, lam[i], log = TRUE) +
+        stats::pchisq(x[i], -2 * alpha * N, lower.tail = lower.tail, log.p = TRUE)
     }
-    dlogT <- function(N, i) {
-      h <- 1e-4 * N
-      log(lam[i]) - digamma(N + 1) +
-        ( stats::pchisq(x[i], 
-                        -2 * alpha * (N + h),
-                        lower.tail = lower.tail, 
-                        log.p = TRUE) -
-            stats::pchisq(x[i], 
-                          -2 * alpha * (N - h), 
-                          lower.tail = lower.tail, 
-                          log.p = TRUE) ) / (2 * h)
+    # Delta(N) = log T_{N+1} - log T_N, for N continuous: the Poisson part is
+    # log(lambda / (N + 1)) exactly; pchisq(log.p = TRUE) is accurate far into
+    # both tails
+    Delta <- function(N, i) {
+      log(lam[i] / (N + 1)) +
+        stats::pchisq(x[i], -2 * alpha * (N + 1), lower.tail = lower.tail, log.p = TRUE) -
+        stats::pchisq(x[i], -2 * alpha * N,       lower.tail = lower.tail, log.p = TRUE)
     }
     
-    # 1. The peak N*: the root of d log T_N / dN, which is decreasing in N
-    Nstar <- rep(1, m)                    # the peak is N = 1 if already falling there
+    
+    # 1. The peak: the root N0 of Delta(N) = 0, which is decreasing in N
+    N0 <- rep(1, m)                       # the peak is N = 1 if already falling there
     for (k in seq_len(m)) {
-      f   <- function(N) { dlogT(N, k) }
+      f   <- function(N) Delta(N, k)
       lo  <- 1
       flo <- f(lo)
       if (flo <= 0) next
-      # Bracket: for the lower tail the derivative is negative at N = lambda;
+      # Bracket: for the lower tail Delta is negative at N = max(2, lambda);
       # for the upper tail the peak can lie well above lambda, so double
       hi  <- max(2, lam[k])
       fhi <- f(hi)
@@ -164,22 +158,18 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
         hi  <- 2 * hi
         fhi <- f(hi)
       }
-      Nstar[k] <- stats::uniroot(f, 
-                                 c(lo, hi), 
-                                 f.lower = flo, 
-                                 f.upper = fhi,
-                                 tol = 0.25)$root   # only the integer peak is needed
+      N0[k] <- stats::uniroot(f, c(lo, hi), f.lower = flo, f.upper = fhi,
+                              tol = 0.25)$root   # only the integer peak is needed
     }
     
-    # The integer peak is next to N*: take the largest term nearby
-    cand <- outer(floor(Nstar), -1:2, "+")
+    # The integer peak is ceiling(N0); to allow for the tolerance, take the
+    # largest of the terms at ceiling(N0) - 1, ceiling(N0), ceiling(N0) + 1
+    cand <- outer(ceiling(N0), -1:1, "+")
     cand[cand < 1] <- 1
-    Lc   <- matrix(logT(as.vector(cand), 
-                        rep(seq_len(m), 4)), 
-                   ncol = 4)
+    Lc   <- matrix(logT(as.vector(cand), rep(seq_len(m), 3)), ncol = 3)
     Lc[is.na(Lc)] <- -Inf
-    peak <- cand[cbind(seq_len(m), 
-                       max.col(Lc, ties.method = "first"))]
+    peak <- cand[cbind(seq_len(m), max.col(Lc, ties.method = "first"))]
+    
     Lmax <- logT(peak, seq_len(m))
     
     # 2. Sum outwards from the peak, in blocks, relative to the term.
