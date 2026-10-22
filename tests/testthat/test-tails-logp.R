@@ -211,8 +211,8 @@ test_that("special p cases (p=0,1,2,3) agree with their standard R distributions
   
   # p = 0: Normal, via special_cases() directly (ptweedie() itself requires power > 1)
   for (lt in c(TRUE, FALSE)) {
-    out0 <- special_cases(y, rep(mu, length(y)), rep(phi, length(y)), power = 0,
-                          type = "CDF", lower.tail = lt)
+    out0 <- tweedie:::special_cases(y, rep(mu, length(y)), rep(phi, length(y)), power = 0,
+                                    type = "CDF", lower.tail = lt)
     expect_equal(out0$f, pnorm(y, mean = mu, sd = sqrt(phi), lower.tail = lt),
                  tolerance = 1e-10)
   }
