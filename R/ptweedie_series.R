@@ -169,7 +169,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     Lc   <- matrix(logT(as.vector(cand), rep(seq_len(m), 3)), ncol = 3)
     Lc[is.na(Lc)] <- -Inf
     peak <- cand[cbind(seq_len(m), max.col(Lc, ties.method = "first"))]
-    
+  
     Lmax <- logT(peak, seq_len(m))
     
     # 2. Sum outwards from the peak, in blocks, relative to the term.
