@@ -136,8 +136,14 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     # both tails
     Delta <- function(N, i) {
       log(lam[i] / (N + 1)) +
-        stats::pchisq(x[i], -2 * alpha * (N + 1), lower.tail = lower.tail, log.p = TRUE) -
-        stats::pchisq(x[i], -2 * alpha * N,       lower.tail = lower.tail, log.p = TRUE)
+        stats::pchisq(x[i], 
+                      -2 * alpha * (N + 1),
+                      lower.tail = lower.tail, 
+                      log.p = TRUE) -
+            stats::pchisq(x[i], 
+                          -2 * alpha * N,       
+                          lower.tail = lower.tail, 
+                          log.p = TRUE)
     }
     
     
@@ -148,6 +154,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
       lo  <- 1
       flo <- f(lo)
       if (flo <= 0) next
+      
       # Bracket: for the lower tail Delta is negative at N = max(2, lambda);
       # for the upper tail the peak can lie well above lambda, so double
       hi  <- max(2, lam[k])
@@ -158,7 +165,9 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
         hi  <- 2 * hi
         fhi <- f(hi)
       }
-      N0[k] <- stats::uniroot(f, c(lo, hi), f.lower = flo, f.upper = fhi,
+      N0[k] <- stats::uniroot(f, c(lo, hi), 
+                              f.lower = flo, 
+                              f.upper = fhi,
                               tol = 0.25)$root   # only the integer peak is needed
     }
     
@@ -166,9 +175,12 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
     # largest of the terms at ceiling(N0) - 1, ceiling(N0), ceiling(N0) + 1
     cand <- outer(ceiling(N0), -1:1, "+")
     cand[cand < 1] <- 1
-    Lc   <- matrix(logT(as.vector(cand), rep(seq_len(m), 3)), ncol = 3)
+    Lc   <- matrix(logT(as.vector(cand), 
+                        rep(seq_len(m), 3)),
+                   ncol = 3)
     Lc[is.na(Lc)] <- -Inf
-    peak <- cand[cbind(seq_len(m), max.col(Lc, ties.method = "first"))]
+    peak <- cand[cbind(seq_len(m),
+                       max.col(Lc, ties.method = "first"))]
   
     Lmax <- logT(peak, seq_len(m))
     
