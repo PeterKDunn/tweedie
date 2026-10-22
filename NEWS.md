@@ -2,15 +2,19 @@ tweedie 3.2.0 (Release date: )
 ==============
 
 ## Summary
-* Add lower.tail argument for ptweedie() functions and ptweedie_series()
-* Minor fixes and improvements
+* Numerous improvements that improve accuracy and precision
 * Use the re-scaling identity to simplify CDF computations
-* Minor improvements and typo fixes in man pages
-* Increased a computation limit
+* Increased a computation limit to allows greater precision
+* Numerous new warnings in the code when accuracy is not reached or fails 
+* Some refining of the inversion approach
 * Add log.p input to ptweedie()
-* New tests for the log.p and lower.tail changes in ptweedie()
-* Numerous new warnings
-* Numerous new tests
+* Add lower.tail argument for ptweedie() functions and ptweedie_series()
+* New testthat tests for the log.p and lower.tail changes in ptweedie()
+* Changes in the ptweedie_series() approach
+* Changes in ptweedie() using saddlpoint approx and direct integration, greatly improving accuracy
+* Numerous new testthat tests 
+* Minor coding fixes and improvements 
+* Minor improvements and typo fixes in man pages
 
 
 ## Changed
