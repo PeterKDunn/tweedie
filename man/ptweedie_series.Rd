@@ -6,7 +6,7 @@
 \title{Series Evaluation for the Tweedie Distribution Function}
 \usage{
 ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, 
-                       verbose = FALSE, details = FALSE)
+                       verbose = FALSE, details = FALSE, max.terms = 1e6)
 
 ptweedie.series(q, power, mu, phi, verbose = FALSE, details = FALSE)
 }
@@ -33,6 +33,11 @@ The default is \code{FALSE}.}
 
 \item{details}{logical; if \code{TRUE}, returns the value of the distribution function 
 and some details.}
+
+\item{max.terms}{integer; the maximum number of terms summed for each value before the 
+summing is truncated, and a warning produced. The default is \code{1e6}, enough for
+\eqn{\lambda}{lambda} up to about \eqn{4\times 10^9}{4e9}; each extra million terms takes
+about half a second per value.}
 }
 \value{
 A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).

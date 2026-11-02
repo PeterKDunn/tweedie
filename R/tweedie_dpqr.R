@@ -473,7 +473,6 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   index.par <- out$index.par
   index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
   
-  if (verbose) cat("- Checking, resizing inputs\n")
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
   out <- check_inputs(q, mu, phi, power)
@@ -564,7 +563,14 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
               }
               not_conv[k] <- FALSE
             } else if (very_small) {
-              not_rel[k] <- TRUE
+              if (is.na(tail_lin[k])) {
+                # No value at all (the inversion returned NA, and it could
+                # not be recomputed): report it as not computed, not as
+                # 'accurate only in absolute terms'
+                not_conv[k] <- TRUE
+              } else {
+                not_rel[k] <- TRUE
+              }
             }
           }
         }
@@ -673,7 +679,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                         details    = TRUE) )
           f[j] <- f_TMP$cdf
 
-          failed <- is.nan(f_TMP$cdf) | (f_TMP$exitstatus == 1L)
+          failed <- is.na(f_TMP$cdf) | (f_TMP$exitstatus == 1L)
           n_bad  <- sum(failed)
           if (n_bad > 0) {
             warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
@@ -702,11 +708,14 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   
   
   
-  # Sanity fixes are only meaningful on the linear scale; log-probabilities
-  # are negative by construction and must not be clamped to [0, 1].
+  # Sanity fixes: a probability lies in [0, 1], so a log-probability cannot
+  # exceed 0. (Rounding in the inversion can give a value fractionally above
+  # one, whose log is then fractionally above zero.)
   if (!log.p) {
     f[ !is.na(f) & (f < 0) ] <- 0
     f[ !is.na(f) & (f > 1) ] <- 1
+  } else {
+    f[ !is.na(f) & (f > 0) ] <- 0
   }
   
   return(f)

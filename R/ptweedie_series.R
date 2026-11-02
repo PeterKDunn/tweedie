@@ -25,9 +25,10 @@
 #'   The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution function 
 #'   and some details.
-#' @param max.terms integer; the maximum number of terms used for summing the series before the 
-#'   summing is truncated, and a warning produced. 
-#'   and some details.
+#' @param max.terms integer; the maximum number of terms summed for each value before the 
+#'   summing is truncated, and a warning produced. The default is \code{1e6}, enough for
+#'   \eqn{\lambda}{lambda} up to about \eqn{4\times 10^9}{4e9}; each extra million terms takes
+#'   about half a second per value.
 #' 
 #' @return A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
 #' 
@@ -54,7 +55,7 @@
 #'
 #' @export
 ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, 
-                            verbose = FALSE, details = FALSE) {
+                            verbose = FALSE, details = FALSE, max.terms = 1e6) {
   ### NOTE: No notation checks
   ### NOTE: Only for 1 < p < 2
   if ( (length(power) != 1) || !is.finite(power) || (power <= 1) || (power >= 2) ) {
