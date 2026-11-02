@@ -506,7 +506,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
     # NOT special p case; ONLY special y cases 
     
     if ( power > 2 ) {
-      # For p > 2 the only option is the inversion
+      # For p > 2: the inversion, with small tail probabilities recomputed
+      # by integrating the density (below)
       if ( any(!special_y_cases)) { 
         if (verbose) cat("- With p > 2: use inversion\n")
         
@@ -526,8 +527,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # probability P has a relative error of about 1e-16/P. Where the
         # requested tail is below 1e-5, recompute it by integrating the
         # density, which keeps its relative accuracy far into the tails (see
-        # ptweedie_tail_integrate); upper tails use Gauss-Laguerre quadrature,
-        # so this is cheap. Between 1e-10 and 1e-5 the inversion still has
+        # ptweedie_tail_integrate); both tails use Gauss-Laguerre quadrature
+        # first, so this is cheap. Between 1e-10 and 1e-5 the inversion still has
         # about 6 or more correct digits, so there the integrated value is
         # used only if it agrees with the inversion to within 1e-12 (absolute),
         # and otherwise the inversion value is kept, silently. Below 1e-10,
@@ -583,54 +584,14 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         n_rel <- sum(not_rel)
         if (n_rel > 0) {
           warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
-                  "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
+                  "full relative accuracy; these are accurate only in absolute terms.",
                   call. = FALSE)
         }
       }
     } else {
-      # CASE 1 < p < 2
-      # For 1 < p < 2, the two options are the series or inversion.
-      # We avoid the series when p is near one, otherwise it is fine.
-      
-      # A few caveats.  Gustaov noted this case:
-      # ptweedie(q=7.709933e-308, mu=1.017691e+01, phi=4.550000e+00, power=1.980000e+00)
-      # which fails for the inversion, but seems to go fine for the series.
-      # So the criterion should be a bit more detailed that just p<1.7...
-      # But what?
-      # Shallow second derivative of integrand is OK in principle... but hard to ascertain.
-      
-      # In a bug report by Gustavo Lacerda (April 2017), 
-      # it seems that the original code here was a bit too 
-      # harsh on the series, and a bit forgiving on the inversion.
-      # Changed April 2017 to use the series more often.
-      
-      # ### OLD CODE:
-      # if ( (power>1) & (power<2) ) {
-      #     if ( power <1.7 ) {
-      #        f <- ptweedie_series(power=power, q=y, mu=mu, phi=phi )
-      #     } else{
-      #        f <- ptweedie_inversion( power=power, q=y, mu=mu, phi=phi)
-      #     }
-      # }
-      
-      ### REVISED CODE:
-      ### The choice of  1.999 is arbitrary.  Probably needs serious attention to decide properly
-      ### Changed early 2017; thanks to Gustavo Lacerda
-      #if ( power < 1.999) { 
-      #  #### XXXXXXXXXXXXXXXXXXXXXXXXX This is arbitrary, and needs a closer look
-      #  if (verbose) cat("- With 1 < p < 2: use series")
-      #  
-      #  f_TMP <- ptweedie_series(power = power, 
-      #                           q     = y[!special_y_cases], 
-      #                           mu    = mu[!special_y_cases], 
-      #                           phi   = phi[!special_y_cases] )
-      #  if (details) {
-      #    f[!special_y_cases] <- f_TMP$cdf
-      #    regions[!special_y_cases] <- f_TMP$regions
-      #  } else {
-      #    f[!special_y_cases] <- f_TMP
-      #  }
-      #} else{
+      # CASE 1 < p < 2: the series, or the inversion when lambda is too large.
+      # (The choice before 2026 -- by p, after bug reports from Gustavo
+      # Lacerda in 2017 -- is in the git history.)
       
       # Since 2026 the SERIES is used first. For 1 < p < 2 it sums positive
       # terms (no cancellation), and it sums exactly the terms that matter
@@ -641,9 +602,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       # point mass at zero is large (small lambda) and p is near 1, and it
       # degrades as lambda grows (relative errors near 5e-8 at lambda = 1e7,
       # and some values of 0.5 in place of the answer for lambda >= 1e7).
-      # The number of terms grows only like sqrt(lambda) (about 18 sqrt(lambda)),
-      # so the series stays within its cap of 1e6 terms up to lambda of about
-      # 3e9. So:
+      # # The number of terms grows only like sqrt(lambda) (about 15 sqrt(lambda)
+      # at y = mu), so the series stays within its default cap of 1e6 terms
+      # (ptweedie_series(max.terms = )) up to lambda of about 4e9. So:
       #  - lambda <= 1e9: use the series;
       #  - lambda >  1e9, or where the series fails: use the inversion.
       if ( any(!special_y_cases)) {
@@ -685,14 +646,16 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
             warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
                     " value(s); these may be inaccurate.", call. = FALSE)
           }
-          # The inversion's error is ABSOLUTE (about 1e-15): small tail
-          # probabilities have little relative accuracy, and here the series
-          # cannot take over (lambda too large)
+          # The inversion's error is ABSOLUTE (and larger than for p > 2: up
+          # to about 1e-11 for p near 1), so small tail probabilities have
+          # little relative accuracy, and here the series cannot take over.
+          # For lambda >= 1e10 it also fails (returning about 0.5, flagged by
+          # exitstatus) for y below the mean.
           tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
           n_rel <- sum( !failed & !is.na(tail_lin) & (tail_lin < 1e-5) )
           if (n_rel > 0) {
             warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
-                    "full relative accuracy; these are accurate only to about 1e-15 in absolute terms.",
+                    "full relative accuracy; these are accurate only in absolute terms.",
                     call. = FALSE)
           }
         }
