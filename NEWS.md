@@ -11,7 +11,8 @@ tweedie 3.2.0 (Release date: )
 * Add lower.tail argument for ptweedie() functions and ptweedie_series()
 * New testthat tests for the log.p and lower.tail changes in ptweedie()
 * Changes in the ptweedie_series() approach
-* Changes in ptweedie() using saddlpoint approx and direct integration, greatly improving accuracy
+* New input to ptweedie_series(): max.terms, so that the truncation of the series can be controlled
+* Changes in ptweedie() using saddlepoint approx and direct integration, greatly improving accuracy
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 
 * Minor improvements and typo fixes in man pages
