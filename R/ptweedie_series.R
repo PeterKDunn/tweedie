@@ -8,7 +8,7 @@
 #' \emph{Not usually called by general users}, but can be in the case of evaluation problems.
 #'
 #' @usage ptweedie_series(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE, 
-#'                        verbose = FALSE, details = FALSE)
+#'                        verbose = FALSE, details = FALSE, max.terms = 1e6)
 #' 
 #' @param q vector of quantiles.
 #' @param power the power parameter \eqn{p}{power}.
@@ -24,6 +24,9 @@
 #' @param verbose logical; if \code{TRUE}, displays some internal computation details. 
 #'   The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, returns the value of the distribution function 
+#'   and some details.
+#' @param max.terms integer; the maximum number of terms used for summing the series before the 
+#'   summing is truncated, and a warning produced. 
 #'   and some details.
 #' 
 #' @return A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
@@ -88,8 +91,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   # Step 2 is done for all values of q at once.
   
   drop      <- 39         # Terms below exp(-drop) times the largest are negligible
-  max_terms <- 1e6        # Safety cap on the number of terms summed, per value
-  
+
   lens <- c(length(q), length(mu), length(phi))
   n    <- if (min(lens) == 0) 0 else max(lens)
   q    <- rep_len(q,   n)
@@ -212,7 +214,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
         } else {
           nlo[act] <- N[act] - nk
         }
-        over    <- cnt[act] > max_terms
+        over    <- cnt[act] > max.terms
         if (any(over)) capped <- TRUE
         N[act] <- N[act] + dir * B
         act    <- act[ (nk == B) & !over ]
@@ -236,7 +238,7 @@ ptweedie_series <- function(q, power, mu, phi, lower.tail = TRUE, log.p = FALSE,
   
   if (verbose) cat("Summed", sum(its, na.rm = TRUE), "terms in all\n")
   if (capped) {
-    warning("ptweedie_series: the series was truncated at ", max_terms,
+    warning("ptweedie_series: the series was truncated at ", max.terms,
             " terms (lambda too large); the result may be inaccurate. ",
             "Use ptweedie() or ptweedie_inversion() instead.",
             call. = FALSE)
