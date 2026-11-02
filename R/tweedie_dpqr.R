@@ -589,7 +589,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         }
       }
     } else {
-      # CASE 1 < p < 2: the series, or the inversion when lambda is too large.
+      # CASE 1 < p < 2: the series, at every lambda; the inversion only where
+      # the series returns no value.
       # (The choice before 2026 -- by p, after bug reports from Gustavo
       # Lacerda in 2017 -- is in the git history.)
       
@@ -602,25 +603,30 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       # point mass at zero is large (small lambda) and p is near 1, and it
       # degrades as lambda grows (relative errors near 5e-8 at lambda = 1e7,
       # and some values of 0.5 in place of the answer for lambda >= 1e7).
-      # # The number of terms grows only like sqrt(lambda) (about 15 sqrt(lambda)
-      # at y = mu), so the series stays within its default cap of 1e6 terms
-      # (ptweedie_series(max.terms = )) up to lambda of about 4e9. So:
-      #  - lambda <= 1e9: use the series;
-      #  - lambda >  1e9, or where the series fails: use the inversion.
+      # The number of terms grows only like sqrt(lambda): about 15 sqrt(lambda)
+      # at y = mu, at most about 18 sqrt(lambda), and fewer in the tails;
+      # about 0.4 microseconds each (0.2 s per value at lambda = 1e9, 4 s at
+      # lambda = 1e12). The inversion is no alternative for large lambda: for
+      # lambda >= 1e10 it fails (returning about 0.5) for y below the mean. So
+      # the series is used for every lambda, with its cap on the number of
+      # terms (ptweedie_series(max.terms = )) set from lambda: 25 sqrt(lambda),
+      # and at least 1e6.
       if ( any(!special_y_cases)) {
         idx    <- which(!special_y_cases)
         lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
-        use_ser <- (lambda <= 1e9)
+        use_ser <- rep(TRUE, length(idx))
 
         if (any(use_ser)) {
           if (verbose) cat("- With 1 < p < 2: using the series for", sum(use_ser), "value(s)\n")
           j <- idx[use_ser]
+          max_terms <- max(1e6, ceiling(25 * sqrt(max(lambda[use_ser]))))
           f[j] <- as.numeric( ptweedie_series(q          = q[j],
                                               mu         = mu[j],
                                               phi        = phi[j],
                                               power      = power,
                                               lower.tail = lower.tail,
-                                              log.p      = log.p) )
+                                              log.p      = log.p,
+                                              max.terms  = max_terms) )
           # In case the series could not be evaluated, fall back to the inversion
           use_ser[use_ser] <- !is.na(f[j])
         }
@@ -646,11 +652,11 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
             warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
                     " value(s); these may be inaccurate.", call. = FALSE)
           }
-          # The inversion's error is ABSOLUTE (and larger than for p > 2: up
-          # to about 1e-11 for p near 1), so small tail probabilities have
-          # little relative accuracy, and here the series cannot take over.
-          # For lambda >= 1e10 it also fails (returning about 0.5, flagged by
-          # exitstatus) for y below the mean.
+          # (Reached only where the series returned no value.) The
+          # inversion's error is ABSOLUTE (and larger than for p > 2: up to
+          # about 1e-11 for p near 1), so small tail probabilities have little
+          # relative accuracy. For lambda >= 1e10 it also fails (returning
+          # about 0.5, flagged by exitstatus) for y below the mean.
           tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
           n_rel <- sum( !failed & !is.na(tail_lin) & (tail_lin < 1e-5) )
           if (n_rel > 0) {
