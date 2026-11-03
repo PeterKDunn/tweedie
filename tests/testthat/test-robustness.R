@@ -58,9 +58,11 @@ test_that("p near 1 with small phi: no longer converges falsely (was silently wr
 
 test_that("non-convergence is reported by a warning, not only through exitstatus", {
   # (p = 6 with effective dispersion phi mu^(p-2) = 1e-11: a case the
-  # inversion still fails on)
-  expect_warning(ptweedie(0.001, mu = 0.01, phi = 0.001, power = 6),
-                 "did not reach the target accuracy")
+  # inversion still fails on. Since 3.2.1 ptweedie() uses the saddlepoint
+  # approximation here (xi = 2.5e10), so it no longer needs the inversion:
+  # y is a tenth of the mean, and F is far below the smallest double.)
+  expect_silent(F <- ptweedie(0.001, mu = 0.01, phi = 0.001, power = 6))
+  expect_equal(F, 0)
   expect_warning(o <- ptweedie_inversion(0.001, mu = 0.01, phi = 0.001, power = 6, details = TRUE),
                  "did not reach the target accuracy")
   expect_equal(o$exitstatus, 1L)

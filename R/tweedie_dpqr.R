@@ -507,20 +507,47 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
     
     if ( power > 2 ) {
       # For p > 2: the inversion, with small tail probabilities recomputed
-      # by integrating the density (below)
-      if ( any(!special_y_cases)) { 
+      # by integrating the density (below); but for very small dispersion,
+      # the saddlepoint approximation.
+      #
+      # With xi = mu^(2 - p) / {phi (p - 2)}, the inversion's error grows with
+      # xi, and above about xi = 1.2e5 (p near 2) to 2e5 (p = 3) the tail
+      # integration also fails or disagrees with it, so that values can be
+      # wrong (errors from 1e-6 to complete failure by xi = 1e8), some without
+      # a warning. The Lugannani-Rice saddlepoint approximation instead gets
+      # better as xi grows (relative error about 1.5e-7 at xi = 1e5, 5e-9 at
+      # 1e6, and about 1e-13 beyond 1e9), and costs almost nothing. So it is
+      # used for xi > 1e5 (see ptweedie_saddle). Where it returns no value
+      # (NA), the inversion is used as before.
+      use_inv <- !special_y_cases
+      if ( any(use_inv) ) {
+        xi_d   <- mu^(2 - power) / (phi * (power - 2))
+        use_sp <- use_inv & (xi_d > 1e5)
+        if (any(use_sp)) {
+          if (verbose) cat("- With p > 2: using the saddlepoint approximation for", sum(use_sp), "value(s) (very small dispersion)\n")
+          f_sp <- ptweedie_saddle(q          = q[use_sp],
+                                  mu         = mu[use_sp],
+                                  phi        = phi[use_sp],
+                                  power      = power,
+                                  lower.tail = lower.tail,
+                                  log.p      = log.p)
+          f[use_sp] <- f_sp
+          use_inv[which(use_sp)[!is.na(f_sp)]] <- FALSE
+        }
+      }
+      if ( any(use_inv)) {
         if (verbose) cat("- With p > 2: use inversion\n")
-        
+
         f_TMP <- suppressWarnings(
-                   ptweedie_inversion(q          = q[!special_y_cases],
-                                      mu         = mu[!special_y_cases],
-                                      phi        = phi[!special_y_cases],
+                   ptweedie_inversion(q          = q[use_inv],
+                                      mu         = mu[use_inv],
+                                      phi        = phi[use_inv],
                                       power      = power,
                                       lower.tail = lower.tail,
                                       log.p      = log.p,
                                       verbose    = verbose,
                                       details    = TRUE) )
-        f[!special_y_cases] <- f_TMP$cdf
+        f[use_inv] <- f_TMP$cdf
         not_conv <- (f_TMP$exitstatus == 1L)
         
         # The inversion's error is ABSOLUTE (about 1e-16), so a tail
@@ -535,7 +562,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # values that cannot be recomputed keep the inversion result and are
         # reported below.
         tail_switch <- 1e-5
-        idx     <- which(!special_y_cases)
+        idx     <- which(use_inv)
         tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
         small   <- is.na(tail_lin) | (tail_lin < tail_switch)
         not_rel <- rep(FALSE, length(idx))

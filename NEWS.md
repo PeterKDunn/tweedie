@@ -13,6 +13,7 @@ tweedie 3.2.0 (Release date: )
 * Changes in the ptweedie_series() approach
 * New input to ptweedie_series(): max.terms, so that the truncation of the series can be controlled
 * Changes in ptweedie() using saddlepoint approx and direct integration, greatly improving accuracy
+* ptweedie() for p > 2: uses the Lugannani-Rice saddlepoint approximation when the dispersion is very small (xi = mu^(2-p)/{phi (p-2)} > 1e5), where the inversion and tail integration can fail
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 
 * Minor improvements and typo fixes in man pages
