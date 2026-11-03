@@ -10,15 +10,20 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   #
   # Written to avoid cancellation. At small dispersion every y that matters is
   # close to mu, where the textbook formulas subtract nearly equal numbers:
+  #
   # - work with e = log(y/mu), after scaling to mean 1 (F(y; mu, phi) =
   #   F(y/mu; 1, phi mu^(p-2))), and use expm1();
+  #
   # - the unit deviance d = 2 {expm1(b e) - b expm1(e)}/(a b), with a = 1 - p
   #   and b = 2 - p, still cancels when e is small, so for |e| < 0.1 sum its
   #   series d = 2/(a b) sum_{k >= 2} (b^k - b) e^k / k!;
+  #
   # - 1/w - 1/u is 0/0 at y = mu, so for |e| < 1e-5 use its Taylor series
   #   sqrt(phi) {p/6 + p (p - 3) e / 24} (mean 1);
+  #
   # - write the small tail as dnorm(w) {Mills(w) + (1/w - 1/u)}, on the log
   #   scale, so it neither cancels nor underflows.
+  #
   # The relative error (checked against the exact inverse Gaussian, p = 3)
   # falls about 30-fold for each 10-fold increase in xi: about 1.5e-7 at
   # xi = 1e5, 5e-9 at 1e6, 5e-12 at 1e8, and about 1e-13 beyond 1e9.
@@ -29,9 +34,9 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   q    <- rep_len(q, n)
   mu   <- rep_len(mu, n)
   phis <- rep_len(phi * mu^(power - 2), n) # dispersion after scaling to mean 1
-  e <- log(q / mu)
-  a <- 1 - power
-  b <- 2 - power
+  e    <- log(q / mu)
+  a    <- 1 - power
+  b    <- 2 - power
 
   d  <- 2 * (expm1(b * e) - b * expm1(e)) / (a * b)
   sm <- !is.na(e) & (abs(e) < 0.1)
@@ -39,6 +44,7 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
     es <- e[sm]
     s  <- 0
     tk <- es                              # e^k / k!
+    
     for (k in 2:40) {
       tk <- tk * es / k
       s  <- s + (b^k - b) * tk
@@ -50,6 +56,7 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   u    <- expm1(a * e) / a * exp(power * e / 2) / sqrt(phis)
   corr <- 1 / w - 1 / u
   near <- !is.na(e) & (abs(e) < 1e-5)
+  
   if (any(near)) {
     corr[near] <- sqrt(phis[near]) *(power / 6 + power * (power - 3) * e[near] / 24)
   }
@@ -66,12 +73,16 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
 
   # Small tail: log{ dnorm(w) (Mills(w) + corr) }
   arg <- exp(stats::pnorm(w[small], log.p = TRUE) - ld[small]) + corr[small]
-  out[small] <- ifelse(arg > 0, ld[small] + log(pmax(arg, 0)), NA_real_)
+  out[small] <- ifelse(arg > 0, 
+                       ld[small] + log(pmax(arg, 0)), 
+                       NA_real_)
 
   # Large tail: log{ 1 - dnorm(w) (Mills(-w) - corr) }
   big  <- !is.na(w) & !small
   arg2 <- exp(stats::pnorm(-w[big], log.p = TRUE) - ld[big]) - corr[big]
-  out[big] <- ifelse(arg2 > 0, log1p(-exp(ld[big] + log(pmax(arg2, 0)))), NA_real_)
+  out[big] <- ifelse(arg2 > 0, 
+                     log1p(-exp(ld[big] + log(pmax(arg2, 0)))), 
+                     NA_real_)
 
   # y so far out that w overflows: the small tail is 0, the large tail 1
   out[!is.na(w) & (w == -Inf)] <- -Inf
