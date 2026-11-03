@@ -602,7 +602,26 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
             }
           }
         }
-        
+
+        # A flagged value close to one (e.g. P(Y > y) for y far below the
+        # mean, when the inversion could not converge): its absolute error
+        # is what matters, so compute instead the OTHER tail, which is then
+        # small, by integrating the density, and return one minus it.
+        near_one <- not_conv & !not_rel & !is.na(tail_lin) & (tail_lin > 1 - tail_switch)
+        for (k in which(near_one)) {
+          j  <- idx[k]
+          ti <- ptweedie_tail_integrate(q = q[j],
+                                        mu = mu[j],
+                                        phi = phi[j],
+                                        power = power,
+                                        lower.tail = !lower.tail,
+                                        fallback = TRUE)
+          if (ti$ok && (exp(ti$logp) < tail_switch)) {
+            f[j] <- if (log.p) log1p(-exp(ti$logp)) else -expm1(ti$logp)
+            not_conv[k] <- FALSE
+          }
+        }
+
         n_bad <- sum(not_conv & !not_rel)
         if (n_bad > 0) {
           warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,

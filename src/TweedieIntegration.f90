@@ -64,6 +64,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
                                                     !   for the p > 2 tail-bound convergence test
   INTEGER(C_INT)                    :: count_PreAcc_Regions
   LOGICAL(C_BOOL)                   :: stop_PreAccelerate, converged_Pre
+  LOGICAL(C_BOOL)                   :: capped_Pre   ! TRUE if pre-acceleration stopped only at its cap
   REAL(C_DOUBLE)                    :: leftPreAccZero
 
   ! Zone 3: acceleration
@@ -127,6 +128,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   aimrerr           = 1.0E-12_C_DOUBLE
   epsilon           = 1.0E-12_C_DOUBLE
   consecSmallCount  = 0_C_INT
+  capped_Pre        = .FALSE.
   IF ( .NOT.(Cpdf) .AND. Ctail) THEN     !ONLY RESET if CDF requested and UPPER tail requested
     aimrerr = 1.0E-15_C_DOUBLE
     epsilon = 1.0E-15_C_DOUBLE
@@ -288,6 +290,7 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
     IF (count_PreAcc_Regions .GT. accMax) THEN
       stop_PreAccelerate = .TRUE.
       converged_Pre      = .FALSE.
+      capped_Pre         = .TRUE.
     END IF
 
   END DO
@@ -379,6 +382,14 @@ SUBROUTINE TweedieIntegration(i, funvalueI, exitstatus, relerr, count_Integratio
   IF ( .NOT.(converged_Pre) .AND. .NOT.(converged_Accelerating) ) THEN
      error = .TRUE.
   END IF
+
+  ! If pre-acceleration stopped only because it reached its cap, acceleration
+  ! was started wherever that happened to be: in practice, before tmax, where
+  ! the zeros are not yet regular and the W-transformation is not valid
+  ! (Sect. "Invoking numerical acceleration" of the paper). The acceleration
+  ! can then appear to converge to a wrong value (e.g. p = 6, mu = phi = 0.01,
+  ! y = 0.001: F = 1.2e-8 returned, where F underflows to 0), so flag it.
+  IF ( capped_Pre ) error = .TRUE.
 
 
   ! --- WIND THINGS UP ---
