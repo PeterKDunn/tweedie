@@ -22,7 +22,8 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   #   sqrt(phi) {p/6 + p (p - 3) e / 24} (mean 1);
   #
   # - write the small tail as dnorm(w) {Mills(w) + (1/w - 1/u)}, on the log
-  #   scale, so it neither cancels nor underflows.
+  #   scale, so it neither cancels nor underflows, with the Mills ratio from
+  #   a continued fraction (see mills_ratio()) far in the tails.
   #
   # The relative error (checked against the exact inverse Gaussian, p = 3)
   # falls about 30-fold for each 10-fold increase in xi: about 1.5e-7 at
@@ -71,15 +72,15 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   small <- !is.na(w) & (w < 0)            # the requested tail is the small one
   out   <- rep(NA_real_, length(w))
 
-  # Small tail: log{ dnorm(w) (Mills(w) + corr) }
-  arg <- exp(stats::pnorm(w[small], log.p = TRUE) - ld[small]) + corr[small]
+  # Small tail: log{ dnorm(w) (Mills(w) + corr) }, Mills(w) = Phi(w)/dnorm(w)
+  arg <- mills_ratio(-w[small]) + corr[small]
   out[small] <- ifelse(arg > 0, 
                        ld[small] + log(pmax(arg, 0)), 
                        NA_real_)
 
   # Large tail: log{ 1 - dnorm(w) (Mills(-w) - corr) }
   big  <- !is.na(w) & !small
-  arg2 <- exp(stats::pnorm(-w[big], log.p = TRUE) - ld[big]) - corr[big]
+  arg2 <- mills_ratio(w[big]) - corr[big]
   out[big] <- ifelse(arg2 > 0, 
                      log1p(-exp(ld[big] + log(pmax(arg2, 0)))), 
                      NA_real_)
@@ -89,4 +90,28 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   out[!is.na(w) & (w ==  Inf)] <- 0
 
   if (log.p) out else exp(out)
+}
+
+
+#' @noRd
+mills_ratio <- function(x) {
+  # R(x) = Phi(-x) / dnorm(x) for x >= 0, to full relative accuracy.
+  # Computed as exp{log Phi(-x) - log dnorm(x)}, the two logs nearly cancel
+  # when x is large (both are about -x^2/2), losing about x^2/2 * 1e-16 in
+  # absolute terms: 1e-13 at x = 37 (a tail of 1e-300), and everything by
+  # x = 1e5 (where the result was even Inf). For x >= 3 use instead the
+  # continued fraction R(x) = 1/(x + 1/(x + 2/(x + 3/(x + ...)))), evaluated
+  # from the back; 100 terms give full double precision for x >= 3.
+  R  <- numeric(length(x))
+  lo <- !is.na(x) & (x < 3)
+  R[lo] <- exp(stats::pnorm(-x[lo], log.p = TRUE) - stats::dnorm(x[lo], log = TRUE))
+  hi <- !is.na(x) & (x >= 3)
+  if (any(hi)) {
+    xh <- x[hi]
+    t  <- 0
+    for (k in 100:1) t <- k / (xh + t)
+    R[hi] <- 1 / (xh + t)
+  }
+  R[is.na(x)] <- NA_real_
+  R
 }

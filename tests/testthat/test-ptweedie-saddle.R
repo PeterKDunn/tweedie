@@ -59,3 +59,16 @@ test_that("ptweedie() for p > 2 is close to continuous at the switch, xi = 1e5",
     expect_lt(max(abs(sp / inv - 1)), 1e-6)
   }
 })
+
+test_that("ptweedie_saddle() does not return log-probabilities above zero far in the tails", {
+  # The Mills ratio used to be computed as exp(log Phi(w) - log dnorm(w)),
+  # which for |w| near 1e10 is a difference of two numbers near -5e19, so it
+  # returned Inf, and ptweedie() then gave F = 1 for y far below the mean.
+  expect_lt(ptweedie(1e-3, mu = 0.01, phi = 0.001, power = 8, log.p = TRUE), -1e18)
+  expect_equal(ptweedie(1e-3, mu = 0.01, phi = 0.001, power = 8), 0)
+  expect_equal(ptweedie(1e-5, mu = 0.01, phi = 0.1, power = 6), 0)
+  # and the continued fraction agrees with the direct formula where both are accurate
+  x <- c(3, 4, 6, 10, 20)
+  expect_equal(tweedie:::mills_ratio(x),
+               exp(pnorm(-x, log.p = TRUE) - dnorm(x, log = TRUE)), tolerance = 1e-13)
+})
