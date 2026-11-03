@@ -506,23 +506,42 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
     # NOT special p case; ONLY special y cases 
     
     if ( power > 2 ) {
-      # For p > 2: the inversion, with small tail probabilities recomputed
-      # by integrating the density (below); but for very small dispersion,
-      # the saddlepoint approximation.
+      # For p > 2, with xi = mu^(2 - p) / {phi (p - 2)} and the dispersion
+      # after scaling to mean 1, phis = phi mu^(p - 2), three regimes:
       #
-      # With xi = mu^(2 - p) / {phi (p - 2)}, the inversion's error grows with
-      # xi, and above about xi = 1.2e5 (p near 2) to 2e5 (p = 3) the tail
-      # integration also fails or disagrees with it, so that values can be
-      # wrong (errors from 1e-6 to complete failure by xi = 1e8), some without
-      # a warning. The Lugannani-Rice saddlepoint approximation instead gets
-      # better as xi grows (relative error about 1.5e-7 at xi = 1e5, 5e-9 at
-      # 1e6, and about 1e-13 beyond 1e9), and costs almost nothing. So it is
-      # used for xi > 1e5 (see ptweedie_saddle). Where it returns no value
-      # (NA), the inversion is used as before.
+      #   xi <= 1e4        : the inversion; tail probabilities below 1e-5 are
+      #                      recomputed by integrating the density (between
+      #                      1e-10 and 1e-5, only if that agrees with the
+      #                      inversion to 1e-12, since the inversion is then the
+      #                      more reliable of the two).
+      #   1e4 < xi <= 1e7  : the inversion's error grows with xi (relative
+      #                      errors of about 1e-8 at tail probabilities of 1e-4
+      #                      when xi = 1e5, and 3e-6 when xi = 1e7, for every p
+      #                      tested), while integrating the density stays
+      #                      accurate (1e-9 or better, against 240-bit reference
+      #                      values, for p from 2.001 to 8, xi up to 1e7, and
+      #                      tail probabilities from 1e-2 to 1e-33). So tails
+      #                      below 1e-2 are integrated, and the integrated value
+      #                      is used whenever the integration succeeds. In the
+      #                      body, the inversion is used, except for 1e6 < xi and
+      #                      phis <= 1e-5, where the saddlepoint approximation is
+      #                      more accurate (relative error below about 3e-10).
+      #   xi > 1e7         : the saddlepoint approximation, for every y. Its
+      #                      error falls as xi grows (about 2e-8 at xi = 1e7 for
+      #                      p = 2.001, and below 1e-9 there for p >= 2.01),
+      #                      while the integration can fail outright by
+      #                      xi = 1e8.
+      #
+      # The saddlepoint approximation's accuracy depends on phis, not on xi:
+      # near p = 2, xi is large even when phis is not small (xi = 1e5 when
+      # p = 2.001 and phis = 0.01), and there it is much less accurate (errors
+      # of 1e-6 to 1e-4), which is why it is not simply used for large xi.
+      # Where it returns no value (NA), the other methods are used.
       use_inv <- !special_y_cases
+      xi_d    <- mu^(2 - power) / (phi * (power - 2))
+      phis    <- phi * mu^(power - 2)
       if ( any(use_inv) ) {
-        xi_d   <- mu^(2 - power) / (phi * (power - 2))
-        use_sp <- use_inv & (xi_d > 1e5)
+        use_sp <- use_inv & (xi_d > 1e7)
         if (any(use_sp)) {
           if (verbose) cat("- With p > 2: using the saddlepoint approximation for", sum(use_sp), "value(s) (very small dispersion)\n")
           f_sp <- ptweedie_saddle(q          = q[use_sp],
@@ -550,36 +569,33 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         f[use_inv] <- f_TMP$cdf
         not_conv <- (f_TMP$exitstatus == 1L)
         
-        # The inversion's error is ABSOLUTE (about 1e-16), so a tail
-        # probability P has a relative error of about 1e-16/P. Where the
-        # requested tail is below 1e-5, recompute it by integrating the
-        # density, which keeps its relative accuracy far into the tails (see
-        # ptweedie_tail_integrate); both tails use Gauss-Laguerre quadrature
-        # first, so this is cheap. Between 1e-10 and 1e-5 the inversion still has
-        # about 6 or more correct digits, so there the integrated value is
-        # used only if it agrees with the inversion to within 1e-12 (absolute),
-        # and otherwise the inversion value is kept, silently. Below 1e-10,
-        # values that cannot be recomputed keep the inversion result and are
-        # reported below.
-        tail_switch <- 1e-5
-        idx     <- which(use_inv)
+        # The inversion's error is ABSOLUTE, so a tail probability P has a
+        # relative error of about (absolute error)/P. Small tails are
+        # therefore recomputed by integrating the density, which keeps its
+        # relative accuracy far into the tails (see ptweedie_tail_integrate;
+        # Gauss-Laguerre quadrature first, so this is usually cheap). See the
+        # regimes above for the thresholds.
+        tail_switch <- 1e-5                        # for xi <= 1e4
+        idx      <- which(use_inv)
+        trust    <- xi_d[idx] > 1e4                # 1e4 < xi <= 1e7
         tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
-        small   <- is.na(tail_lin) | (tail_lin < tail_switch)
-        not_rel <- rep(FALSE, length(idx))
+        small    <- is.na(tail_lin) | (tail_lin < ifelse(trust, 1e-2, tail_switch))
+        not_rel  <- rep(FALSE, length(idx))
         if (any(small)) {
           if (verbose) cat("- Small tail probabilities:", sum(small), "value(s) recomputed by integrating the density\n")
           for (k in which(small)) {
             j <- idx[k]
-            # Between 1e-10 and 1e-5 only the cheap Gauss-Laguerre rules are
-            # tried, since the inversion value is a good fallback there
+            # For xi <= 1e4, between 1e-10 and 1e-5 only the cheap
+            # Gauss-Laguerre rules are tried, since the inversion value is a
+            # good fallback there
             very_small <- is.na(tail_lin[k]) || (tail_lin[k] < 1e-10)
             ti <- ptweedie_tail_integrate(q = q[j], 
                                           mu = mu[j], 
                                           phi = phi[j],
                                           power = power, 
                                           lower.tail = lower.tail,
-                                          fallback = very_small)
-            if (ti$ok && !very_small &&
+                                          fallback = very_small || trust[k])
+            if (ti$ok && !very_small && !trust[k] &&
                 !(abs(exp(ti$logp) - tail_lin[k]) < 1e-12)) {
               next   # disagrees with the inversion: keep the inversion value
             }
@@ -590,6 +606,15 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                  exp(ti$logp)
               }
               not_conv[k] <- FALSE
+              # A tail so small that the density underflows: the integration
+              # returns log P = -Inf. For 1e4 < xi the saddlepoint
+              # approximation (relative error below 1e-4 there) gives the
+              # finite log instead.
+              if (log.p && trust[k] && (ti$logp == -Inf)) {
+                ls <- ptweedie_saddle(q = q[j], mu = mu[j], phi = phi[j], power = power,
+                                      lower.tail = lower.tail, log.p = TRUE)
+                if (!is.na(ls)) f[j] <- ls
+              }
             } else if (very_small) {
               if (is.na(tail_lin[k])) {
                 # No value at all (the inversion returned NA, and it could
@@ -601,6 +626,22 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
               }
             }
           }
+        }
+
+        # The body, for 1e6 < xi <= 1e7 with phis <= 1e-5: the saddlepoint
+        # approximation is more accurate than the inversion there
+        body_sp <- !small & trust & (xi_d[idx] > 1e6) & (phis[idx] <= 1e-5)
+        if (any(body_sp)) {
+          j    <- idx[body_sp]
+          f_sp <- ptweedie_saddle(q          = q[j],
+                                  mu         = mu[j],
+                                  phi        = phi[j],
+                                  power      = power,
+                                  lower.tail = lower.tail,
+                                  log.p      = log.p)
+          ok_sp <- !is.na(f_sp)
+          f[j[ok_sp]] <- f_sp[ok_sp]
+          not_conv[which(body_sp)[ok_sp]] <- FALSE
         }
 
         # A flagged value close to one (e.g. P(Y > y) for y far below the

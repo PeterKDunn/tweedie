@@ -2,7 +2,7 @@
 ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE) {
   # The Lugannani-Rice saddlepoint approximation to the Tweedie distribution
   # function, as used by ptweedie() for p > 2 when the dispersion is very small
-  # (xi = mu^(2 - p) / {phi (p - 2)} > 1e5). Vectorised in q, mu and phi.
+  # (see ptweedie() for where). Vectorised in q, mu and phi.
   #
   #   F(y) ~ Phi(w) + dnorm(w) (1/w - 1/u),
   #   w = sign(y - mu) sqrt(d(y, mu)/phi),   u = t.hat sqrt(phi V(y)),
@@ -26,8 +26,11 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
   #   a continued fraction (see mills_ratio()) far in the tails.
   #
   # The relative error (checked against the exact inverse Gaussian, p = 3)
-  # falls about 30-fold for each 10-fold increase in xi: about 1.5e-7 at
-  # xi = 1e5, 5e-9 at 1e6, 5e-12 at 1e8, and about 1e-13 beyond 1e9.
+  # falls about 30-fold for each 10-fold increase in xi = mu^(2-p)/{phi (p-2)}:
+  # about 1.5e-7 at xi = 1e5, 5e-9 at 1e6, 5e-12 at 1e8, and about 1e-13
+  # beyond 1e9. It depends on the dispersion phi mu^(p-2), not on xi alone:
+  # near p = 2, xi is large even when the dispersion is not small, and the
+  # error is then larger (about 2e-8 at xi = 1e7 when p = 2.001).
   #
   # Returns NA where the approximation breaks down (a tail value <= 0).
 
