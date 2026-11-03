@@ -1,4 +1,4 @@
-# For 1 < p < 2, ptweedie() uses the series at every lambda (since 3.2.1).
+# For 1 < p < 2, ptweedie() uses the series at every lambda (since 3.2.0).
 # Before, it used the inversion for lambda > 1e9, which for lambda >= 1e10
 # returned about 0.5 (with a warning) for y below the mean.
 

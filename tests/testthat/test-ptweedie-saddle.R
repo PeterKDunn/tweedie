@@ -1,6 +1,6 @@
 # For p > 2 and very small dispersion (xi = mu^(2-p) / {phi (p-2)} > 1e5),
 # ptweedie() uses the Lugannani-Rice saddlepoint approximation
-# (ptweedie_saddle), since 3.2.1.
+# (ptweedie_saddle), since 3.2.0.
 
 test_that("ptweedie_saddle() matches the exact inverse Gaussian (p = 3) at small dispersion", {
   for (xi in c(1e6, 1e8, 1e10)) {

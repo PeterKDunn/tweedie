@@ -27,7 +27,7 @@ test_that("No common errors", {
   expect_no_error(
     suppressWarnings(ptweedie_inversion(0.001, power = 6, mu = 0.01, phi = 0.01))
   )
-  # Before 3.2.1 the inversion was wrong here (2e-5), and warned on some
+  # Before 3.2.0 the inversion was wrong here (2e-5), and warned on some
   # platforms only; see test-inversion-psmall-oscillations.R
   expect_no_error(
     ptweedie_inversion(0.001, phi = 10, power = 1.01, mu = 5)

@@ -1,6 +1,6 @@
 # ptweedie(log.p = TRUE) must never return a positive log-probability.
 # Rounding in the inversion can give a probability fractionally above one
-# (by about 1e-14), whose log was returned as it stood before 3.2.1.
+# (by about 1e-14), whose log was returned as it stood before 3.2.0.
 
 test_that("log-probabilities from ptweedie() are never positive", {
   # p > 2 (inversion): upper body of the distribution

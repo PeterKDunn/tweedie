@@ -1,7 +1,7 @@
 # For p < 4/3, Im k(t) oscillates about zero before the -t y term takes over,
 # so a region between the zeros found can hold many oscillations of the
 # integrand. A single Gauss rule over such a region was wrong, without a
-# warning (errors up to 2e-3 before 3.2.1); the regions are now integrated
+# warning (errors up to 2e-3 before 3.2.0); the regions are now integrated
 # adaptively. Also, when the tail regions are only rounding noise, the
 # acceleration now stops (it used to run to 400 regions and warn, on some
 # platforms only).
