@@ -116,7 +116,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   #
   # Here is a summary of what happens:
   #
-  #   p                          |  What happpens
+  #   p                          |  What happens
   # -----------------------------+-------------------
   #  1 -> p.lowest (=1.3)        |  Use series A
   #  p.lowest (=1.3) -> p=2      |  Use series A if
