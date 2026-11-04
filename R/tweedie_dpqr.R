@@ -152,8 +152,9 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   # inversion, which was faster but much less accurate in places (relative
   # errors of about 1e-9 for most p, and about 2.5e-7 for 7 <= p <= 10).
   
-  TOL_SADDLE <- 1e-13     # use the corrected saddlepoint where its estimated error is below this
-  TOL_SERIES <- 1e-12     # for p > 2, use the series where its estimated error is below this
+  # (The thresholds are in tweedie_regime_settings(); dtweedie_regime() says
+  # which regime each value is in.)
+  S <- tweedie_regime_settings()
   
   ### BEGIN: preliminary work
   
@@ -196,18 +197,23 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     
     if ( length(todo) > 0 ) {
       
-      # 1. The corrected saddlepoint approximation, where accurate
-      sp <- dtweedie_saddle_corrected(y     = y[todo], 
-                                      mu    = mu[todo], 
-                                      phi   = phi[todo], 
-                                      power = power)
-      # (log density -Inf is fine: the density underflows to zero)
-      use_sp <- !is.na(sp$relerr) & (sp$relerr < TOL_SADDLE) & !is.na(sp$logf)
-      density[ todo[use_sp] ] <- sp$density[use_sp]
-      method[ todo[use_sp] ]  <- "saddlepoint"
+      regime <- dtweedie_regime(y     = y[todo], 
+                                mu    = mu[todo], 
+                                phi   = phi[todo], 
+                                power = power)
+      
+      # 1. The corrected saddlepoint approximation, where accurate (a log
+      #    density of -Inf is fine: the density underflows to zero)
+      use_sp <- (regime == "saddlepoint")
+      if ( any(use_sp) ) {
+        sp <- dtweedie_saddle_corrected(y     = y[ todo[use_sp] ], 
+                                        mu    = mu[ todo[use_sp] ], 
+                                        phi   = phi[ todo[use_sp] ], 
+                                        power = power)
+        density[ todo[use_sp] ] <- sp$density
+        method[ todo[use_sp] ]  <- "saddlepoint"
+      }
       rest <- todo[!use_sp]
-      relerr_sp <- sp$relerr[!use_sp]               # (for the fallback below)
-      dens_sp   <- sp$density[!use_sp]
       if (verbose) cat("- Corrected saddlepoint approximation:", sum(use_sp), "value(s)\n")
       
       if ( length(rest) > 0 ) {
@@ -229,7 +235,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                    phi     = phi[rest],
                                    power   = power,
                                    details = TRUE) )
-          use_ser <- !is.na(ser$relerr) & (ser$relerr < TOL_SERIES)
+          use_ser <- !is.na(ser$relerr) & (ser$relerr < S$d_tol_series)
           density[ rest[use_ser] ] <- ser$density[use_ser]
           method[ rest[use_ser] ]  <- "series"
           if (verbose) cat("- Series:", sum(use_ser), "value(s)\n")
@@ -255,13 +261,18 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
               k      <- which(failed)
               re_ser <- ser$relerr[!use_ser][k]
               re_ser[is.na(re_ser)] <- Inf
-              re_sp  <- relerr_sp[!use_ser][k]
-              re_sp[is.na(re_sp) | !is.finite(dens_sp[!use_ser][k])] <- Inf
+              sp_k   <- dtweedie_saddle_corrected(y     = y[ inv[k] ], 
+                                                  mu    = mu[ inv[k] ], 
+                                                  phi   = phi[ inv[k] ], 
+                                                  power = power)
+              dens_sp_k <- sp_k$density
+              re_sp  <- sp_k$relerr
+              re_sp[is.na(re_sp) | !is.finite(dens_sp_k)] <- Inf
               pick_ser <- (re_ser <= re_sp) & is.finite(re_ser)
               pick_sp  <- !pick_ser & is.finite(re_sp)
               density[ inv[k][pick_ser] ] <- ser$density[!use_ser][k][pick_ser]
               method[ inv[k][pick_ser] ]  <- "series"
-              density[ inv[k][pick_sp] ]  <- dens_sp[!use_ser][k][pick_sp]
+              density[ inv[k][pick_sp] ]  <- dens_sp_k[pick_sp]
               method[ inv[k][pick_sp] ]   <- "saddlepoint"
               # (No warning where the density underflows to zero, whatever 
               # the method's relative error)
@@ -390,6 +401,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       # p = 2.001 and phis = 0.01), and there it is much less accurate (errors
       # of 1e-6 to 1e-4), which is why it is not simply used for large xi.
       # Where it returns no value (NA), the other methods are used.
+      # (The thresholds are in tweedie_regime_settings(); see also
+      # ptweedie_regime(), which says which regime each value is in.)
+      S       <- tweedie_regime_settings()
       use_inv <- !special_y_cases
       xi_d    <- mu^(2 - power) / (phi * (power - 2))
       phis    <- phi * mu^(power - 2)
@@ -397,7 +411,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # (xi within rounding of 1e7 counts as xi = 1e7: it is included only
         # when phis <= 1e-5; near p = 2, at xi = 1e7, the integration is the
         # more accurate)
-        use_sp <- use_inv & ((xi_d > 1e7 * (1 + 1e-8)) | ((xi_d >= 1e7 * (1 - 1e-8)) & (phis <= 1e-5)))
+        use_sp <- use_inv & ptweedie_use_saddle(xi_d, phis)
         if (any(use_sp)) {
           if (verbose) cat("- With p > 2: using the saddlepoint approximation for", sum(use_sp), "value(s) (very small dispersion)\n")
           f_sp <- ptweedie_saddle(q          = q[use_sp],
@@ -431,11 +445,11 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # relative accuracy far into the tails (see ptweedie_tail_integrate;
         # Gauss-Laguerre quadrature first, so this is usually cheap). See the
         # regimes above for the thresholds.
-        tail_switch <- 1e-5                        # for xi <= 1e4
+        tail_switch <- S$p_tail_small              # for xi <= 1e4
         idx      <- which(use_inv)
-        trust    <- xi_d[idx] > 1e4                # 1e4 < xi <= 1e7
+        trust    <- xi_d[idx] > S$p_xi_trust       # 1e4 < xi <= 1e7
         tail_lin <- if (log.p) exp(f_TMP$cdf) else f_TMP$cdf
-        small    <- is.na(tail_lin) | (tail_lin < ifelse(trust, 1e-2, tail_switch))
+        small    <- is.na(tail_lin) | (tail_lin < ifelse(trust, S$p_tail_trust, tail_switch))
         not_rel  <- rep(FALSE, length(idx))
         if (any(small)) {
           if (verbose) cat("- Small tail probabilities:", sum(small), "value(s) recomputed by integrating the density\n")
@@ -444,7 +458,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
             # For xi <= 1e4, between 1e-10 and 1e-5 only the cheap
             # Gauss-Laguerre rules are tried, since the inversion value is a
             # good fallback there
-            very_small <- is.na(tail_lin[k]) || (tail_lin[k] < 1e-10)
+            very_small <- is.na(tail_lin[k]) || (tail_lin[k] < S$p_tail_tiny)
             ti <- ptweedie_tail_integrate(q = q[j], 
                                           mu = mu[j], 
                                           phi = phi[j],
@@ -452,7 +466,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                                           lower.tail = lower.tail,
                                           fallback = very_small || trust[k])
             if (ti$ok && !very_small && !trust[k] &&
-                !(abs(exp(ti$logp) - tail_lin[k]) < 1e-12)) {
+                !(abs(exp(ti$logp) - tail_lin[k]) < S$p_agree)) {
               next   # disagrees with the inversion: keep the inversion value
             }
             if (ti$ok) {
@@ -486,7 +500,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
 
         # The body, for 1e6 < xi <= 1e7 with phis <= 1e-5: the saddlepoint
         # approximation is more accurate than the inversion there
-        body_sp <- !small & trust & (xi_d[idx] > 1e6) & (phis[idx] <= 1e-5)
+        body_sp <- !small & trust & (xi_d[idx] > S$p_xi_body_sp) & (phis[idx] <= S$p_phis_saddle)
         if (any(body_sp)) {
           j    <- idx[body_sp]
           f_sp <- ptweedie_saddle(q          = q[j],
@@ -504,7 +518,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # The body, for 1e5 < xi <= 1e7 (where the saddlepoint is not used):
         # integrating the density is more accurate than the inversion there.
         # Where the integration returns no value, the inversion's is kept.
-        body_int <- !small & (xi_d[idx] > 1e5) & !body_sp
+        body_int <- !small & (xi_d[idx] > S$p_xi_body_int) & !body_sp
         if (any(body_int)) {
           if (verbose) cat("- Body values with small dispersion:", sum(body_int), "value(s) recomputed by integrating the density\n")
           for (k in which(body_int)) {
@@ -578,7 +592,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         # even negative. There the saddlepoint approximation, where it gives a
         # probability, has at least the right order of magnitude, so it is
         # used instead (still flagged below).
-        for (k in which(not_rel & (is.na(tail_lin) | tail_lin < 1e-14))) {
+        for (k in which(not_rel & (is.na(tail_lin) | tail_lin < S$p_tail_nodigits))) {
           j    <- idx[k]
           f_sp <- ptweedie_saddle(q          = q[j],
                                   mu         = mu[j],

@@ -170,6 +170,34 @@ dtweedie_saddle_corrected <- function(y, mu, phi, power) {
   # The unit deviance is computed without cancellation (tweedie_dev()), and
   # the density on the log scale, so it neither cancels nor underflows early.
   
+  n   <- max(length(y), length(mu), length(phi))
+  y   <- rep_len(y,   n)
+  mu  <- rep_len(mu,  n)
+  phi <- rep_len(phi, n)
+  
+  sc   <- saddle_correction(z = phi * y ^ (power - 2), 
+                            power = power)
+  corr   <- sc$corr
+  relerr <- sc$relerr
+  logf <- -0.5 * log(2 * pi * phi) - (power / 2) * log(y) -
+            tweedie_dev(y = y, mu = mu, power = power) / (2 * phi) + 
+            log(pmax(corr, 0))
+  
+  list(density = exp(logf),
+       logf    = logf,
+       relerr  = relerr)
+}
+
+
+#' @noRd
+saddle_correction <- function(z, power) {
+  # The asymptotic correction to the saddlepoint approximation to the density,
+  # f / f_sp ~ 1 + a_1(p) z + a_2(p) z^2 + ..., with z = phi y^(p - 2), and an
+  # estimate of the relative error of the corrected approximation (see
+  # dtweedie_saddle_corrected()). It depends only on z and p, so it also
+  # decides, before any density is computed, where dtweedie() uses the
+  # corrected saddlepoint approximation (see dtweedie_regime()).
+  
   coefs <- list(                    # a_m(p): coefficients of s^0, s^1, ..., s^m
     c(-0.09375, 0.041666666666666664),
     c(-0.00732421875, 0.048177083333333329, -0.019965277777777776),
@@ -181,12 +209,7 @@ dtweedie_saddle_corrected <- function(y, mu, phi, power) {
     c(-0.00010504019574142376, 0.025265580179458472, -0.8931267961325523, 10.869733400438863, -58.99721957176417, 157.9847748331855, -211.72895167670441, 131.35384807074067, -28.305925780171091)
   )
   
-  n   <- max(length(y), length(mu), length(phi))
-  y   <- rep_len(y,   n)
-  mu  <- rep_len(mu,  n)
-  phi <- rep_len(phi, n)
-  
-  z  <- phi * y ^ (power - 2)
+  n  <- length(z)
   s  <- (power - 3 / 2) ^ 2
   am <- sapply(coefs, function(cf) {
     v <- 0
@@ -219,11 +242,6 @@ dtweedie_saddle_corrected <- function(y, mu, phi, power) {
   # the expansion: no value)
   bad <- !is.na(corr) & (corr <= 0)
   relerr[bad] <- Inf
-  logf <- -0.5 * log(2 * pi * phi) - (power / 2) * log(y) -
-            tweedie_dev(y = y, mu = mu, power = power) / (2 * phi) + 
-            log(pmax(corr, 0))
-  
-  list(density = exp(logf),
-       logf    = logf,
-       relerr  = relerr)
+  list(corr   = corr,
+       relerr = relerr)
 }

@@ -24,6 +24,7 @@ tweedie 3.2.0 (Release date: )
 * dtweedie_inversion(): the method argument is now used (it was ignored, and the method with the smallest multiplier was always chosen; method = NULL does that); the default, method 3, keeps the relative accuracy in the tails. This also makes ptweedie() more accurate for p > 2 where it integrates the density
 * tweedie_dev(): computed without cancellation, so it has full relative accuracy when y is close to mu (it lost most of its digits there); this also makes the saddlepoint and inversion densities more accurate at small dispersion
 * dtweedie(): y = NA gives NA (it gave an error)
+* The thresholds that decide which method dtweedie() and ptweedie() use are now all in one place, tweedie_regime_settings() (R/tweedie_regimes.R); the internal functions dtweedie_regime() and ptweedie_regime() say which regime each value falls in. The results are unchanged
 * ptweedie_inversion(): a result is now flagged (exitstatus = 1, with a warning) when the pre-acceleration zone reaches its cap, since acceleration then starts where it is not valid
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 
