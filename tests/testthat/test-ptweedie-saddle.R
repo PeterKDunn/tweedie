@@ -1,7 +1,7 @@
 # For p > 2 and very small dispersion, ptweedie() uses the Lugannani-Rice
 # saddlepoint approximation (ptweedie_saddle), since 3.2.0: for every y when
-# xi = mu^(2-p) / {phi (p-2)} > 1e7, and in the body when 1e6 < xi <= 1e7 and
-# phi mu^(p-2) <= 1e-5.
+# xi = mu^(2-p) / {phi (p-2)} > 1e7, or xi = 1e7 and phi mu^(p-2) <= 1e-5;
+# and in the body when 1e6 < xi < 1e7 and phi mu^(p-2) <= 1e-5.
 
 test_that("ptweedie_saddle() matches the exact inverse Gaussian (p = 3) at small dispersion", {
   for (xi in c(1e6, 1e8, 1e10)) {
@@ -50,8 +50,9 @@ test_that("ptweedie() uses the saddlepoint approximation for xi > 1e7 (p > 2)", 
 })
 
 test_that("ptweedie() for p > 2 is close to continuous at the switch, xi = 1e7", {
-  # At xi = 1e7 the inversion and integration are still used; just above it,
-  # the saddlepoint approximation. Both are accurate to about 1e-9 here.
+  # Just below xi = 1e7 the integration is used; at and above it (here, where
+  # phi mu^(p-2) <= 1e-5), the saddlepoint approximation. Both are accurate
+  # to about 1e-9 here.
   for (p in c(2.05, 4)) {
     phi <- 1 / (1e7 * (p - 2))
     y   <- 1 + c(-8, -4, -1, 0, 1, 4, 8) * sqrt(phi)

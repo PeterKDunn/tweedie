@@ -15,6 +15,9 @@ tweedie 3.2.0 (Release date: )
 * Changes in ptweedie() using saddlepoint approx and direct integration, greatly improving accuracy
 * ptweedie() for p > 2: uses the Lugannani-Rice saddlepoint approximation when the dispersion is very small (xi = mu^(2-p)/{phi (p-2)} > 1e7, and in the body when xi > 1e6 and phi mu^(p-2) <= 1e-5), where the inversion and tail integration can fail
 * ptweedie() for p > 2 and xi > 1e4: tail probabilities below 1e-2 (not 1e-5) are computed by integrating the density, and the integrated value is used whenever the integration succeeds (before, between 1e-10 and 1e-5 the inversion value was kept if the two disagreed, which near p = 2 gave silent errors of up to 0.5%)
+* ptweedie() for p > 2 and 1e5 < xi <= 1e7: values in the body are also computed by integrating the density (the inversion's error there reached about 1e-8 near p = 2; now about 1e-9 or better), with the inversion where the integration returns no value; this is slower (about 0.1 s per value)
+* ptweedie() for p > 2: the saddlepoint approximation is also used at xi = 1e7 when phi mu^(p-2) <= 1e-5, where it is more accurate than the integration
+* ptweedie() for p > 2: where the inversion fails (near p = 2, for very small y and large dispersion it could return 0.5, or 0, whatever the true value), the density is integrated or, failing that, the saddlepoint approximation is used; these values are rough, and still flagged by a warning
 * ptweedie_inversion(): a result is now flagged (exitstatus = 1, with a warning) when the pre-acceleration zone reaches its cap, since acceleration then starts where it is not valid
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 

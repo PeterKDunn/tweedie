@@ -523,14 +523,29 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       #                      tail probabilities from 1e-2 to 1e-33). So tails
       #                      below 1e-2 are integrated, and the integrated value
       #                      is used whenever the integration succeeds. In the
-      #                      body, the inversion is used, except for 1e6 < xi and
-      #                      phis <= 1e-5, where the saddlepoint approximation is
-      #                      more accurate (relative error below about 3e-10).
-      #   xi > 1e7         : the saddlepoint approximation, for every y. Its
+      #                      body, the inversion is used for xi <= 1e5; for
+      #                      1e5 < xi, the density is integrated in the body
+      #                      too (the inversion's error in the body reaches
+      #                      about 1e-8 near p = 2 at xi = 1e7, against about
+      #                      1e-9 for the integration; the integration is
+      #                      slower, about 0.1 s per value), with the inversion
+      #                      where the integration returns no value. For
+      #                      1e6 < xi and phis <= 1e-5, the saddlepoint
+      #                      approximation is used in the body instead (relative
+      #                      error below about 3e-10).
+      #   xi > 1e7         : the saddlepoint approximation, for every y; and
+      #                      also at xi = 1e7 when phis <= 1e-5 (then p >= 2.01),
+      #                      where it is more accurate than the integration. Its
       #                      error falls as xi grows (about 2e-8 at xi = 1e7 for
       #                      p = 2.001, and below 1e-9 there for p >= 2.01),
       #                      while the integration can fail outright by
       #                      xi = 1e8.
+      #
+      # Where the inversion fails (for xi <= 1e4, at very small y when p is near
+      # 2, it can return about 0.5) and none of the above replaces its value,
+      # the density is integrated; failing that, the saddlepoint approximation
+      # is used if it gives a probability (rough there, but far better than the
+      # failed value). Such values are still flagged by a warning.
       #
       # The saddlepoint approximation's accuracy depends on phis, not on xi:
       # near p = 2, xi is large even when phis is not small (xi = 1e5 when
@@ -541,7 +556,10 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       xi_d    <- mu^(2 - power) / (phi * (power - 2))
       phis    <- phi * mu^(power - 2)
       if ( any(use_inv) ) {
-        use_sp <- use_inv & (xi_d > 1e7)
+        # (xi within rounding of 1e7 counts as xi = 1e7: it is included only
+        # when phis <= 1e-5; near p = 2, at xi = 1e7, the integration is the
+        # more accurate)
+        use_sp <- use_inv & ((xi_d > 1e7 * (1 + 1e-8)) | ((xi_d >= 1e7 * (1 - 1e-8)) & (phis <= 1e-5)))
         if (any(use_sp)) {
           if (verbose) cat("- With p > 2: using the saddlepoint approximation for", sum(use_sp), "value(s) (very small dispersion)\n")
           f_sp <- ptweedie_saddle(q          = q[use_sp],
@@ -642,6 +660,28 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
           ok_sp <- !is.na(f_sp)
           f[j[ok_sp]] <- f_sp[ok_sp]
           not_conv[which(body_sp)[ok_sp]] <- FALSE
+          body_sp[which(body_sp)[!ok_sp]] <- FALSE
+        }
+
+        # The body, for 1e5 < xi <= 1e7 (where the saddlepoint is not used):
+        # integrating the density is more accurate than the inversion there.
+        # Where the integration returns no value, the inversion's is kept.
+        body_int <- !small & (xi_d[idx] > 1e5) & !body_sp
+        if (any(body_int)) {
+          if (verbose) cat("- Body values with small dispersion:", sum(body_int), "value(s) recomputed by integrating the density\n")
+          for (k in which(body_int)) {
+            j  <- idx[k]
+            ti <- ptweedie_tail_integrate(q = q[j],
+                                          mu = mu[j],
+                                          phi = phi[j],
+                                          power = power,
+                                          lower.tail = lower.tail,
+                                          fallback = TRUE)
+            if (ti$ok) {
+              f[j] <- if (log.p) ti$logp else exp(ti$logp)
+              not_conv[k] <- FALSE
+            }
+          }
         }
 
         # A flagged value close to one (e.g. P(Y > y) for y far below the
@@ -663,6 +703,55 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
           }
         }
 
+        # Where the inversion failed in what it took to be the body, and
+        # nothing above replaced its value (for xi <= 1e4 this happens at very
+        # small y when p is near 2, where the inversion can return about 0.5
+        # whatever the true value): integrate the density; failing that, use
+        # the saddlepoint approximation if it gives a probability (it is rough
+        # there, but far better than the failed value). Either way, the value
+        # is still flagged by the warning below, since neither has been
+        # checked against the other.
+        failed <- which(not_conv & !not_rel & !near_one & !small)
+        for (k in failed) {
+          j  <- idx[k]
+          ti <- ptweedie_tail_integrate(q = q[j],
+                                        mu = mu[j],
+                                        phi = phi[j],
+                                        power = power,
+                                        lower.tail = lower.tail,
+                                        fallback = TRUE)
+          if (ti$ok && is.finite(ti$logp)) {
+            f[j] <- if (log.p) ti$logp else exp(ti$logp)
+            next
+          }
+          f_sp <- ptweedie_saddle(q          = q[j],
+                                  mu         = mu[j],
+                                  phi        = phi[j],
+                                  power      = power,
+                                  lower.tail = lower.tail,
+                                  log.p      = log.p)
+          is_prob <- !is.na(f_sp) && (if (log.p) f_sp < 0 else (f_sp > 0 && f_sp < 1))
+          if (is_prob) f[j] <- f_sp
+        }
+
+        # A tail probability below 1e-10 that could not be integrated: the
+        # inversion's value is accurate only in absolute terms (about 1e-16),
+        # so below about 1e-14 it has no correct digits, and can be zero or
+        # even negative. There the saddlepoint approximation, where it gives a
+        # probability, has at least the right order of magnitude, so it is
+        # used instead (still flagged below).
+        for (k in which(not_rel & (is.na(tail_lin) | tail_lin < 1e-14))) {
+          j    <- idx[k]
+          f_sp <- ptweedie_saddle(q          = q[j],
+                                  mu         = mu[j],
+                                  phi        = phi[j],
+                                  power      = power,
+                                  lower.tail = lower.tail,
+                                  log.p      = log.p)
+          is_prob <- !is.na(f_sp) && (if (log.p) f_sp < 0 else (f_sp > 0 && f_sp < 1))
+          if (is_prob) f[j] <- f_sp
+        }
+
         n_bad <- sum(not_conv & !not_rel)
         if (n_bad > 0) {
           warning("ptweedie: the numerical integration did not reach the target accuracy for ", n_bad,
@@ -671,7 +760,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         n_rel <- sum(not_rel)
         if (n_rel > 0) {
           warning("ptweedie: ", n_rel, " small tail probability(ies) could not be computed to ",
-                  "full relative accuracy; these are accurate only in absolute terms.",
+                  "full relative accuracy; these are only approximate (from the saddlepoint ",
+                  "approximation, or accurate only in absolute terms).",
                   call. = FALSE)
         }
       }
