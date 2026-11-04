@@ -29,11 +29,11 @@ test_that("dtweedie_series is unchanged where it can be summed", {
 test_that("dtweedie for p > 10 no longer hangs or returns Inf", {
   # Near the mean the density is ~ 1 / (sd * sqrt(2 pi)), sd = sqrt(phi mu^p)
   # The series and the inversion both fail here (the inversion is off by
-  # ~2e-3), so dtweedie uses the saddlepoint, and says so. Since
-  # xi = phi y^(p-2) ~ 5e-15 the saddlepoint is very accurate: the reference is
-  # a 60-digit evaluation of the inversion integral.
-  expect_warning(f <- dtweedie(0.05, mu = 0.05, phi = 0.05, power = 12),
-                 "saddlepoint approximation was used")
+  # ~2e-3). Since z = phi y^(p-2) ~ 5e-15, dtweedie() uses the corrected
+  # saddlepoint approximation, which is very accurate here (since 3.2.0;
+  # before, the plain saddlepoint approximation was used, with a warning):
+  # the reference is a 60-digit evaluation of the inversion integral.
+  expect_silent(f <- dtweedie(0.05, mu = 0.05, phi = 0.05, power = 12))
   expect_equal(f, 114183943.43378, tolerance = 1e-10)
   expect_equal(dtweedie(0.1, mu = 0.1, phi = 10, power = 11),
                dtweedie_inversion(0.1, mu = 0.1, phi = 10, power = 11), tolerance = 1e-8)

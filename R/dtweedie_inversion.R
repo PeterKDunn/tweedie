@@ -12,7 +12,11 @@
 #' @param mu the mean parameter \eqn{\mu}{mu}.
 #' @param phi the dispersion parameter \eqn{\phi}{phi}.
 #' @param power scalar; the power parameter \eqn{p}{power}.
-#' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default).
+#' @param method the method to use; one of \code{1}, \code{2}, or \code{3} (the default), 
+#'   or \code{NULL} to choose, for each value, the method with the smallest multiplier 
+#'   (Dunn and Smyth, 2008). Method 3 (rescaling \code{y} to one) keeps the relative 
+#'   accuracy in the tails, where Methods 1 and 2 can lose it entirely. 
+#'   (Before version 3.2.0, this argument was ignored, and the method was always chosen as for \code{NULL}.)
 #' @param verbose logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.
 #' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
 #' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
@@ -126,15 +130,13 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		### END: SET UP
 		
 		
-		# Establish which method to use
-		# For special cases, method is 0.
-		if ( is.null(method)){
-			method <- array(0, dim = N)
-		} else {
-			method <- array( method, 
-											 dim = N)
+		# Establish which method to use: the 'method' given (1, 2 or 3) for every
+		# value or, if 'method' is NULL, for each value the method with the
+		# smallest multiplier (below). (Before, 'method' was ignored, and the
+		# method with the smallest multiplier was always used.)
+		if ( !is.null(method) ) {
+			if ( (length(method) != 1) || !(method %in% 1:3) ) stop("method must be 1, 2, 3, or NULL.")
 		}
-		method[special_y_cases] <- 0
 		# There are three approaches ('method'), each a product of a simple bit
 		# and a complicated bit computed in FORTRAN
 		#
@@ -146,18 +148,20 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		# If no method is explicitly requested, find the notional "optimal" method for each i.
 		
 		### BEGIN: ESTABLISH METHOD
-		theta <- ( mu ^ (1 - power) - 1 ) / ( 1 - power )
-		if ( ( abs(power - 2 ) ) < 1.0e-07 ){
-			kappa <- log(mu) + (2 - power) * ( log(mu) ^ 2 ) / 2
-		} else {
-			kappa <- ( mu ^ (2 - power) - 1 ) / (2 - power)
-		}
-	
+		# The factors use the unit deviance, computed without cancellation (see
+		# tweedie_dev()); the factor for Method 1, exp{(y theta - kappa)/phi} with
+		# theta = (mu^(1 - p) - 1)/(1 - p) and kappa = (mu^(2 - p) - 1)/(2 - p),
+		# is exp[{d(y, 1) - d(y, mu)}/(2 phi)], which avoids the cancellation in
+		# y theta - kappa
+		dev   <- tweedie_dev(y = y, 
+		                     mu = mu,
+		                     power = power )
+		dev_1 <- tweedie_dev(y = y, 
+		                     mu = 1,
+		                     power = power )
+
 		# Method 1
-		m1 <- exp( (y * theta - kappa ) / phi )
-		dev <- tweedie_dev(y = y, 
-											 mu = mu,
-											 power = power )
+		m1 <- exp( (dev_1 - dev) / (2 * phi) )
 
 		# Method 2
 		m2 <- 1 / mu
@@ -174,6 +178,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		optimal_Method <- apply(method_List, 
 														MARGIN = 1, 
 														FUN = which.min)
+		if ( !is.null(method) ) optimal_Method[] <- method
 		optimal_Method[special_y_cases] <- 0  
 	
 		### BEGIN: Set parameters for FORTRAN call, depending on method

@@ -21,6 +21,8 @@ A numeric vector containing the unit deviance.
 }
 \description{
 Computes the unit deviance for Tweedie distributions.
+Since version 3.2.0 it is computed without cancellation, so it has full 
+relative accuracy even when \code{y} is very close to \code{mu}.
 }
 \examples{
 # Unit deviance is not symmetric in general:

@@ -19,7 +19,11 @@ dtweedie.inversion(y, power, mu, phi, method = 3, verbose, details)
 
 \item{power}{scalar; the power parameter \eqn{p}{power}.}
 
-\item{method}{the method to use; one of \code{1}, \code{2}, or \code{3} (the default).}
+\item{method}{the method to use; one of \code{1}, \code{2}, or \code{3} (the default), 
+or \code{NULL} to choose, for each value, the method with the smallest multiplier 
+(Dunn and Smyth, 2008). Method 3 (rescaling \code{y} to one) keeps the relative 
+accuracy in the tails, where Methods 1 and 2 can lose it entirely. 
+(Before version 3.2.0, this argument was ignored, and the method was always chosen as for \code{NULL}.)}
 
 \item{verbose}{logical; if \code{TRUE}, display some internal computation details. The default is \code{FALSE}.}
 

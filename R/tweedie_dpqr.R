@@ -23,14 +23,20 @@
 #' Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), 
 #' gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
 #' Evaluation is difficult for \eqn{p}{p} outside of \eqn{p = 0, 1, 2, 3}{power = 0, 1, 2, 3}. 
-#' This function uses one of two primary methods, depending on the combination of parameters:
+#' For the density, \code{dtweedie()} uses one of three methods for each value, 
+#' depending on \eqn{p}{p} and \eqn{z = \phi y^{p - 2}}{z = phi * y^(p - 2)} 
+#' (the dispersion after rescaling \eqn{y}{y} to one):
 #' \enumerate{
-#'   \item Evaluation of an infinite series (\code{dtweedie_series}).
-#'   \item Interpolation from stored values computed via a Fourier inversion technique (\code{dtweedie_inversion}).
+#'   \item the saddlepoint approximation with its asymptotic correction, 
+#'         where \eqn{z}{z} is small enough for its estimated relative error to be below \eqn{10^{-13}}{1e-13};
+#'   \item otherwise, the series (\code{dtweedie_series}) for \eqn{1 < p < 2}{1 < power < 2}, and 
+#'         for \eqn{p > 2}{power > 2} where its estimated relative error is below \eqn{10^{-12}}{1e-12};
+#'   \item otherwise, the Fourier inversion (\code{dtweedie_inversion}).
 #' }
-#' This function employs a two-dimensional interpolation procedure to compute
-#' the density for some parts of the parameter space from previously computed
-#' values (interpolation) and uses the series solution for others.
+#' Against high-precision reference values, the relative error of the density is 
+#' below about \eqn{4 \times 10^{-13}}{4e-13}.
+#' (Before version 3.2.0, \code{dtweedie()} also interpolated from stored values 
+#' of the Fourier inversion, which was less accurate.)
 #'
 #' When \eqn{1<p<2}{1 < power < 2}, the density function include a positive 
 #' probability for \eqn{Y = 0}.
@@ -103,36 +109,51 @@
 #' @keywords distribution
 #' @export
 dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
-  # Methods employed:  
-  # - cgf inversion (type=1)
-  # - series evaluation (type = 2 if 1 < p < 2); 
-  # - series evaluation (type = 3 if p > 2).
+  # THE REGIMES (since 2026; no interpolation)
   #
-  # This function uses bivariate interpolation to accurately
-  # approximate the inversion in conjunction with the series.
+  # Special values of p (p = 1, 2, 3; also p = 0) use the closed forms, and
+  # y <= 0 is exact (the point mass Pr(Y = 0) = exp(-lambda) when 1 < p < 2).
+  # Otherwise, for each y > 0, with the dispersion after rescaling y to 1,
   #
+  #   z = phi y^(p - 2)
   #
-  # FIRST, establish whether the series or the cgf inversion is the better method.
+  # (by the scaling property, the relative accuracy of each method depends on
+  # p and z only), three methods are used:
   #
-  # Here is a summary of what happens:
+  #   1. The saddlepoint approximation with its asymptotic correction
+  #      (dtweedie_saddle_corrected()), wherever its estimated relative error is
+  #      below 1e-13: that is, wherever z is small enough. This needs z below
+  #      about 0.07 for p from 1.1 to 2.05, 0.03 for p = 2.5, 3e-3 for p = 4,
+  #      4e-4 for p = 8 and 1e-4 for p = 12 (for 1 < p < 2 the density also has
+  #      ripples that the approximation misses, which matter for p near 1: there
+  #      z must be below 7e-3 when p = 1.01). Its actual relative error there
+  #      is about 1e-13 or smaller. (The uncorrected saddlepoint approximation
+  #      has relative error of about z p |p - 3| / 24.)
   #
-  #   p                          |  What happens
-  # -----------------------------+-------------------
-  #  1 -> p.lowest (=1.3)        |  Use series A
-  #  p.lowest (=1.3) -> p=2      |  Use series A if
-  #                              |        xix > xix.smallp (=0.8)
-  #                              |      inversion with rho if
-  #                              |        xix < xix.smallp (=0.8)
-  #  p=2 -> p=3                  |  Use series B if
-  #                              |        xix > xix.smallp (=0.8)
-  #                              |      inversion with rho if
-  #                              |        xix < xix.smallp (=0.8)
-  #  p=3 -> p.highest (=4)       |  Use series B if xix > xix.bigp (=0.9)
-  #                              |      inversion with 1/rho if
-  #                              |        xix < xix.bigp (=0.9)
-  #  p > 4                       |  Use series B if xix > 0.03
-  #                              | Saddlepoint approximation if xix<= 0.03 (NEEDS FIXING)
+  #   2. Otherwise, for 1 < p < 2: the series (dtweedie_series()), a sum of
+  #      positive terms, accurate to about 1e-13 wherever it is used here (z
+  #      not small means few terms: about 1/{z (2 - p)} at the peak).
   #
+  #   3. Otherwise, for p > 2: the series, if its estimated relative error is
+  #      below 1e-12 (its terms alternate in sign, and it cancels badly once
+  #      its peak index k_max = 1/{z (p - 2)} is more than a few times p - 1);
+  #      otherwise the Fourier inversion (dtweedie_inversion(), method 3:
+  #      y rescaled to 1), accurate to about 1e-12 or better there.
+  #
+  # If the inversion fails (it reports exitstatus = 1), whichever of the
+  # series and the saddlepoint approximation has the smaller estimated error
+  # is used instead, with a warning.
+  #
+  # Against high-precision reference values (p from 1.01 to 12, z from 1e-12
+  # to 1e3, the body and both tails down to tail probabilities of 1e-30), the
+  # largest relative error is about 4e-13.
+  #
+  # Before 2026, dtweedie() also interpolated from stored values of the
+  # inversion, which was faster but much less accurate in places (relative
+  # errors of about 1e-9 for most p, and about 2.5e-7 for 7 <= p <= 10).
+  
+  TOL_SADDLE <- 1e-13     # use the corrected saddlepoint where its estimated error is below this
+  TOL_SERIES <- 1e-12     # for p > 2, use the series where its estimated error is below this
   
   ### BEGIN: preliminary work
   
@@ -150,300 +171,117 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   out <- check_inputs(y, mu, phi, power)
   mu  <- out$mu
   phi <- out$phi
-
-  # density2 is the whole vector; the same length as  y.
-  # density  is just the part where !special_y_cases.
-  # All is resolved in the end.
-  density2 <- numeric(length = length(y) )
-
   
   # IDENTIFY SPECIAL CASES
-  special_y_cases <- rep(FALSE, length(y))
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(y, mu, phi, power,
                        type = "PDF")
-
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
-
+  density         <- out$f
   if (verbose & special_p_cases) cat("  - Special case for p used\n")
-  if ( any(special_y_cases) ) {
-    special_y_cases <- out$special_y_cases  
-    if (verbose) cat("  - Special cases for first input found\n")
-#    density[special_y_cases] <- out$f[special_y_cases]
-    density2 <- out$f
-  }
-
-
-  # Set things up for the interpolation/series; i.e., not special_y_cases
-  density <- density2[ !special_y_cases ]
-  mu      <- mu[ !special_y_cases ]
-  phi     <- phi[ !special_y_cases ]
-  y       <- y[ !special_y_cases ]
+  if (verbose & any(special_y_cases)) cat("  - Special cases for first input found\n")
+  
   ### END: preliminary work
   
-
-  
-  regions <- NA  # 'regions'  may not be relevant (e.g., if interpolation is used)
-  if (special_p_cases){
-    density <- out$f
-  } else {
-    # Set up
-    id.type0  <- array( FALSE, dim = length(y) )
-    id.series <- id.type0
-    id.interp <- id.type0
-    density   <- density2[ !special_y_cases ]
+  if ( !special_p_cases ) {
     
-
+    # The values still to compute: y > 0 (y = Inf has density zero)
+    todo <- which( !special_y_cases & !is.na(y) )
+    y_inf <- todo[ y[todo] == Inf ]
+    density[y_inf] <- 0
+    todo <- setdiff(todo, y_inf)
     
-    ###   Now consider the cases 1 < p < 2   ###
-    id.type0 <- (y == 0)
-    if (any(id.type0) ) {
-      if (power > 2) {
-        density[id.type0] <- 0
-      } else {
-        lambda <- mu[id.type0] ^ (2 - power) / (phi[id.type0] * (2 - power))
-        density[id.type0] <- exp( -lambda )
-      }
-    }
-
+    method <- rep(NA_character_, length(y))  # the method used for each value (for inspection; not returned)
+    
+    if ( length(todo) > 0 ) {
+      
+      # 1. The corrected saddlepoint approximation, where accurate
+      sp <- dtweedie_saddle_corrected(y     = y[todo], 
+                                      mu    = mu[todo], 
+                                      phi   = phi[todo], 
+                                      power = power)
+      # (log density -Inf is fine: the density underflows to zero)
+      use_sp <- !is.na(sp$relerr) & (sp$relerr < TOL_SADDLE) & !is.na(sp$logf)
+      density[ todo[use_sp] ] <- sp$density[use_sp]
+      method[ todo[use_sp] ]  <- "saddlepoint"
+      rest <- todo[!use_sp]
+      relerr_sp <- sp$relerr[!use_sp]               # (for the fallback below)
+      dens_sp   <- sp$density[!use_sp]
+      if (verbose) cat("- Corrected saddlepoint approximation:", sum(use_sp), "value(s)\n")
+      
+      if ( length(rest) > 0 ) {
         
-    xi <- array( dim = length(y) )
-    xi[id.type0] <- 0
-    xi[!id.type0] <- phi[!id.type0] * y[!id.type0] ^ (power - 2)
-    xix <- xi / ( 1 + xi )
-
-    if ( (power > 1) && (power <= 1.1) ) {
-      id.series <- (!id.type0)
-      if (any(id.series)){
-        density[id.series] <- dtweedie_series(y = y[id.series],
-                                              mu = mu[id.series], 
-                                              phi = phi[id.series],
-                                              power = power)
-      }
-    }
-    
-    if ( power == 1 ) { # AND phi not equal to one here
-      id.series <- rep(TRUE,  length(id.series))
-      id.interp <- rep(FALSE, length(id.series))
-    }
-    if ( (power > 1.1) && (power <= 1.2) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.1) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 1.1
-        p.hi   <- 1.2
-        xix.lo <- 0
-        xix.hi <- 0.1
-        np     <- 15
-        nx <- 25
-      }
-    }
-    
-    if ( (power > 1.2) && (power <= 1.3) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.3) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 1.2
-        p.hi   <- 1.3
-        xix.lo <- 0
-        xix.hi <- 0.3
-        np     <- 15
-        nx <- 25
-      }
-    }
-    if ( (power > 1.3) && (power <= 1.4) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.5) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 1.3
-        p.hi   <- 1.4
-        xix.lo <- 0
-        xix.hi <- 0.5
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power > 1.4) && (power <= 1.5) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.8) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 1.4
-        p.hi   <- 1.5
-        xix.lo <- 0
-        xix.hi <- 0.8
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power > 1.5) && (power < 2) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.9) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 1.5
-        p.hi   <- 2
-        xix.lo <- 0
-        xix.hi <- 0.9
-        np     <- 15
-        nx <- 25
-      }
-    }
-    
-    ### Cases p>2   ###
-    if ( (power > 2) && (power < 3) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.9) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 2
-        p.hi   <- 3
-        xix.lo <- 0
-        xix.hi <- 0.9
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power >= 3) && (power < 4) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.9) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 3
-        p.hi   <- 4
-        xix.lo <- 0
-        xix.hi <- 0.9
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power >= 4) && (power < 5) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.9) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 4
-        p.hi   <- 5
-        xix.lo <- 0
-        xix.hi <- 0.9
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power >= 5) && (power < 7) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.5) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 5
-        p.hi   <- 7
-        xix.lo <- 0
-        xix.hi <- 0.5
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    if ( (power >= 7) && (power <= 10) ) {
-      id.interp <- ( (xix > 0) & (xix < 0.3) )
-      id.series <- (!(id.interp | id.type0))
-      if ( any(id.interp)) {
-        grid   <- stored_grids(power)
-        p.lo   <- 7
-        p.hi   <- 10
-        xix.lo <- 0
-        xix.hi <- 0.3
-        np     <- 15
-        nx     <- 25
-      }
-    }
-    
-    if ( power > 10) {
-      id.series <- (y != 0)
-      id.interp <- (!(id.series | id.type0))
-    }
-    
-    if (any(id.series)) {
-      density[id.series] <- suppressWarnings(
-                              dtweedie_series(y = y[id.series],
-                                              mu = mu[id.series], 
-                                              phi = phi[id.series],
-                                              power = power) )
-      # For p > 2 the series returns NaN where it cannot be summed accurately
-      # (catastrophic cancellation); use the inversion for those values.
-      use_inv <- id.series & is.nan(density)
-      if (any(use_inv)) {
-        if (verbose) cat("- Series unreliable for", sum(use_inv), "value(s): using inversion\n")
-        inv_out <- suppressWarnings(
-                     dtweedie_inversion(y = y[use_inv],
-                                        mu = mu[use_inv],
-                                        phi = phi[use_inv],
-                                        power = power,
-                                        details = TRUE) )
-        density[use_inv] <- inv_out$density
-        not_conv <- rep(FALSE, length(density))
-        not_conv[use_inv] <- (inv_out$exitstatus == 1L)
-        # Last resort: if the inversion also fails (NaN, or not converged), use the
-        # saddlepoint approximation where xi = phi y^(p-2) < 0.01. Its relative
-        # error is roughly proportional to xi, with a constant that grows with p
-        # (measured: ~5e-4 at p = 2.5, ~4e-3 at p = 5, ~3e-2 at p = 12, all at
-        # xi = 0.01). Since dtweedie() only uses the series for p <= 10 when xi
-        # is large, in practice this applies only for p > 10. It is computed on
-        # the log scale: when y^(2-p) overflows, the deviance is Inf and the
-        # direct formula gives Inf * 0 = NaN, whereas the density is 0.
-        # A warning is given, except where the density underflows to 0 (then the
-        # result is 0 whatever the approximation's relative error).
-        use_sad <- use_inv & (is.nan(density) | not_conv) & (xi < 0.01)
-        if (any(use_sad)) {
-          if (verbose) cat("- Inversion failed for", sum(use_sad), "value(s) with small xi: using saddlepoint\n")
-          dev_sad <- tweedie_dev(power = power, mu = mu[use_sad], y = y[use_sad])
-          logf_sad <- -0.5 * log(2 * pi * phi[use_sad]) -
-                       (power / 2) * log(y[use_sad]) -
-                       dev_sad / (2 * phi[use_sad])
-          density[use_sad] <- exp(logf_sad)
-          not_conv[use_sad] <- FALSE
-          n_sad <- sum(logf_sad > -740)
-          if (n_sad > 0) {
-            warning("dtweedie: the series and the Fourier inversion both failed for ", n_sad,
-                    " value(s); the saddlepoint approximation was used for these instead ",
-                    "(relative error roughly proportional to phi * y^(power - 2)).", call. = FALSE)
+        if (power < 2) {
+          # 2. 1 < p < 2: the series
+          density[rest] <- dtweedie_series(y     = y[rest], 
+                                           mu    = mu[rest], 
+                                           phi   = phi[rest],
+                                           power = power)
+          method[rest] <- "series"
+          if (verbose) cat("- Series:", length(rest), "value(s)\n")
+          
+        } else {
+          # 3. p > 2: the series where its estimated error is small...
+          ser <- suppressWarnings( 
+                   dtweedie_series(y       = y[rest], 
+                                   mu      = mu[rest], 
+                                   phi     = phi[rest],
+                                   power   = power,
+                                   details = TRUE) )
+          use_ser <- !is.na(ser$relerr) & (ser$relerr < TOL_SERIES)
+          density[ rest[use_ser] ] <- ser$density[use_ser]
+          method[ rest[use_ser] ]  <- "series"
+          if (verbose) cat("- Series:", sum(use_ser), "value(s)\n")
+          
+          # ... otherwise the inversion
+          inv <- rest[!use_ser]
+          if ( length(inv) > 0 ) {
+            if (verbose) cat("- Inversion:", length(inv), "value(s)\n")
+            inv_out <- suppressWarnings(
+                         dtweedie_inversion(y       = y[inv],
+                                            mu      = mu[inv],
+                                            phi     = phi[inv],
+                                            power   = power,
+                                            method  = 3,
+                                            details = TRUE) )
+            density[inv] <- inv_out$density
+            method[inv]  <- "inversion"
+            
+            # If the inversion failed: the series or the saddlepoint
+            # approximation, whichever has the smaller estimated error
+            failed <- (inv_out$exitstatus == 1L) | is.na(inv_out$density)
+            if ( any(failed) ) {
+              k      <- which(failed)
+              re_ser <- ser$relerr[!use_ser][k]
+              re_ser[is.na(re_ser)] <- Inf
+              re_sp  <- relerr_sp[!use_ser][k]
+              re_sp[is.na(re_sp) | !is.finite(dens_sp[!use_ser][k])] <- Inf
+              pick_ser <- (re_ser <= re_sp) & is.finite(re_ser)
+              pick_sp  <- !pick_ser & is.finite(re_sp)
+              density[ inv[k][pick_ser] ] <- ser$density[!use_ser][k][pick_ser]
+              method[ inv[k][pick_ser] ]  <- "series"
+              density[ inv[k][pick_sp] ]  <- dens_sp[!use_ser][k][pick_sp]
+              method[ inv[k][pick_sp] ]   <- "saddlepoint"
+              # (No warning where the density underflows to zero, whatever 
+              # the method's relative error)
+              n_warn <- sum( !is.na(density[ inv[k] ]) & (density[ inv[k] ] > 0) )
+              if (n_warn > 0) {
+                warning("dtweedie: the Fourier inversion did not reach the target accuracy for ", 
+                        n_warn, " value(s); ",
+                        "the series or the saddlepoint approximation was used for these instead, ",
+                        "and they may be inaccurate.", 
+                        call. = FALSE)
+              }
+            }
           }
         }
-        n_bad <- sum(not_conv)
-        if (n_bad > 0) {
-          warning("dtweedie: the computation did not reach the target accuracy for ", n_bad,
-                  " value(s); these may be inaccurate.", call. = FALSE)
-        }
       }
     }
-    
-    if (any(id.interp)) {
-      dim( grid ) <- c( nx + 1, np + 1 )
-      rho <- dtweedie_interp(grid, 
-                             np = np, 
-                             nx = nx,
-                             xix.lo = xix.lo, 
-                             xix.hi = xix.hi,
-                             p.lo = p.lo, 
-                             p.hi = p.hi,
-                             power = power, 
-                             xix = xix[id.interp] )
-      dev <- tweedie_dev(power = power, 
-                         mu = mu[id.interp], 
-                         y = y[id.interp])
-      front <- rho / (y[id.interp] * sqrt(2 * pi * xi[id.interp]))
-      density[id.interp] <- front * exp(-1/(2 * phi[id.interp]) * dev)
-    }
   }
-
-    
+  
   # Restoration of whole vector, and sanity fixes
-  density2[ !special_y_cases ] <- density
-  density <- density2
-
+  density[is.na(y)] <- NA
   neg <- !is.na(density) & (density < 0)
   if (any(neg))  density[neg] <- 0
   density <- as.vector(density)

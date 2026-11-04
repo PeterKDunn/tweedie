@@ -244,13 +244,13 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
     # Special cases BASED ON THE VALUES OF y (when y <= 0)
     if (verbose) cat("Special cases in y found.\n")
     
-    special_y_cases <- (y <= 0)
+    special_y_cases <- !is.na(y) & (y <= 0)     # (NA is not a special case)
     if (any(special_y_cases)) {
       # NEGATIVE VALUES
-      y_Negative <- (y < 0)
+      y_Negative <- !is.na(y) & (y < 0)
       # P(Y <= y) = 0 and P(Y > y) = 1 for y < 0
       if (any(y_Negative) ) f[y_Negative] <- if (lower.tail) { if (log.p) -Inf else 0 } else { if (log.p) 0 else 1 }
-      y_Zero <- (y == 0)
+      y_Zero <- !is.na(y) & (y == 0)
       if (any(y_Zero)) {
         if ( (power > 0) & (power < 2) ) {
           lambda_z <- tweedie_lambda(mu[y_Zero], phi[y_Zero], power)

@@ -68,14 +68,20 @@ The Tweedie distributions are the \acronym{edm}s with a variance of the form
 Special cases are the Poisson (\eqn{p = 1} with \eqn{\phi = 1}{phi = 1}), 
 gamma (\eqn{p = 2}), and inverse Gaussian (\eqn{p = 3}) distributions.
 Evaluation is difficult for \eqn{p}{p} outside of \eqn{p = 0, 1, 2, 3}{power = 0, 1, 2, 3}. 
-This function uses one of two primary methods, depending on the combination of parameters:
+For the density, \code{dtweedie()} uses one of three methods for each value, 
+depending on \eqn{p}{p} and \eqn{z = \phi y^{p - 2}}{z = phi * y^(p - 2)} 
+(the dispersion after rescaling \eqn{y}{y} to one):
 \enumerate{
-  \item Evaluation of an infinite series (\code{dtweedie_series}).
-  \item Interpolation from stored values computed via a Fourier inversion technique (\code{dtweedie_inversion}).
+  \item the saddlepoint approximation with its asymptotic correction, 
+        where \eqn{z}{z} is small enough for its estimated relative error to be below \eqn{10^{-13}}{1e-13};
+  \item otherwise, the series (\code{dtweedie_series}) for \eqn{1 < p < 2}{1 < power < 2}, and 
+        for \eqn{p > 2}{power > 2} where its estimated relative error is below \eqn{10^{-12}}{1e-12};
+  \item otherwise, the Fourier inversion (\code{dtweedie_inversion}).
 }
-This function employs a two-dimensional interpolation procedure to compute
-the density for some parts of the parameter space from previously computed
-values (interpolation) and uses the series solution for others.
+Against high-precision reference values, the relative error of the density is 
+below about \eqn{4 \times 10^{-13}}{4e-13}.
+(Before version 3.2.0, \code{dtweedie()} also interpolated from stored values 
+of the Fourier inversion, which was less accurate.)
 
 When \eqn{1<p<2}{1 < power < 2}, the density function include a positive 
 probability for \eqn{Y = 0}.

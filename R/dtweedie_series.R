@@ -11,7 +11,9 @@
 #' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^power}.
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
-#' @param details logical; if \code{TRUE}, returns the value of the distribution function and some details.
+#' @param details logical; if \code{TRUE}, returns a list: the density (\code{density}), 
+#'   an estimate of its relative error from rounding (\code{relerr}; for \eqn{p > 2}{power > 2}, 
+#'   where the series alternates in sign; zero otherwise), and the range of terms summed (\code{lo}, \code{hi}).
 #' 
 #' @return A numeric vector of probabilities.
 #' 
@@ -58,6 +60,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
   y0      <- (y == 0)
   yp      <- (y != 0)
   density <- lo <- hi <-array( dim = length(y))
+  relerr  <- rep(0, length(y))   # the estimated relative error (p > 2 only; 0 otherwise)
   
   if ( (power == 2) | (power == 1) ) { # Special cases
     if ( power == 2 ){
@@ -93,6 +96,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
                                     y = y[yp],
                                     phi = phi[yp])
         density[yp] <- out$density 
+        relerr[yp]  <- out$relerr
         lo[yp]      <- out$lo
         hi[yp]      <- out$hi
       }
@@ -120,6 +124,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
   
   if (details) {
     return(list( density = density,
+                 relerr  = relerr,
                  lo      = lo,
                  hi      = hi) )
   } else {
@@ -153,17 +158,38 @@ dtweedie_series_smallp <- function(power, y, mu, phi){
   # Peter K Dunn
   # 02 Feb 2000
   #
-  
+  # Rewritten (2026). For 1 < p < 2, Y is a Poisson sum of gamma variables:
   #
-  # Error traps
+  #   f(y) = sum_{N >= 1} T_N,  T_N = Pr(N; lambda) x g(y; N alpha, tau),
   #
+  # with Pr(N; lambda) the Poisson probability (lambda = mu^(2 - p)/{phi (2 - p)})
+  # and g the gamma density with shape N alpha (alpha = (2 - p)/(p - 1)) and
+  # scale tau = phi (p - 1) mu^(p - 1). This is the same series as before
+  # (Dunn and Smyth, 2005), but:
+  #
+  # - each term is computed as dpois(log = TRUE) + dgamma(log = TRUE), which
+  #   R computes without cancellation even for large N (Loader's algorithm);
+  #   before, each log term was a difference of numbers of size N log N, and
+  #   then the log of the sum had lambda subtracted from it, so the result lost
+  #   about log10(lambda) digits (relative errors of about 1e-9 at lambda = 1e4
+  #   and 1e-7 at lambda = 1e6);
+  #
+  # - the terms are summed for each value of y separately, from its own peak
+  #   outwards, as in ptweedie_series(). Before, one range of N was used for
+  #   all values of y, from the smallest to the largest peak, so a vector y
+  #   with widely spread values needed a matrix of (length of y) x (range of
+  #   N), which could exhaust the memory.
+  #
+  # log T_N is concave in N (log Pr(N) is concave, and log g is concave in its
+  # shape), so the terms rise to a single peak and then fall: find the peak,
+  # then sum outwards from it in each direction until the terms fall below
+  # exp(-drop) times the peak term.
   
   if ( power < 1)      stop("power must be between 1 and 2.")
   if ( power > 2)      stop("power must be between 1 and 2.")
   if ( any(phi <= 0) ) stop("phi must be positive.")
-  if ( any(y <= 0) & (power >= 2) )             stop("y must be a strictly positive vector.")
-  if ( any(y < 0) & (power > 1) & (power < 2) ) stop("y must be a non-negative vector.")
-  if ( any(mu <= 0) ) stop("mu must be positive.")
+  if ( any(y < 0) )    stop("y must be a non-negative vector.")
+  if ( any(mu <= 0) )  stop("mu must be positive.")
   if ( length(mu) > 1) {
     if ( length(mu) != length(y) ) stop("mu must be scalar, or the same length as y.")
   } else {
@@ -175,21 +201,103 @@ dtweedie_series_smallp <- function(power, y, mu, phi){
     phi <- array( dim = length(y), phi )
   }
   
-  result <- dtweedie_logw_smallp( y = y, 
-                                  power = power, 
-                                  phi = phi)
-  logw <- result$logw
+  drop   <- 39                  # Terms below exp(-drop) times the largest are negligible
   
+  n      <- length(y)
+  y      <- as.vector(y)            # (plain vectors: 1-d arrays do not recycle)
+  lambda <- as.vector( mu ^ (2 - power) / ( phi * (2 - power) ) )
+  tau    <- as.vector( phi * (power - 1) * mu ^ ( power - 1 ) )
+  alpha  <- (2 - power) / (power - 1)
   
-  tau    <- phi * (power - 1) * mu ^ ( power - 1 )
-  lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
-  logf   <- -y / tau - lambda - log(y) + logw
-  f      <- exp( logf )
+  logf <- rep(NA_real_, n)
+  lo   <- hi <- rep(NA_real_, n)
   
-  list(density = f, 
-       logw    = logw, 
-       hi      = result$hi, 
-       lo      = result$lo)
+  y0 <- !is.na(y) & (y == 0)
+  logf[y0] <- -lambda[y0]        # Pr(Y = 0), the point mass
+  
+  todo <- which( !is.na(y) & (y > 0) & is.finite(y) )
+  if (length(todo) > 0) {
+    yy  <- y[todo]
+    lam <- lambda[todo]
+    tt  <- tau[todo]
+    m   <- length(todo)
+    
+    # log T_N, for values i and N (N >= 1)
+    logT <- function(N, i) {
+      stats::dpois(N, lam[i], log = TRUE) +
+        stats::dgamma(yy[i], shape = alpha * N, scale = tt[i], log = TRUE)
+    }
+    # The derivative of log T_N with respect to N (N continuous); decreasing
+    dlogT <- function(N, i) {
+      log(lam[i]) - digamma(N + 1) + 
+        alpha * ( log(yy[i] / tt[i]) - digamma(alpha * N) )
+    }
+    
+    # 1. The peak: the root of dlogT(N) = 0, found by bisection on log(N),
+    #    for all values at once (the peak is N = 1 if the terms fall from N = 1)
+    N_lo <- rep(1, m)
+    N_hi <- pmax(2, 2 * lam, 2 * yy / (alpha * tt))
+    grow <- dlogT(N_hi, seq_len(m)) > 0
+    while (any(grow)) {
+      N_hi[grow] <- 4 * N_hi[grow]
+      grow[grow] <- dlogT(N_hi[grow], which(grow)) > 0
+    }
+    rising <- dlogT(N_lo, seq_len(m)) > 0
+    for (k in 1:60) {
+      N_mid <- sqrt(N_lo * N_hi)
+      up    <- dlogT(N_mid, seq_len(m)) > 0
+      N_lo  <- ifelse(up, N_mid, N_lo)
+      N_hi  <- ifelse(up, N_hi, N_mid)
+    }
+    N0 <- ifelse(rising, N_lo, 1)
+    
+    # The integer peak: the largest of the terms at floor(N0) and floor(N0) + 1
+    cand <- cbind( pmax(1, floor(N0)), pmax(1, floor(N0)) + 1 )
+    Lc   <- matrix(logT(as.vector(cand), rep(seq_len(m), 2)), 
+                   ncol = 2)
+    Lc[is.na(Lc)] <- -Inf
+    peak <- cand[cbind(seq_len(m), 
+                       max.col(Lc, ties.method = "first"))]
+    Lmax <- logT(peak, seq_len(m))
+    
+    # 2. Sum outwards from the peak, in blocks, relative to the peak term
+    acc <- rep(1, m)                         # sum of exp(L - Lmax), starting with the peak
+    nlo <- nhi <- peak
+    for (dir in c(1, -1)) {
+      N   <- peak
+      act <- which( is.finite(Lmax) & ( (dir > 0) | (peak > 1) ) )
+      while (length(act) > 0) {
+        B     <- min(1e4, 16 + ceiling(2 * sqrt(max(N[act]))))
+        NN    <- outer(N[act], 
+                       dir * seq_len(B), 
+                       "+")                  # rows: values; cols: steps
+        valid      <- NN >= 1
+        NN[!valid] <- 1
+        L     <- matrix(logT(as.vector(NN), rep(act, B)), 
+                        nrow = length(act)) - Lmax[act]
+        keep  <- valid & (L > -drop)         # concavity: once a term is negligible, all beyond are
+        nk    <- rowSums(keep)
+        acc[act] <- acc[act] + rowSums(exp(L) * keep)
+        if (dir > 0) {
+          nhi[act] <- N[act] + nk
+        } else {
+          nlo[act] <- N[act] - nk
+        }
+        N[act] <- N[act] + dir * B
+        act    <- act[ nk == B ]
+      }
+    }
+    logf[todo] <- ifelse(is.finite(Lmax), 
+                         Lmax + log(acc), 
+                         -Inf)
+    lo[todo]   <- nlo
+    hi[todo]   <- nhi
+  }
+  
+  list(density = exp(logf), 
+       logf    = logf,
+       hi      = hi, 
+       lo      = lo)
   
 }
 
@@ -327,10 +435,15 @@ dtweedie_kv_bigp <- function(y, phi, power){
   # is large, the cancellation is beyond double precision (and for very large
   # values the search for the summation limits below never terminates, since
   # k + 2 == k). Values that cannot be summed reliably are returned as NaN.
+  # The cancellation is about exp{k_max/(p - 1)} relative to the result, so
+  # beyond k_max of about 23 (p - 1) double precision cannot give six correct
+  # digits: only values with k_max below 40 (p - 1) + 10 are tried (before, up
+  # to 1e6; since one range of k serves all values of y, a single such value
+  # made the matrices below enormous).
   n_all     <- length(y)
   kv_all    <- rep(NaN, n_all)
   kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
-  can_try   <- is.finite(kmax_each) & (kmax_each <= 1e6)
+  can_try   <- is.finite(kmax_each) & (kmax_each <= 40 * (p - 1) + 10)
   if ( !any(can_try) ) {
     return( list(lo = NA, 
                  hi = NA, 
@@ -415,12 +528,16 @@ dtweedie_kv_bigp <- function(y, phi, power){
   sum.ve <- apply( ve*C, 1, sum )
   # Estimate the rounding error in the sum: each term carries a relative
   # error of about eps * (|A| + 1) (from forming it via exp(A)), and summing
-  # n terms adds about eps * n, all relative to the sum of the absolute
-  # terms. If that error is not small compared to the sum itself, the result
-  # is noise (previously returned as 0, a huge value, or Inf): give NaN.
-  abs.sum.ve      <- apply( abs(ve * C), 1, sum )
-  max.abs.A       <- apply( abs(A), 1, max )
-  err.est         <- .Machine$double.eps * (length(k) + max.abs.A + 1) * abs.sum.ve
+  # n terms adds about eps * n times the sum of the absolute terms. If that
+  # error is not small compared to the sum itself, the result is noise
+  # (previously returned as 0, a huge value, or Inf): give NaN.
+  # (Only the terms that are not negligible count: one range of k serves
+  # all values of y, and the largest |A| over that range, or its length,
+  # could otherwise swamp the estimate for a value whose terms are few.)
+  abs.term        <- abs(ve * C)
+  n.eff           <- rowSums(ve > .Machine$double.eps)
+  err.est         <- .Machine$double.eps * ( rowSums( (abs(A) + 1) * abs.term ) +
+                                               n.eff * rowSums(abs.term) )
   reliable        <- (err.est < 1e-6 * abs(sum.ve))
   kv              <- rep(NaN, length(sum.ve))
   kv[reliable]    <- sum.ve[reliable] * exp( m[reliable] )
@@ -470,12 +587,17 @@ dtweedie_logv_bigp <- function( y, phi, power){
   # is large, the cancellation is beyond double precision (and for very large
   # values the search for the summation limits below never terminates, since
   # k + 2 == k). Values that cannot be summed reliably are returned as NaN.
+  # The cancellation is about exp{k_max/(p - 1)} relative to the result, so
+  # beyond k_max of about 23 (p - 1) double precision cannot give six correct
+  # digits: only values with k_max below 40 (p - 1) + 10 are tried (before, up
+  # to 1e6; since one range of k serves all values of y, a single such value
+  # made the matrices below enormous).
   n_all     <- length(y)
   logv_all  <- rep(NaN, n_all)
   kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
-  can_try   <- is.finite(kmax_each) & (kmax_each <= 1e6)
+  can_try   <- is.finite(kmax_each) & (kmax_each <= 40 * (p - 1) + 10)
   if ( !any(can_try) ) {
-    return( list(lo = NA, hi = NA, logv = logv_all) )
+    return( list(lo = NA, hi = NA, logv = logv_all, relerr = rep(NaN, n_all)) )
   }
   y   <- y[can_try]
   phi <- phi[can_try]
@@ -553,21 +675,28 @@ dtweedie_logv_bigp <- function( y, phi, power){
   # cancellation.
   # Estimate the rounding error in the sum: each term carries a relative
   # error of about eps * (|A| + 1) (from forming it via exp(A)), and summing
-  # n terms adds about eps * n, all relative to the sum of the absolute
-  # terms. If that error is not small compared to the sum itself, the result
-  # is noise (previously returned as 0, a huge value, or Inf): give NaN.
-  abs.sum.ve       <- apply( abs(ve * C), 1, sum )
-  max.abs.A        <- apply( abs(A), 1, max )
-  err.est          <- .Machine$double.eps * (length(k) + max.abs.A + 1) * abs.sum.ve
+  # n terms adds about eps * n times the sum of the absolute terms. If that
+  # error is not small compared to the sum itself, the result is noise
+  # (previously returned as 0, a huge value, or Inf): give NaN.
+  # (Only the terms that are not negligible count: one range of k serves
+  # all values of y, and the largest |A| over that range, or its length,
+  # could otherwise swamp the estimate for a value whose terms are few.)
+  abs.term         <- abs(ve * C)
+  n.eff            <- rowSums(ve > .Machine$double.eps)
+  err.est          <- .Machine$double.eps * ( rowSums( (abs(A) + 1) * abs.term ) +
+                                                n.eff * rowSums(abs.term) )
   reliable         <- (sum.ve > 0) & (err.est < 1e-6 * sum.ve)
   logv             <- rep(NaN, length(sum.ve))
   logv[reliable]   <- log( sum.ve[reliable] ) + m[reliable]
   logv_all[can_try] <- logv
+  relerr_all       <- rep(NaN, n_all)      # the estimated relative error of the sum
+  relerr_all[can_try][reliable] <- err.est[reliable] / sum.ve[reliable]
   
-  list(lo    = lo.k, 
-       hi    = hi.k, 
-       logv  = logv_all, 
-       k.max = k.max )
+  list(lo     = lo.k, 
+       hi     = hi.k, 
+       logv   = logv_all, 
+       relerr = relerr_all,
+       k.max  = k.max )
   
 }
 
@@ -716,6 +845,7 @@ dtweedie_series_bigp <- function(power, y, mu, phi){
   
   return( list(density = f,
                logv    = logv, 
+               relerr  = result$relerr,
                lo      = result$lo, 
                hi      = result$hi ) )
   
