@@ -82,8 +82,8 @@ ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE)
                        NA_real_)
 
   # Large tail: log{ 1 - dnorm(w) (Mills(-w) - corr) }
-  big  <- !is.na(w) & !small
-  arg2 <- mills_ratio(w[big]) - corr[big]
+  big      <- !is.na(w) & !small
+  arg2     <- mills_ratio(w[big]) - corr[big]
   out[big] <- ifelse(arg2 > 0, 
                      log1p(-exp(ld[big] + log(pmax(arg2, 0)))), 
                      NA_real_)
@@ -112,7 +112,9 @@ mills_ratio <- function(x) {
   if (any(hi)) {
     xh <- x[hi]
     t  <- 0
-    for (k in 100:1) t <- k / (xh + t)
+    for (k in 100:1) {
+      t <- k / (xh + t)
+    }
     R[hi] <- 1 / (xh + t)
   }
   R[is.na(x)] <- NA_real_

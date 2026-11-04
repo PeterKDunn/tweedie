@@ -80,14 +80,16 @@ tweedie_dev <- function(y, mu, power){
       en <- e[near]
       s  <- 0
       tk <- en                                      # e^k / k!
+      
       for (k in 2:40) {
         tk <- tk * en / k
         s  <- s + (k - 1) * tk
       }
       dev[near] <- mu[near] * s
     }
-    y0 <- !is.na(y) & (y == 0)
+    y0      <- !is.na(y) & (y == 0)
     dev[y0] <- mu[y0]
+    
     return(dev * 2)
   }
   
@@ -98,14 +100,16 @@ tweedie_dev <- function(y, mu, power){
       en <- e[near]
       s  <- 0
       tk <- en
+      
       for (k in 2:40) {
         tk <- tk * en / k
         s  <- s + tk
       }
       dev[near] <- s
     }
-    y0 <- !is.na(y) & (y == 0)
+    y0      <- !is.na(y) & (y == 0)
     dev[y0] <- Inf
+    
     return(dev * 2)
   }
   
@@ -123,6 +127,7 @@ tweedie_dev <- function(y, mu, power){
     en <- e[near]
     s  <- 0
     tk <- en                                        # e^k / k!
+    
     for (k in 2:40) {
       tk <- tk * en / k
       ck <- if (b > 0) expm1( (k - 1) * log1p(a) ) else (b ^ (k - 1) - 1)

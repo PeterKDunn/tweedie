@@ -93,19 +93,19 @@ tweedie_integrand <- function(y, power, mu, phi,
   # END: Check for some given parameters supplied via args
 
   
-  kvals <- k(p = power, 
-             mu = mu, 
+  kvals <- k(p   = power, 
+             mu  = mu, 
              phi = phi,
-             y = y, 
-             t = t)
+             y   = y, 
+             t   = t)
   k_Imag <- kvals$Imag
   k_Real <- kvals$Real
   
   if(type == "PDF" ){
-    igrand <- exp(k_Real) * cos(k_Imag)
+    igrand   <- exp(k_Real) * cos(k_Imag)
     envelope <- exp(k_Real)
   } else {
-    igrand <- exp(k_Real) * sin(k_Imag)/t
+    igrand   <- exp(k_Real) * sin(k_Imag)/t
     envelope <- exp(k_Real) / t
   }
   
@@ -127,8 +127,8 @@ tweedie_integrand <- function(y, power, mu, phi,
   if (1 %in% whichPlots) {
     do.call(plot,
             c(list(
-              x = t,
-              y = k_Imag,
+              x    = t,
+              y    = k_Imag,
               type = "l",
               main = expression( bold(Imaginary~part~of~italic(k)*(italic(t)))),
               ylab = expression(Im*"("*italic(k)*")")),
@@ -143,20 +143,20 @@ tweedie_integrand <- function(y, power, mu, phi,
     # Adornments
     mtext(text = expression(atop(italic(m), " ") ),
           side = 4,
-          las = 1,
-          cex = 0.9,
+          las  = 1,
+          cex  = 0.9,
           line = 2,
-          adj = 1,
-          at = max(k_Imag) )
-    abline(h = 0, 
-           col="grey")
-    abline(h = mValues * pi + ifelse(type=="PDF", pi/2, 0),
+          adj  = 1,
+          at   = max(k_Imag) )
+    abline(h   = 0, 
+           col = "grey")
+    abline(h   = mValues * pi + ifelse(type=="PDF", pi/2, 0),
            lty = 2,
-           col="grey")
-    axis(side = 4, 
-         at = mValues * pi + ifelse(type=="PDF", pi/2, 0),
-         las = 1,
-         cex = 0.8,
+           col = "grey")
+    axis(side   = 4, 
+         at     = mValues * pi + ifelse(type=="PDF", pi/2, 0),
+         las    = 1,
+         cex    = 0.8,
          labels = mValues )
   }
   
@@ -167,8 +167,8 @@ tweedie_integrand <- function(y, power, mu, phi,
     if (type == "PDF"){
       do.call(plot,
               c(list(
-                x = t,
-                y = cos(k_Imag),
+                x    = t,
+                y    = cos(k_Imag),
                 type = "l",
                 main = expression(cos(Im*"("*italic(k)*")")),
                 ylab = expression(cos(Im*"("*italic(k)*")"))),
@@ -177,16 +177,16 @@ tweedie_integrand <- function(y, power, mu, phi,
     } else {
       do.call(plot,
               c(list(
-                x = t,
-                y = sin(k_Imag),
+                x    = t,
+                y    = sin(k_Imag),
                 type = "l",
                 main = expression(sin(Im*"("*italic(k)*")")),
                 ylab = expression(cos(Im*"("*italic(k)*")"))),
                 plot_args 
               ))
     }
-    abline(h = 0, 
-           col="grey")
+    abline(h   = 0, 
+           col = "grey")
   }
   
   
@@ -196,15 +196,15 @@ tweedie_integrand <- function(y, power, mu, phi,
   if (3 %in% whichPlots) {
     do.call(plot,
             c(list(
-              x = t,
-              y = k_Real,
+              x    = t,
+              y    = k_Real,
               type = "l",
               main = "Real part of k(t)",
               ylab = expression(Re*"("*italic(k)*")")),
               plot_args 
             ))
-    abline(h = 0, 
-           col="grey")
+    abline(h   = 0, 
+           col = "grey")
     }
   
   
@@ -214,28 +214,28 @@ tweedie_integrand <- function(y, power, mu, phi,
   if (4 %in% whichPlots) {  
     do.call(plot,
             c(list(
-              x = t,
-              y = igrand,
+              x    = t,
+              y    = igrand,
               type = "l",
               main = "Integrand",
               ylab = "Integrand"),
               plot_args 
             ))
 
-    abline(h = 0, 
-           col="grey")
-    lines(x = t,
-          y = envelope,
+    abline(h   = 0, 
+           col = "grey")
+    lines(x   = t,
+          y   = envelope,
           lty = 2,
           col = "grey")
-    lines(x = t,
-          y = -envelope,
+    lines(x   = t,
+          y   = -envelope,
           lty = 2,
           col = "grey")
   }
   
   return(invisible( list(Real = k_Real,
                          Imag = k_Imag,
-                         IG = igrand)) )
+                         IG   = igrand)) )
   
 }

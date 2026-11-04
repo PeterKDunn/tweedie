@@ -203,12 +203,12 @@ tweedie_profile <- function(formula,
   ### NOW some notation stuff
   xi.notation <- TRUE
   if ( is.null(xi.vec) & !is.null(p.vec) ){ # If p.vec given, but not xi.vec
-    xi.vec <- p.vec
+    xi.vec      <- p.vec
     xi.notation <- FALSE
   }
   
   if ( is.null(p.vec) & !is.null(xi.vec) ){ # If xi.vec given, but not p.vec
-    p.vec <- xi.vec
+    p.vec       <- xi.vec
     xi.notation <- TRUE
   }
   
@@ -220,7 +220,7 @@ tweedie_profile <- function(formula,
       p.vec <- seq(1.5, 5, 
                    by = 0.5)
     }
-    xi.vec <- p.vec
+    xi.vec      <- p.vec
     xi.notation <- TRUE
   }
   
@@ -228,7 +228,9 @@ tweedie_profile <- function(formula,
   ### but we stick with using xi.vec hereafter
   
   # Determine notation to use in output (consistent with what was supplied by the user)
-  index.par <- ifelse( xi.notation, "xi", "p")
+  index.par <- ifelse( xi.notation, 
+                       "xi", 
+                       "p")
   
   # Find if values of p/xi have been specified that are not appropriate
   xi.fix <- any( xi.vec <= 1 & xi.vec != 0, na.rm = TRUE)
@@ -263,7 +265,7 @@ tweedie_profile <- function(formula,
   if ( do.smooth & (length(xi.vec) < 5) ) {
     warning(paste("Smoothing needs at least five values of", index.par,".") )
     do.smooth <- FALSE
-    do.ci <- FALSE
+    do.ci     <- FALSE
   }
   if ( (conf.level >= 1) | (conf.level <= 0)  ){
     stop("Confidence level must be between 0 and 1.")
@@ -295,8 +297,8 @@ tweedie_profile <- function(formula,
                                     power = power ) ) )
     if ( is.infinite( ans ) ) {
       # If infinite, replace with saddlepoint estimate?
-      ans <- sum( tweedie_dev(y = y, 
-                              mu = mu, 
+      ans <- sum( tweedie_dev(y     = y, 
+                              mu    = mu, 
                               power = power) ) / length( y )
     }
     attr(ans, "gradient") <- dtweedie_dldphi(y     = y, 
@@ -319,8 +321,8 @@ tweedie_profile <- function(formula,
   mu.vec <- L
   b.mat  <- array( dim = c(xi.len, length(ydata) ) )
 
-  pBar <- utils::txtProgressBar(min = 1, 
-                                max = xi.len,
+  pBar <- utils::txtProgressBar(min   = 1, 
+                                max   = xi.len,
                                 style = 2)
   for (i in (1:xi.len)) {
     utils::setTxtProgressBar(pBar, i)
@@ -403,8 +405,7 @@ tweedie_profile <- function(formula,
         if ( p != 0 ) {
           ans <- optimize(f        = dtweedie_nlogl, 
                           maximum  = FALSE, 
-                          interval = c(low.limit, 
-                                       10 * phi.est),
+                          interval = c(low.limit, 10 * phi.est),
                           power    = p, 
                           mu       = mu, 
                           y        = ydata )
@@ -769,7 +770,7 @@ tweedie_profile <- function(formula,
     }
     
     if ( do.plot ) {
-      graphics::abline(h = ht, 
+      graphics::abline(h   = ht, 
                        lty = 2)
       graphics::title( sub = paste("(", 100*conf.level, "% confidence interval)",
                        sep = "") )

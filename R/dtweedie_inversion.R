@@ -153,11 +153,11 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		# theta = (mu^(1 - p) - 1)/(1 - p) and kappa = (mu^(2 - p) - 1)/(2 - p),
 		# is exp[{d(y, 1) - d(y, mu)}/(2 phi)], which avoids the cancellation in
 		# y theta - kappa
-		dev   <- tweedie_dev(y = y, 
-		                     mu = mu,
+		dev   <- tweedie_dev(y     = y, 
+		                     mu    = mu,
 		                     power = power )
-		dev_1 <- tweedie_dev(y = y, 
-		                     mu = 1,
+		dev_1 <- tweedie_dev(y     = y, 
+		                     mu    = 1,
 		                     power = power )
 
 		# Method 1
@@ -177,7 +177,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 	
 		optimal_Method <- apply(method_List, 
 														MARGIN = 1, 
-														FUN = which.min)
+														FUN    = which.min)
 		if ( !is.null(method) ) optimal_Method[] <- method
 		optimal_Method[special_y_cases] <- 0  
 	
@@ -191,13 +191,13 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 	
 		# Method 1 just uses the given  y  and  phi
 		if (any(optimal_Method == 2L)){
-			use_M2 <- optimal_Method==2L
+			use_M2          <- optimal_Method==2L
 			phi_F[ use_M2 ] <- phi[use_M2] / mu[use_M2] ^ (2 - power)
 			y_F[ use_M2 ]   <- y[use_M2]/mu[use_M2]
 		}
 
 		if (any(optimal_Method == 3L)){
-			use_M3 <- optimal_Method==3L
+			use_M3          <- optimal_Method==3L
 			phi_F[ use_M3 ] <- phi[use_M3] / y[use_M3] ^ (2 - power)
 			y_F[ use_M3 ]   <- 1
 		}
@@ -226,7 +226,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 
 		# Reconstruct
 		if (any(optimal_Method == 1L)){
-			use_M1 <- optimal_Method==1L
+			use_M1          <- optimal_Method==1L
 			density[use_M1] <- density[use_M1] * m1[use_M1]
 		}    
 		if (any(optimal_Method == 2L)){

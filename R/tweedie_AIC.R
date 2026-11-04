@@ -61,26 +61,26 @@
 tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){ 
   # New  dispersion  input for (e.g.) Poisson case, added October 2017
   
-  wt <- glm.obj$prior.weights
-  n <- length(glm.obj$residuals)
+  wt  <- glm.obj$prior.weights
+  n   <- length(glm.obj$residuals)
   edf <- glm.obj$rank  # As used in logLik.glm()
   
   mu <- stats::fitted( glm.obj )
   y  <- glm.obj$y
-  p <- get("p", envir = environment(glm.obj$family$variance))
+  p  <- get("p", envir = environment(glm.obj$family$variance))
   
   if ( is.null(dispersion)) {  # New section
     if (p == 1 & verbose) message("*** Tweedie index power = 1: Consider using  dispersion=1  in call to  tweedie_AIC().\n")
-    dev <- deviance(glm.obj)
+    dev  <- deviance(glm.obj)
     disp <- dev / sum(wt)  # In line with Gamma()$aic
-    edf <- edf + 1  # ADD one as we are estimating phi too
+    edf  <- edf + 1  # ADD one as we are estimating phi too
   } else {
     disp <- dispersion
   }
   
-  den <- dtweedie( y = y, 
-                   mu = mu, 
-                   phi = disp, 
+  den <- dtweedie( y     = y, 
+                   mu    = mu, 
+                   phi   = disp, 
                    power = p)
   AIC <- -2 * sum( log(den) * wt) 
   
@@ -95,10 +95,10 @@ AICtweedie <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
   lifecycle::deprecate_warn(when = "3.0.5", 
                             what = "AICtweedie()", 
                             with = "tweedie_AIC()")
-  tweedie_AIC(glm.obj = glm.obj, 
+  tweedie_AIC(glm.obj    = glm.obj, 
               dispersion = dispersion,
-              k = k,
-              verbose = verbose)
+              k          = k,
+              verbose    = verbose)
 }
 
 

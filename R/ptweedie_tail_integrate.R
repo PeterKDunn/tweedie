@@ -46,21 +46,21 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
     
     if ( is.finite(xi) && (xi < 0.01) ) {
       logf_sad <- -0.5 * log(2 * pi * phi) - (power / 2) * log(q) -
-                   tweedie_dev(y = q, 
-                               mu = mu, 
+                   tweedie_dev(y     = q, 
+                               mu    = mu, 
                                power = power) / (2 * phi)
       if ( !is.na(logf_sad) && (logf_sad < -800) ) {
         return( list(logp = -Inf, 
-                     ok = TRUE) )
+                     ok   = TRUE) )
       }
     }
     return( list(logp = NA_real_, 
-                 ok = FALSE) )
+                 ok   = FALSE) )
   }
   if ( fq == 0 ) {
     # The density underflows at q, so the tail does too (for practical purposes)
     return( list(logp = -Inf, 
-                 ok = TRUE) )
+                 ok   = TRUE) )
   }
 
   # UPPER TAIL: Gauss-Laguerre quadrature.
@@ -81,9 +81,11 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
         gq <- statmod::gauss.quad(n, kind = "laguerre")
         d  <- dens(q + gq$nodes / r_gl)
         if ( any(d$exitstatus != 0L) || any(!is.finite(d$density)) || any(d$density < 0) ) return(NA_real_)
+        
         lt <- log(gq$weights) + gq$nodes + log(d$density)   # log of each term
         m  <- max(lt)
         if (!is.finite(m)) return(NA_real_)
+        
         m + log(sum(exp(lt - m))) - log(r_gl)
       }
       l10 <- gl_logS(10L)
@@ -113,24 +115,29 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
         gq <- statmod::gauss.quad(n, kind = "laguerre")
         tt <- (u_q + gq$nodes / r_u)^(1 / (2 - power))
         if ( any(!is.finite(tt)) || any(tt <= 0) ) return(NA_real_)
+        
         d  <- dens(tt)
         if ( any(d$exitstatus != 0L) || any(!is.finite(d$density)) || any(d$density < 0) ) return(NA_real_)
+        
         lt <- log(gq$weights) + gq$nodes + log(d$density) +
               (power - 1) * log(tt) - log(power - 2)
         m  <- max(lt)
         if (!is.finite(m)) return(NA_real_)
+        
         m + log(sum(exp(lt - m))) - log(r_u)
       }
       l10 <- gl_logF(10L)
       l20 <- if (is.finite(l10)) gl_logF(20L) else NA_real_
       if ( is.finite(l10) && is.finite(l20) && (abs(expm1(l10 - l20)) < 1e-10) ) {
-        return( list(logp = l20, ok = TRUE) )
+        return( list(logp = l20, 
+                     ok   = TRUE) )
       }
       # otherwise fall through to the adaptive integration
     }
   }
 
-  if (!fallback) return( list(logp = NA_real_, ok = FALSE) )
+  if (!fallback) return( list(logp = NA_real_, 
+                              ok   = FALSE) )
 
   # The tail mass lies within a few multiples of 1/r of q, where r is the
   # local decay rate of the log density, |d/dy log f|, taken from the
@@ -189,10 +196,10 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
       hi <- q + b
     }
     piece <- tryCatch(stats::integrate(g, 
-                                       lower = lo, 
-                                       upper = hi,
-                                       rel.tol = 1e-10, 
-                                       abs.tol = 0, 
+                                       lower        = lo, 
+                                       upper        = hi,
+                                       rel.tol      = 1e-10, 
+                                       abs.tol      = 0, 
                                        subdivisions = 200L),
                       error = function(e) NULL)
     if (is.null(piece)) { 
@@ -221,5 +228,5 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
   }
 
   list(logp = log(fq) + log(out$value), 
-       ok = TRUE)
+       ok   = TRUE)
 }

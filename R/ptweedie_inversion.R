@@ -70,8 +70,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
 
   # cdf    is the whole vector; the same length as  q.
   # All is resolved in the end.
-  cdf <- numeric(length = length(q) )
-  regions <- rep(NA, length(q)) 
+  cdf            <- numeric(length = length(q) )
+  regions        <- rep(NA, length(q)) 
   exitstatus_out <- integer(length(q))
   # exitstatus: 0 for values computed exactly (special cases); filled from the
   # Fortran for the rest. Always the same length as  q.
@@ -122,7 +122,7 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
     phi_F <- mu^(power - 2) * phi
     
     # Scaling is numerically unsafe for extremely small q_F
-    cut_off <- 1e-307
+    cut_off    <- 1e-307
     use_scaled <- !special_y_cases & (q_F >= cut_off)
     use_direct <- !special_y_cases & (q_F <  cut_off)
     
@@ -147,8 +147,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
         PACKAGE    = "tweedie"
       )
       
-      cdf[use_scaled] <- tmp$funvalue
-      regions[use_scaled] <- tmp$its
+      cdf[use_scaled]            <- tmp$funvalue
+      regions[use_scaled]        <- tmp$its
       exitstatus_out[use_scaled] <- tmp$exitstatus
     }
     if (any(use_direct)) {
@@ -170,8 +170,8 @@ ptweedie_inversion <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FAL
         PACKAGE    = "tweedie"
       )
       
-      cdf[use_direct] <- tmp$funvalue
-      regions[use_direct] <- tmp$its
+      cdf[use_direct]            <- tmp$funvalue
+      regions[use_direct]        <- tmp$its
       exitstatus_out[use_direct] <- tmp$exitstatus
     }    
 

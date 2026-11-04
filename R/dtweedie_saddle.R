@@ -54,7 +54,7 @@ dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   }
   if ( is.null(xi) ) {
     xi.notation <- FALSE
-    xi <- power
+    xi          <- power
   }
   if ( xi != power ) {
     cat("Different values for xi and power given; the value of xi used.\n")
@@ -85,7 +85,7 @@ dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   if (power<2) y.eps <- y + eps
   # Nelder and Pregibon's idea for problems at y=0
   
-  y0 <- (y == 0)
+  y0      <- (y == 0)
   density <- y
   #    if(any(y == 0)) {
   #        if(power >= 2) {
@@ -94,8 +94,8 @@ dtweedie_saddle <- function(y, xi = NULL, mu, phi, eps = 1/6, power = NULL) {
   #        }
   #      else{
   
-  dev <- tweedie_dev(y = y, 
-                     mu = mu, 
+  dev <- tweedie_dev(y     = y, 
+                     mu    = mu, 
                      power = power)
   density <- (2 * pi * phi * y.eps ^ power) ^ (-1/2) * exp( -dev / (2 * phi) )
   
@@ -175,7 +175,7 @@ dtweedie_saddle_corrected <- function(y, mu, phi, power) {
   mu  <- rep_len(mu,  n)
   phi <- rep_len(phi, n)
   
-  sc   <- saddle_correction(z = phi * y ^ (power - 2), 
+  sc   <- saddle_correction(z     = phi * y ^ (power - 2), 
                             power = power)
   corr   <- sc$corr
   relerr <- sc$relerr
@@ -226,10 +226,11 @@ saddle_correction <- function(z, power) {
     zm     <- zm * z
     term   <- am[m] * zm
     going  <- going & (abs(term) < last)
+    
     corr[going] <- corr[going] + term[going]
     last[going] <- abs(term[going])
   }
-  relerr <- last
+  relerr              <- last
   relerr[last == Inf] <- 0          # (z = 0 cannot occur for y > 0; for safety)
   
   if ( (power > 1) && (power < 2) ) {

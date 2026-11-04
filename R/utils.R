@@ -23,23 +23,23 @@ sort_notation <- function(xi = NULL, power = NULL){
   
   if ( is.null(xi) & !is.null(power)) {
     # xi  is NULL
-    xi <- power
-    xi.notation <- FALSE
-    index.par <- "p"
+    xi             <- power
+    xi.notation    <- FALSE
+    index.par      <- "p"
     index.par.long <- "power"
   } 
   if ( !is.null(xi) & is.null(power)) {
     # power  is NULL
-    power <- xi
-    xi.notation <- TRUE
-    index.par <- "xi"
+    power          <- xi
+    xi.notation    <- TRUE
+    index.par      <- "xi"
     index.par.long <- "xi"
   }
 
-  return( list(xi = xi, 
-               power = power, 
-               xi.notation = xi.notation, 
-               index.par = index.par, 
+  return( list(xi             = xi, 
+               power          = power, 
+               xi.notation    = xi.notation, 
+               index.par      = index.par, 
                index.par.long = index.par.long) )
 } 
 

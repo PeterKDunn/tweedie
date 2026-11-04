@@ -66,11 +66,11 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
     if ( power == 2 ){
       density <- dgamma( y, 
                          shape = 1 / phi, 
-                         rate = 1 / (phi * mu ) )
+                         rate  = 1 / (phi * mu ) )
     }
     
     if ( (power == 1) ){
-      density <- dpois(x = y / phi, 
+      density <- dpois(x      = y / phi, 
                        lambda = mu / phi )
     }
     # CHANGED: 31 October, thanks to Dina Farkas' email 18 October 2012.  WAS:
@@ -92,9 +92,9 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
     if ( any( y!= 0 ) ) { 
       if (power > 2) {
         out <- dtweedie_series_bigp(power = power,
-                                    mu = mu[yp], 
-                                    y = y[yp],
-                                    phi = phi[yp])
+                                    mu    = mu[yp], 
+                                    y     = y[yp],
+                                    phi   = phi[yp])
         density[yp] <- out$density 
         relerr[yp]  <- out$relerr
         lo[yp]      <- out$lo
@@ -246,14 +246,21 @@ dtweedie_series_smallp <- function(power, y, mu, phi){
     for (k in 1:60) {
       N_mid <- sqrt(N_lo * N_hi)
       up    <- dlogT(N_mid, seq_len(m)) > 0
-      N_lo  <- ifelse(up, N_mid, N_lo)
-      N_hi  <- ifelse(up, N_hi, N_mid)
+      N_lo  <- ifelse(up, 
+                      N_mid, 
+                      N_lo)
+      N_hi  <- ifelse(up, 
+                      N_hi, 
+                      N_mid)
     }
-    N0 <- ifelse(rising, N_lo, 1)
+    N0 <- ifelse(rising, 
+                 N_lo, 
+                 1)
     
     # The integer peak: the largest of the terms at floor(N0) and floor(N0) + 1
     cand <- cbind( pmax(1, floor(N0)), pmax(1, floor(N0)) + 1 )
-    Lc   <- matrix(logT(as.vector(cand), rep(seq_len(m), 2)), 
+    Lc   <- matrix(logT(as.vector(cand), 
+                        rep(seq_len(m), 2)), 
                    ncol = 2)
     Lc[is.na(Lc)] <- -Inf
     peak <- cand[cbind(seq_len(m), 
@@ -263,17 +270,20 @@ dtweedie_series_smallp <- function(power, y, mu, phi){
     # 2. Sum outwards from the peak, in blocks, relative to the peak term
     acc <- rep(1, m)                         # sum of exp(L - Lmax), starting with the peak
     nlo <- nhi <- peak
+    
     for (dir in c(1, -1)) {
       N   <- peak
       act <- which( is.finite(Lmax) & ( (dir > 0) | (peak > 1) ) )
       while (length(act) > 0) {
-        B     <- min(1e4, 16 + ceiling(2 * sqrt(max(N[act]))))
+        B     <- min(1e4, 
+                     16 + ceiling(2 * sqrt(max(N[act]))))
         NN    <- outer(N[act], 
                        dir * seq_len(B), 
                        "+")                  # rows: values; cols: steps
         valid      <- NN >= 1
         NN[!valid] <- 1
-        L     <- matrix(logT(as.vector(NN), rep(act, B)), 
+        L     <- matrix(logT(as.vector(NN), 
+                             rep(act, B)), 
                         nrow = length(act)) - Lmax[act]
         keep  <- valid & (L > -drop)         # concavity: once a term is negligible, all beyond are
         nk    <- rowSums(keep)
@@ -381,11 +391,11 @@ dtweedie_jw_smallp <- function(y, phi, power){
                  ncol = hi.j - lo.j + 1) 
   og     <- o %*% g                             # matrix of gamma terms
   ologj  <- o %*% logj 
-  A      <- outer(r, j) - og + ologj        # the series, almost ready to sum
+  A      <- outer(r, j) - og + ologj            # the series, almost ready to sum
   m      <- apply(A, 1, max)                    # avoid overflow; find maximum values
-  we     <- exp( A - m )                    # evaluate terms, less max.
-  sum.we <- apply( we, 1, sum)            # sum terms
-  jw     <- sum.we * exp( m )                # now restore max.
+  we     <- exp( A - m )                        # evaluate terms, less max.
+  sum.we <- apply( we, 1, sum)                  # sum terms
+  jw     <- sum.we * exp( m )                   # now restore max.
   # Since derivs may be negative, can't use log-scale
   
   list(lo    = lo.j, 
@@ -445,9 +455,9 @@ dtweedie_kv_bigp <- function(y, phi, power){
   kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
   can_try   <- is.finite(kmax_each) & (kmax_each <= 40 * (p - 1) + 10)
   if ( !any(can_try) ) {
-    return( list(lo = NA, 
-                 hi = NA, 
-                 kv = kv_all, 
+    return( list(lo    = NA, 
+                 hi    = NA, 
+                 kv    = kv_all, 
                  k.max = NA) )
   }
   y   <- y[can_try]
@@ -597,7 +607,10 @@ dtweedie_logv_bigp <- function( y, phi, power){
   kmax_each <- y ^ (2 - p) / ( phi * (p - 2) )
   can_try   <- is.finite(kmax_each) & (kmax_each <= 40 * (p - 1) + 10)
   if ( !any(can_try) ) {
-    return( list(lo = NA, hi = NA, logv = logv_all, relerr = rep(NaN, n_all)) )
+    return( list(lo = NA, 
+                 hi = NA, 
+                 logv = logv_all, 
+                 relerr = rep(NaN, n_all)) )
   }
   y   <- y[can_try]
   phi <- phi[can_try]
@@ -689,7 +702,7 @@ dtweedie_logv_bigp <- function( y, phi, power){
   logv             <- rep(NaN, length(sum.ve))
   logv[reliable]   <- log( sum.ve[reliable] ) + m[reliable]
   logv_all[can_try] <- logv
-  relerr_all       <- rep(NaN, n_all)      # the estimated relative error of the sum
+  relerr_all        <- rep(NaN, n_all)      # the estimated relative error of the sum
   relerr_all[can_try][reliable] <- err.est[reliable] / sum.ve[reliable]
   
   list(lo     = lo.k, 
@@ -833,8 +846,8 @@ dtweedie_series_bigp <- function(power, y, mu, phi){
   
   
   result <- dtweedie_logv_bigp(power = power, 
-                               y = y, 
-                               phi = phi)
+                               y     = y, 
+                               phi   = phi)
   logv <- result$logv
   
   theta <- mu ^ (1 - power) / ( 1 - power )

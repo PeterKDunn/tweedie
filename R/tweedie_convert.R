@@ -44,7 +44,7 @@ tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
   if ( is.null(xi) ) {   # Then   power  is given
     if ( !is.numeric(power)) stop("power  must be numeric.\n")
     xi.notation <- FALSE
-    xi <- power
+    xi          <- power
   }
   if ( xi != power ) {
     cat("Different values for xi and power given; the value of xi used.\n")
@@ -75,11 +75,11 @@ tweedie_convert <- function(xi = NULL, mu, phi, power = NULL){
   mu     <- gam / phi
   
   list( poisson.lambda = lambda, 
-        gamma.shape = alpha, 
-        gamma.scale = gam, 
-        p0 = p0,
-        gamma.mean = mu,
-        gamma.phi = phi.g)
+        gamma.shape    = alpha, 
+        gamma.scale    = gam, 
+        p0             = p0,
+        gamma.mean     = mu,
+        gamma.phi      = phi.g)
   
 }
 
@@ -94,8 +94,8 @@ tweedie.convert <- function(xi = NULL, mu, phi, power = NULL){
                             what = "tweedie.convert()", 
                             with = "tweedie_convert()")
   if (is.null(power)) power <- xi
-  tweedie_convert(xi = NULL, 
-              mu = mu,
-              phi = phi,
-              power=power)
+  tweedie_convert(xi   = NULL, 
+                 mu    = mu,
+                 phi   = phi,
+                 power = power)
 }

@@ -54,7 +54,7 @@ tweedie_plot <- function(y,
   }
   if (is.null(xi)) {
     xi.notation <- FALSE
-    xi <- power
+    xi          <- power
   }
   if (xi != power) {
     cat("Different values for xi and power given; the value of xi used.\n")
@@ -76,24 +76,22 @@ tweedie_plot <- function(y,
   is.pg <- (power > 1) & (power < 2)
   
   if (type == "pdf") {
-    fy <- dtweedie(
-      y = y,
-      power = power,
-      mu = mu,
-      phi = phi
+    fy <- dtweedie(y     = y,
+                   power = power,
+                   mu    = mu,
+                   phi   = phi
     )
   } else {
-    fy <- ptweedie(
-      q = y,
-      power = power,
-      mu = mu,
-      phi = phi
+    fy <- ptweedie(q     = y,
+                   power = power,
+                   mu    = mu, 
+                   phi   = phi
     )
   }
   
   # BEGIN: Check for some given parameters supplied via args
   plot_defaults <- list(
-    col = "black",
+    col  = "black",
     main = "Tweedie distribution",
     xlab = "Y",
     ylab = "Prob fn"
@@ -117,8 +115,8 @@ tweedie_plot <- function(y,
     if (is.pg) {
       do.call(plot, 
               c(list(
-                x = range(y),
-                y = range(fy),
+                x    = range(y),
+                y    = range(fy),
                 type = "n"
                 ), 
                 plot_args))
@@ -140,8 +138,8 @@ tweedie_plot <- function(y,
       # Not a Poison-gamma dist
       do.call(plot, 
               c(list(
-                x = range(y),
-                y = range(fy),
+                x    = range(y),
+                y    = range(fy),
                 type = "n"
                 ), 
                 plot_args))
@@ -176,7 +174,8 @@ tweedie_plot <- function(y,
     }
     
   }
-  return(invisible(list(y = fy, x = y)))
+  return(invisible(list(y = fy, 
+                        x = y)))
   
 }
 
@@ -207,12 +206,12 @@ tweedie.plot <- function(y,
   dots <- list(...)
   
   tweedie_plot(
-    y = y,
+    y     = y,
     power = power,
-    mu = mu,
-    phi = phi,
-    type = type,
-    add = add,
+    mu    = mu,
+    phi   = phi,
+    type  = type,
+    add   = add,
     plot_args = dots
   )
 }

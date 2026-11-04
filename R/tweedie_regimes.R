@@ -131,11 +131,12 @@ ptweedie_regime <- function(q, mu, phi, power) {
 
   xi   <- mu ^ (2 - power) / (phi * (power - 2))
   phis <- phi * mu ^ (power - 2)
-  regime[ok] <- "inversion"
-  regime[ok & (xi > S$p_xi_trust)]    <- "integration in tails"
-  regime[ok & (xi > S$p_xi_body_int)] <- "integration"
+  
+  regime[ok]                                 <- "inversion"
+  regime[ok & (xi > S$p_xi_trust)]           <- "integration in tails"
+  regime[ok & (xi > S$p_xi_body_int)]        <- "integration"
   regime[ok & ptweedie_use_saddle(xi, phis)] <- "saddlepoint"
-  regime[ok & (q <= 0)] <- "exact"
+  regime[ok & (q <= 0)]                      <- "exact"
   regime
 }
 
