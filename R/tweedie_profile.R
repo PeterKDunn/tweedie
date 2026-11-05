@@ -291,10 +291,11 @@ tweedie_profile <- function(formula,
   # since we want a *maximum* likelihood estimator,
   # define the negative.
   dtweedie_nlogl <- function(phi, y, mu, power) {
-    ans <- -2 * sum( log( dtweedie( y     = y, 
-                                    mu    = mu, 
-                                    phi   = phi, 
-                                    power = power ) ) )
+    ans <- -2 * sum( dtweedie( y     = y, 
+                               mu    = mu, 
+                               phi   = phi, 
+                               power = power,
+                               log   = TRUE ) )
     if ( is.infinite( ans ) ) {
       # If infinite, replace with saddlepoint estimate?
       ans <- sum( tweedie_dev(y     = y, 

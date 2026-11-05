@@ -8,7 +8,7 @@
 \alias{rtweedie}
 \title{Tweedie distributions}
 \usage{
-dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE)
 
 ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
   log.p = FALSE, verbose = FALSE)
@@ -31,6 +31,10 @@ rtweedie(n, xi = NULL, mu, phi, power = NULL)
 
 \item{verbose}{logical; if \code{TRUE}, some details of the algorithms used is
 shown. The default is \code{FALSE}.}
+
+\item{log}{logical; if \code{TRUE}, \code{dtweedie()} returns the log of the density,
+computed without underflow (so it stays finite far into the tails, where the
+density itself underflows to zero). The default is \code{FALSE}.}
 
 \item{q}{vector of quantiles.}
 

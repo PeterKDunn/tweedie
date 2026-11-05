@@ -27,10 +27,11 @@ dtweedie_logl <- function(phi, y, mu, power) {
   
   # Peter Dunn
   # 26 April 2001
-  sum( log( dtweedie( y     = y, 
-                      mu    = mu, 
-                      phi   = phi, 
-                      power = power) ) )
+  sum( dtweedie( y     = y, 
+                 mu    = mu, 
+                 phi   = phi, 
+                 power = power,
+                 log   = TRUE) )
   
 }
 

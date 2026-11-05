@@ -7,7 +7,7 @@
 #' dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, 
 #' a synonym for \code{power}).
 #' 
-#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE)
+#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE)
 #' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
 #'   log.p = FALSE, verbose = FALSE)
 #' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
@@ -60,6 +60,9 @@
 #'    The default is \code{FALSE}.
 #' @param verbose logical; if \code{TRUE}, some details of the algorithms used is
 #'    shown. The default is \code{FALSE}.
+#' @param log logical; if \code{TRUE}, \code{dtweedie()} returns the log of the density,
+#'    computed without underflow (so it stays finite far into the tails, where the
+#'    density itself underflows to zero). The default is \code{FALSE}.
 #'
 #' @return
 #' \code{dtweedie()} gives the density, \code{ptweedie()} gives the distribution function,
@@ -108,7 +111,7 @@
 #' 
 #' @keywords distribution
 #' @export
-dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
+dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE){
   # THE REGIMES (since 2026; no interpolation)
   #
   # Special values of p (p = 1, 2, 3; also p = 0) use the closed forms, and
@@ -175,11 +178,20 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   
   # IDENTIFY SPECIAL CASES
   if (verbose) cat("- Checking for special cases\n")
+  # (The log of the density is kept alongside the density throughout, from
+  # each method's own log scale, so that log = TRUE does not underflow.)
   out <- special_cases(y, mu, phi, power,
-                       type = "PDF")
+                       type  = "PDF",
+                       log.p = log)
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
-  density         <- out$f
+  if (log) {
+    logdens <- out$f
+    density <- exp(logdens)
+  } else {
+    density <- out$f
+    logdens <- base::log(density)
+  }
   if (verbose & special_p_cases) cat("  - Special case for p used\n")
   if (verbose & any(special_y_cases)) cat("  - Special cases for first input found\n")
   
@@ -191,6 +203,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
     todo <- which( !special_y_cases & !is.na(y) )
     y_inf <- todo[ y[todo] == Inf ]
     density[y_inf] <- 0
+    logdens[y_inf] <- -Inf
     todo <- setdiff(todo, y_inf)
     
     method <- rep(NA_character_, length(y))  # the method used for each value (for inspection; not returned)
@@ -211,6 +224,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                         phi   = phi[ todo[use_sp] ], 
                                         power = power)
         density[ todo[use_sp] ] <- sp$density
+        logdens[ todo[use_sp] ] <- sp$logf
         method[ todo[use_sp] ]  <- "saddlepoint"
       }
       rest <- todo[!use_sp]
@@ -220,11 +234,14 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
         
         if (power < 2) {
           # 2. 1 < p < 2: the series
-          density[rest] <- dtweedie_series(y     = y[rest], 
-                                           mu    = mu[rest], 
-                                           phi   = phi[rest],
-                                           power = power)
-          method[rest] <- "series"
+          ser <- dtweedie_series(y       = y[rest], 
+                                 mu      = mu[rest], 
+                                 phi     = phi[rest],
+                                 power   = power,
+                                 details = TRUE)
+          density[rest] <- ser$density
+          logdens[rest] <- ser$logf
+          method[rest]  <- "series"
           if (verbose) cat("- Series:", length(rest), "value(s)\n")
           
         } else {
@@ -237,6 +254,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                    details = TRUE) )
           use_ser <- !is.na(ser$relerr) & (ser$relerr < S$d_tol_series)
           density[ rest[use_ser] ] <- ser$density[use_ser]
+          logdens[ rest[use_ser] ] <- ser$logf[use_ser]
           method[ rest[use_ser] ]  <- "series"
           if (verbose) cat("- Series:", sum(use_ser), "value(s)\n")
           
@@ -252,6 +270,7 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
                                             method  = 3,
                                             details = TRUE) )
             density[inv] <- inv_out$density
+            logdens[inv] <- inv_out$logdensity
             method[inv]  <- "inversion"
             
             # If the inversion failed: the series or the saddlepoint
@@ -271,8 +290,10 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
               pick_ser <- (re_ser <= re_sp) & is.finite(re_ser)
               pick_sp  <- !pick_ser & is.finite(re_sp)
               density[ inv[k][pick_ser] ] <- ser$density[!use_ser][k][pick_ser]
+              logdens[ inv[k][pick_ser] ] <- ser$logf[!use_ser][k][pick_ser]
               method[ inv[k][pick_ser] ]  <- "series"
               density[ inv[k][pick_sp] ]  <- dens_sp_k[pick_sp]
+              logdens[ inv[k][pick_sp] ]  <- sp_k$logf[pick_sp]
               method[ inv[k][pick_sp] ]   <- "saddlepoint"
               # (No warning where the density underflows to zero, whatever 
               # the method's relative error)
@@ -293,9 +314,14 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE){
   
   # Restoration of whole vector, and sanity fixes
   density[is.na(y)] <- NA
+  logdens[is.na(y)] <- NA
   neg <- !is.na(density) & (density < 0)
-  if (any(neg))  density[neg] <- 0
-  density <- as.vector(density)
+  if (any(neg)) {
+    density[neg] <- 0
+    logdens[neg] <- -Inf
+  }
+  logdens[ is.nan(logdens) & !is.na(y) ] <- -Inf   # (the log of a negative value)
+  density <- if (log) as.vector(logdens) else as.vector(density)
 
   # Restore names if supplied
   if( !is.null(names(y)) ){
@@ -327,6 +353,25 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   out <- check_inputs(q, mu, phi, power)
   mu <- out$mu
   phi <- out$phi
+  
+  # MISSING VALUES: NA in, NA out; the other values are computed as usual
+  # (before, an NA gave an error)
+  if ( any(is.na(q)) ) {
+    ok  <- !is.na(q)
+    ans <- rep(NA_real_, length(q))
+    if ( any(ok) ) {
+      ans[ok] <- ptweedie(q          = q[ok], 
+                          mu         = mu[ok], 
+                          phi        = phi[ok], 
+                          power      = power, 
+                          lower.tail = lower.tail, 
+                          log.p      = log.p, 
+                          verbose    = verbose)
+    }
+    if ( !is.null(names(q)) ) names(ans) <- names(q)
+    return(ans)
+  }
+  
   f <- array(0,
              dim = length(q) )
   

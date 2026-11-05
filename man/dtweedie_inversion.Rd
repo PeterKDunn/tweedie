@@ -32,7 +32,7 @@ accuracy in the tails, where Methods 1 and 2 can lose it entirely.
 \item{IGexact}{logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.}
 }
 \value{
-A numeric vector of densities if \code{details=FALSE}; if \code{details = TRUE}, a list containing \code{denisty} (a vector of the values of the density), \code{regions} (a vector of the number of integration regions used),\code{method} (a vector giving the evaluation method used; see the Note below on the three methods), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
+A numeric vector of densities if \code{details=FALSE}; if \code{details = TRUE}, a list containing \code{density} (a vector of the values of the density), \code{logdensity} (its logarithm, computed without underflow), \code{regions} (a vector of the number of integration regions used),\code{method} (a vector giving the evaluation method used; see the Note below on the three methods), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
 }
 \description{
 Evaluates the probability density function (\acronym{pdf}) for Tweedie distributions using Fourier inversion, 

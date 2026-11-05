@@ -78,11 +78,14 @@ tweedie_AIC <- function( glm.obj, dispersion = NULL, k = 2, verbose = TRUE){
     disp <- dispersion
   }
   
-  den <- dtweedie( y     = y, 
-                   mu    = mu, 
-                   phi   = disp, 
-                   power = p)
-  AIC <- -2 * sum( log(den) * wt) 
+  # The log density directly (log = TRUE), so that observations far in the
+  # tails do not underflow to a density of zero (and a log-likelihood of -Inf)
+  logden <- dtweedie( y     = y, 
+                      mu    = mu, 
+                      phi   = disp, 
+                      power = p,
+                      log   = TRUE)
+  AIC <- -2 * sum( logden * wt) 
   
   return( AIC + k * (edf) )
   

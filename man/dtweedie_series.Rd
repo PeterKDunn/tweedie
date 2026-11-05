@@ -19,7 +19,7 @@ dtweedie.series(y, power, mu, phi)
 \item{phi}{vector of dispersion parameters \eqn{\phi}{phi}.}
 
 \item{details}{logical; if \code{TRUE}, returns a list: the density (\code{density}), 
-an estimate of its relative error from rounding (\code{relerr}; for \eqn{p > 2}{power > 2}, 
+its logarithm (\code{logf}, computed without underflow), an estimate of its relative error from rounding (\code{relerr}; for \eqn{p > 2}{power > 2}, 
 where the series alternates in sign; zero otherwise), and the range of terms summed (\code{lo}, \code{hi}).}
 }
 \value{

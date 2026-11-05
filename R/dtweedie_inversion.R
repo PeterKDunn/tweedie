@@ -21,7 +21,7 @@
 #' @param details logical; if \code{TRUE}, return a list with basic details of the integration. The default is \code{FALSE}.
 #' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse Gaussian distribution using the 'exact' values, otherwise uses inversion.
 #'
-#' @return A numeric vector of densities if \code{details=FALSE}; if \code{details = TRUE}, a list containing \code{denisty} (a vector of the values of the density), \code{regions} (a vector of the number of integration regions used),\code{method} (a vector giving the evaluation method used; see the Note below on the three methods), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
+#' @return A numeric vector of densities if \code{details=FALSE}; if \code{details = TRUE}, a list containing \code{density} (a vector of the values of the density), \code{logdensity} (its logarithm, computed without underflow), \code{regions} (a vector of the number of integration regions used),\code{method} (a vector giving the evaluation method used; see the Note below on the three methods), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
 #' 
 #' @note
 #' The 'exact' values for the inverse Gaussian distribution are not really exact, 
@@ -106,6 +106,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
   
   if ( special_p_cases ) {
     density <- out$f
+    logdensity <- log(density)
     optimal_Method <- array(NA, dim = length(y)) 
   } else {
 		# ONLY special y (not p) cases 
@@ -224,7 +225,14 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 		regions[!special_y_cases]        <- tmp$its
 		exitstatus_out[!special_y_cases] <- tmp$exitstatus
 
-		# Reconstruct
+		# Reconstruct (and the log of the density, from the logs of the
+		# factors, so it does not underflow where the density does)
+		logdensity <- log( pmax(density, 0) )
+		logmult    <- rep(0, length(y))
+		logmult[optimal_Method == 1L] <- ( (dev_1 - dev) / (2 * phi) )[optimal_Method == 1L]
+		logmult[optimal_Method == 2L] <- ( -log(mu) )[optimal_Method == 2L]
+		logmult[optimal_Method == 3L] <- ( -dev / (2 * phi) - log(y) )[optimal_Method == 3L]
+		logdensity[!special_y_cases] <- logdensity[!special_y_cases] + logmult[!special_y_cases]
 		if (any(optimal_Method == 1L)){
 			use_M1          <- optimal_Method==1L
 			density[use_M1] <- density[use_M1] * m1[use_M1]
@@ -250,6 +258,7 @@ dtweedie_inversion <- function(y, mu, phi, power, method = 3, verbose = FALSE,
 
   if (details) {
     return( list( density    = density,
+                  logdensity = logdensity,   # without underflow (from the logs of the factors)
                   regions    = regions,
                   method     = optimal_Method,
                   exitstatus = exitstatus_out))

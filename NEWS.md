@@ -25,6 +25,8 @@ tweedie 3.2.0 (Release date: )
 * tweedie_dev(): computed without cancellation, so it has full relative accuracy when y is close to mu (it lost most of its digits there); this also makes the saddlepoint and inversion densities more accurate at small dispersion
 * dtweedie(): y = NA gives NA (it gave an error)
 * The thresholds that decide which method dtweedie() and ptweedie() use are now all in one place, tweedie_regime_settings() (R/tweedie_regimes.R); the internal functions dtweedie_regime() and ptweedie_regime() say which regime each value falls in. The results are unchanged
+* dtweedie(): new argument log; if TRUE, the log of the density is returned, computed without underflow (each method works on the log scale), so it stays finite far into the tails where the density underflows to zero. tweedie_AIC(), logLiktweedie() and tweedie_profile() now use it, so an observation far in the tail no longer makes the log-likelihood -Inf. dtweedie_series() and dtweedie_inversion() return the log density too (details = TRUE: logf, logdensity)
+* ptweedie(): y = NA gives NA (it gave an error)
 * ptweedie_inversion(): a result is now flagged (exitstatus = 1, with a warning) when the pre-acceleration zone reaches its cap, since acceleration then starts where it is not valid
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 

@@ -180,7 +180,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (type == "PDF") {
         f <- stats::dnorm( y, 
                            mean = mu, 
-                           sd   = sqrt(phi))
+                           sd   = sqrt(phi),
+                           log  = log.p)
       } else {
         f <- stats::pnorm( y, 
                            mean       = mu, 
@@ -195,7 +196,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (verbose) cat("power = 1 (Poisson case)\n")
       if (type == "PDF"){
         f <- stats::dpois(y/phi, 
-                          lambda = mu / phi )
+                          lambda = mu / phi,
+                          log    = log.p)
       } else {
         f <- stats::ppois(y/phi, 
                           lambda     = mu / phi,
@@ -210,7 +212,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
       if (type == "PDF") {
         f <- stats::dgamma( y,
                             scale = mu * phi, 
-                            shape = 1 / phi)
+                            shape = 1 / phi,
+                            log   = log.p)
       } else {
         f <- stats::pgamma( y,
                             scale      = mu * phi, 
@@ -227,7 +230,8 @@ special_cases <- function(y, mu, phi, power, type = "PDF", verbose = FALSE, IGex
         if (type == "PDF") {
           f <- statmod::dinvgauss(x          = y, 
                                   mean       = mu, 
-                                  dispersion = phi)
+                                  dispersion = phi,
+                                  log        = log.p)
         } else {
           f <- statmod::pinvgauss(q          = y, 
                                   mean       = mu, 

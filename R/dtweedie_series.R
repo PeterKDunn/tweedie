@@ -12,7 +12,7 @@
 #' @param mu vector of mean \eqn{\mu}{mu}.
 #' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
 #' @param details logical; if \code{TRUE}, returns a list: the density (\code{density}), 
-#'   an estimate of its relative error from rounding (\code{relerr}; for \eqn{p > 2}{power > 2}, 
+#'   its logarithm (\code{logf}, computed without underflow), an estimate of its relative error from rounding (\code{relerr}; for \eqn{p > 2}{power > 2}, 
 #'   where the series alternates in sign; zero otherwise), and the range of terms summed (\code{lo}, \code{hi}).
 #' 
 #' @return A numeric vector of probabilities.
@@ -60,6 +60,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
   y0      <- (y == 0)
   yp      <- (y != 0)
   density <- lo <- hi <-array( dim = length(y))
+  logf    <- rep(NA_real_, length(y))   # the log of the density
   relerr  <- rep(0, length(y))   # the estimated relative error (p > 2 only; 0 otherwise)
   
   if ( (power == 2) | (power == 1) ) { # Special cases
@@ -77,15 +78,18 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
     #   if ( (power == 1) & (all(phi==1)) ){
     #    density <- dpois(x=y/phi, lambda=mu/phi )
     #   }
+    logf <- log(density)
   } else{
     
     if ( any(y == 0) ) {
       if (power > 2) {
         density[y0] <- 0 * y[y0]
+        logf[y0]    <- -Inf
       }
       if ( (power > 1) && (power < 2) ) {
         lambda      <- mu[y0] ^ (2 - power) / ( phi[y0] * (2 - power) )
         density[y0] <- exp( -lambda )
+        logf[y0]    <- -lambda
       }
     }
     
@@ -96,6 +100,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
                                     y     = y[yp],
                                     phi   = phi[yp])
         density[yp] <- out$density 
+        logf[yp]    <- out$logf
         relerr[yp]  <- out$relerr
         lo[yp]      <- out$lo
         hi[yp]      <- out$hi
@@ -107,6 +112,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
                                       y     = y[yp],
                                       phi   = phi[yp])
         density[yp] <- out$density 
+        logf[yp]    <- out$logf
         lo[yp]      <- out$lo
         hi[yp]      <- out$hi
       }
@@ -124,6 +130,7 @@ dtweedie_series <- function(y, power, mu, phi, details = FALSE){
   
   if (details) {
     return(list( density = density,
+                 logf    = logf,
                  relerr  = relerr,
                  lo      = lo,
                  hi      = hi) )
@@ -857,6 +864,7 @@ dtweedie_series_bigp <- function(power, y, mu, phi){
   f       <- exp( logfnew )
   
   return( list(density = f,
+               logf    = logfnew,
                logv    = logv, 
                relerr  = result$relerr,
                lo      = result$lo, 
