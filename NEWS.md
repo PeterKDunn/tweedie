@@ -2,38 +2,62 @@ tweedie 3.2.0 (Release date: )
 ==============
 
 ## Summary
-* Numerous improvements that improve accuracy and precision
-* Use the re-scaling identity to simplify CDF computations
-* Increased a computation limit to allows greater precision
-* Numerous new warnings in the code when accuracy is not reached or fails 
-* Some refining of the inversion approach
-* Add log.p input to ptweedie()
-* Add lower.tail argument for ptweedie() functions and ptweedie_series()
-* New testthat tests for the log.p and lower.tail changes in ptweedie()
-* Changes in the ptweedie_series() approach
-* New input to ptweedie_series(): max.terms, so that the truncation of the series can be controlled
-* Changes in ptweedie() using saddlepoint approx and direct integration, greatly improving accuracy
-* ptweedie() for p > 2: uses the Lugannani-Rice saddlepoint approximation when the dispersion is very small (xi = mu^(2-p)/{phi (p-2)} > 1e7, and in the body when xi > 1e6 and phi mu^(p-2) <= 1e-5), where the inversion and tail integration can fail
-* ptweedie() for p > 2 and xi > 1e4: tail probabilities below 1e-2 (not 1e-5) are computed by integrating the density, and the integrated value is used whenever the integration succeeds (before, between 1e-10 and 1e-5 the inversion value was kept if the two disagreed, which near p = 2 gave silent errors of up to 0.5%)
-* ptweedie() for p > 2 and 1e5 < xi <= 1e7: values in the body are also computed by integrating the density (the inversion's error there reached about 1e-8 near p = 2; now about 1e-9 or better), with the inversion where the integration returns no value; this is slower (about 0.1 s per value)
-* ptweedie() for p > 2: the saddlepoint approximation is also used at xi = 1e7 when phi mu^(p-2) <= 1e-5, where it is more accurate than the integration
-* ptweedie() for p > 2: where the inversion fails (near p = 2, for very small y and large dispersion it could return 0.5, or 0, whatever the true value), the density is integrated or, failing that, the saddlepoint approximation is used; these values are rough, and still flagged by a warning
+Numerous changes, mostly internally. These changes substantially increase the
+relative accuracy of the algorithms for dtweedie() and especially for ptweedie().
+
+**Crucially, the interpolation is no longer used for dtweedie()** but will be
+reinstated in a future update; the purpose of this update is improving accuracy.
+The result is much greater relative accuracy, but some evaluations are slightly 
+slower (though not painfully so). This will also mean that the faster
+interpolation method will produce more accurate results when it is reinstated.
+
+Some of the important changes for improving accuracy include: 
+* new methods are introduced for computation (e.g., direct integration for the CDF); 
+* improved (corrected) saddlepoint approximations;  
+* more computations performed on the log-scale to prevent under- and over-flow; 
+* a re-scaling identity now is used for the CDF.
+
+dtweedie() and ptweedie() have new inputs for log-outputs. More warnings and
+errors are reported when accuracy targets are not met.
+
+These changes have all been prompted by preparing the Tweedie CDF paper. For
+example, the direct integration method inspired the more accurate computation
+of the denisty.
+
+
+## Changed and fixed
+* ptweedie() and dtweedie(): Numerous improvements that improve accuracy and precision
+* ptweedie() and dtweedie(): Numerous new warnings in the code when accuracy is not reached or fails 
+* ptweedie() and dtweedie(): Some refining of the inversion approach
+* dtweedie() and ptweedie(): The thresholds that decide which method dtweedie() and ptweedie() use are now all in one place, tweedie_regime_settings() (R/tweedie_regimes.R); the internal functions dtweedie_regime() and ptweedie_regime() say which regime each value falls in. The results are unchanged
+* ptweedie(): Use the re-scaling identity to simplify CDF computations
+* ptweedie(): Increased a computation limit to allows greater precision
+* ptweedie(): new log.p input; if TRUE, the log of the CDF is returned
+* ptweedie(): Add lower.tail argument for ptweedie() functions and ptweedie_series()
+* ptweedie(): New testthat tests for the log.p and lower.tail changes in ptweedie()
+* ptweedie_series(): Changes in the ptweedie_series() approach as per paper
+* ptweedie_series(): New input: max.terms, so that the truncation of the series can be controlled
+* ptweedie(): using saddlepoint approx and direct integration, greatly improving accuracy
+* ptweedie(): for p > 2, uses the Lugannani-Rice saddlepoint approximation when the dispersion is very small (xi = mu^(2-p)/{phi (p-2)} > 1e7, and in the body when xi > 1e6 and phi mu^(p-2) <= 1e-5), where the inversion and tail integration can fail
+* ptweedie(): for p > 2 and xi > 1e4: tail probabilities below 1e-2 (not 1e-5) are computed by integrating the density, and the integrated value is used whenever the integration succeeds (before, between 1e-10 and 1e-5 the inversion value was kept if the two disagreed, which near p = 2 gave silent errors of up to 0.5%)
+* ptweedie(): for p > 2 and 1e5 < xi <= 1e7: values in the body are also computed by integrating the density (the inversion's error there reached about 1e-8 near p = 2; now about 1e-9 or better), with the inversion where the integration returns no value; this is slower (about 0.1 s per value)
+* ptweedie(): for p > 2: the saddlepoint approximation is also used at xi = 1e7 when phi mu^(p-2) <= 1e-5, where it is more accurate than the integration
+* ptweedie(): for p > 2: where the inversion fails (near p = 2, for very small y and large dispersion it could return 0.5, or 0, whatever the true value), the density is integrated or, failing that, the saddlepoint approximation is used; these values are rough, and still flagged by a warning
+* ptweedie(): y = NA gives NA (it gave an error)
+* ptweedie_inversion(): a result is now flagged (exitstatus = 1, with a warning) when the pre-acceleration zone reaches its cap, since acceleration then starts where it is not valid
+* dtweedie(): new argument log; if TRUE, the log of the density is returned, computed without underflow (each method works on the log scale), so it stays finite far into the tails where the density underflows to zero. tweedie_AIC(), logLiktweedie() and tweedie_profile() now use it, so an observation far in the tail no longer makes the log-likelihood -Inf. dtweedie_series() and dtweedie_inversion() return the log density too (details = TRUE: logf, logdensity)
 * dtweedie(): no longer interpolates. For each value it uses the saddlepoint approximation with its asymptotic correction where z = phi y^(p-2) is small enough (its estimated relative error below 1e-13), otherwise the series (1 < p < 2; and p > 2 where its estimated error is below 1e-12), otherwise the Fourier inversion. The relative error is now below about 4e-13 everywhere tested (before, up to about 1e-5 for p near 1 at small dispersion, and about 2.5e-7 for 7 <= p <= 10)
 * dtweedie_series() for 1 < p < 2: each term is computed with dpois() and dgamma(), and the terms are summed from each value's own peak, so it keeps full accuracy at large lambda (before, relative errors of about 1e-7 at lambda = 1e6) and no longer needs a huge matrix when the values of y are widely spread (it could exhaust the memory)
 * dtweedie_series() for p > 2: only values that can be summed in double precision are tried, and the error estimate counts only the terms that matter; with details = TRUE it also returns the estimated relative error (relerr)
 * dtweedie_inversion(): the method argument is now used (it was ignored, and the method with the smallest multiplier was always chosen; method = NULL does that); the default, method 3, keeps the relative accuracy in the tails. This also makes ptweedie() more accurate for p > 2 where it integrates the density
-* tweedie_dev(): computed without cancellation, so it has full relative accuracy when y is close to mu (it lost most of its digits there); this also makes the saddlepoint and inversion densities more accurate at small dispersion
 * dtweedie(): y = NA gives NA (it gave an error)
-* The thresholds that decide which method dtweedie() and ptweedie() use are now all in one place, tweedie_regime_settings() (R/tweedie_regimes.R); the internal functions dtweedie_regime() and ptweedie_regime() say which regime each value falls in. The results are unchanged
-* dtweedie(): new argument log; if TRUE, the log of the density is returned, computed without underflow (each method works on the log scale), so it stays finite far into the tails where the density underflows to zero. tweedie_AIC(), logLiktweedie() and tweedie_profile() now use it, so an observation far in the tail no longer makes the log-likelihood -Inf. dtweedie_series() and dtweedie_inversion() return the log density too (details = TRUE: logf, logdensity)
-* ptweedie(): y = NA gives NA (it gave an error)
-* ptweedie_inversion(): a result is now flagged (exitstatus = 1, with a warning) when the pre-acceleration zone reaches its cap, since acceleration then starts where it is not valid
+* tweedie_dev(): computed without cancellation, so it has full relative accuracy when y is close to mu (it lost most of its digits there); this also makes the saddlepoint and inversion densities more accurate at small dispersion
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 
-* Minor improvements and typo fixes in man pages
+* Minor improvements and typo fixes in man pages throghout
 
 
-## Changed
+## Fixed
 * Fixed typo in README.Rmd.
 
 
