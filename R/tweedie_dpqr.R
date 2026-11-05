@@ -163,12 +163,13 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log =
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
   if (verbose) cat("- Checking notation\n")
-  out <- sort_notation(xi = xi, power = power)
-  xi <- out$xi
+  out   <- sort_notation(xi = xi, power = power)
+  xi    <- out$xi
   power <- out$power
-  xi.notation <- out$xi.notation
-  index.par <- out$index.par
-  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
+  
+  xi.notation    <- out$xi.notation
+  index.par      <- out$index.par
+  index.par.long <- out$index.par.long 
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
@@ -346,7 +347,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   power <- out$power
   xi.notation <- out$xi.notation
   index.par <- out$index.par
-  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
+  index.par.long <- out$index.par.long 
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   if (verbose) cat("- Checking, resizing inputs\n")
@@ -379,9 +380,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   special_y_cases <- rep(FALSE, length(q))
   if (verbose) cat("- Checking for special cases\n")
   out <- special_cases(q, mu, phi, power, 
-                       type = "CDF",
+                       type       = "CDF",
                        lower.tail = lower.tail,
-                       log.p = log.p)
+                       log.p      = log.p)
   special_p_cases <- out$special_p_cases
   special_y_cases <- out$special_y_cases
   
@@ -504,12 +505,12 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
             # Gauss-Laguerre rules are tried, since the inversion value is a
             # good fallback there
             very_small <- is.na(tail_lin[k]) || (tail_lin[k] < S$p_tail_tiny)
-            ti <- ptweedie_tail_integrate(q = q[j], 
-                                          mu = mu[j], 
-                                          phi = phi[j],
-                                          power = power, 
+            ti <- ptweedie_tail_integrate(q          = q[j], 
+                                          mu         = mu[j], 
+                                          phi        = phi[j],
+                                          power      = power, 
                                           lower.tail = lower.tail,
-                                          fallback = very_small || trust[k])
+                                          fallback   = very_small || trust[k])
             if (ti$ok && !very_small && !trust[k] &&
                 !(abs(exp(ti$logp) - tail_lin[k]) < S$p_agree)) {
               next   # disagrees with the inversion: keep the inversion value
@@ -527,7 +528,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
               # finite log instead.
               if (log.p && trust[k] && (ti$logp == -Inf)) {
                 ls <- ptweedie_saddle(q = q[j], mu = mu[j], phi = phi[j], power = power,
-                                      lower.tail = lower.tail, log.p = TRUE)
+                                      lower.tail = lower.tail,
+                                      log.p      = TRUE)
                 if (!is.na(ls)) f[j] <- ls
               }
             } else if (very_small) {
@@ -568,12 +570,12 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
           if (verbose) cat("- Body values with small dispersion:", sum(body_int), "value(s) recomputed by integrating the density\n")
           for (k in which(body_int)) {
             j  <- idx[k]
-            ti <- ptweedie_tail_integrate(q = q[j],
-                                          mu = mu[j],
-                                          phi = phi[j],
-                                          power = power,
+            ti <- ptweedie_tail_integrate(q          = q[j],
+                                          mu         = mu[j],
+                                          phi        = phi[j],
+                                          power      = power,
                                           lower.tail = lower.tail,
-                                          fallback = TRUE)
+                                          fallback   = TRUE)
             if (ti$ok) {
               f[j] <- if (log.p) ti$logp else exp(ti$logp)
               not_conv[k] <- FALSE
@@ -588,14 +590,18 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         near_one <- not_conv & !not_rel & !is.na(tail_lin) & (tail_lin > 1 - tail_switch)
         for (k in which(near_one)) {
           j  <- idx[k]
-          ti <- ptweedie_tail_integrate(q = q[j],
-                                        mu = mu[j],
-                                        phi = phi[j],
-                                        power = power,
+          ti <- ptweedie_tail_integrate(q          = q[j],
+                                        mu         = mu[j],
+                                        phi        = phi[j],
+                                        power      = power,
                                         lower.tail = !lower.tail,
-                                        fallback = TRUE)
+                                        fallback   = TRUE)
           if (ti$ok && (exp(ti$logp) < tail_switch)) {
-            f[j] <- if (log.p) log1p(-exp(ti$logp)) else -expm1(ti$logp)
+            f[j] <- if (log.p) {
+              log1p(-exp(ti$logp)) 
+            } else {
+              -expm1(ti$logp)
+            }
             not_conv[k] <- FALSE
           }
         }
@@ -611,12 +617,12 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
         failed <- which(not_conv & !not_rel & !near_one & !small)
         for (k in failed) {
           j  <- idx[k]
-          ti <- ptweedie_tail_integrate(q = q[j],
-                                        mu = mu[j],
-                                        phi = phi[j],
-                                        power = power,
+          ti <- ptweedie_tail_integrate(q          = q[j],
+                                        mu         = mu[j],
+                                        phi        = phi[j],
+                                        power      = power,
                                         lower.tail = lower.tail,
-                                        fallback = TRUE)
+                                        fallback   = TRUE)
           if (ti$ok && is.finite(ti$logp)) {
             f[j] <- if (log.p) ti$logp else exp(ti$logp)
             next
@@ -686,8 +692,8 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       # terms (ptweedie_series(max.terms = )) set from lambda: 25 sqrt(lambda),
       # and at least 1e6.
       if ( any(!special_y_cases)) {
-        idx    <- which(!special_y_cases)
-        lambda <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
+        idx     <- which(!special_y_cases)
+        lambda  <- mu[idx]^(2 - power) / (phi[idx] * (2 - power))
         use_ser <- rep(TRUE, length(idx))
 
         if (any(use_ser)) {
@@ -775,21 +781,22 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   ### BEGIN preliminary work
   
   # SORT OUT THE NOTATION (i.e., xi VS power)
-  out <- sort_notation(xi = xi, power = power)
-  xi <- out$xi
+  out   <- sort_notation(xi = xi, power = power)
+  xi    <- out$xi
   power <- out$power
-  xi.notation <- out$xi.notation
-  index.par <- out$index.par
-  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
+  
+  xi.notation    <- out$xi.notation
+  index.par      <- out$index.par
+  index.par.long <- out$index.par.long 
   
 
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
   out <- check_inputs(p, mu, phi, power,
                       type = "quantile")
-  mu <- out$mu
+  mu  <- out$mu
   phi <- out$phi
-  f <- array(0,
-             dim = length(p) )
+  f   <- array(0,
+               dim = length(p) )
   
   
   # IDENTIFY SPECIAL CASES
@@ -818,7 +825,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   p.vec   <-  p[   ( (p > 0) & (p < 1) ) ]
   
   for (i in (1 : length(ans)) ) {
-    mu.1 <- mu.vec[i]
+    mu.1  <- mu.vec[i]
     phi.1 <- phi.vec[i]
     p.1   <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
     pwr   <- power     # This is the Tweedie power, xi
@@ -831,7 +838,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
     }
     
     qg <- stats::qgamma(prob,  
-                        rate = 1 / (phi.1 * mu.1), 
+                        rate  = 1 / (phi.1 * mu.1), 
                         shape = 1 / phi.1 )
     if ( pwr == 2 ) ans[i] <- qg
     
@@ -846,9 +853,9 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
     
     # Solve!
     if ( ( pwr > 1) & (pwr < 2) ) { # This gives a *lower* bound on the value of the answer (if y>0)
-      step <- dtweedie(y = 0, 
-                       mu = mu.1, 
-                       phi = phi.1, 
+      step <- dtweedie(y     = 0, 
+                       mu    = mu.1, 
+                       phi   = phi.1, 
                        power = pwr)
       # This is P(Y = 0), the discrete "step"
       
@@ -945,11 +952,12 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
 
   # SORT OUT THE NOTATION (i.e., xi VS power)
   out <- sort_notation(xi = xi, power = power)
-  xi <- out$xi
-  power <- out$power
-  xi.notation <- out$xi.notation
-  index.par <- out$index.par
-  index.par.long <- out$index.par.long ### MAY NOT BE NEEDED!!!
+  xi  <- out$xi
+  
+  power          <- out$power
+  xi.notation    <- out$xi.notation
+  index.par      <- out$index.par
+  index.par.long <- out$index.par.long
   
   
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
@@ -984,8 +992,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
 
   if ( power > 2) {
     rtw <- qtweedie( stats::runif(n),
-                     mu = mu,
-                     phi = phi, 
+                     mu    = mu,
+                     phi   = phi, 
                      power = power)
   }
   
