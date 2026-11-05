@@ -22,6 +22,7 @@ tweedie_regime_settings <- function() {
     # Use the corrected saddlepoint approximation where its estimated relative
     # error is below this (its estimate depends only on p and z = phi y^(p-2))
     d_tol_saddle  = 1e-13,
+    
     # For p > 2, use the series where its estimated relative error (from
     # rounding; the terms alternate in sign) is below this
     d_tol_series  = 1e-12,
@@ -30,6 +31,7 @@ tweedie_regime_settings <- function() {
     # xi above this: the dispersion is small, and the inversion is not trusted
     # in the tails
     p_xi_trust    = 1e4,
+    
     # xi <= p_xi_trust: tail probabilities (from the inversion) below this
     # are recomputed by integrating the density...
     p_tail_small  = 1e-5,
@@ -37,17 +39,22 @@ tweedie_regime_settings <- function() {
     # only if it agrees with the inversion to p_agree
     p_tail_tiny   = 1e-10,
     p_agree       = 1e-12,
+    
     # xi > p_xi_trust: tail probabilities below this are integrated
     p_tail_trust  = 1e-2,
+    
     # xi above this: the body is integrated too
     p_xi_body_int = 1e5,
+    
     # xi above this, with phis <= p_phis_saddle: the body uses the saddlepoint
     # approximation
     p_xi_body_sp  = 1e6,
     p_phis_saddle = 1e-5,
+    
     # xi above this (or equal to it, with phis <= p_phis_saddle): the
     # saddlepoint approximation for every value
     p_xi_saddle   = 1e7,
+    
     # A failed tail probability below this (the inversion's value then has
     # no correct digits) is replaced by the saddlepoint approximation
     p_tail_nodigits = 1e-14
