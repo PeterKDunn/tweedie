@@ -9,3 +9,4 @@ src/*.dll
 *.pdf
 .DS_Store
 *.Rproj
+*.md
