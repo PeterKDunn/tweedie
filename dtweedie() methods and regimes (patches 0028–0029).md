@@ -102,10 +102,10 @@ Patch 0029 (optional, applied after 0028) moves every threshold that picks a met
 
 ## Open questions and next steps
 
-- [ ] Apply 0027, 0028, 0029 in that order and run the tests (827 expectations, all pass here; R CMD check: no warnings or notes from the package).
-- [ ] Regenerate the Tables and Checks (Table 4 values change in the last digits), including Check B with the skellam\_ref fix.
+- [x] Apply 0027, 0028, 0029 in that order and run the tests (827 expectations, all pass here; R CMD check: no warnings or notes from the package).
+- [x] Regenerate the Tables and Checks (Table 4 values change in the last digits), including Check B with the skellam\_ref fix.
 - [ ] Decide whether to export the corrected saddlepoint (now internal: tweedie:::dtweedie\_saddle\_corrected()).
-- [ ] Decide whether dtweedie() should get a log argument: the saddlepoint and series already work on the log scale, and logLiktweedie() takes log(dtweedie()), which underflows in the far tails.
+- [x] Decide whether dtweedie() should get a log argument: the saddlepoint and series already work on the log scale, and logLiktweedie() takes log(dtweedie()), which underflows in the far tails.
 - [ ] Interpolation, later: build it from stored values of the corrected saddlepoint, series and inversion, for speed where the inversion is used (p > 2, middle values of z).
-- [ ] ptweedie() with y = NA gives an error (not fixed).
+- [x] ptweedie() with y = NA gives an error (not fixed).
 - [ ] dtweedie\_interpolation.R and stored\_grids() are no longer called by dtweedie(); keep them for the interpolation work, or remove them.
