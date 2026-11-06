@@ -12,6 +12,23 @@
 #' 
 #' @return A numeric vector of densities.
 #' 
+#' @section Accuracy:
+#' The saddlepoint approximation is an approximation, not an exact evaluation, and 
+#' no warning is given when it is inaccurate. 
+#' Its relative error grows with \eqn{z = \phi y^{p - 2}}{z = phi * y^(p - 2)}, 
+#' and is roughly of order \eqn{z/10}{z/10} or smaller (for example, exactly
+#' \eqn{z/12}{z/12} to first order for the gamma distribution, \eqn{p = 2}{power = 2});
+#' it is small only when \eqn{z}{z} is small.
+#' For \eqn{1 < p < 2}{1 < power < 2}, the default offset \code{eps = 1/6} 
+#' (which keeps the density finite near \eqn{y = 0}{y = 0}) adds a further relative 
+#' error of about \eqn{(1 + \epsilon/y)^{-p/2} - 1}{(1 + eps/y)^(-p/2) - 1}, 
+#' which does not shrink as \eqn{\phi}{phi} becomes small (about 11\% at 
+#' \eqn{y = 1}{y = 1} when \eqn{p = 1.5}{power = 1.5}).
+#' 
+#' \code{\link{dtweedie}()} uses a corrected saddlepoint approximation only where 
+#' its estimated relative error is below \eqn{10^{-13}}{1e-13}; use \code{dtweedie()}
+#' for accurate densities.
+#' 
 #' @examples
 #' # Plot a Tweedie density
 #' y <- seq(0.01, 4, length = 50)

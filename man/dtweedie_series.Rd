@@ -30,6 +30,19 @@ Evaluates the probability density function (\acronym{pdf}) for Tweedie distribut
 for given values of the dependent variable \code{y}, the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 \emph{Not usually called by general users}, but can be used in the case of evaluation problems.
 }
+\section{Accuracy}{
+
+For \eqn{1 < p < 2}{1 < power < 2}, the terms of the series are all positive, 
+and the density keeps full relative accuracy.
+For \eqn{p > 2}{power > 2}, the terms alternate in sign, and rounding error can 
+cancel many digits. An estimate of the resulting relative error is returned 
+(as \code{relerr}) when \code{details = TRUE}; no warning is given for a large
+estimated error. Where the series cannot be summed at all, \code{NaN} is returned 
+with a warning.
+\code{\link{dtweedie}()} uses the series for \eqn{p > 2}{power > 2} only where this 
+estimated relative error is below \eqn{10^{-12}}{1e-12}.
+}
+
 \examples{
 # Plot a Tweedie density
 y <- seq(0.01, 4, length = 50)

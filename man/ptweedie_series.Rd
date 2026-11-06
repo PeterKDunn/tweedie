@@ -53,6 +53,15 @@ the mean \code{mu}, dispersion \code{phi}, and power parameter \code{power}.
 The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using 
 inverse normal distributions, for which very good numerical approximation are available in R.
 }
+\section{Accuracy}{
+
+The terms of the series are all positive, and are summed on the log scale, so
+both tails keep full relative accuracy, far into the tails.
+The only limitation is the number of terms: if more than \code{max.terms} are 
+needed (when \eqn{\lambda}{lambda} is very large), the series is truncated and a
+warning is given.
+}
+
 \examples{
 # Plot a Tweedie distribution function
 y <- seq(0.01, 4, length = 50)

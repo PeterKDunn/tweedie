@@ -27,6 +27,13 @@ tweedie_regime_settings <- function() {
     # rounding; the terms alternate in sign) is below this
     d_tol_series  = 1e-12,
 
+    ### ptweedie_inversion()
+    # The inversion's error is ABSOLUTE (a few times 1e-16), so a tail probability
+    # P has a relative error of about (1e-16 to 1e-15)/P. Tail probabilities below this
+    # are flagged (small_tail = TRUE) when details = TRUE; their relative
+    # error may exceed about 1e-8
+    inv_tail_flag = 1e-8,
+
     ### ptweedie(), p > 2; xi = mu^(2 - p)/{phi (p - 2)}, phis = phi mu^(p - 2)
     # xi above this: the dispersion is small, and the inversion is not trusted
     # in the tails

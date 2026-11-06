@@ -32,6 +32,13 @@
 #' 
 #' @return A numeric vector of probabilities (or log-probabilities, if \code{log.p = TRUE}).
 #' 
+#' @section Accuracy:
+#' The terms of the series are all positive, and are summed on the log scale, so
+#' both tails keep full relative accuracy, far into the tails.
+#' The only limitation is the number of terms: if more than \code{max.terms} are 
+#' needed (when \eqn{\lambda}{lambda} is very large), the series is truncated and a
+#' warning is given.
+#' 
 #' @note
 #' The 'exact' values for the inverse Gaussian distribution are not really exact, but evaluated using 
 #' inverse normal distributions, for which very good numerical approximation are available in R.

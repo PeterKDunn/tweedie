@@ -32,7 +32,7 @@ directly from the already-correctly-computed tail probability rather than as
 \item{details}{logical; if \code{TRUE}, returns the value of the distribution and some information about the integration. The default is \code{FALSE}.}
 }
 \value{
-If \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{CDF} (a vector of the values of the distribution function), \code{regions} (a vector of the number of integration regions used), and \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation).
+If \code{details = FALSE}, a numeric vector of the distribution function values; if \code{details = TRUE}, a list containing \code{cdf} (a vector of the values of the distribution function), \code{regions} (a vector of the number of integration regions used), \code{exitstatus} (a vector, where a \code{1} for any value means a computational problem or target relative accuracy not reached, for the corresponding observation), and \code{small_tail} (a logical vector; \code{TRUE} where the inversion returned a tail probability below \eqn{10^{-8}}{1e-8}, whose relative accuracy may be poor; see the Accuracy section).
 
 For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} is set to \code{NA} for all values of \code{q}.
 For special cases of \code{q} for other values of \eqn{p} (i.e., \eqn{P(Y = 0)}), \code{regions} is set to \code{NA}.
@@ -48,6 +48,26 @@ The 'exact' values for the inverse Gaussian distribution are not really exact,
 but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
 (Giner & Smyth, 2016).
 }
+\section{Accuracy}{
+
+The inversion computes \eqn{F(y) = 1/2 - I/\pi}{F(y) = 1/2 - I/pi} (and 
+\eqn{1 - F(y) = 1/2 + I/\pi}{1 - F(y) = 1/2 + I/pi} for the upper tail), where 
+\eqn{I}{I} is the integral evaluated numerically
+(for \eqn{1 < p < 2}{1 < p < 2}, the constant \eqn{1/2}{1/2} is replaced by 
+\eqn{(1 \pm e^{-\lambda})/2}{(1 +/- exp(-lambda))/2}).
+When the requested tail probability \eqn{P}{P} is small, \eqn{I/\pi}{I/pi} is 
+close to \eqn{1/2}{1/2} and most of the digits cancel, so the error is 
+\emph{absolute} (a few times \eqn{10^{-16}}{1e-16}) rather than relative: 
+the relative error is about \eqn{10^{-16}/P}{1e-16/P} or a few times larger.
+Tail probabilities below about \eqn{10^{-8}}{1e-8} may therefore have poor
+relative accuracy, and those far below \eqn{10^{-16}}{1e-16} may have no correct digits.
+These values are flagged by \code{small_tail} when \code{details = TRUE}; no warning is given.
+
+\code{\link{ptweedie}()} does not have this limitation: it recomputes small tail
+probabilities from the inversion by integrating the density, which keeps its relative
+accuracy far into the tails. Use \code{ptweedie()} for small tail probabilities.
+}
+
 \examples{
 # Plot a Tweedie distribution function
 y <- seq(0.01, 4, length = 50)

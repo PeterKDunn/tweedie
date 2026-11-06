@@ -26,6 +26,14 @@ of the denisty.
 
 
 ## Changed and fixed
+* ptweedie_inversion(): with details = TRUE, now also returns small_tail, flagging
+  tail probabilities below 1e-8. The inversion computes F = 1/2 -/+ I/pi, so its
+  error is absolute (a few times 1e-16), and such small tails can have poor relative
+  accuracy. The new Accuracy section of the help page explains this. No warning is
+  given (as for the other methods), and the values returned are unchanged; ptweedie()
+  already recomputes small tails by integrating the density.
+* dtweedie_saddle(), dtweedie_series(), ptweedie_series(): new Accuracy sections in
+  the help pages, describing where each method is less accurate.
 * ptweedie() and dtweedie(): Numerous improvements that improve accuracy and precision
 * ptweedie() and dtweedie(): Numerous new warnings in the code when accuracy is not reached or fails 
 * ptweedie() and dtweedie(): Some refining of the inversion approach
