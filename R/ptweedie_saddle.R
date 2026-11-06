@@ -102,17 +102,20 @@ mills_ratio <- function(x) {
   # Computed as exp{log Phi(-x) - log dnorm(x)}, the two logs nearly cancel
   # when x is large (both are about -x^2/2), losing about x^2/2 * 1e-16 in
   # absolute terms: 1e-13 at x = 37 (a tail of 1e-300), and everything by
-  # x = 1e5 (where the result was even Inf). For x >= 3 use instead the
-  # continued fraction R(x) = 1/(x + 1/(x + 2/(x + 3/(x + ...)))), evaluated
-  # from the back; 100 terms give full double precision for x >= 3.
+  # x = 1e5 (where the result was even Inf). 
+  #
+  # For x >= 3 use instead the continued fraction 
+  #    R(x) = 1/(x + 1/(x + 2/(x + 3/(x + ...)))), 
+  # evaluated from the back; 100 terms give full double precision for x >= 3.
   R  <- numeric(length(x))
   lo <- !is.na(x) & (x < 3)
-  R[lo] <- exp(stats::pnorm(-x[lo], log.p = TRUE) - stats::dnorm(x[lo], log = TRUE))
+  R[lo] <- exp(stats::pnorm(-x[lo], log.p = TRUE) - 
+                 stats::dnorm(x[lo], log = TRUE))
   hi <- !is.na(x) & (x >= 3)
   if (any(hi)) {
     xh <- x[hi]
     t  <- 0
-    for (k in 100:1) {
+    for (k in 100:1) { # 'from the back'
       t <- k / (xh + t)
     }
     R[hi] <- 1 / (xh + t)
