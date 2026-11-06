@@ -9,12 +9,9 @@
 \title{Tweedie distributions}
 \usage{
 dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE)
-
 ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
   log.p = FALSE, verbose = FALSE)
-
 qtweedie(p, xi = NULL, mu, phi, power = NULL)
-
 rtweedie(n, xi = NULL, mu, phi, power = NULL)
 }
 \arguments{
