@@ -21,11 +21,17 @@ test_that("inversion: lower tail accurate in the body; small tails flagged", {
   expect_identical(out$small_tail, out$cdf < 1e-8)
   expect_identical(out$small_tail, y == 0.03)
 
-  # Not flagged: good RELATIVE accuracy, value by value
+  # In the tail: good ABSOLUTE accuracy (the error is absolute, and its size
+  # varies with the compiler and CPU, so allow a margin)
+  tail <- F < 0.01
+  expect_true(all(abs(out$cdf[tail] - F[tail]) < 1e-14))
+  # Not flagged: relative error at most about (absolute error)/1e-8
   ok <- !out$small_tail
-  expect_true(all(abs(out$cdf[ok] / F[ok] - 1) < 1e-8))
-  body <- F > 1e-5
+  expect_true(all(abs(out$cdf[ok] / F[ok] - 1) < 1e-6))
+  # In the body, full relative accuracy
+  body <- F > 0.01
   expect_true(all(abs(out$cdf[body] / F[body] - 1) < 1e-12))
+  
 
   # Flagged: still good ABSOLUTE accuracy
   expect_true(all(abs(out$cdf[!ok] - F[!ok]) < 1e-14))
@@ -38,8 +44,11 @@ test_that("inversion: upper tail flags small tail probabilities", {
                             lower.tail = FALSE, details = TRUE)
   expect_identical(out$small_tail, out$cdf < 1e-8)
   expect_identical(out$small_tail, y == 60)
-  expect_true(all(abs(out$cdf - S) < 1e-14))
-  body <- S > 1e-5
+  tail <- S < 0.01
+  expect_true(all(abs(out$cdf[tail] - S[tail]) < 1e-14))
+  ok <- !out$small_tail
+  expect_true(all(abs(out$cdf[ok] / S[ok] - 1) < 1e-6))
+  body <- S > 0.01
   expect_true(all(abs(out$cdf[body] / S[body] - 1) < 1e-12))
 })
 
