@@ -7,12 +7,13 @@
 #' dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, 
 #' a synonym for \code{power}).
 #' 
-#' @usage dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE)
-#' @usage ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
+#' @usage 
+#' dtweedie(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log = FALSE)
+#' ptweedie(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, 
 #'   log.p = FALSE, verbose = FALSE)
-#' @usage qtweedie(p, xi = NULL, mu, phi, power = NULL)
-#' @usage rtweedie(n, xi = NULL, mu, phi, power = NULL)
-#'
+#' qtweedie(p, xi = NULL, mu, phi, power = NULL)
+#' rtweedie(n, xi = NULL, mu, phi, power = NULL)
+#' 
 #' @details
 #' Tweedie \acronym{edm}s belong to the class of exponential dispersion models 
 #' (\acronym{edm}s), known for their role in generalized linear models (\acronym{glm}s). 
