@@ -1,4 +1,33 @@
-#' @noRd
+#' @title Tweedie CDF evaluation using direct integration (in the tails only)
+#' @name ptweedie_tail_integrate
+#' @description 
+#' Distribution function evaluation in the distribution tails using direct
+#' integration of the density function.
+#'
+#' @usage ptweedie_tail_integrate(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
+#'                                fallback = TRUE)
+#'
+#' @param q vector of quantiles.
+#' @param mu vector of mean \eqn{\mu}{mu}.
+#' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
+#' @param power scalar; a synonym for \eqn{\xi}{xi}, the Tweedie index parameter.
+#'    Here, \eqn{p > 2}{p > 2}.
+#' @param lower.tail logical; if \code{TRUE} (the default), computes the lower 
+#'    tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
+#' @param IGexact logical; if \code{TRUE} (the default), evaluate the inverse 
+#'    Gaussian distribution using the 'exact' values, otherwise uses inversion.
+#' @param fallback logical; if ]\code{FALSE},only the Gauss-Laguerre rules are tried,
+#'    which is cheap; the slower piecewise adaptive integration is skipped, and 
+#'    \code{ok = FALSE} returned if they fail. The default is \code{TRUE}
+#'     
+#' @examples
+#' ptweedie_tail_integrate(0.00001, power = 2.1, mu = 1, phi = 1)
+#'
+#'
+#' @importFrom graphics lines rug par mtext abline axis  points plot
+#'
+#' @keywords distribution
+#' @export
 ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
                                     fallback = TRUE) {
   # Tail probability for p > 2 by integrating the density; for scalar q, mu, phi.
@@ -91,7 +120,8 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
       l10 <- gl_logS(10L)
       l20 <- if (is.finite(l10)) gl_logS(20L) else NA_real_
       if ( is.finite(l10) && is.finite(l20) && (abs(expm1(l10 - l20)) < 1e-10) ) {
-        return( list(logp = l20, ok = TRUE) )
+        return( list(logp = l20,
+                     ok   = TRUE) )
       }
       # otherwise fall through to the adaptive integration
     }
@@ -224,7 +254,7 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
        !(out$value > 0) ||
        (out$abs.error > 1e-6 * out$value) ) {
     return( list(logp = NA_real_, 
-                 ok = FALSE) )
+                 ok   = FALSE) )
   }
 
   list(logp = log(fq) + log(out$value), 
