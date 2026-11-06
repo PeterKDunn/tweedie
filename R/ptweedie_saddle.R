@@ -1,4 +1,49 @@
-#' @noRd
+#' @title Tweedie CDF evaluation using the saddlepoint approximation
+#' @name ptweedie_saddle
+#' @description
+#' Distribution function for the Tweedie EMDs using a saddlepoint approximation.
+#' 
+#' @param q vector of quantiles.
+#' @param mu vector of mean \eqn{\mu}{mu}.
+#' @param phi vector of dispersion parameters \eqn{\phi}{phi}.
+#' @param power scalar; the value of \eqn{p}{power} such that the variance is \eqn{\mbox{var}[Y]=\phi\mu^{p}}{var[Y] = phi * mu^p}.
+#' @param lower.tail logical; if \code{TRUE} (the default), computes the lower 
+#'    tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.
+#' @param log.p logical; if \code{TRUE}, probabilities are returned as \eqn{\log(p)}. The default is \code{FALSE}.
+#' 
+#' @return A numeric vector of densities.
+#' 
+#' @examples
+#' # Plot a Tweedie distribution function
+#' y <- seq(0.01, 4, length = 50)
+#' Fy <- ptweedie_saddle(y, power = 2.1, mu = 1, phi = 1)
+#' plot(y, Fy, type = "l", lwd = 2, ylab = "CDF")
+#'
+#'
+#' @keywords distribution
+#'
+#' @references
+#' Dunn, P. K. and Smyth, G. K. (2008).
+#' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
+#' \emph{Statistics and Computing}, 
+#' \bold{18}, 73--86.
+#' \doi{10.1007/s11222-007-9039-6}
+#' 
+#' Dunn, Peter K and Smyth, Gordon K (2005).
+#' Series evaluation of Tweedie exponential dispersion model densities
+#' \emph{Statistics and Computing},
+#' \bold{15}(4). 267--280.
+#' \doi{10.1007/s11222-005-4070-y}
+#' 
+#' 	Nelder, J. A. and Pregibon, D. (1987).
+#' 	An extended quasi-likelihood function
+#' 	\emph{Biometrika},
+#' 	\bold{74}(2), 221--232.
+#' 	\doi{10.1093/biomet/74.2.221}
+#'
+#' @keywords distribution
+#' 
+#' @export
 ptweedie_saddle <- function(q, mu, phi, power, lower.tail = TRUE, log.p = FALSE) {
   # The Lugannani-Rice saddlepoint approximation to the Tweedie distribution
   # function, as used by ptweedie() for p > 2 when the dispersion is very small
