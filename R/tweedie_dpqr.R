@@ -899,56 +899,57 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
                  pwr     = pwr,
                  p.given = prob)
       
-      if ( pt == 0 ) ans2[i] <- start
-      
-      if ( pt > 0 ) { 
-        loop <- TRUE
-        start.2 <- start
-        #start.2 <- 0   # Perhaps set this if too many attempts otherwise
-        while ( loop ) {
-          # Try harder
-          start.2 <- 0.5 * start.2
-          if (pt2( q = start.2, 
-                   mu.1, 
-                   phi.1, 
-                   pwr, 
-                   p.given = prob )<0 ) loop = FALSE
-          # RECALL:  We are only is this part of the loop if  pt>0
-        }
-      }
-      
-      #      cat("*** Start.2 =",start.2,"\n")
-      if ( pt < 0) {
-        loop <- TRUE
-        start.2 <- start
+      if ( pt == 0 ) {
+        # The starting value is the quantile itself.
+        # (Before, this was stored in the wrong place, in ans2[i] rather than 
+        # ans[i], and uniroot() was then called with  start.2  undefined.)
+        ans[i] <- start
         
-        while ( loop ) {
-          # Try harder
-          start.2 <- 1.5 * (start.2 + 2)
-          if (pt2( q = start.2, 
-                   mu.1, 
-                   phi.1, 
-                   pwr, 
-                   p.given = prob ) > 0 ) loop = FALSE
-          # RECALL:  We are only is this part of the loop if  pt<0
+      } else {
+        
+        if ( pt > 0 ) { 
+          loop <- TRUE
+          start.2 <- start
+          while ( loop ) {
+            # Try harder
+            start.2 <- 0.5 * start.2
+            if (pt2( q       = start.2, 
+                     mu      = mu.1, 
+                     phi     = phi.1, 
+                     pwr     = pwr, 
+                     p.given = prob ) < 0 ) loop <- FALSE
+            # RECALL:  We are only in this part of the loop if  pt > 0
+          }
         }
+        
+        if ( pt < 0) {
+          loop <- TRUE
+          start.2 <- start
+          
+          while ( loop ) {
+            # Try harder
+            start.2 <- 1.5 * (start.2 + 2)
+            if (pt2( q       = start.2, 
+                     mu      = mu.1, 
+                     phi     = phi.1, 
+                     pwr     = pwr, 
+                     p.given = prob ) > 0 ) loop <- FALSE
+            # RECALL:  We are only in this part of the loop if  pt < 0
+          }
+        }
+        
+        # (The root is bracketed by  start  and  start.2; uniroot() uses the
+        # smaller as the lower end of the interval. uniroot() is now called 
+        # once only: before, it was also called with its default tolerance,
+        # and that result was not used.)
+        ans[i] <- stats::uniroot(pt2, 
+                                 c(start, start.2), 
+                                 mu      = mu.1, 
+                                 phi     = phi.1, 
+                                 pwr     = pwr, 
+                                 p.given = prob, 
+                                 tol     = 1e-12 )$root
       }
-      
-      out <- stats::uniroot(pt2, 
-                            c(start, start.2), 
-                              mu      = mu.1, 
-                              phi     = phi.1, 
-                              p       = pwr, 
-                              p.given = prob )
-      #print(out)
-      
-      ans[i] <- uniroot(pt2, 
-                        c(start, start.2), 
-                          mu      = mu.1, 
-                          phi     = phi.1, 
-                          p       = pwr, 
-                          p.given = prob, 
-                          tol     = 0.000000000001 )$root
     }
     
   }
