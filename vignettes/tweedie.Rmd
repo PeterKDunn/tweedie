@@ -171,7 +171,7 @@ To find the most suitable value of $\xi$, **tweedie_profile()** can be used [@du
 ```{r TWprofile}
 y <- rtweedie(100, xi = 1.5, mu = 1, phi = 1)
 out <- tweedie_profile(y ~ 1,
-                       xi.vec  = seq(1.2, 1.8, by = 0.05), 
+                       xi.vec  = seq(1.2, 1.8, length = 5), 
                        do.plot = TRUE)
 
 # The estimated power index:
@@ -181,7 +181,7 @@ out$xi.max
 
 ## Example
 
-Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in [@BIB:DunnSmyth:GLMs], Sect. 12.4.2). 
+Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in [@dunnGeneralizedLinearModels2018], Sect. 12.4.2). 
 For convenience, a copy is included with this package:
 
 ```{r PSNLoad}
@@ -222,7 +222,7 @@ To fit a Tweedie glm, the value of $\xi$ is needed; since no exact zeros are pre
 PSNPrf <- tweedie_profile(Time ~ Trmt + Psn, 
                           data    = poison, 
                           do.plot = TRUE, 
-                          xi.vec  = seq(2.5, 5.5, length = 11) )
+                          xi.vec  = seq(2.5, 5.5, length = 7) )
 ```
 
 Then, $\xi\approx{}$ `r round(PSNPrf$xi.max, 1)`:
