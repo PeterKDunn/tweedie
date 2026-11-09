@@ -41,7 +41,7 @@
 #' \bold{18}, 73--86.
 #' \doi{10.1007/s11222-007-9039-6}
 #' 
-#' #' Giner G., Smyth G. K. (2016). 
+#' Giner G., Smyth G. K. (2016). 
 #' statmod: probability calculations for the inverse Gaussian distribution. 
 #' \emph{The R Journal},
 #' \bold{8}(1), 339--351. 
