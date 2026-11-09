@@ -62,7 +62,7 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
   ### CHECKING VALUES ARE OK
   # Checking the input values for qtweedie
   if ( type == "quantile" ) {
-    if ( any(y < 0) | any(y > 1) ) {
+    if ( any(y < 0, na.rm = TRUE) | any(y > 1, na.rm = TRUE) ) {
       stop("quantiles must be between 0 and 1.\n")
       inputs_Error <- TRUE
     }
@@ -71,9 +71,11 @@ check_inputs <- function(y, mu, phi, power, type = "standard"){
   ### CHECKING VALUES ARE OK
   # Checking the input values: n for rtweedie
   if ( type == "random" ) {
+    # (rtweedie() has already turned  n  into a single non-negative whole
+    # number, as R's own r-functions do; n = 0 gives a zero-length result)
     y <- round(y)
-    if ( y <= 0 ) {
-      stop("n must be a positive integer.\n")
+    if ( y < 0 ) {
+      stop("n must be a non-negative integer.\n")
       inputs_Error <- TRUE
     }
   }
@@ -353,3 +355,27 @@ write_f90_gauss_table <- function(n,
 }
 
 ################################################################################
+
+
+#' @noRd
+match_shape <- function(ans, x){
+  # Gives the result  ans  of dtweedie(), ptweedie() or qtweedie() the same
+  # form as the first input  x  (y, q or p), as R's own d-, p- and q-functions
+  # (dnorm(), pgamma(), qgamma(), ...) do: all the attributes of  x  are kept, 
+  # so a matrix gives a matrix (with its dimnames), a named vector gives a 
+  # named vector, a time series gives a time series, and so on. 
+  # (R's functions copy the attributes of the longest input, the first input 
+  # when there is a tie; here  x  is always the longest, as  mu  and  phi 
+  # must be scalars or the same length as  x.)
+  # The result is always of type double, as in R's functions.
+  ans <- as.vector(ans, mode = "double")   # (drops any attributes)
+  if ( length(ans) == length(x) ) {
+    if ( is.numeric(x) || is.logical(x) ) {
+      attributes(ans) <- attributes(x)
+    } else {
+      # (Not a numeric input, so keep only any names)
+      names(ans) <- names(x)
+    }
+  }
+  ans
+}

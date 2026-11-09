@@ -124,11 +124,11 @@ test_that("Invalid parameters cause error in rtweedie", {
     regexp = "phi must be positive."
   )
 
-  # 3. Test for bad n value (n > 0)
+  # 3. Test for bad n value (n >= 0; n = 0 gives numeric(0), as for rgamma(0))
   expect_error({
     set.seed(1000)
-    rtweedie(0, mu = 1, phi = -1, power = 1.5)},
-    regexp = "n must be a positive integer."
+    rtweedie(-1, mu = 1, phi = 1, power = 1.5)},
+    regexp = "n must be a non-negative integer."
   )
 })
 

@@ -37,7 +37,8 @@ density itself underflows to zero). The default is \code{FALSE}.}
 
 \item{p}{vector of probabilities.}
 
-\item{n}{number of observations.}
+\item{n}{number of observations. If \code{length(n) > 1}, the length is taken 
+to be the number required (as for \code{\link[stats]{rnorm}}).}
 
 \item{lower.tail}{logical; if \code{TRUE} (the default), computes the lower 
 tail \eqn{F(y)}; otherwise computes \eqn{S(y) = 1 - F(y)}.}
@@ -50,8 +51,13 @@ The default is \code{FALSE}.}
 \code{qtweedie()} gives the quantile function, 
 and \code{rtweedie} generates random deviates.
 
-The length of the result is determined by \code{n} for \code{rtweedie()}, 
-and by the length of \code{mu} for other functions.
+As for R's own functions for distributions (such as \code{\link[stats]{dnorm}}), 
+the result of \code{dtweedie()}, \code{ptweedie()} and \code{qtweedie()} has 
+the same length and form as the first input (\code{y}, \code{q} or \code{p}): 
+its attributes are kept, so (for example) a matrix gives a matrix, and a 
+named vector gives a named vector.
+(\code{mu} and \code{phi} must be scalars, or the same length as the first input.)
+\code{rtweedie()} returns a vector of length \code{n}, without attributes.
 }
 \description{
 Density, distribution function, quantile function and random 

@@ -49,7 +49,8 @@
 #' @param y vector of quantiles.
 #' @param q vector of quantiles.
 #' @param p vector of probabilities.
-#' @param n number of observations. 
+#' @param n number of observations. If \code{length(n) > 1}, the length is taken 
+#'    to be the number required (as for \code{\link[stats]{rnorm}}).
 #' @param xi scalar; the value of \eqn{\xi}{xi} such that the variance is 
 #'    \eqn{\mbox{var}[Y]=\phi\mu^{\xi}}{var[Y] = phi * mu^xi}. A synonym for \code{power}.
 #' @param mu vector of mean \eqn{\mu}{mu}.
@@ -70,8 +71,13 @@
 #' \code{qtweedie()} gives the quantile function, 
 #' and \code{rtweedie} generates random deviates.
 #' 
-#' The length of the result is determined by \code{n} for \code{rtweedie()}, 
-#' and by the length of \code{mu} for other functions.
+#' As for R's own functions for distributions (such as \code{\link[stats]{dnorm}}), 
+#' the result of \code{dtweedie()}, \code{ptweedie()} and \code{qtweedie()} has 
+#' the same length and form as the first input (\code{y}, \code{q} or \code{p}): 
+#' its attributes are kept, so (for example) a matrix gives a matrix, and a 
+#' named vector gives a named vector.
+#' (\code{mu} and \code{phi} must be scalars, or the same length as the first input.)
+#' \code{rtweedie()} returns a vector of length \code{n}, without attributes.
 #' 
 #' @importFrom stats dgamma dnorm dpois
 #' @importFrom graphics lines legend plot
@@ -323,14 +329,10 @@ dtweedie <- function(y, xi = NULL, mu, phi, power = NULL, verbose = FALSE, log =
     logdens[neg] <- -Inf
   }
   logdens[ is.nan(logdens) & !is.na(y) ] <- -Inf   # (the log of a negative value)
-  density <- if (log) as.vector(logdens) else as.vector(density)
+  density <- if (log) logdens else density
 
-  # Restore names if supplied
-  if( !is.null(names(y)) ){
-    names(density) <- names(y)
-  }
-
-  return(density)
+  # The result has the same form (dim, names, ...) as  y, as for dnorm() etc.
+  return( match_shape(density, y) )
 
 }
 
@@ -370,8 +372,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
                           log.p      = log.p, 
                           verbose    = verbose)
     }
-    if ( !is.null(names(q)) ) names(ans) <- names(q)
-    return(ans)
+    return( match_shape(ans, q) )
   }
   
   f <- array(0,
@@ -751,13 +752,7 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   }
   
   f <- as.vector(f)
-  # Restore names if supplied
-  if( !is.null(names(q)) ){
-    names(f) <- names(q)
-  }
-  
-  
-  
+
   # Sanity fixes: a probability lies in [0, 1], so a log-probability cannot
   # exceed 0. (Rounding in the inversion can give a value fractionally above
   # one, whose log is then fractionally above zero.)
@@ -767,8 +762,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
   } else {
     f[ !is.na(f) & (f > 0) ] <- 0
   }
-  
-  return(f)
+
+  # The result has the same form (dim, names, ...) as  q, as for pnorm() etc.
+  return( match_shape(f, q) )
     
 }
 
@@ -796,6 +792,24 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
                       type = "quantile")
   mu  <- out$mu
   phi <- out$phi
+
+  # MISSING VALUES: NA in, NA out; the other values are computed as usual
+  # (as in ptweedie(); before, an NA gave an error)
+  if ( any(is.na(p)) ) {
+    ok  <- !is.na(p)
+    ans <- rep(NA_real_, length(p))
+    if ( any(ok) ) {
+      ans[ok] <- qtweedie(p     = p[ok],
+                          mu    = mu[ok],
+                          phi   = phi[ok],
+                          power = power)
+    }
+    return( match_shape(ans, p) )
+  }
+
+  # NO VALUES: a zero-length result (as for qnorm(numeric(0)))
+  if ( length(p) == 0 ) return( match_shape(numeric(0), p) )
+
   f   <- array(0,
                dim = length(p) )
   
@@ -825,7 +839,7 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   phi.vec <-  phi[ ( (p > 0) & (p < 1) ) ]
   p.vec   <-  p[   ( (p > 0) & (p < 1) ) ]
   
-  for (i in (1 : length(ans)) ) {
+  for (i in seq_along(ans) ) {   # (no loop when all p are 0 or 1)
     mu.1  <- mu.vec[i]
     phi.1 <- phi.vec[i]
     p.1   <- p.vec[i]  # This is the  qtweedie()  input p (a probability)
@@ -940,7 +954,9 @@ qtweedie <- function(p, xi = NULL, mu, phi, power = NULL){
   }
   
   ans2[ is.na(ans2) ] <-  ans
-  ans2
+
+  # The result has the same form (dim, names, ...) as  p, as for qnorm() etc.
+  match_shape(ans2, p)
 }
 
 ################################################################################
@@ -959,10 +975,22 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   xi.notation    <- out$xi.notation
   index.par      <- out$index.par
   index.par.long <- out$index.par.long
-  
-  
+
+  # THE NUMBER OF VALUES: n is used as in R's own r-functions (rnorm(),
+  # rgamma(), ...): if  length(n) > 1, the length is the number required;
+  # a non-integer  n  is truncated (so n = 2.7 gives two values); and n = 0
+  # gives a zero-length result
+  if ( length(n) > 1L ) n <- length(n)
+  if ( length(n) == 0L ) return( numeric(0) )
+  n <- suppressWarnings( as.numeric(n) )
+  if ( is.na(n) || !is.finite(n) || (n < 0) ) {
+    stop("n must be a non-negative integer.\n")
+  }
+  n <- floor(n)
+
+
   # CHECK THE INPUTS ARE OK AND OF CORRECT LENGTHS
-  out <- check_inputs(y     = n, 
+  out <- check_inputs(y     = n,
                       mu    = mu, 
                       phi   = phi, 
                       power = power,
@@ -970,7 +998,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   mu  <- out$mu
   phi <- out$phi
 
-  
+  if ( n == 0 ) return( numeric(0) )   # (as for rnorm(0))
+
   # IDENTIFY SPECIAL CASES
   out <- special_cases(n, mu, phi, power)
   f <- out$f
@@ -1001,7 +1030,7 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
   if ( (power > 1) & (power < 2) ) {
     # Two options:  As above or directly.
     # Directly is faster
-    rtw <- array( dim = n, NA)
+    rtw <- numeric(n)
     
     lambda <- mu ^ (2 - power) / ( phi * (2 - power) )
     alpha  <- (2 - power) / (1 - power)
@@ -1015,8 +1044,8 @@ rtweedie <- function(n, xi = NULL, mu, phi, power = NULL){
                               scale = gam[i])
     }
   }
-  #as.vector(rtw)
-  rtw 
+  # A plain double vector of length n, with no attributes (as for rnorm() etc.)
+  as.vector(rtw, mode = "double")
 }
 
 

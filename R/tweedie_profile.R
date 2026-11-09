@@ -180,6 +180,13 @@ tweedie_profile <- function(formula,
   mf <- eval(mf, parent.frame())
   mt <- attr(mf, "terms")
   Y <- stats::model.response(mf, "numeric")
+  if ( length(dim(Y)) == 1L ) {
+    # A 1-d array response (e.g., from tapply()) is made a vector, as glm()
+    # does; otherwise glm.fit() fails with "non-conformable arrays"
+    nm <- rownames(Y)
+    dim(Y) <- NULL
+    if ( !is.null(nm) ) names(Y) <- nm
+  }
   X <- if (!stats::is.empty.model(mt)) {
     stats::model.matrix(mt, mf, contrasts = NULL)
   } else { 
