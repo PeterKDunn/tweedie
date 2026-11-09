@@ -22,7 +22,7 @@ errors are reported when accuracy targets are not met.
 
 These changes have all been prompted by preparing the Tweedie CDF paper. For
 example, the direct integration method inspired the more accurate computation
-of the denisty.
+of the density.
 
 
 ## Changed and fixed
