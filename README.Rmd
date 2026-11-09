@@ -31,10 +31,27 @@ This package uses fast numerical algorithms (infinite oscillating integrals; inf
 
 You can install the development version of **tweedie** from [GitHub](https://github.com/) with:
 
-``` r
+```{r}
 # install.packages("pak")
 pak::pak("PeterKDunn/tweedie")
 ```
+
+To also build and install the vignette (this takes a little longer, and installs **knitr** and **rmarkdown** if needed):
+
+```{r}
+options(pkg.build_vignettes = TRUE)
+pak::pak("PeterKDunn/tweedie", dependencies = TRUE)
+vignette("tweedie", package = "tweedie")
+```
+
+Alternatively, using **remotes**:
+
+```{r}
+remotes::install_github("PeterKDunn/tweedie", build_vignettes = TRUE, dependencies = TRUE)
+```
+
+`install.packages("tweedie")` includes the vignette automatically.
+
 
 ## Tweedie distributions
 
