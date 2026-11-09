@@ -169,7 +169,7 @@ To use a Tweedie distribution in a glm, the value of $\xi$ is needed.
 To find the most suitable value of $\xi$, **tweedie_profile()** can be used [@dunnGeneralizedLinearModels2018]:
 
 ```{r TWprofile}
-y <- rtweedie(100, xi = 1.5, mu = 1, phi = 1)
+y <- rtweedie(50, xi = 1.5, mu = 1, phi = 1)
 out <- tweedie_profile(y ~ 1,
                        xi.vec  = seq(1.2, 1.8, length = 5), 
                        do.plot = TRUE)
