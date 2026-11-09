@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 ## Tweedie distributions
 
-Tweedie distributions are exponential dispersion models, with a mean $\mu$ and a variance $\phi \mu^\xi$, for some dispersion parameter $\phi > 0$ and a variance-power index $\xi$ [@tweedie1984], that is sometimes called $p$, that uniquely defines the distribution within the Tweedie family (for all real values of $\xi$ **not** between 0 and 1).
+Tweedie distributions are exponential dispersion models, with a mean $\mu$ and a variance $\phi \mu^\xi$, for some dispersion parameter $\phi > 0$ and a variance-power index $\xi$ [@tweedie1984], that is sometimes called $p$, which uniquely defines the distribution within the Tweedie family (for all real values of $\xi$ **not** between 0 and 1).
 
 Special cases of the Tweedie distributions are:
 
@@ -31,15 +31,16 @@ For all other values of $\xi$, the probability functions and distribution functi
 
 | Variance power, $\xi$       | Distribution     | Support                       |
 |:---------------------------:|:----------------:|:-----------------------------:|
+| $\xi < 0$                   | Extreme stable   | $(-\infty, \infty)$ 
 | $\xi = 0$                   | Normal           | $(-\infty, \infty)$           |
 | $0 < \xi < 1$               | Do not exist     |                               |
-| $\xi = 1$ (with $\phi = 1)$ | Poisson          | Discrete: $(0, 1, 2, \dots)$  |
+| $\xi = 1$ (with $\phi = 1$) | Poisson          | Discrete: $\{0, 1, 2, \dots\}$  |
 | $1 < \xi < 2$               | Poisson--gamma   | $[ 0, \infty)$                |
 | $\xi = 2$                   | Gamma            | $(0, \infty)$                 |
-| $\xi > 2$                   | Skewed right     | $(0, \infty$)                 |
+| $\xi > 2$                   | Skewed right     | $(0, \infty)$                 |
 | $\xi = 3$                   | inverse Gaussian | $(0, \infty)$                 |
 
-For $\xi < 1$, applications are limited (non-existent so far?), but have support on the entire real line and $\mu > 0$.
+For $\xi < 0$, applications are limited, but have support on the entire real line and $\mu > 0$.
 
 For $1 < \xi < 2$, Tweedie distributions can be represented as a Poisson sum of gamma distributions. 
 These distributions are continuous for $Y > 0$ but have a discrete mass at $Y = 0$.
@@ -47,7 +48,7 @@ These distributions are continuous for $Y > 0$ but have a discrete mass at $Y = 
 
 ## Use cases
 
-Likelihood computations are not need to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) (@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018):
+Likelihood computations are not needed to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018]:
 
 ```{r TWexample}
 library(tweedie)
@@ -55,7 +56,7 @@ library(statmod)   # For the tweedie() family function, for use in glm()
 
 set.seed(96)
 N <- 25
-# Mean of the Poisson (lambda) and Gamma (shape/scale)
+# Poisson mean (lambda): the gamma summands have shape 2 and scale 1
 lambda <- 1.5
 # Generating Compound Poisson-Gamma data manually
 y <- replicate(N, {
@@ -64,83 +65,85 @@ y <- replicate(N, {
 })
 
 mod.tw <- glm(y ~ 1, 
-             family = statmod::tweedie(var.power = 1.5, link.power = 0) )
+             family = statmod::tweedie(var.power  = 1.5, 
+                                       link.power = 0) )
              # link.power = 0  means the log-link
 ```
 
 However, likelihood computations are necessary in other situations.
-Since likelihoods cannot be computed analytically apart from special cases, the **tweedie** package computes Tweedie densities  using numerical methods (@dunnSeriesEvaluationTweedie2005, @dunnEvaluationTweedieExponential2008).
+Since likelihoods cannot be computed analytically apart from special cases, the **tweedie** package computes Tweedie density functions and distribution functions using numerical methods [@dunnSeriesEvaluationTweedie2005, @dunnEvaluationTweedieExponential2008].
 
 ### Generating random numbers
 
 Random numbers from a Tweedie distribution are generated using **rtweedie()**:
 
 ```{r TWrandom}
-tweedie::rtweedie(10, xi = 1.1, mu = 2, phi = 1)
+tweedie::rtweedie(10, xi = 1.4, mu = 2, phi = 1)
 ```
+
 
 ### Plotting density and probability functions
 
 Accurate density functions are generated using **dtweedie()**:
 
-
 ```{r TWplotsPDF}
-y <- seq(0, 2, length = 100)
-xi <- 1.1
-mu <- 0.5
-phi <- 0.4
+y_grid <- seq(0, 2, 
+              length = 100)
+xi     <- 1.05
+mu     <- 0.5
+phi    <- 0.4
 
-twden <- tweedie::dtweedie(y, xi = xi, mu = mu, phi = phi)  
-twdtn <- tweedie::ptweedie(y, xi = xi, mu = mu, phi = phi)
+twden <- tweedie::dtweedie(y_grid, xi = xi, mu = mu, phi = phi)  
+twdtn <- tweedie::ptweedie(y_grid, xi = xi, mu = mu, phi = phi)
 
-plot( twden[y > 0] ~ y[y > 0], 
+plot( twden[y_grid > 0] ~ y_grid[y_grid > 0], 
      xlab = expression(italic(y)),
      ylab = "Density function",
      type ="l",
-     lwd = 2,
-     las = 1)
-points(twden[y==0] ~ y[y == 0],
+     lwd  = 2,
+     las  = 1)
+points(twden[y_grid==0] ~ y_grid[y_grid == 0],
      lwd = 2,
      pch = 19)
 ```
 
+The solid point at $y = 0$ shows the probability mass $\Pr(Y = 0)$, not a density.
 Accurate probability functions are generated using **ptweedie()**:
 
 ```{r TWplotsCDF}
-plot(twdtn ~ y,
+plot(twdtn ~ y_grid,
     xlab = expression(italic(y)),
     ylab = "Distribution function",
     type = "l",
-    las = 1,
-    lwd = 2,
-    las = 1,
+    las  = 1,
+    lwd  = 2,
     ylim = c(0, 1) )
-points(twdtn[y==0] ~ y[y == 0],
+points(twdtn[y_grid==0] ~ y_grid[y_grid == 0],
      lwd = 2,
      pch = 19)
 ```
 
-However, the function **tweedie_plot()** is sometimes more convenient (especially for $1 < \xi \ < 2$, when a probability mass at $Y = 0$ is present):
+However, the function **tweedie_plot()** is sometimes more convenient (especially for $1 < \xi < 2$, when a probability mass at $Y = 0$ is present):
 
 ```{r TWplotsPDF2}
-tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi,
+tweedie::tweedie_plot(y_grid, xi = xi, mu = mu, phi = phi,
                       plot_args = list(
                         ylab = "Density function",
                         xlab = expression(italic(y)),
-                        las = 1,
-                        lwd = 2
+                        las  = 1,
+                        lwd  = 2
                         ) 
 )
 ```
 
 ```{r TWplotsCDF2}
-tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi, 
-                      type = "cdf",
+tweedie::tweedie_plot(y_grid, xi = xi, mu = mu, phi = phi, 
+                      type      = "cdf",
                       plot_args = list(
                         ylab = "Distribution function",
                         xlab = expression(italic(y)),
-                        las = 1, 
-                        lwd = 2, 
+                        las  = 1, 
+                        lwd  = 2, 
                         ylim = c(0, 1)) 
                         )
 ```
@@ -148,11 +151,9 @@ tweedie::tweedie_plot(y, xi = xi, mu = mu, phi = phi,
 ### Computing the quantile residuals
 
 Quantile residuals [@dunnRandomizedQuantileResiduals1996] can be computed to assess the fit of a glm.
-The function **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) (@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018):
+The function **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018]:
 
 ```{r TWqqplot}
-library(tweedie)
-
 qqnorm( qr <- statmod::qresid(mod.tw),
        las = 1)
 qqline(qr,
@@ -168,9 +169,10 @@ To use a Tweedie distribution in a glm, the value of $\xi$ is needed.
 To find the most suitable value of $\xi$, **tweedie_profile()** can be used [@dunnGeneralizedLinearModels2018]:
 
 ```{r TWprofile}
-out <- tweedie::tweedie_profile(y ~ 1, 
-                               xi.vec = seq(1.2, 1.8, by = 0.05), 
-                               do.plot = TRUE)
+y <- rtweedie(100, xi = 1.5, mu = 1, phi = 1)
+out <- tweedie_profile(y ~ 1,
+                       xi.vec  = seq(1.2, 1.8, by = 0.05), 
+                       do.plot = TRUE)
 
 # The estimated power index:
 out$xi.max
@@ -179,14 +181,16 @@ out$xi.max
 
 ## Example
 
-Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in @dunnGeneralizedLinearModels2018, Sect. 12.4.2). 
+Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in [@BIB:DunnSmyth:GLMs], Sect. 12.4.2). 
 For convenience, a copy is included with this package:
 
 ```{r PSNLoad}
-poison <- read.csv(system.file("extdata", "poison.csv", package = "tweedie"))
+poison <- read.csv(system.file("extdata", 
+                               "poison.csv", 
+                               package = "tweedie"))
 
 # Convert to factors:
-poison$Psn <- factor(poison$Psn)
+poison$Psn  <- factor(poison$Psn)
 poison$Trmt <- factor(poison$Trmt)
 
 head(poison)
@@ -199,14 +203,14 @@ plot(Time ~ Psn,
     data = poison,
     xlab = "Poison type",
     ylab = "Survival time (tens of hours)",
-    las = 1)
+    las  = 1)
 ```
 ```{r PSNPlotTmt}
 plot(Time ~ Trmt,
     data = poison,
     xlab = "Treatment type",
     ylab = "Survival time (tens of hours)",
-    las = 1)
+    las  = 1)
 ```
 
 In both cases, the variance of the survival times seems to increase with the mean survival time.
@@ -215,11 +219,13 @@ To fit a Tweedie glm, the value of $\xi$ is needed; since no exact zeros are pre
 
 
 ```{r PSNProfile}
-PSNPrf <- tweedie_profile(Time ~ Trmt + Psn, data = poison, 
-                         do.plot = TRUE, xi.vec = seq(2.5, 5.5, length = 11) )
+PSNPrf <- tweedie_profile(Time ~ Trmt + Psn, 
+                          data    = poison, 
+                          do.plot = TRUE, 
+                          xi.vec  = seq(2.5, 5.5, length = 11) )
 ```
 
-Then, $\xi\approx 4$:
+Then, $\xi\approx{}$ `r round(PSNPrf$xi.max, 1)`:
 
 ```{r PSNXi}
 PSNPrf$xi.max
@@ -230,8 +236,9 @@ So then the Tweedie glm can be fitted:
 
 ```{r PSNModel}
 PSNMod <- glm(Time ~ Trmt + Psn, 
-             data = poison,
-             family=statmod::tweedie(var = 4, link.power = 0))
+             data   = poison,
+             family = statmod::tweedie(var.power  = round(PSNPrf$xi.max, 1), 
+                                       link.power = 0))
 anova(PSNMod, test = "F")
 ```
 
@@ -246,7 +253,6 @@ qqline(qr,
 ```
 
 The quantile residuals suggest that this model looks fine.
-
 
 
 ## References
