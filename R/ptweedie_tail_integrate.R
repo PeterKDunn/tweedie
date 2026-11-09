@@ -27,6 +27,12 @@
 #' @importFrom graphics lines rug par mtext abline axis  points plot
 #'
 #' @keywords distribution
+#' 
+#' @references
+#' Dunn, Peter K and Smyth, Gordon K (Submitted).
+#' Evaluation of the Tweedie exponential dispersion model distribution function.
+#' Submitted.
+#' 
 #' @export
 ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
                                     fallback = TRUE) {

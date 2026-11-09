@@ -36,4 +36,9 @@ ptweedie_tail_integrate(0.00001, power = 2.1, mu = 1, phi = 1)
 
 
 }
+\references{
+Dunn, Peter K and Smyth, Gordon K (Submitted).
+Evaluation of the Tweedie exponential dispersion model distribution function.
+Submitted.
+}
 \keyword{distribution}

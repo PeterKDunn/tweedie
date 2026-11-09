@@ -50,6 +50,10 @@
 #' (Giner & Smyth, 2016).
 #' 
 #' @references
+#' Dunn, Peter K and Smyth, Gordon K (Submitted).
+#' Evaluation of the Tweedie exponential dispersion model distribution function.
+#' Submitted.
+#' 
 #' Dunn, P. K. and Smyth, G. K. (2008).
 #' Evaluation of Tweedie exponential dispersion model densities by Fourier inversion.
 #' \emph{Statistics and Computing}, 

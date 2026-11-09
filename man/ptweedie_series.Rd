@@ -70,6 +70,10 @@ plot(y, Fy, type = "l", lwd = 2, ylab = "Distribution function")
 
 }
 \references{
+Dunn, Peter K and Smyth, Gordon K (Submitted).
+Evaluation of the Tweedie exponential dispersion model distribution function.
+Submitted.
+
 Dunn, Peter K and Smyth, Gordon K (2005).
 Series evaluation of Tweedie exponential dispersion model densities
 \emph{Statistics and Computing},
