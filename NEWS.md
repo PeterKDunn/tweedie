@@ -25,7 +25,14 @@ example, the direct integration method inspired the more accurate computation
 of the density.
 
 
+## New functions
+* tweedie_convert_back(): convert from underlying to the GLM parameters.
+* ptweedie_tail_integrate(): direct integration of density for tail probabilities.
+* [dp]tweedie_regimes(): which method dtweedie() and ptweedie() use, and where.
+
+
 ## Changed and fixed
+* tweedie_convert(): updated and fixed error in gamma parameters
 * ptweedie_inversion(): with details = TRUE, now also returns small_tail, flagging
   tail probabilities below 1e-8. The inversion computes F = 1/2 -/+ I/pi, so its
   error is absolute (a few times 1e-16), and such small tails can have poor relative
