@@ -110,6 +110,23 @@ test_that("Other functions work OK", {
   },
   regexp = "power must be less than 2")
 
+  # tweedie_convert_back: round trip, and the gamma mean/dispersion
+  pg <- tweedie_convert(xi = 1.4, mu = c(0.5, 2, 10), phi = c(0.25, 1, 3))
+  back <- tweedie_convert_back(lambda = pg$poisson.lambda,
+                               alpha  = pg$gamma.shape,
+                               gamma  = pg$gamma.scale)
+  expect_equal(back$mu,    c(0.5, 2, 10))
+  expect_equal(back$phi,   c(0.25, 1, 3))
+  expect_equal(back$power, 1.4)
+  expect_equal(back$p0,    pg$p0)
+  expect_equal(pg$gamma.mean, pg$gamma.shape * pg$gamma.scale)
+  expect_equal(pg$gamma.phi,  1 / pg$gamma.shape)
+
+  expect_error(tweedie_convert_back(lambda = -1, alpha = 1, gamma = 1),
+               regexp = "lambda must be positive")
+  expect_error(tweedie_convert_back(lambda = 1:2, alpha = 1:3, gamma = 1),
+               regexp = "same length")
+
   # tweedie_lambda
   expect_no_error({
     tweedie_lambda(power = 1.5,
