@@ -73,6 +73,7 @@ mod.tw <- glm(y ~ 1,
 However, likelihood computations are necessary in other situations.
 Since likelihoods cannot be computed analytically apart from special cases, the **tweedie** package computes Tweedie density functions and distribution functions using numerical methods [@dunnSeriesEvaluationTweedie2005, @dunnEvaluationTweedieExponential2008].
 
+
 ### Generating random numbers
 
 Random numbers from a Tweedie distribution are generated using **rtweedie()**:
@@ -179,7 +180,7 @@ out$xi.max
 ```
 
 
-## Example
+## Example: p > 2
 
 Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in [@dunnGeneralizedLinearModels2018], Sect. 12.4.2). 
 For convenience, a copy is included with this package:
@@ -253,6 +254,98 @@ qqline(qr,
 ```
 
 The quantile residuals suggest that this model looks fine.
+
+
+## Example: 1 < p < 2
+
+Consider the `quilpie` data in the `GLMsData` package [@dunnGLMsData], which records the July rainfalls at Quilpie (used in [@dunnGeneralizedLinearModels2018]). 
+For convenience, a copy is included with this package:
+
+```{r QRainLoad}
+quilpie <- read.csv(system.file("extdata", 
+                                "quilpie.csv", 
+                                package = "tweedie"))
+
+# Convert to factors:
+quilpie$Phase  <- factor(quilpie$Phase)
+
+head(quilpie)
+```
+
+The rainfall may be related to the SOI Phase:
+
+```{r QRainPlot}
+plot(Rain ~ Phase,
+    data = quilpie,
+    xlab = "SOI Phase",
+    ylab = "July rainfall (mm)",
+    las  = 1)
+```
+
+
+The variance of the survival times seems to increase with the mean rainfall:
+Also, some rainfall totals are zero:
+
+```{r QRainZero}
+cat("Percentage of Julys with zero rain:", 
+    round( sum(quilpie$Rain == 0) / length(quilpie$Rain) * 100, 1),
+    "\n")
+```
+
+Perhaps a Tweedie glm would be appropriate.
+To fit a Tweedie glm, the value of $\xi$ is needed, so $1 < \xi < 2$:
+
+
+```{r QRainProfile}
+QRainPrf <- tweedie_profile(Rain ~ Phase, 
+                          data    = quilpie, 
+                          do.plot = TRUE, 
+                          xi.vec  = seq(1.2, 1.8, length = 7) )
+```
+
+Then, $\xi\approx{}$ `r round(QRainPrf$xi.max, 1)`:
+
+```{r QRainXi}
+QRainPrf$xi.max
+```
+
+
+So then the Tweedie glm can be fitted:
+
+```{r QRainModel}
+QRainMod <- glm(Rain ~ Phase, 
+             data   = quilpie,
+             family = statmod::tweedie(var.power  = round(QRainPrf$xi.max, 1), 
+                                       link.power = 0))
+anova(QRainMod, test = "F")
+```
+
+Quantile residuals can be used to assess the model:
+
+```{r QRainRes}
+qr <- statmod::qresid(QRainMod)
+qqnorm(qr,
+      las = 1)
+qqline(qr,
+      col = "grey")
+```
+
+The quantile residuals suggest that this model looks fine.
+
+Since $1 < p < 2$, the glm parameters can be converted to the underlying parameters:
+
+```{r QrainConvert}
+out <- tweedie_convert(xi = QRainPrf$xi.max,
+                       mu = fitted(QRainMod),
+                       phi = summary(QRainMod)$dispersion )
+out2 <- cbind( 
+  lamda = round(out$poisson.lambda, 2), # Poisson mean
+  shape = round(out$gamma.shape, 2),    # Gamma shape
+  p0    = round(out$p0, 2),             # Pr(Rainfall = 0)
+  scale = round(out$gamma.scale, 2)     # Gamma scale
+)
+head(out2, 10)
+```
 
 
 ## References
