@@ -70,11 +70,8 @@ of the density.
 * tweedie_dev(): computed without cancellation, so it has full relative accuracy when y is close to mu (it lost most of its digits there); this also makes the saddlepoint and inversion densities more accurate at small dispersion
 * Numerous new testthat tests 
 * Minor coding fixes and improvements 
-* Minor improvements and typo fixes in man pages throghout
-
-
-## Fixed
-* Fixed typo in README.Rmd.
+* Minor improvements and typo fixes in man pages throughout
+* Fixed typos in README.Rmd.
 
 
 tweedie 3.1.0 (Release date: 2026-05-20)
