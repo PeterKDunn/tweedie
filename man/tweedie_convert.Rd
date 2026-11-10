@@ -2,10 +2,13 @@
 % Please edit documentation in R/tweedie_convert.R
 \name{tweedie_convert}
 \alias{tweedie_convert}
+\alias{tweedie_convert_back}
 \alias{tweedie.convert}
 \title{Tweedie Distribution: Convert Between Parameter Formats}
 \usage{
 tweedie_convert(xi = NULL, mu, phi, power = NULL)
+
+tweedie_convert_back(lambda, alpha, gamma)
 
 tweedie.convert(xi = NULL, mu, phi, power = NULL)
 }
@@ -17,28 +20,79 @@ tweedie.convert(xi = NULL, mu, phi, power = NULL)
 \item{phi}{the dispersion parameter \eqn{\phi}{phi}.}
 
 \item{power}{the power parameter \eqn{p}{power}; a synonym for \eqn{\xi}{xi}.}
+
+\item{lambda}{the mean \eqn{\lambda}{lambda} of the underlying Poisson distribution.}
+
+\item{alpha}{the shape parameter \eqn{\alpha}{alpha} of the underlying gamma distribution.}
+
+\item{gamma}{the scale parameter \eqn{\gamma}{gamma} of the underlying gamma distribution
+(the reciprocal of the rate parameter).}
 }
 \value{
-a list of the parameters of the parameters of the corresponding underlying 
-Poisson and gamma densities: 
+\code{tweedie_convert()} returns a list of the parameters of the
+corresponding underlying Poisson and gamma distributions:
 \code{poisson.lambda} (\eqn{\lambda}{lambda} from the underlying Poisson distribution),
-\code{gamma.shape}, \code{gamma.scale} (the shape and scale parameters
- from the underlying gamma distribution),
+\code{gamma.shape}, \code{gamma.scale} (the shape \eqn{\alpha}{alpha} and
+ scale \eqn{\gamma}{gamma} parameters from the underlying gamma distribution),
  \code{p0} (the probability that \eqn{Y = 0}),
- \code{gamma.mean} and \code{gamma.phi} (the gamma mean and dispersion parameter values)
+ \code{gamma.mean} and \code{gamma.phi} (the gamma mean \eqn{\alpha\gamma}{alpha * gamma}
+ and dispersion parameter \eqn{1/\alpha}{1/alpha} values).
+
+\code{tweedie_convert_back()} returns a list containing
+\code{mu} (the Tweedie mean \eqn{\mu}{mu}),
+\code{phi} (the Tweedie dispersion parameter \eqn{\phi}{phi}),
+\code{power} (the Tweedie index parameter \eqn{p}),
+and \code{p0} (the probability that \eqn{Y = 0}).
 }
 \description{
-Converts from the fitted \acronym{glm} parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}
-and the corresponding underlying Poisson (\eqn{\lambda}{lambda}) 
-and gamma parameters (\eqn{\alpha}{alpha} and \eqn{\beta}{beta}, when \eqn{1 < p < 2}.
+For \eqn{1 < p < 2}, a Tweedie random variable is a Poisson sum of gamma
+random variables: \eqn{Y = \sum_{i=1}^N Z_i}{Y = Z_1 + ... + Z_N}, where
+\eqn{N \sim \mbox{Pois}(\lambda)}{N ~ Pois(lambda)} and the \eqn{Z_i} are
+independent gamma variables with shape \eqn{\alpha}{alpha} and scale
+\eqn{\gamma}{gamma}.
+
+\code{tweedie_convert()} converts from the Tweedie (\acronym{glm})
+parameters \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi} to the underlying
+Poisson parameter \eqn{\lambda}{lambda} and gamma parameters
+\eqn{\alpha}{alpha} and \eqn{\gamma}{gamma}.
+
+\code{tweedie_convert_back()} converts the other way: from
+\eqn{\lambda}{lambda}, \eqn{\alpha}{alpha} and \eqn{\gamma}{gamma}
+to \eqn{p}, \eqn{\mu}{mu} and \eqn{\phi}{phi}.
+}
+\details{
+The relationships are
+\deqn{\lambda = \frac{\mu^{2 - p}}{\phi (2 - p)}, \quad
+      \alpha  = \frac{2 - p}{p - 1}, \quad
+      \gamma  = \phi (p - 1) \mu^{p - 1}}{lambda = mu^(2 - p) / (phi * (2 - p)),
+      alpha = (2 - p) / (p - 1),
+      gamma = phi * (p - 1) * mu^(p - 1)}
+and, in reverse,
+\deqn{p = \frac{\alpha + 2}{\alpha + 1}, \quad
+      \mu = \lambda \alpha \gamma, \quad
+      \phi = \frac{\lambda \alpha (\alpha + 1) \gamma^2}{\mu^p}.}{p = (alpha + 2) / (alpha + 1),
+      mu = lambda * alpha * gamma,
+      phi = lambda * alpha * (alpha + 1) * gamma^2 / mu^p.}
+
+Here \eqn{\gamma}{gamma} is the gamma \emph{scale} parameter; the
+corresponding \emph{rate} parameter (sometimes written \eqn{\beta}{beta})
+is \eqn{\beta = 1/\gamma}{beta = 1/gamma}.
+In \R's notation, the gamma variables are
+\code{rgamma(n, shape = alpha, scale = gamma)}.
 }
 \examples{
 ### Fit a Tweedie density
 pretend <- data.frame( y = rgamma(20, shape = 1, rate = 1) )
-fit <- glm(y ~ 1, data = pretend, 
+fit <- glm(y ~ 1, data = pretend,
            family = statmod::tweedie(link.power = 0, var.power = 1.4))
 
 # Convert parameters
 tweedie_convert(mu = fitted(fit, type="response"), phi = 1, power = 1.4)
+
+### Convert, then convert back
+pg <- tweedie_convert(mu = 2, phi = 0.5, power = 1.4)
+tweedie_convert_back(lambda = pg$poisson.lambda,
+                     alpha  = pg$gamma.shape,
+                     gamma  = pg$gamma.scale)
 
 }
