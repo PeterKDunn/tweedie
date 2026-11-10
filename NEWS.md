@@ -6,10 +6,11 @@ Numerous changes, mostly internally. These changes substantially increase the
 relative accuracy of the algorithms for dtweedie() and especially for ptweedie().
 
 **Crucially, the interpolation is no longer used for dtweedie()** but will be
-reinstated in a future update; the purpose of this update is improving accuracy.
-The result is much greater relative accuracy, but some evaluations are slightly 
-slower (though not painfully so). This will also mean that the faster
-interpolation method will produce more accurate results when it is reinstated.
+reinstated in a future update in a separate function; the purpose of this update 
+is improving accuracy. The result is much greater relative accuracy, but some 
+evaluations are slightly slower (though not painfully so). This will also mean 
+that the faster interpolation method will produce more accurate results when it
+is reinstated.
 
 Some of the important changes for improving accuracy include: 
 * new methods are introduced for computation (e.g., direct integration for the CDF); 
