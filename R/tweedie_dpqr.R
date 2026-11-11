@@ -2,7 +2,8 @@
 #' @name Tweedie
 #' @aliases dtweedie ptweedie qtweedie rtweedie
 #'   
-#' @description Density, distribution function, quantile function and random 
+#' @description 
+#' Density, distribution function, quantile function and random 
 #' generation for the the Tweedie family of distributions, with mean \code{mu}, 
 #' dispersion parameter \code{phi} and variance power \code{power} (or \code{xi}, 
 #' a synonym for \code{power}).
