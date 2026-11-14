@@ -200,7 +200,10 @@ test_that("fit.glm = TRUE returns the GLM fitted at the MLE of p", {
                        xi.vec = c(1.5, 1.75, 2, 2.25, 2.5),
                        do.smooth = FALSE, fit.glm = TRUE)
   expect_true( "glm.obj" %in% names(out) )
+  # (Use the same convergence criterion as tweedie_profile(): IRLS converges
+  # slowly here, so the default  epsilon  gives slightly different estimates)
   fit <- glm(perm ~ area, data = rock,
+             control = glm.control(epsilon = 1e-09),
              family = statmod::tweedie(var.power = out$xi.max, link.power = 0))
   expect_equal(unname(out$glm.obj$coefficients), unname(coef(fit)),
                tolerance = 1e-6)
@@ -221,4 +224,99 @@ test_that("Offsets and add0 are accepted", {
                         add0 = TRUE)
   expect_equal(out0$xi[1], 0)
   expect_length(out0$L, 4)
+})
+
+
+
+test_that("Prior weights give each observation dispersion phi/weight", {
+  # With every weight equal to 2, the MLE of phi doubles (phi/2 is unchanged),
+  # and the profile log-likelihood is unchanged
+  xi.vec <- seq(1.5, 2.5, by = 0.25)
+  rock.w <- rock
+  rock.w$w2 <- 2
+  out1 <- quiet_profile(perm ~ 1, data = rock.w, xi.vec = xi.vec,
+                        do.smooth = FALSE)
+  capture_output(
+    out2 <- suppressWarnings(
+      tweedie_profile(perm ~ 1, data = rock.w, weights = w2, xi.vec = xi.vec,
+                      do.smooth = FALSE)) )
+  expect_equal(out2$L, out1$L, tolerance = 1e-6)
+  expect_equal(out2$phi / 2, out1$phi, tolerance = 1e-4)
+
+  # An observation with zero weight is the same as leaving it out
+  rock.w$w0 <- c(0, rep(1, nrow(rock) - 1))
+  capture_output(
+    out3 <- suppressWarnings(
+      tweedie_profile(perm ~ 1, data = rock.w, weights = w0, xi.vec = xi.vec,
+                      do.smooth = FALSE)) )
+  out4 <- quiet_profile(perm ~ 1, data = rock[-1, ], xi.vec = xi.vec,
+                        do.smooth = FALSE)
+  expect_equal(out3$L, out4$L)
+})
+
+
+
+test_that("With smoothing, the MLE is the maximum of the spline", {
+  out <- quiet_profile(perm ~ 1, data = rock,
+                       xi.vec = seq(1.5, 2.75, length = 11))
+  # The MLE need not be one of the values of p computed (or of the 50 grid
+  # points), and is at least as high as all of them
+  expect_true( out$L.max >= max(out$y) )
+  expect_true( out$L.max >= max(out$L) )
+  expect_true( out$ci[1] < out$xi.max & out$xi.max < out$ci[2] )
+  # The CI limits are where the profile is  ht
+  ss <- stats::splinefun(out$xi, out$L)
+  expect_equal(ss(out$ci), rep(out$ht, 2), tolerance = 1e-4)
+})
+
+
+
+test_that("Inputs are checked", {
+  # A misspelt method is an error (it used to silently use "series")
+  expect_error(
+    capture_output(
+      tweedie_profile(perm ~ 1, data = rock, xi.vec = c(1.5, 2),
+                      do.smooth = FALSE, method = "inverson")) )
+
+  # Supplying both  p.vec  and  xi.vec  gives a warning
+  expect_warning(
+    capture_output(
+      tweedie_profile(perm ~ 1, data = rock, xi.vec = c(1.5, 2),
+                      p.vec = c(1.6, 2.1), do.smooth = FALSE)),
+    regexp = "only  xi.vec  is used"
+  )
+
+  # No possible values of p is an error
+  expect_error(
+    capture_output(
+      tweedie_profile(perm ~ 1, data = rock, xi.vec = c(0.5, 1),
+                      do.smooth = FALSE)),
+    regexp = "No values"
+  )
+})
+
+
+
+test_that("The output is consistent with the values of p actually used", {
+  # Impossible values are removed, so  p  must match  L  and  phi
+  capture_output(
+    out <- suppressWarnings(
+      tweedie_profile(perm ~ 1, data = rock, p.vec = c(0.5, 1, 1.5, 2, 2.5),
+                      do.smooth = FALSE)) )
+  expect_equal(out$p, c(1.5, 2, 2.5))
+  expect_length(out$L, 3)
+  expect_length(out$phi, 3)
+
+  # A single value of p works
+  out1 <- quiet_profile(perm ~ 1, data = rock, xi.vec = 2, do.smooth = FALSE)
+  expect_equal(out1$xi.max, 2)
+
+  # Plotting does not change the results
+  grDevices::pdf(NULL)
+  out.plot <- quiet_profile(perm ~ 1, data = rock, xi.vec = c(1.5, 2, 2.5),
+                            do.smooth = FALSE, do.plot = TRUE)
+  grDevices::dev.off()
+  out.noplot <- quiet_profile(perm ~ 1, data = rock, xi.vec = c(1.5, 2, 2.5),
+                              do.smooth = FALSE)
+  expect_equal(out.plot, out.noplot)
 })
