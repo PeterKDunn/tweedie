@@ -344,11 +344,44 @@ tweedie_profile <- function(formula,
   }
   
   
+  # The MLE of phi (given mu and p), searching near  phi.start.
+  # optimize() works on log(phi), over  log(phi.start) +/- width:
+  #  - a narrow bracket around a good start needs fewer evaluations of
+  #    the log-likelihood than a wide one;
+  #  - on the log scale, the tolerance is relative to phi (so small and large
+  #    phi are found with similar precision).
+  # If the minimum is at (or very near) an end of the bracket, the true
+  # minimum may be outside it: the bracket is re-centred there, widened, and
+  # the search repeated.
+  phi_mle <- function(mu, power, phi.start, width = 0.5) {
+    nlogl_log <- function(log.phi) {
+      dtweedie_nlogl(exp(log.phi), 
+                     y     = ydata, 
+                     mu    = mu, 
+                     power = power)
+    }
+    centre <- log(phi.start)
+    for (attempt in 1:10) {
+      lims <- centre + c(-width, width)
+      ans  <- optimize(nlogl_log, 
+                       interval = lims, 
+                       tol      = 1e-5)
+      if ( min( abs(ans$minimum - lims) ) > 1e-3 ) break
+      centre <- ans$minimum
+      width  <- 2 * width
+    }
+    list(phi  = exp(ans$minimum),
+         logl = attr(ans$objective, "logl"))
+  }
+  
   # Set up some parameters
   xi.len   <- length(xi.vec)
   L        <- rep(NA_real_, xi.len)
   phi.vec  <- rep(NA_real_, xi.len)
-  phi.prev <- NA   # The last good estimate of phi: a start for the next one
+
+  
+  # Coefficients of the fit at each p: a start for the fit at the MLE of p
+  coef.list <- vector("list", xi.len)
   
   # Fitted values from the previous value of p, used to start the next
   # glm.fit(). Neighbouring values of p give similar fits, so IRLS then
@@ -404,6 +437,7 @@ tweedie_profile <- function(formula,
       mu.start <- NULL   # After a failed fit, use the family's default start
     } else {
       mu <- fitted( fit.model )
+      coef.list[[i]] <- fit.model$coefficients
       # Keep these to start the next fit, if valid for any p (a normal fit,
       # p = 0, may give  mu <= 0  with some links)
       mu.start <- if ( all(mu > 0) ) mu else NULL
@@ -423,28 +457,30 @@ tweedie_profile <- function(formula,
     } else if ( phi.method == "mle" ) {        
         if (verbose >= 1) cat(" (using optimize): ")
         
-        # Saddlepoint approx of phi:
-        phi.saddle <-  phi_saddle(mu, p)
-        
-        
-        # Start from the previous estimate of phi, if there is one;
-        # otherwise, from the saddlepoint approximation
-        phi.est   <- if ( is.na(phi.prev) ) phi.saddle else phi.prev
-        low.limit <- min( 0.001, phi.saddle / 2)
-        
-        ans <- try( optimize(f        = dtweedie_nlogl, 
-                             maximum  = FALSE, 
-                             interval = c(low.limit, 10 * phi.est),
-                             power    = p, 
-                             mu       = mu, 
-                             y        = ydata ),
+      # A starting value for phi. log(phi) changes smoothly with p, so
+      # extrapolate (linearly) from the last two estimates (for p > 0) if
+      # available; else use the last estimate; else the saddlepoint
+      # approximation (the mean deviance)
+      prev <- which( !is.na(phi.vec[seq_len(i - 1)]) & (xi.vec[seq_len(i - 1)] > 0) )
+      if ( length(prev) >= 2 ) {
+        j         <- utils::tail(prev, 2)
+        slope     <- diff( log(phi.vec[j]) ) / diff( xi.vec[j] )
+        phi.start <- exp( log(phi.vec[j[2]]) + slope * (p - xi.vec[j[2]]) )
+      } else if ( length(prev) == 1 ) {
+        phi.start <- phi.vec[prev]
+      } else {
+        phi.start <- phi_saddle(mu, p)
+      }
+      if ( !is.finite(phi.start) || (phi.start <= 0) ) phi.start <- 1
+      
+      ans <- try( phi_mle(mu, p, phi.start), 
                     silent = TRUE)
         if ( inherits(ans, "try-error") ) {
           # Treat like a failed fit: record NA, and carry on with the next p
           warning(paste("  Problem estimating phi near ", index.par, " = ", p, "; this error reported:\n     ", ans))
           skip.obs <- TRUE
         } else {
-          phi.vec[i] <- ans$minimum
+          phi.vec[i] <- ans$phi
           # The log-likelihood at this phi (from dtweedie()) is L itself
           L.from.phi <- attr(ans$objective, "logl")
           if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
@@ -454,11 +490,8 @@ tweedie_profile <- function(formula,
     phi.vec[i] <- phi_saddle(mu, p)
     if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
   }
-    
-  
-  
+
   phi <- phi.vec[i]
-  if ( !is.na(phi) ) phi.prev <- phi
   ### -- Done:  estimate phi
     
 
@@ -612,7 +645,18 @@ tweedie_profile <- function(formula,
 
   ### Maximum likelihood estimates
   at.end <- FALSE   # Is the maximum at the end of the values of p?
-
+  fit.max <- NULL    # The GLM fitted at the MLE of p (if one is needed)
+  
+  # Starting coefficients for a GLM fit at  p: those from the fit at the
+  # nearest computed p > 0 (aliased, NA, coefficients set to zero)
+  start_near <- function(p) {
+    ok.fit <- which( !vapply(coef.list, is.null, logical(1)) & (xi.vec > 0) )
+    if ( length(ok.fit) == 0 ) return(NULL)
+    start <- coef.list[[ ok.fit[ which.min( abs(xi.vec[ok.fit] - p) ) ] ]]
+    start[ is.na(start) ] <- 0
+    start
+  }
+  
   if ( do.smooth ){
     if (verbose >= 2) cat(" Finding maximum likelihood estimates:  ")
     
@@ -658,6 +702,7 @@ tweedie_profile <- function(formula,
                                  weights = weights, 
                                  offset  = offset,
                                  control = control,
+                                 start   = start_near(xi.max),
                                  family  = statmod::tweedie(var.power  = xi.max, 
                                                             link.power = link.power))
       mu <- fitted( fit.max )
@@ -665,18 +710,17 @@ tweedie_profile <- function(formula,
       if ( phi.method == "saddlepoint"){
         phi.max <- phi_saddle(mu, xi.max)
       } else {
-        # Bound phi using the estimates at the computed values of p
-        # (only p > 1: phi at p = 0 is on a different scale)
-        phi.lo <- 0.5 * min( phi.vec.fix[xi.pos] )
-        phi.hi <-   2 * max( phi.vec.fix[xi.pos] )
+        fit.max <- NULL    # The GLM fitted at the MLE of p (if one is needed)
         
-        phi.max <- optimize( f        = dtweedie_nlogl, 
-                             maximum  = FALSE, 
-                             interval = c(phi.lo, phi.hi ), 
-                             power    = xi.max, 
-                             mu       = mu,
-                             y        = ydata)$minimum
-      }
+        # Starting coefficients for a GLM fit at  p: those from the fit at the
+        # nearest computed p > 0 (aliased, NA, coefficients set to zero)
+        start_near <- function(p) {
+          ok.fit <- which( !vapply(coef.list, is.null, logical(1)) & (xi.vec > 0) )
+          if ( length(ok.fit) == 0 ) return(NULL)
+          start <- coef.list[[ ok.fit[ which.min( abs(xi.vec[ok.fit] - p) ) ] ]]
+          start[ is.na(start) ] <- 0
+          start
+        }      }
     }
     if (verbose >= 2) cat(" Done\n")
   } else {
@@ -758,14 +802,18 @@ tweedie_profile <- function(formula,
                    phi.method = phi.method)
       
       if ( fit.glm ) {
-        out$glm.obj <- stats::glm.fit( x       = model.x, 
-                                       y       = ydata, 
-                                       weights = weights, 
-                                       offset  = offset,
-                                       control = control,
-                                       family  = statmod::tweedie(var.power  = xi.max, 
-                                                                  link.power = link.power) )
-      }
+        # Reuse the fit at the MLE of p, if it was needed to find phi.max
+        if ( is.null(fit.max) ) {
+          fit.max <- stats::glm.fit( x       = model.x, 
+                                     y       = ydata, 
+                                     weights = weights, 
+                                     offset  = offset,
+                                     control = control,
+                                     start   = start_near(xi.max),
+                                     family  = statmod::tweedie(var.power  = xi.max, 
+                                                                link.power = link.power) )
+        }
+        out$glm.obj <- fit.max      }
       
       
       if ( !xi.notation ) {
