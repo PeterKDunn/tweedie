@@ -3,6 +3,7 @@
 0 errors | 0 warnings | 1 note
 
 * This is a update release.
+* Fixes the -Wintrinsic-shadow warning on r-devel-linux-x86_64-fedora-gcc (GCC 16).
 
 # Test results
 
