@@ -1,6 +1,6 @@
 Package: tweedie
 Version: 3.2.0
-Date: 2026-10-05
+Date: 2026-11-14
 Title: Evaluation of Tweedie Exponential Family Models
 Authors@R: person("Peter K.", "Dunn", email = "pdunn2@usc.edu.au", role = c("cre", "aut") )
 Depends: R (>= 2.8.0)
@@ -17,4 +17,4 @@ License: GPL (>=2)
 NeedsCompilation: yes
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

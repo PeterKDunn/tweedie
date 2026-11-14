@@ -1,4 +1,4 @@
-tweedie 3.2.0 (Release date: )
+tweedie 3.2.0 (Release date: 2026-11-14)
 ==============
 
 ## Summary
