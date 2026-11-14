@@ -46,6 +46,7 @@ importFrom(graphics,
 importFrom(lifecycle,deprecate_warn)
 importFrom(statmod,tweedie)
 importFrom(stats,
+  deviance,
   dgamma,
   dnorm,
   dpois,
