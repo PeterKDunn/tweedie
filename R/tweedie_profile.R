@@ -91,12 +91,22 @@
 #'
 #' @examples 
 #' data(rock)
-#' out <- tweedie_profile(perm~1, data=rock, do.plot=FALSE, 
-#'                        xi.vec=seq(1.5, 2.75, length=11),
+#' # A quick profile, over a few values of p (no smoothing)
+#' out <- tweedie_profile(perm ~ 1, data = rock, do.smooth = FALSE,
+#'                        xi.vec = seq(1.8, 2.4, by = 0.2))
+#' out$xi.max
+#'
+#' \donttest{
+#' # A finer profile, smoothed, with a confidence interval (slower)
+#' out <- tweedie_profile(perm ~ 1, data = rock, do.plot = TRUE,
+#'                        xi.vec = seq(1.5, 2.75, length = 11),
 #'                        line_args = list(lwd = 2))
 #'
-#' # The estimate for the variance power index (p, or xi) is:
+#' # The estimate for the variance power index (p, or xi), and its CI:
 #' out$xi.max
+#' out$ci
+#' }
+#' 
 #' 
 #' @importFrom graphics lines rug points abline title plot
 #' @importFrom stats fitted optimize glm.fit splinefun glm.control uniroot qchisq dgamma dnorm 
