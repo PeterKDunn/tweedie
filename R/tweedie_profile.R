@@ -24,7 +24,7 @@
 #' @note
 #' The estimates of \eqn{p}{p} and \eqn{\phi}{phi} are printed invisibly. 
 #' If the response variable has any exact zeros, the values in \code{p.vec} must all be
-#' between one and two.
+#' between one and two (or perhaps zero).
 #'
 #' The function can be temperamental (for theoretical reasons involved in numerically computing
 #' the density; see Dunn and Smyth (2005)) and may be very slow or fail. 
@@ -48,7 +48,9 @@
 #' @param link.power the power link function to use in the \code{tweedie} \acronym{glm} family. 
 #'  These link functions \eqn{g(\cdot)}{g()} are of the form \eqn{g(\eta)=\eta^{link.power}}{g(\eta) = \eta^{\text{link.power}}}, where \code{link.power = 0} (default) refers to the logarithm link function.
 #' @param data an optional data frame, list or environment containing the variables.
-#' @param weights an optional vector of weights to be used in the fitting process.
+#' @param weights an optional vector of prior weights to be used in the fitting process.
+#'  As for \code{\link{glm}}, observation \eqn{i} has dispersion \eqn{\phi/w_i}{phi/w[i]};
+#'   observations with zero weight are dropped.
 #' @param offset an \emph{a priori} known component included in the linear predictor.
 #'   See \code{\link{model.offset}}.
 #' @param fit.glm logical; if \code{TRUE}, the Tweedie \acronym{glm} is fitted using the
@@ -91,13 +93,13 @@
 #' data(rock)
 #' out <- tweedie_profile(perm~1, data=rock, do.plot=FALSE, 
 #'                        xi.vec=seq(1.5, 2.75, length=11),
-#'                        line_arg = list(lwd = 2))
+#'                        line_args = list(lwd = 2))
 #'
 #' # The estimate for the variance power index (p, or xi) is:
 #' out$xi.max
 #' 
-#' @importFrom graphics lines rug points par mtext abline axis  points
-#' @importFrom stats contrasts fitted optimize glm.fit splinefun glm.control deviance deviance uniroot
+#' @importFrom graphics lines rug points abline title plot
+#' @importFrom stats fitted optimize glm.fit splinefun glm.control uniroot qchisq dgamma dnorm 
 #' 
 #' @keywords  models
 #' 
@@ -163,6 +165,14 @@ tweedie_profile <- function(formula,
                                   line_args)
   # END: Check for some given parameters supplied via args
   
+  # Check the method names now: a typo is then an error, rather than
+  # (as before) silently using  method = "series".  Partial matching still works.
+  # (phi.method's default depends on  method, so  method  is checked first.)
+  method     <- match.arg(method, 
+                          c("inversion", "series", "interpolation", "saddlepoint"))
+  phi.method <- match.arg(phi.method, 
+                          c("mle", "saddlepoint"))
+  
   
   if ( is.logical( verbose ) ) verbose <- as.numeric(verbose)
   
@@ -174,7 +184,6 @@ tweedie_profile <- function(formula,
     cat(" try a different input for  p.vec\n---\n")
   }
   
-  cl <- match.call()
   mf <- match.call()
   m <- match(c("formula", "data", "weights","offset"), names(mf), 0L)
   mf <- mf[c(1, m)]
@@ -208,69 +217,73 @@ tweedie_profile <- function(formula,
       stop(gettextf("number of offsets is %d should equal %d (number of observations)",
                     length(offset), NROW(Y)), domain = NA)
   }
-
+  
+  # Prior weights: as in glm(), observation i has dispersion  phi / weights[i].
+  # Observations with zero weight carry no information, so are dropped
+  # (otherwise their dispersion would be  phi / 0 = Inf).
+  if ( is.null(weights) ) weights <- rep(1, NROW(Y))
+  if ( any(weights == 0) ) {
+    keep.obs <- (weights > 0)
+    Y        <- Y[keep.obs]
+    X        <- X[keep.obs, , drop = FALSE]
+    weights  <- weights[keep.obs]
+    if ( !is.null(offset) ) offset <- offset[keep.obs]
+  }
   
   ### NOW some notation stuff
+  if ( !is.null(p.vec) & !is.null(xi.vec) ) {
+    warning("Both  p.vec  and  xi.vec  were supplied; only  xi.vec  is used.")
+  }
   xi.notation <- TRUE
   if ( is.null(xi.vec) & !is.null(p.vec) ){ # If p.vec given, but not xi.vec
     xi.vec      <- p.vec
     xi.notation <- FALSE
   }
-  
-  if ( is.null(p.vec) & !is.null(xi.vec) ){ # If xi.vec given, but not p.vec
-    p.vec       <- xi.vec
-    xi.notation <- TRUE
-  }
-  
-  if ( is.null( p.vec ) & is.null(xi.vec)) { # Neither xi.vec or p.vec are given
+
+  if ( is.null(xi.vec)) { # Neither xi.vec or p.vec are given
     if ( any(Y == 0) ){
-      p.vec <- seq(1.2, 1.8, 
-                   by = 0.1)
+      xi.vec <- seq(1.2, 1.8, 
+                    by = 0.1)
     } else {
-      p.vec <- seq(1.5, 5, 
-                   by = 0.5)
+      xi.vec <- seq(1.5, 5, 
+                    by = 0.5)
     }
-    xi.vec      <- p.vec
-    xi.notation <- TRUE
   }
   
-  ### AT THIS POINT, we have both xi.vec and p.vec declared, and both are the same
-  ### but we stick with using xi.vec hereafter
-  
+  ### Hereafter, only  xi.vec  is used (whichever notation was supplied)
+    
   # Determine notation to use in output (consistent with what was supplied by the user)
   index.par <- ifelse( xi.notation, 
                        "xi", 
                        "p")
   
-  # Find if values of p/xi have been specified that are not appropriate
-  xi.fix <- any( xi.vec <= 1 & xi.vec != 0, na.rm = TRUE)
-  
-  if ( xi.fix ) {
-    xi.fix.these <- (xi.vec <= 1 & xi.vec != 0)
-    xi.vec[ xi.fix.these ] <- NA 
+  # Remove values of p/xi that are not possible: p <= 1, except p = 0 (the
+  # normal distribution). (p = 1 is excluded too: the Poisson likelihood is
+  # only defined when every y/phi is an integer, so is not comparable.)
+  xi.vec <- xi.vec[ !is.na(xi.vec) ]   # is.na() is also TRUE for NaN
+  xi.bad <- (xi.vec <= 1) & (xi.vec != 0)
+  if ( any(xi.bad) ) {
+    xi.vec <- xi.vec[ !xi.bad ]
     if ( length(xi.vec) == 0 ) {
-      stop(paste("No values of", index.par, "between 0 and 1, or below 0, are possible.\n"))
+      stop(paste("No values of", index.par, "are possible: values must be zero, or greater than 1.\n"))
     } else {
-      cat("Values of", index.par, "between 0 and 1 and less than zero have been removed: such values are not possible.\n")
+      cat("Values of", index.par, "less than or equal to 1 (other than zero) have been removed: such values are not possible.\n")
     }
   }
   
 
-  # Warnings
-  if ( any( Y == 0 ) & any( (xi.vec >= 2) | (xi.vec <= 0) ) ) {
-    xi.fix.these <- (xi.vec >= 2 | xi.vec <= 0)
-    xi.vec[ xi.fix.these ] <- NA 
-    if ( length(xi.vec) == 0 ) {
-      stop(paste("When the response variable contains exact zeros, all values of", index.par, "must be between 1 and 2.\n"))
-    } else {
-      cat("When the response variable contains exact zeros, all values of", index.par, "must be between 1 and 2; other values have been removed.\n")
+  # With exact zeros in the response, only  p = 0  or  1 < p < 2  are possible
+  if ( any( Y == 0 ) ) {
+    xi.bad <- (xi.vec >= 2)
+    if ( any(xi.bad) ) {
+      xi.vec <- xi.vec[ !xi.bad ]
+      if ( length(xi.vec) == 0 ) {
+        stop(paste("When the response variable contains exact zeros, all values of", index.par, "must be between 1 and 2.\n"))
+      } else {
+        cat("When the response variable contains exact zeros, all values of", index.par, "must be between 1 and 2; other values have been removed.\n")
+      }
     }
   }
-  
-  
-  # Remove any NAs and NaNs in the p/xi values
-  xi.vec <- xi.vec[ !is.na(xi.vec) ] 
-  xi.vec <- xi.vec[ !is.nan(xi.vec) ] 
   
   if ( do.smooth & (length(xi.vec) < 5) ) {
     warning(paste("Smoothing needs at least five values of", index.par,".") )
@@ -286,8 +299,8 @@ tweedie_profile <- function(formula,
     warning("Confidence intervals only computed if  do.smooth=TRUE\n")
   }
   
-  if ( add0 ) {
-    p.vec  <- c( 0, p.vec )
+  
+  if ( add0 & !any(xi.vec == 0) ) {
     xi.vec <- c( 0, xi.vec )
   }
 
@@ -299,44 +312,43 @@ tweedie_profile <- function(formula,
   
   # First define the function to *minimize*;
   # since we want a *maximum* likelihood estimator,
-  # define the negative.
+  # define the negative.  (With prior weights, observation  i  has
+  # dispersion  phi / weights[i].)
   dtweedie_nlogl <- function(phi, y, mu, power) {
     logl <- sum( dtweedie(y     = y, 
                           mu    = mu, 
-                          phi   = phi, 
+                          phi   = phi/weights, 
                           power = power,
                           log   = TRUE ) )
-    ans - -2 * logl
-    if ( is.infinite( ans ) ) {
-      # If infinite, replace with saddlepoint estimate?
-      ans <- sum( tweedie_dev(y     = y, 
-                              mu    = mu, 
-                              power = power) ) / length( y )
+    ans <- -2 * logl
+    if ( !is.finite( ans ) ) {
+      # The log-likelihood cannot be computed at this phi. Return a huge (but
+      # finite) value so optimize() moves away from here. (The mean deviance
+      # was used before; it is on a different scale, and so can look like a
+      # *good* value of the objective.)
+      ans <- 1e300
     }
-    attr(ans, "gradient") <- dtweedie_dldphi(y     = y, 
-                                             mu    = mu, 
-                                             phi   = phi, 
-                                             power = power)
     # Keep the log-likelihood itself: optimize() returns f() at the minimum
     # (attributes included), so it can be used as L without recomputing it
     attr(ans, "logl") <- logl
-    # No gradient is attached: optimize() never uses one, and computing it
-    # (dtweedie_dldphi()) cost more than the log-likelihood itself.
     ans
   }
   
   
-  # Set up some parameters
-  xi.len  <- length(xi.vec)
-  phi     <- NaN
-  L       <- numeric( length = xi.len )
-  phi.vec <- L
   
-  # Now most of these are for debugging:
-  b.vec  <- L
-  c.vec  <- L
-  mu.vec <- L
-  b.mat  <- array( dim = c(xi.len, length(ydata) ) )
+  # The saddlepoint (mean deviance) estimate of phi, allowing for weights
+  phi_saddle <- function(mu, power) {
+    sum( weights * tweedie_dev(y     = ydata, 
+                               mu    = mu, 
+                               power = power) ) / length( ydata )
+  }
+  
+  
+  # Set up some parameters
+  xi.len   <- length(xi.vec)
+  L        <- rep(NA_real_, xi.len)
+  phi.vec  <- rep(NA_real_, xi.len)
+  phi.prev <- NA   # The last good estimate of phi: a start for the next one
   
   # Fitted values from the previous value of p, used to start the next
   # glm.fit(). Neighbouring values of p give similar fits, so IRLS then
@@ -344,25 +356,27 @@ tweedie_profile <- function(formula,
   
   mu.start <- NULL
 
-  pBar <- utils::txtProgressBar(min   = 1, 
-                                max   = xi.len,
-                                style = 2)
-  for (i in (1:xi.len)) {
-    utils::setTxtProgressBar(pBar, i)
+  
+  # A progress bar (but not when verbose output is printed, as they clash).
+  # on.exit() closes it even if an error occurs.
+  show.bar <- (verbose == 0) & (xi.len > 1)
+  if ( show.bar ) {
+    pBar <- utils::txtProgressBar(min   = 0, 
+                                  max   = xi.len,
+                                  style = 2)
+    on.exit( close(pBar), add = TRUE )
+  }
+  
+  for (i in seq_len(xi.len)) {
+    if ( show.bar ) utils::setTxtProgressBar(pBar, i)
     if ( verbose > 0) {
       cat( paste(index.par," = ", xi.vec[i], "\n", sep="") )
     }
-
-    # We find the mle of phi.
-    # We try to bound it as well as we can, then use  uniroot()  to solve for it.
     
     # Set things up
     p          <- xi.vec[i]
     L.from.phi <- NULL   # Set below if the search for phi also gives L
-    phi.pos    <- 1.0e2
-    bnd.neg    <- -Inf
-    bnd.pos    <-  Inf
-    
+
     if (verbose == 2) cat("* Fitting initial model:")
     
     # Fit the model with given p
@@ -379,92 +393,81 @@ tweedie_profile <- function(formula,
     )
     
     
-    skip.obs <- FALSE
-    if ( inherits( catch.possible.error, "try-error" ) ) {
-      skip.obs <- TRUE 
-    }
-    # Keep these fitted values to start the next fit (but after a failed
-    # fit, go back to the family's default start)
-    
-    mu.start <- if ( skip.obs ) NULL else fitted( fit.model )
-    
+    skip.obs <- inherits( catch.possible.error, "try-error" )
+
     if( skip.obs ) {
       warning(paste("  Problem near ", index.par, " = ", p,"; this error reported:\n     ",
                     catch.possible.error,
                     " Examine the data and function inputs carefully.") )
       
-      # NOTE:  We need epsilon to be very small to make a smooth likelihood plot
-      mu <- rep(NA, length(ydata) )
+      mu       <- rep(NA, length(ydata) )
+      mu.start <- NULL   # After a failed fit, use the family's default start
     } else {
       mu <- fitted( fit.model )
+      # Keep these to start the next fit, if valid for any p (a normal fit,
+      # p = 0, may give  mu <= 0  with some links)
+      mu.start <- if ( all(mu > 0) ) mu else NULL
     }
-
+    
     ### -- Start:  Estimate phi
     if (verbose >= 1) cat("* Phi estimation, method: ", phi.method)
     
     if( skip.obs ) {
       if (verbose >= 1) cat("; but skipped for this obs\n")
-      phi.est <- phi <- phi.vec[i] <- NA
-    } else {
-      if ( phi.method == "mle"){
-        
+    } else if ( p == 0 ) {
+      # Normal distribution: the MLE of phi has a closed form (and is also
+      # the mean deviance)
+      phi.vec[i] <- sum( weights * (ydata - mu) ^ 2 ) / length(ydata)
+      if (verbose >= 1) cat(" (closed form): Done (phi =", phi.vec[i], ")\n")
+      
+    } else if ( phi.method == "mle" ) {        
         if (verbose >= 1) cat(" (using optimize): ")
         
         # Saddlepoint approx of phi:
-        phi.saddle <- sum( tweedie_dev(y     = ydata, 
-                                       mu    = mu, 
-                                       power = p) ) / length( ydata )
+        phi.saddle <-  phi_saddle(mu, p)
         
-        if ( is.nan(phi) ) {
-          
-          # NOTE:  This is only used for first p.
-          #        The remainder use the previous estimate of phi as a starting point
-          
-          # Starting point for phi:  use saddlepoint approx/EQL.
-          phi.est <- phi.saddle
-          
-        } else {
-          phi.est <- phi
-        }
+        
+        # Start from the previous estimate of phi, if there is one;
+        # otherwise, from the saddlepoint approximation
+        phi.est   <- if ( is.na(phi.prev) ) phi.saddle else phi.prev
         low.limit <- min( 0.001, phi.saddle / 2)
         
-        #    ans <- nlm(p=phi.est, f=dtweedie_nlogl, 
-        #                hessian=FALSE,
-        #                power=p, mu=mu, y=data)
-        if ( p != 0 ) {
-          ans <- optimize(f        = dtweedie_nlogl, 
-                          maximum  = FALSE, 
-                          interval = c(low.limit, 10 * phi.est),
-                          power    = p, 
-                          mu       = mu, 
-                          y        = ydata )
-          phi <- phi.vec[i] <- ans$minimum
+        ans <- try( optimize(f        = dtweedie_nlogl, 
+                             maximum  = FALSE, 
+                             interval = c(low.limit, 10 * phi.est),
+                             power    = p, 
+                             mu       = mu, 
+                             y        = ydata ),
+                    silent = TRUE)
+        if ( inherits(ans, "try-error") ) {
+          # Treat like a failed fit: record NA, and carry on with the next p
+          warning(paste("  Problem estimating phi near ", index.par, " = ", p, "; this error reported:\n     ", ans))
+          skip.obs <- TRUE
+        } else {
+          phi.vec[i] <- ans$minimum
           # The log-likelihood at this phi (from dtweedie()) is L itself
           L.from.phi <- attr(ans$objective, "logl")
-          } else {
-          phi <- phi.vec[i] <- sum( (ydata - mu) ^ 2 ) / length(ydata)
-        }
-        if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
-        
-      } else{ # phi.method=="saddlepoint")
-        
-        if (verbose >= 1) cat(" (using mean deviance/saddlepoint): ")
-        phi <- phi.est <- phi.vec[i] <- sum( tweedie_dev(y     = ydata, 
-                                                         mu    = mu, 
-                                                         power = p) )/ length( ydata )
-        if (verbose >= 1) cat(" Done (phi =", phi, ")\n")
-      }
+          if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
     }
+  } else{ # phi.method=="saddlepoint")
+    if (verbose >= 1) cat(" (using mean deviance/saddlepoint): ")
+    phi.vec[i] <- phi_saddle(mu, p)
+    if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
+  }
     
-    ### -- Done:  estimate phi
+  
+  
+  phi <- phi.vec[i]
+  if ( !is.na(phi) ) phi.prev <- phi
+  ### -- Done:  estimate phi
     
 
-    # Now determine log-likelihood at this p
-    # Best to use the same density evaluation for all:  series or inversion
-    
+  # Now determine log-likelihood at this p.
+  
+  # With prior weights, the dispersion for each observation is  phi/weights
+  
     if (verbose >= 1) cat("* Computing the log-likelihood ")
     
-    # Now compute the log-likelihood
     if (verbose >= 1) cat("(method =", method, "):")
     
     if ( skip.obs ) {
@@ -477,67 +480,41 @@ tweedie_profile <- function(formula,
       # method = "inversion" gives the same value (to about 1e-12), but
       # applies the (slower) inversion to every observation.
       if (verbose >= 1) cat(" (from dtweedie(), while finding phi)")
-      L[i] <- L.from.phi    } else {   
-      if ( method == "saddlepoint") {
+      L[i] <- L.from.phi    
+      } else if ( method == "saddlepoint") {
         L[i] <- dtweedie_logl_saddle(y     = ydata, 
                                      mu    = mu, 
                                      power = p, 
-                                     phi   = phi, 
+                                     phi   = phi/weights, 
                                      eps   = eps)
+      } else if (p == 0) {
+        L[i] <- sum( dnorm(x    = ydata, 
+                           mean = mu, 
+                           sd   = sqrt(phi / weights), 
+                           log  = TRUE) )
+        
+      } else if ( p == 2 ) {
+        L[i] <- sum( dgamma(x     = ydata,
+                            shape = weights / phi, 
+                            rate  = weights / (phi * mu), 
+                            log   = TRUE ) )
+        
       } else {
-        if (p == 2) {
-          L[i] <- sum( log( dgamma( rate  = 1 / (phi * mu), 
-                                    shape = 1 / phi, 
-                                    x     = ydata ) ) )
-        } else {
-          if ( p == 1 ) {
-            if ( phi == 1 ){
-              # The phi==1 part added 30 Sep 2010.
-              L[i] <- sum( log( dpois(x      = ydata / phi, 
-                                      lambda = mu / phi ) ) )
-            } else { # p=1, but phi is not equal to zero
-              # As best as we can, we determine if the values
-              # of  ydata  are multiples of  phi
-              y.on.phi <- ydata/phi
-              close.enough <- array( dim = length(y.on.phi))
-              for (j in (1 : length(y.on.phi))){
-                if (isTRUE(all.equal(y.on.phi, 
-                                     as.integer(y.on.phi)))){
-                  L[j] <- sum( log( dpois(x      = round(y / phi), 
-                                          lambda = mu / phi ) ) )
-                } else {
-                  L[j] <- 0
-                }
-              }
-            }
-          } else {
-            if ( p == 0 ) {
-              L[i] <- sum( dnorm(x    = ydata, 
-                                 mean = mu, 
-                                 sd   = sqrt(phi), 
-                                 log  = TRUE) )
-            } else {
-              L[i] <- switch(
-                pmatch(method, 
-                       c("interpolation", "series", "inversion"), 
-                       nomatch = 2),
-                "1" = dtweedie_logl( mu    = mu, 
-                                     power = p, 
-                                     phi   = phi, 
-                                     y     = ydata),
-                "2" = sum( log( dtweedie_series( y     = ydata, 
-                                                 mu    = mu, 
-                                                 power = p, 
-                                                 phi   = phi) ) ),
-                "3" = sum( log( dtweedie_inversion( y     = ydata, 
-                                                    mu    = mu, 
-                                                    power = p, 
-                                                    phi   = phi) ) ) )
-            }
-          }
-        }
-      }
-    }
+        L[i] <- switch(method,
+                       "interpolation" = dtweedie_logl( mu    = mu, 
+                                                        power = p, 
+                                                        phi   = phi / weights, 
+                                                        y     = ydata),
+                       "series"        = sum( log( dtweedie_series( y     = ydata, 
+                                                                    mu    = mu, 
+                                                                    power = p, 
+                                                                    phi   = phi / weights) ) ),
+                       "inversion"     = sum( log( dtweedie_inversion( y     = ydata, 
+                                                                       mu    = mu, 
+                                                                       power = p, 
+                                                                       phi   = phi / weights) ) ) )
+        
+  }
     
     if (verbose >= 1) {
       cat(" Done: L =", L[i], "\n")
@@ -545,61 +522,62 @@ tweedie_profile <- function(formula,
   }
   
 
-  ### Smoothing
-  # If there are infs etc in the log-likelihood, the smooth can't happen.  
-  # Perhaps this can be worked around.
-  # But at present, we note when it happens to ensure no future errors
-  # (eg in computing confidence interval for p).
+  ### Only finite values of L are used for smoothing and finding the maximum
+  # (is.finite() is FALSE for NA, NaN and +/-Inf)
+  ok          <- is.finite(L)
+  xi.vec.fix  <- xi.vec[ok]
+  L.fix       <- L[ok]
+  phi.vec.fix <- phi.vec[ok]
   
-  # y and x are the smoothed plot produced; here we set them
-  # as NA so they are defined when the function is returned to
-  # the workspace
-  y <- NA
-  x <- NA
+  if ( !any(ok) ) {
+    stop("No valid values of the log-likelihood were computed.\n",
+         "  Consider trying other values of ", index.par, ", or another value for  method.")
+  }
+  if ( any(!ok) ) {
+    cat(" WARNING: Some values of L are infinite or NA, and are ignored\n")
+  }
+  if ( do.smooth & (length(L.fix) < 5) ) {
+    warning(paste("Smoothing needs at least five (valid) values of", index.par, "; no smoothing used.") )
+    do.smooth <- FALSE
+    do.ci     <- FALSE
+  }
+
+
+  ### Smoothing and plotting
+  # x and y are returned (to recreate the plot): the smoothed profile when
+  # smoothing, otherwise the computed values
+  
+  # With add0, the spline would join p = 0 to the values p > 1, across the 
+  # impossible values 0 < p < 1. So the MLE and CI use a spline through the
+  # values p > 1 only (ss.pos), and p = 0 is then considered on its own.
+  xi.pos <- (xi.vec.fix > 0)
   
   if ( do.smooth ) {
-    L.fix       <- L
-    xi.vec.fix  <- xi.vec
-    phi.vec.fix <- phi.vec
+    if (verbose >= 1) cat(" --- \n* Smoothing: ")
+    # An interpolating spline through the points (it does not smooth them)
+    ss     <- stats::splinefun( xi.vec.fix, 
+                                L.fix )
+    ss.pos <- stats::splinefun( xi.vec.fix[xi.pos],
+                                L.fix[xi.pos] )
     
-    if ( any( is.nan(L) ) | any( is.infinite(L) ) | any( is.na(L) ) ) {
-      retain.these <- !( ( is.nan(L) ) | ( is.infinite(L) ) | ( is.na(L) ) )
-      xi.vec.fix   <- xi.vec.fix[ retain.these ]
-      phi.vec.fix  <- phi.vec.fix[ retain.these ]
-      L.fix        <- L.fix[ retain.these ]
-      
-      cat("Smooth perhaps inaccurate--log-likelihood contains  Inf  or  NA.\n")
-    }
+    x <- seq(min(xi.vec.fix), 
+             max(xi.vec.fix), 
+             length = 50 )
+    y <- ss( x )
+  } else {
+    x <- xi.vec
+    y <- L
+  }
 
-    if ( length( L.fix ) > 0 ) {
-      if (verbose >= 1) cat(".")
-      if (verbose >= 1) cat(" --- \n")
-      if (verbose >= 1) cat("* Smoothing: ")
-      # Smooth the points
-      # - get smoothing spline
-      ss <- stats::splinefun( xi.vec.fix, 
-                              L.fix )
-      
-      # Plot smoothed data
-      xi.smooth <- seq(min(xi.vec.fix), 
-                       max(xi.vec.fix), 
-                       length = 50 )
-      L.smooth <- ss(xi.smooth )
-            
-      if ( do.plot) {
-        keep.these <- is.finite(L.smooth) & !is.na(L.smooth)
-        L.smooth   <- L.smooth[ keep.these ] 
-        xi.smooth  <- xi.smooth[ keep.these ] 
-        if ( (verbose >= 1) & any( !keep.these ) ) {
-          cat(" (Some values of L are infinite or NA for the smooth; these are ignored)\n")
-        }
-        
-        yrange <- range( L.smooth, na.rm = TRUE )
-        
+  if ( do.plot ) {
+    # Plot only the finite values
+    x.plot <- if ( do.smooth ) x else xi.vec.fix
+    y.plot <- if ( do.smooth ) y else L.fix
+  
         do.call(plot,
                 c(list(
                     x    = range(xi.vec),
-                    y    = yrange,
+                    y    = range(y.plot),
                     type = "n",
                     las  = 1,
                     xlab = ifelse(xi.notation, 
@@ -611,8 +589,8 @@ tweedie_profile <- function(formula,
 
         do.call(lines,
                 c(list(
-                    x = xi.smooth,
-                    y = L.smooth),
+                    x = x.plot,
+                    y = y.plot),
                     line_args))
         
         rug( xi.vec )
@@ -623,167 +601,92 @@ tweedie_profile <- function(formula,
                       y = L),
                      point_args))
         }
-        if (add0) lines(xi.smooth[xi.smooth < 1], 
-                        L.smooth[xi.smooth < 1], 
+        if (add0 & do.smooth) lines(x[x < 1],
+                                    y[x < 1],
                         col = "gray",
                         lwd = 2)
       }
-
-      x <- xi.smooth
-      y <- L.smooth
-      
-    } else {
-      cat("  No valid values of the likelihood computed: smooth aborted\n",
-          "  Consider trying another value for the input  method.\n")
-    }
-  } else {
-    if ( do.plot) {
-      
-      keep.these <- is.finite(L) & !is.na(L)
-      xi.vec     <- xi.vec[ keep.these ] 
-      L          <- L[ keep.these ] 
-      phi.vec    <- phi.vec[ keep.these ]
-      if ( verbose >= 1 & any( keep.these ) ) {
-        cat(" Some values of L are infinite or NA, and hence ignored\n")
-      }
-      
-      yrange <- range( L, na.rm = TRUE )
-      # Plot the data we have
-      do.call(plot,
-              c(list(
-                  x    = range(xi.vec),
-                  y    = yrange,
-                  type = "n",
-                  xlab = ifelse( xi.notation, 
-                                 expression(paste(xi, " index")), 
-                                 expression(paste(italic(p), " index")) ),
-                  ylab = expression(italic(L))),
-                  plot_args))
-
-      do.call(lines,
-              c(list(
-                  x = xi.vec,
-                  y = L),
-                  line_args
-              ))
-      
-      rug( xi.vec )
-      if (do.points) {
-        do.call(points,
-                c(list(
-                    x = xi.vec,
-                    y = L),
-                  point_args))
-        }
-      
-    }
-    x <- xi.vec
-    y <- L
-  }
-  
-  if ( any( is.infinite(y)) | any(is.na(y)) ) {
-    cat(" WARNING: Some values of L are infinite or NA\n")
-  }
   
   if (verbose >= 2) cat(" Done\n")
   
+
   ### Maximum likelihood estimates
+  at.end <- FALSE   # Is the maximum at the end of the values of p?
+
   if ( do.smooth ){
-    # WARNING:  This spline does not necessarily pass
-    #           through the given points.  This should
-    #           be seen as a deficiency in the method.
+    if (verbose >= 2) cat(" Finding maximum likelihood estimates:  ")
     
-    if (verbose >= 2) cat(" Estimating phi:  ")
+    # Find the best point on a grid, then refine with optimize() between
+    # its neighbours (the grid alone is accurate only to range/49)
+    x.grid <- seq(min(xi.vec.fix[xi.pos]), 
+                  max(xi.vec.fix[xi.pos]), 
+                  length = 50)
+    y.grid <- ss.pos(x.grid)
+    best   <- which.max(y.grid)
     
-    # Find maximum from profile
-    
-    L.max  <- max(y, na.rm = TRUE)
-    xi.max <- x[ y == L.max ]
-    
-    # In some unusual cases, when add0=TRUE, the maximum of p/xi
-    # may be between 0 and 1.
-    # In this situation, we... set the mle to either 0 or 1,
-    # whichever gives the larger values of the log-likelihood
-    if ( (xi.max > 0)  & ( xi.max < 1 ) ) {
-      L.max  <- max( c( y[xi.vec == 0], 
-                        y[xi.vec == 1]) )
-      xi.max <- xi.vec[ L.max == y ]
-      cat("MLE of", index.par, "is between 0 and 1, which is impossible.",
-          "Instead, the MLE of", index.par, "has been set to", xi.max,
-          ".  Please check your data and the call to tweedie_profile().")
+    if ( (best == 1) | (best == length(x.grid)) ) {
+      at.end <- TRUE
+      xi.max <- x.grid[best]
+      L.max  <- y.grid[best]
+    } else {
+      opt    <- optimize(ss.pos, 
+                         interval = x.grid[c(best - 1, best + 1)], 
+                         maximum  = TRUE)
+      xi.max <- opt$maximum
+      L.max  <- opt$objective
     }
     
-    # Now need to find mle of  phi  at this very value of  p
-    # - Find bounds
-    
-    phi.1 <-   2 * max( phi.vec.fix, na.rm = TRUE )
-    phi.2 <- 0.5 * min( phi.vec.fix, na.rm = TRUE )
-    
-    if ( phi.1 > phi.2 ) {
-      phi.hi <- phi.1
-      phi.lo <- phi.2 
-    } else {
-      phi.hi <- phi.2
-      phi.lo <- phi.1
+    # With add0, p = 0 (the normal distribution) may be better still
+    if ( any(xi.vec.fix == 0) ) {
+      L.0 <- L.fix[xi.vec.fix == 0]
+      if ( L.0 > L.max ) {
+        xi.max <- 0
+        L.max  <- L.0
+        at.end <- TRUE
+      }
     }
     
-    if (verbose >= 2) cat(" Done\n")
-    
-    # Now, if the maximum happens to be at an endpoint,
-    # we have to do things differently:
-    if ( (xi.max == xi.vec[1]) | (xi.max == xi.vec[length(xi.vec)]) ) {
-      
-      if ( xi.max == xi.vec[1])              phi.max <- phi.vec[1]
-      if ( xi.max == xi.vec[length(xi.vec)]) phi.max <- phi.vec[length(xi.vec)]
-      #      phi.max <- phi.lo # and is same as phi.max
-      warning("True maximum possibly not detected.")
+    # Now find the mle of  phi  at this very value of  p
+    if ( at.end ) {
+      # At one of the computed values: use its phi
+      phi.max <- phi.vec.fix[ xi.vec.fix == xi.max ]
+      if (xi.max != 0) warning("True maximum possibly not detected.")
       
     } else {
-      # - solve
+      fit.max <- stats::glm.fit( y       = ydata, 
+                                 x       = model.x, 
+                                 weights = weights, 
+                                 offset  = offset,
+                                 control = control,
+                                 family  = statmod::tweedie(var.power  = xi.max, 
+                                                            link.power = link.power))
+      mu <- fitted( fit.max )
       
       if ( phi.method == "saddlepoint"){
-        mu <- fitted( stats::glm.fit( y       = ydata, 
-                                      x       = model.x, 
-                                      weights = weights, 
-                                      offset  = offset,
-                                      family  = statmod::tweedie(xi.max, 
-                                                                 link.power = link.power)))
-        phi.max <- sum( tweedie_dev(y     = ydata, 
-                                    mu    = mu, 
-                                    power = xi.max) ) / length( ydata )
-        
+        phi.max <- phi_saddle(mu, xi.max)
       } else {
-        #        phi.max <- nlm(p=phi.est, f=dtweedie_nlogl, 
-        #                    hessian=FALSE,
-        #                    power=p, mu=mu, y=data, 
-        #                    gradient=dtweedie_dldphi)$estimate
-        mu <- fitted( glm.fit( y       = ydata, 
-                               x       = model.x, 
-                               weights = weights, 
-                               offset  = offset,
-                               family  = statmod::tweedie(xi.max, 
-                                                          link.power = link.power)))
+        # Bound phi using the estimates at the computed values of p
+        # (only p > 1: phi at p = 0 is on a different scale)
+        phi.lo <- 0.5 * min( phi.vec.fix[xi.pos] )
+        phi.hi <-   2 * max( phi.vec.fix[xi.pos] )
+        
         phi.max <- optimize( f        = dtweedie_nlogl, 
                              maximum  = FALSE, 
                              interval = c(phi.lo, phi.hi ), 
-                             # set lower limit phi.lo???
                              power    = xi.max, 
                              mu       = mu,
                              y        = ydata)$minimum
-        
-        #       Note that using the Hessian often produces computational problems
-        #       for little (no?) advantage.
-        
       }
     }
+    if (verbose >= 2) cat(" Done\n")
   } else {
-    # Find maximum from computed data
+    # Find maximum from computed data:  which.max()  takes the first if
+    # there are ties
     if (verbose >= 2) cat(" Finding maximum likelihood estimates:  ")
-    
-    L.max <- max(L)
-    
-    xi.max  <- xi.vec[  L == L.max ]
-    phi.max <- phi.vec[ L == L.max ]
+    best    <- which.max(L.fix)
+    xi.max  <- xi.vec.fix[best]
+    L.max   <- L.fix[best]
+    phi.max <- phi.vec.fix[best]
     
     if (verbose >= 2) cat(" Done\n")
   }
@@ -801,12 +704,7 @@ tweedie_profile <- function(formula,
   
   if ( do.ci ) {
     if (verbose == 2) cat("* Finding confidence interval:")
-    if ( !do.smooth ) {
-      warning("Confidence interval may be very inaccurate without smoothing.\n")
-      y <- L
-      x <- xi.vec
-    }
-    
+
     if ( do.plot ) {
       graphics::abline(h   = ht, 
                        lty = 2)
@@ -814,94 +712,38 @@ tweedie_profile <- function(formula,
                        sep = "") )
     }
     
-    # Now find limits on p:
-    # - fit a smoothing spline the other way:  based on L predicting p
-    #   so we can ensure that the limits on  p  are found OK
+    # Each limit is where the spline crosses the height  ht: solve
+    #   ss.pos(p) = ht  
+    # using uniroot(), on each side of the maximum
+    ci.fun <- function(z) ss.pos(z) - ht
+    p.lo   <- min( x.grid )
+    p.hi   <- max( x.grid )
     
-    # --- Left side ---
-    cond.left <- (y < ht ) & (x < xi.max )
-    if ( all(cond.left == FALSE) ) {
-      warning("Confidence interval cannot be found: insufficient data to find left CI.\n")
+    if ( xi.max < p.lo ) {
+      warning("Confidence interval not found: the MLE is p = 0.\n")
     } else {
-      # Now find it!
-      approx.left <- max( x[cond.left] )
-      index.left  <- seq(1, length(cond.left) )
-      index.left  <- index.left[x == approx.left]
-      left.left   <- max( 1, 
-                          index.left - 5)
-      left.right  <- min( length(cond.left), 
-                          index.left + 5)
-      
-      # Left-side spline
-      ss.left     <- splinefun( y[left.left : left.right],
-                                x[left.left : left.right] )
-      ci.new.left <- ss.left( ht )
-      
-      ci[1] <- ci.new.left
-    }
-    
+      # --- Left side ---
+      if ( ci.fun(p.lo) >= 0 ) {
+        warning("Confidence interval cannot be found: insufficient data to find left CI.\n")
+      } else {
+        ci[1] <- stats::uniroot(ci.fun, 
+                                interval = c(p.lo, xi.max))$root
+      }
     # --- Right side ---
-    cond.right <- (y < ht ) & (x > xi.max )
-    if ( all( cond.right == FALSE ) ) {
-      warning("Confidence interval cannot be found: insufficient data to find right CI.\n")
-    }else{
-      approx.right <- min( x[cond.right] )
-      index.right  <- seq(1, length(cond.right) )
-      index.right  <- index.right[x == approx.right]
-      right.left   <- max( 1, 
-                           index.right - 5)
-      right.right  <- min( length(cond.left), 
-                           index.right + 5)
+      if ( ci.fun(p.hi) >= 0 ) {
+        warning("Confidence interval cannot be found: insufficient data to find right CI.\n")
+    } else {
       
-      # Right-side spline
-      ss.right     <- splinefun( y[right.left : right.right], 
-                                 x[right.left : right.right] )
-      ci.new.right <- ss.right(ht )
-      
-      ci[2] <- ci.new.right
+      ci[2] <- stats::uniroot(ci.fun, 
+                              interval = c(xi.max, p.hi))$root
     }
+      }
     if (verbose==2) cat(" Done\n")
   }
   
-  if ( fit.glm ) {
-    out.glm <- glm.fit( x       = model.x, 
-                        y       = ydata, 
-                        weights = weights, 
-                        offset  = offset,
-                        family  = statmod::tweedie(var.power = xi.max, 
-                                                   link.power = link.power) )
     
-    if ( xi.notation){
-      out <- list( y          = y,
-                   x          = x,
-                   ht         = ht, 
-                   L          = L, 
-                   xi         = xi.vec, 
-                   xi.max     = xi.max,
-                   L.max      = L.max, 
-                   phi        = phi.vec, 
-                   phi.max    = phi.max, 
-                   ci         = ci,
-                   method     = method, 
-                   phi.method = phi.method,
-                   glm.obj    = out.glm)
-    } else {
-      out <- list( y          = y, 
-                   x          = x, 
-                   ht         = ht, 
-                   L          = L, 
-                   p          = p.vec, 
-                   p.max      = xi.max, 
-                   L.max      = L.max, 
-                   phi        = phi.vec, 
-                   phi.max    = phi.max, 
-                   ci         = ci,
-                   method     = method, 
-                   phi.method = phi.method,
-                   glm.obj    = out.glm)
-    }
-  } else {
-    if (xi.notation ){
+    # Build the output (in the notation the user supplied)
+    
       out <- list( y          = y, 
                    x          = x, 
                    ht         = ht, 
@@ -915,22 +757,21 @@ tweedie_profile <- function(formula,
                    method     = method, 
                    phi.method = phi.method)
       
-    } else {
-      out <- list( y          = y, 
-                   x          = x, 
-                   ht         = ht, 
-                   L          = L, 
-                   p          = p.vec, 
-                   p.max      = xi.max, 
-                   L.max      = L.max, 
-                   phi        = phi.vec, 
-                   phi.max    = phi.max, 
-                   ci         = ci,
-                   method     = method, 
-                   phi.method = phi.method)
-    }
-    
-  }
+      if ( fit.glm ) {
+        out$glm.obj <- stats::glm.fit( x       = model.x, 
+                                       y       = ydata, 
+                                       weights = weights, 
+                                       offset  = offset,
+                                       control = control,
+                                       family  = statmod::tweedie(var.power  = xi.max, 
+                                                                  link.power = link.power) )
+      }
+      
+      
+      if ( !xi.notation ) {
+        names(out)[ names(out) == "xi" ]     <- "p"
+        names(out)[ names(out) == "xi.max" ] <- "p.max"
+      }
   
   if ( verbose ) cat("\n")
   
@@ -963,7 +804,10 @@ tweedie.profile <- function(formula,
                             conf.level = 0.95, 
                             phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
                             verbose    = FALSE, 
-                            add0       = FALSE) { 
+                            add0       = FALSE,
+                            plot_args  = list(),
+                            point_args = list(),
+                            line_args  = list()) {  
   # 1. Signal the deprecation
   lifecycle::deprecate_warn(
     when = "3.0.5", 
