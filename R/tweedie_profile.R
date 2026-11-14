@@ -482,7 +482,7 @@ tweedie_profile <- function(formula,
         } else {
           phi.vec[i] <- ans$phi
           # The log-likelihood at this phi (from dtweedie()) is L itself
-          L.from.phi <- attr(ans$objective, "logl")
+          L.from.phi <- ans$logl
           if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
     }
   } else{ # phi.method=="saddlepoint")
@@ -710,17 +710,13 @@ tweedie_profile <- function(formula,
       if ( phi.method == "saddlepoint"){
         phi.max <- phi_saddle(mu, xi.max)
       } else {
-        fit.max <- NULL    # The GLM fitted at the MLE of p (if one is needed)
-        
-        # Starting coefficients for a GLM fit at  p: those from the fit at the
-        # nearest computed p > 0 (aliased, NA, coefficients set to zero)
-        start_near <- function(p) {
-          ok.fit <- which( !vapply(coef.list, is.null, logical(1)) & (xi.vec > 0) )
-          if ( length(ok.fit) == 0 ) return(NULL)
-          start <- coef.list[[ ok.fit[ which.min( abs(xi.vec[ok.fit] - p) ) ] ]]
-          start[ is.na(start) ] <- 0
-          start
-        }      }
+        # Start from a spline through log(phi) at the computed values of p
+        # (only p > 1: phi at p = 0 is on a different scale). This start is
+        # close, so a narrow bracket suffices.
+        phi.start <- exp( stats::splinefun(xi.vec.fix[xi.pos], 
+                                           log(phi.vec.fix[xi.pos]))(xi.max) )
+        phi.max   <- phi_mle(mu, xi.max, phi.start, width = 0.1)$phi
+      }
     }
     if (verbose >= 2) cat(" Done\n")
   } else {
