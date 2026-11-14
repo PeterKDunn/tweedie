@@ -67,6 +67,9 @@
 #' @param do.points logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
 #' The defaults is the value of \code{do.plot}.
 #' @param method the method of evaluation; one of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).
+#'   When \eqn{\phi}{phi} is found by maximum likelihood (\code{phi.method = "mle"}),
+#'   the log-likelihood found along the way (using \code{\link{dtweedie}}) is used,
+#'   so \code{method} only matters for \code{method = "saddlepoint"}.
 #' @param conf.level the level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).
 #' @param phi.method the method used to estimate \eqn{\phi}{phi}; one of \code{saddlepoint}, \code{mle} (the default).
 #' @param verbose logical; if \code{TRUE}, some details of the calculations are shown. The default is \code{FALSE}.
@@ -298,11 +301,12 @@ tweedie_profile <- function(formula,
   # since we want a *maximum* likelihood estimator,
   # define the negative.
   dtweedie_nlogl <- function(phi, y, mu, power) {
-    ans <- -2 * sum( dtweedie( y     = y, 
-                               mu    = mu, 
-                               phi   = phi, 
-                               power = power,
-                               log   = TRUE ) )
+    logl <- sum( dtweedie(y     = y, 
+                          mu    = mu, 
+                          phi   = phi, 
+                          power = power,
+                          log   = TRUE ) )
+    ans - -2 * logl
     if ( is.infinite( ans ) ) {
       # If infinite, replace with saddlepoint estimate?
       ans <- sum( tweedie_dev(y     = y, 
@@ -313,6 +317,11 @@ tweedie_profile <- function(formula,
                                              mu    = mu, 
                                              phi   = phi, 
                                              power = power)
+    # Keep the log-likelihood itself: optimize() returns f() at the minimum
+    # (attributes included), so it can be used as L without recomputing it
+    attr(ans, "logl") <- logl
+    # No gradient is attached: optimize() never uses one, and computing it
+    # (dtweedie_dldphi()) cost more than the log-likelihood itself.
     ans
   }
   
@@ -328,6 +337,12 @@ tweedie_profile <- function(formula,
   c.vec  <- L
   mu.vec <- L
   b.mat  <- array( dim = c(xi.len, length(ydata) ) )
+  
+  # Fitted values from the previous value of p, used to start the next
+  # glm.fit(). Neighbouring values of p give similar fits, so IRLS then
+  # needs only a few iterations. (NULL means: use the family's usual start.)
+  
+  mu.start <- NULL
 
   pBar <- utils::txtProgressBar(min   = 1, 
                                 max   = xi.len,
@@ -342,10 +357,11 @@ tweedie_profile <- function(formula,
     # We try to bound it as well as we can, then use  uniroot()  to solve for it.
     
     # Set things up
-    p       <- xi.vec[i]
-    phi.pos <- 1.0e2
-    bnd.neg <- -Inf
-    bnd.pos <-  Inf
+    p          <- xi.vec[i]
+    L.from.phi <- NULL   # Set below if the search for phi also gives L
+    phi.pos    <- 1.0e2
+    bnd.neg    <- -Inf
+    bnd.pos    <-  Inf
     
     if (verbose == 2) cat("* Fitting initial model:")
     
@@ -356,6 +372,7 @@ tweedie_profile <- function(formula,
                                    weights = weights, 
                                    offset  = offset,
                                    control = control,
+                                   mustart = mu.start,
                                    family  = statmod::tweedie(var.power  = p, 
                                                               link.power = link.power)),
       silent = TRUE
@@ -366,6 +383,10 @@ tweedie_profile <- function(formula,
     if ( inherits( catch.possible.error, "try-error" ) ) {
       skip.obs <- TRUE 
     }
+    # Keep these fitted values to start the next fit (but after a failed
+    # fit, go back to the family's default start)
+    
+    mu.start <- if ( skip.obs ) NULL else fitted( fit.model )
     
     if( skip.obs ) {
       warning(paste("  Problem near ", index.par, " = ", p,"; this error reported:\n     ",
@@ -418,7 +439,9 @@ tweedie_profile <- function(formula,
                           mu       = mu, 
                           y        = ydata )
           phi <- phi.vec[i] <- ans$minimum
-        } else {
+          # The log-likelihood at this phi (from dtweedie()) is L itself
+          L.from.phi <- attr(ans$objective, "logl")
+          } else {
           phi <- phi.vec[i] <- sum( (ydata - mu) ^ 2 ) / length(ydata)
         }
         if (verbose >= 1) cat(" Done (phi =", phi.vec[i], ")\n")
@@ -447,7 +470,14 @@ tweedie_profile <- function(formula,
     if ( skip.obs ) {
       if (verbose >= 1) cat(" but skipped for this obs\n")
       L[i] <- NA
-    } else {   
+      
+    } else if ( !is.null(L.from.phi) && (method != "saddlepoint") ) {
+      # Already computed while finding phi (by dtweedie(), which chooses the
+      # fastest accurate method for each observation). Recomputing it with
+      # method = "inversion" gives the same value (to about 1e-12), but
+      # applies the (slower) inversion to every observation.
+      if (verbose >= 1) cat(" (from dtweedie(), while finding phi)")
+      L[i] <- L.from.phi    } else {   
       if ( method == "saddlepoint") {
         L[i] <- dtweedie_logl_saddle(y     = ydata, 
                                      mu    = mu, 
