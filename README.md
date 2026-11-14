@@ -28,12 +28,11 @@ You can install the development version of **tweedie** from
 ``` r
 # install.packages("pak")
 pak::pak("PeterKDunn/tweedie")
-#> ! Using bundled GitHub PAT. Please add your own PAT using `gitcreds::gitcreds_set()`.
 #> ℹ Loading metadata database
 #> ✔ Loading metadata database ... done
 #> 
 #> 
-#> → Package library at '/tmp/RtmphZvvUG/temp_libpath222bd1f2b5f'.
+#> → Package library at '/tmp/RtmphZvvUG/temp_libpath222b212925bc'.
 #> → Will install 4 packages.
 #> → Will update 1 package.
 #> → All 5 packages (1.63 MB) are cached.
@@ -41,19 +40,19 @@ pak::pak("PeterKDunn/tweedie")
 #> + lifecycle         1.0.5 [bld]
 #> + rlang             1.3.0 [bld][cmp]
 #> + statmod           1.5.2 [bld][cmp]
-#> + tweedie   3.2.2 → 3.2.1 [bld][cmp] (GitHub: cec8613)
+#> + tweedie   3.2.2 → 3.2.2 [bld][cmp] (GitHub: aade557)
 #> ℹ No downloads are needed, 5 pkgs (1.63 MB) are cached
-#> ✔ Got tweedie 3.2.1 (source) (358.90 kB)
-#> ✔ Installed cli 3.6.6  (30ms)
-#> ✔ Installed lifecycle 1.0.5  (45ms)
+#> ✔ Got tweedie 3.2.2 (source) (358.83 kB)
+#> ✔ Installed cli 3.6.6  (31ms)
+#> ✔ Installed lifecycle 1.0.5  (46ms)
 #> ✔ Installed rlang 1.3.0  (60ms)
 #> ✔ Installed statmod 1.5.2  (69ms)
-#> ℹ Packaging tweedie 3.2.1
-#> ✔ Packaged tweedie 3.2.1 (512ms)
-#> ℹ Building tweedie 3.2.1
-#> ✔ Built tweedie 3.2.1 (3.7s)
-#> ✔ Installed tweedie 3.2.1 (github::PeterKDunn/tweedie@cec8613) (1s)
-#> ✔ 1 pkg + 4 deps: upd 1, added 4, dld 1 (NA B) [9.6s]
+#> ℹ Packaging tweedie 3.2.2
+#> ✔ Packaged tweedie 3.2.2 (532ms)
+#> ℹ Building tweedie 3.2.2
+#> ✔ Built tweedie 3.2.2 (3.6s)
+#> ✔ Installed tweedie 3.2.2 (github::PeterKDunn/tweedie@aade557) (1s)
+#> ✔ 1 pkg + 4 deps: upd 1, added 4, dld 1 (NA B) [8.9s]
 ```
 
 To also build and install the vignette (this takes a little longer, and
@@ -63,9 +62,9 @@ installs **knitr** and **rmarkdown** if needed):
 options(pkg.build_vignettes = TRUE)
 pak::pak("PeterKDunn/tweedie", dependencies = TRUE)
 #> 
-#> → Package library at '/tmp/RtmphZvvUG/temp_libpath222bd1f2b5f'.
+#> → Package library at '/tmp/RtmphZvvUG/temp_libpath222b212925bc'.
 #> ℹ No downloads are needed
-#> ✔ 1 pkg + 4 deps: kept 5 [888ms]
+#> ✔ 1 pkg + 4 deps: kept 5 [916ms]
 vignette("tweedie", package = "tweedie")
 #> Warning: vignette 'tweedie' not found
 ```
@@ -74,7 +73,8 @@ Alternatively, using **remotes**:
 
 ``` r
 remotes::install_github("PeterKDunn/tweedie", build_vignettes = TRUE, dependencies = TRUE)
-#> Skipping install of 'tweedie' from a github remote, the SHA1 (cec86136) has not changed since last install.
+#> Using GitHub PAT from the git credential store.
+#> Skipping install of 'tweedie' from a github remote, the SHA1 (aade557d) has not changed since last install.
 #>   Use `force = TRUE` to force installation
 ```
 
