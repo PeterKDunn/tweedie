@@ -200,13 +200,13 @@ test_that("fit.glm = TRUE returns the GLM fitted at the MLE of p", {
                        xi.vec = c(1.5, 1.75, 2, 2.25, 2.5),
                        do.smooth = FALSE, fit.glm = TRUE)
   expect_true( "glm.obj" %in% names(out) )
-  # (Use the same convergence criterion as tweedie_profile(): IRLS converges
-  # slowly here, so the default  epsilon  gives slightly different estimates)
+  # (IRLS converges slowly here, and tweedie_profile() starts this fit from
+  # a nearby fit; so compare with a tightly-converged fit, to about 1e-5)
   fit <- glm(perm ~ area, data = rock,
-             control = glm.control(epsilon = 1e-09),
+             control = glm.control(epsilon = 1e-12, maxit = 100),
              family = statmod::tweedie(var.power = out$xi.max, link.power = 0))
   expect_equal(unname(out$glm.obj$coefficients), unname(coef(fit)),
-               tolerance = 1e-6)
+               tolerance = 1e-5)
 })
 
 
