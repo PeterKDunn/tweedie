@@ -48,13 +48,13 @@ These distributions are continuous for $Y > 0$ but have a discrete mass at $Y = 
 
 ## Use cases
 
-Likelihood computations are not needed to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018]:
+Likelihood computations are not needed to fit a Tweedie generalized linear model, using the `tweedie()` family from the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025; @dunnGeneralizedLinearModels2018]:
 
 ```{r TWexample}
 library(tweedie)
 library(statmod)   # For the tweedie() family function, for use in glm()
 
-set.seed(96)
+set.seed(961)
 N <- 25
 # Poisson mean (lambda): the gamma summands have shape 2 and scale 1
 lambda <- 1.5
@@ -65,19 +65,19 @@ y <- replicate(N, {
 })
 
 mod.tw <- glm(y ~ 1, 
-             family = statmod::tweedie(var.power  = 1.5, 
+             family = statmod::tweedie(var.power  = 1.3, 
                                        link.power = 0) )
              # link.power = 0  means the log-link
 ```
 
 However, likelihood computations are necessary in other situations.
-Since likelihoods cannot be computed analytically apart from special cases, the **tweedie** package computes Tweedie density functions and distribution functions using numerical methods [@dunnSeriesEvaluationTweedie2005, @dunnEvaluationTweedieExponential2008].
+Since likelihoods cannot be computed analytically apart from special cases, the **tweedie** package computes Tweedie density functions and distribution functions using numerical methods [@dunnSeriesEvaluationTweedie2005; @dunnEvaluationTweedieExponential2008].
 
 
 ### Computing the quantile residuals
 
 Quantile residuals [@dunnRandomizedQuantileResiduals1996] can be computed to assess the fit of a glm.
-The function **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025, @dunnGeneralizedLinearModels2018]:
+The function **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025; @dunnGeneralizedLinearModels2018]:
 
 ```{r TWqqplot}
 qqnorm( qr <- statmod::qresid(mod.tw),
@@ -86,7 +86,7 @@ qqline(qr,
       col = "grey")
 ```
 
-The quantile residuals suggest the model may not be adequate.
+The quantile residuals suggest the model is probably adequate.
 
 
 ### Generating random numbers
@@ -124,7 +124,7 @@ points(twden[y_grid==0] ~ y_grid[y_grid == 0],
 ```
 
 The solid point at $y = 0$ shows the probability mass $\Pr(Y = 0)$, not a density.
-Accurate probability functions are generated using **ptweedie()**:
+Accurate distribution functions are generated using **ptweedie()**:
 
 ```{r TWplotsCDF}
 plot(twdtn ~ y_grid,
@@ -188,7 +188,7 @@ out$ci
 
 ## Example: $p > 2$
 
-Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in [@dunnGeneralizedLinearModels2018], Sect. 12.4.2). 
+Consider the `poison` data in the `GLMsData` package [@dunnGLMsData], which records the survival times of animals under various treatments and poisons (used in @dunnGeneralizedLinearModels2018, Sect. 12.4.2). 
 For convenience, a copy is included with this package:
 
 ```{r PSNLoad}
@@ -265,7 +265,7 @@ The quantile residuals suggest that this model looks fine.
 
 ## Example: $1 < p < 2$
 
-Consider the `quilpie` data in the `GLMsData` package [@dunnGLMsData], which records the July rainfalls at Quilpie (used in [@dunnGeneralizedLinearModels2018]). 
+Consider the `quilpie` data in the `GLMsData` package [@dunnGLMsData], which records the July rainfalls at Quilpie (used in @dunnGeneralizedLinearModels2018). 
 For convenience, a copy is included with this package:
 
 ```{r QRainLoad}
