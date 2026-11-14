@@ -33,6 +33,11 @@ of the density.
 
 
 ## Changed and fixed
+* tweedie_profile(): prior weights are now used in the likelihood 
+  (dispersion phi/weights); the MLE of p is the exact maximum of the spline (not
+  the best of 50 grid points), and CIs are found with uniroot(); several bugs 
+  fixed (e.g., failed fits no longer stop the profile; returned p values match 
+  L and phi); faster (the phi search is narrower, and L is reused from it).
 * tweedie_convert(): updated and fixed error in gamma parameters
 * ptweedie_inversion(): with details = TRUE, now also returns small_tail, flagging
   tail probabilities below 1e-8. The inversion computes F = 1/2 -/+ I/pi, so its
