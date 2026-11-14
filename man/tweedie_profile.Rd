@@ -35,7 +35,10 @@ tweedie.profile(
   conf.level = 0.95,
   phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"),
   verbose = FALSE,
-  add0 = FALSE
+  add0 = FALSE,
+  plot_args = list(),
+  point_args = list(),
+  line_args = list()
 )
 }
 \arguments{
@@ -54,7 +57,9 @@ These link functions \eqn{g(\cdot)}{g()} are of the form \eqn{g(\eta)=\eta^{link
 
 \item{data}{an optional data frame, list or environment containing the variables.}
 
-\item{weights}{an optional vector of weights to be used in the fitting process.}
+\item{weights}{an optional vector of prior weights to be used in the fitting process.
+As for \code{\link{glm}}, observation \eqn{i} has dispersion \eqn{\phi/w_i}{phi/w[i]};
+ observations with zero weight are dropped.}
 
 \item{offset}{an \emph{a priori} known component included in the linear predictor.
 See \code{\link{model.offset}}.}
@@ -81,7 +86,10 @@ Confidence intervals are only computed if \code{do.smooth = TRUE}.}
 \item{do.points}{logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
 The defaults is the value of \code{do.plot}.}
 
-\item{method}{the method of evaluation; one of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).}
+\item{method}{the method of evaluation; one of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).
+When \eqn{\phi}{phi} is found by maximum likelihood (\code{phi.method = "mle"}),
+the log-likelihood found along the way (using \code{\link{dtweedie}}) is used,
+so \code{method} only matters for \code{method = "saddlepoint"}.}
 
 \item{conf.level}{the level of confidence for the confidence intervals; the default is \code{0.95} (for \eqn{95\%}{95\%} confidence intervals).}
 
@@ -115,7 +123,7 @@ Once \eqn{p}{p} is found, the distribution within the class of Tweedie distribut
 \note{
 The estimates of \eqn{p}{p} and \eqn{\phi}{phi} are printed invisibly. 
 If the response variable has any exact zeros, the values in \code{p.vec} must all be
-between one and two.
+between one and two (or perhaps zero).
 
 The function can be temperamental (for theoretical reasons involved in numerically computing
 the density; see Dunn and Smyth (2005)) and may be very slow or fail. 
@@ -133,7 +141,7 @@ and smoothing can be used.
 data(rock)
 out <- tweedie_profile(perm~1, data=rock, do.plot=FALSE, 
                        xi.vec=seq(1.5, 2.75, length=11),
-                       line_arg = list(lwd = 2))
+                       line_args = list(lwd = 2))
 
 # The estimate for the variance power index (p, or xi) is:
 out$xi.max

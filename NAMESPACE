@@ -40,13 +40,12 @@ importFrom(graphics,
   par,
   plot,
   points,
-  rug
+  rug,
+  title
 )
 importFrom(lifecycle,deprecate_warn)
 importFrom(statmod,tweedie)
 importFrom(stats,
-  contrasts,
-  deviance,
   dgamma,
   dnorm,
   dpois,
@@ -56,6 +55,7 @@ importFrom(stats,
   glm.fit,
   optimize,
   pchisq,
+  qchisq,
   splinefun,
   uniroot
 )
