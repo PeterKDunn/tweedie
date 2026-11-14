@@ -66,8 +66,8 @@ CONTAINS
       ! e*omega = pi*A - B,  with  A = s*e/2  and  B = s*e*delta
       A  = s * e / 2.0_C_DOUBLE
       B  = s * e * delta
-      cA = cosPi(A)
-      sA = sinPi(A)
+      cA = tw_cosPi(A)
+      sA = tw_sinPi(A)
       re = modE * ( cA * DCOS(B) + sA * DSIN(B) )
       im = modE * ( sA * DCOS(B) - cA * DSIN(B) )
     END IF
@@ -75,7 +75,7 @@ CONTAINS
   END SUBROUTINE zPow
 
 
-  PURE FUNCTION sinPi(r) RESULT(v)
+  PURE FUNCTION tw_sinPi(r) RESULT(v)
     ! sin(pi * r), exact at multiples of 1/2
     REAL(KIND=C_DOUBLE), INTENT(IN) :: r
     REAL(KIND=C_DOUBLE)             :: v, a, sgn
@@ -90,10 +90,10 @@ CONTAINS
       v = DSIN(PI * (1.0_C_DOUBLE - a))
     END IF
     v = sgn * v
-  END FUNCTION sinPi
+  END FUNCTION tw_sinPi
 
 
-  PURE FUNCTION cosPi(r) RESULT(v)
+  PURE FUNCTION tw_cosPi(r) RESULT(v)
     ! cos(pi * r), exact at multiples of 1/2
     REAL(KIND=C_DOUBLE), INTENT(IN) :: r
     REAL(KIND=C_DOUBLE)             :: v, a
@@ -105,7 +105,7 @@ CONTAINS
     ELSE
       v = -DCOS(PI * (1.0_C_DOUBLE - a))
     END IF
-  END FUNCTION cosPi
+  END FUNCTION tw_cosPi
 
 END MODULE tweedie_params_mod
 
