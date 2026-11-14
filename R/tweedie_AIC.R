@@ -45,7 +45,7 @@
 #' \emph{Akaike Information Criterion Statistics}. 
 #' D. Reidel Publishing Company.
 #' 
-#' @importFrom stats glm
+#' @importFrom stats glm deviance
 #' @importFrom statmod tweedie
 #'
 #' @examples
