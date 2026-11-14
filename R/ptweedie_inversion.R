@@ -46,7 +46,7 @@
 #' 
 #' @note
 #' The 'exact' values for the inverse Gaussian distribution are not really exact, 
-#' but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
+#' but evaluated using statmod::[pdpqr]invgauss, all of which are very accurate
 #' (Giner & Smyth, 2016).
 #' 
 #' @references

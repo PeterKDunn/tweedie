@@ -25,7 +25,7 @@
 #' 
 #' @note
 #' The 'exact' values for the inverse Gaussian distribution are not really exact, 
-#' but evaluated using statsmod::[pdpqr]invgauss, all of which are very accurate
+#' but evaluated using statmod::[pdpqr]invgauss, all of which are very accurate
 #' (Giner & Smyth, 2016).
 
 #' For special cases of \eqn{p} (i.e., \eqn{p = 0, 1, 2, 3}), where no inversion is needed, \code{regions} and \code{method} are set to \code{NA} for all values of \code{y}.
