@@ -1,4 +1,4 @@
-tweedie 3.2.0 (Release date: 2026-11-14)
+tweedie 3.2.2 (Release date: 2026-11-15)
 ==============
 
 ## Summary
@@ -77,6 +77,8 @@ of the density.
 * Minor coding fixes and improvements 
 * Minor improvements and typo fixes in man pages throughout
 * Fixed typos in README.Rmd.
+* Change FORTRAN functions sin/cosPi to avoid clashes
+
 
 
 tweedie 3.1.0 (Release date: 2026-05-20)
