@@ -10,3 +10,6 @@ src/*.dll
 .DS_Store
 *.Rproj
 *.md
+inst/doc
+/doc/
+/Meta/
