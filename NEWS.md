@@ -4,6 +4,7 @@ tweedie 3.2.2 (Release date: 2026-11-15)
 ## Summary
 Numerous changes, mostly internally. These changes substantially increase the
 relative accuracy of the algorithms for dtweedie() and especially for ptweedie().
+tweedie_profile() i smuch faster.
 
 **Crucially, the interpolation is no longer used for dtweedie()** but will be
 reinstated in a future update in a separate function; the purpose of this update 
