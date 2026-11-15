@@ -24,6 +24,7 @@ that the faster interpolation method will produce more accurate results when it
 is reinstated.
 
 Some of the important changes for improving accuracy include: 
+
 * new methods are introduced for computation (e.g., direct integration for the CDF); 
 * improved (corrected) saddlepoint approximations;  
 * more computations performed on the log-scale to prevent under- and over-flow; 
