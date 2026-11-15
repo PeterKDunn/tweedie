@@ -80,9 +80,9 @@ Quantile residuals [@dunnRandomizedQuantileResiduals1996] can be computed to ass
 The function **qresid()** is in the [**statmod** package](https://CRAN.R-project.org/package=statmod) [@smythStatmodStatisticalModeling2025; @dunnGeneralizedLinearModels2018]:
 
 ```{r TWqqplot}
-qqnorm( qr <- statmod::qresid(mod.tw),
+qqnorm( rQ <- statmod::qresid(mod.tw),
        las = 1)
-qqline(qr,
+qqline(rQ,
       col = "grey")
 ```
 
@@ -253,10 +253,10 @@ anova(PSNMod,
 Quantile residuals can be used to assess the model:
 
 ```{r PSNRes}
-qr <- statmod::qresid(PSNMod)
-qqnorm(qr,
+rQ <- statmod::qresid(PSNMod)
+qqnorm(rQ,
       las = 1)
-qqline(qr,
+qqline(rQ,
       col = "grey")
 ```
 
@@ -331,10 +331,10 @@ anova(QRainMod,
 Quantile residuals can be used to assess the model:
 
 ```{r QRainRes}
-qr <- statmod::qresid(QRainMod)
-qqnorm(qr,
+rQr <- statmod::qresid(QRainMod)
+qqnorm(rQ,
       las = 1)
-qqline(qr,
+qqline(rQ,
       col = "grey")
 ```
 
