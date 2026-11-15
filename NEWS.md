@@ -1,9 +1,12 @@
 tweedie 3.3.??? (Release date: )
+==============
 
 ## Summary
 
 ## Changed and fixed
 * Fixed some minor typos in the vignette.
+* Corrections to README.
+
 
 tweedie 3.2.2 (Release date: 2026-11-15)
 ==============
