@@ -6,6 +6,14 @@ tweedie 3.3.??? (Release date: )
 ## Changed and fixed
 * Fixed some minor typos in the vignette.
 * Corrections to README.
+* tweedie_profile() has a new argument `glm.method`, to choose the function that
+  fits the GLM at each value of p: `"glm.fit"` (the default, as before),
+  `"glm.fit2"` (from the glm2 package, now in Suggests), or a user-supplied
+  function. For some Tweedie models the usual IRLS algorithm cycles between two
+  values without converging, giving a jagged profile likelihood; `glm.fit2`
+  halves the step whenever the deviance increases, and converges in such cases.
+* tweedie_profile() now gives a single warning listing the values of p where
+  the GLM fit did not converge (rather than one warning from glm.fit() for each).
 
 
 tweedie 3.2.2 (Release date: 2026-11-15)

@@ -320,3 +320,57 @@ test_that("The output is consistent with the values of p actually used", {
                               do.smooth = FALSE)
   expect_equal(out.plot, out.noplot)
 })
+
+
+
+test_that("glm.method chooses the GLM fitter", {
+  skip_if_not_installed("glm2")
+  xi.vec <- seq(1.4, 1.8, by = 0.1)
+  
+  # On a well-behaved model, glm.fit and glm.fit2 converge to the same fits
+  out.1 <- quiet_profile(y ~ x, data = dat.zeros, xi.vec = xi.vec, 
+                         do.smooth = FALSE)
+  out.2 <- quiet_profile(y ~ x, data = dat.zeros, xi.vec = xi.vec, 
+                         do.smooth = FALSE, glm.method = "glm.fit2")
+  expect_equal(out.2$L,   out.1$L,   tolerance = 1e-6)
+  expect_equal(out.2$phi, out.1$phi, tolerance = 1e-6)
+  
+  # A user-supplied function is used: count how often it is called
+  n.calls <- 0
+  counting_fit <- function(...) {
+    n.calls <<- n.calls + 1
+    stats::glm.fit(...)
+  }
+  out.3 <- quiet_profile(y ~ x, data = dat.zeros, xi.vec = xi.vec, 
+                         do.smooth = FALSE, glm.method = counting_fit)
+  expect_equal(n.calls, length(xi.vec))
+  expect_equal(out.3$L, out.1$L)
+  
+  # An unknown name is an error
+  expect_error( quiet_profile(y ~ x, data = dat.zeros, xi.vec = xi.vec,
+                              glm.method = "glm.fit3") )
+})
+
+
+
+test_that("Non-converged GLM fits give one warning, naming glm.fit2", {
+  xi.vec <- seq(1.4, 1.8, by = 0.1)
+  
+  # maxit = 1 ensures no fit converges; collect all warnings from the call
+  warns <- character(0)
+  utils::capture.output(
+    withCallingHandlers(
+      tweedie_profile(y ~ x, data = dat.zeros, xi.vec = xi.vec, do.smooth = FALSE,
+                      control = list(epsilon = 1e-9, maxit = 1, trace = FALSE)),
+      warning = function(w) {
+        warns <<- c(warns, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      })
+  )
+  
+  # glm.fit()'s own warnings are replaced by a single one
+  expect_false( any(grepl("glm.fit: algorithm did not converge", warns)) )
+  expect_equal( sum(grepl("did not converge", warns)), 1 )
+  expect_true( any(grepl("value\\(s\\) of xi", warns)) )
+  expect_true( any(grepl("glm.fit2", warns)) )
+})

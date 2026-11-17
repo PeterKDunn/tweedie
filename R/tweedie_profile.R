@@ -8,7 +8,7 @@
 #'   data, weights = 1, offset = 0, fit.glm = FALSE, do.smooth = TRUE, 
 #'   do.plot = FALSE, do.ci = do.smooth, eps = 1/6, 
 #'   control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, 
-#'   trace = glm.control()$trace ),
+#'   trace = glm.control()$trace ), glm.method = "glm.fit",
 #'   do.points = do.plot, method = "inversion", conf.level = 0.95, 
 #'   phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
 #'   verbose = FALSE, add0 = FALSE,
@@ -66,6 +66,17 @@
 #' @param eps the offset in computing the variance function. Default is \code{1/6} (as recommended by Nelder and Pregibon, 1987).
 #'   \code{eps} is ignored unless \code{method = "saddlepoint"}.
 #' @param control a list of parameters for controlling the fitting process;
+#' @param glm.method the function used to fit the generalized linear model at each value of
+#'   \eqn{p}{p}: either \code{"glm.fit"} (the default; \code{\link[stats]{glm.fit}}),
+#'   \code{"glm.fit2"} (\code{glm.fit2} from the \pkg{glm2} package, which must be installed),
+#'   or a function with the same arguments as \code{\link[stats]{glm.fit}}.
+#'   The usual fitting algorithm (iteratively reweighted least squares) sometimes fails to
+#'   converge for Tweedie models, typically cycling between two values without settling;
+#'   the profile likelihood is then jagged rather than smooth, and the estimate of
+#'   \eqn{p}{p} may be poor.
+#'   \code{glm.fit2} halves the step size whenever the deviance increases, and so converges
+#'   in many such cases.
+#'   A warning is given if the fit does not converge for any value of \eqn{p}{p}.
 #' @param do.points logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
 #' The defaults is the value of \code{do.plot}.
 #' @param method the method of evaluation; one of \code{saddlepoint}, \code{interpolation}, \code{series} or \code{inversion} (the default).
@@ -129,6 +140,7 @@ tweedie_profile <- function(formula,
                             control = list( epsilon = 1e-09, 
                                             maxit = stats::glm.control()$maxit, 
                                             trace = glm.control()$trace ),
+                            glm.method = "glm.fit",
                             do.points = do.plot, 
                             method = "inversion",
                             conf.level = 0.95, 
@@ -182,6 +194,24 @@ tweedie_profile <- function(formula,
                           c("inversion", "series", "interpolation", "saddlepoint"))
   phi.method <- match.arg(phi.method, 
                           c("mle", "saddlepoint"))
+
+  # The function that fits the GLM at each p. glm2::glm.fit2() takes the same
+  # arguments as stats::glm.fit(), but halves the step whenever the deviance
+  # increases, so it converges where IRLS cycles. (glm2 is only Suggested.)
+  if ( is.function(glm.method) ) {
+    glm_fitter <- glm.method
+  } else {
+    glm.method <- match.arg(glm.method,
+                            c("glm.fit", "glm.fit2"))
+    if ( glm.method == "glm.fit2" ) {
+      if ( !requireNamespace("glm2", quietly = TRUE) ) {
+        stop("glm.method = \"glm.fit2\" needs the glm2 package: install.packages(\"glm2\")")
+      }
+      glm_fitter <- glm2::glm.fit2
+    } else {
+      glm_fitter <- stats::glm.fit
+    }
+  }
   
   
   if ( is.logical( verbose ) ) verbose <- as.numeric(verbose)
@@ -400,6 +430,34 @@ tweedie_profile <- function(formula,
   mu.start <- NULL
 
   
+  # Fit the GLM at  p  with the chosen fitter (used for every GLM fit below).
+  # The fitter's own "did not converge" warnings are muffled, since there
+  # could be one for every p; instead, the values of p where the fit did not
+  # converge are recorded, and reported in one warning at the end.
+  # glm.fit2()'s "step size truncated" warnings are muffled too: they only
+  # say that step-halving was used, which is what glm.fit2() is for.
+  not.converged <- numeric(0)
+  fit_glm <- function(p, start = NULL, mustart = NULL) {
+    fit <- withCallingHandlers(
+      glm_fitter( x       = model.x,
+                  y       = ydata,
+                  weights = weights,
+                  offset  = offset,
+                  control = control,
+                  start   = start,
+                  mustart = mustart,
+                  family  = statmod::tweedie(var.power  = p,
+                                             link.power = link.power)),
+      warning = function(w) {
+        if ( grepl("did not converge|step size truncated", conditionMessage(w)) ) {
+          invokeRestart("muffleWarning")
+        }
+      })
+    if ( !isTRUE(fit$converged) ) not.converged <<- c(not.converged, p)
+    fit
+  }
+
+
   # A progress bar (but not when verbose output is printed, as they clash).
   # on.exit() closes it even if an error occurs.
   show.bar <- (verbose == 0) & (xi.len > 1)
@@ -424,14 +482,7 @@ tweedie_profile <- function(formula,
     
     # Fit the model with given p
     catch.possible.error <- try(
-      fit.model <- stats::glm.fit( x       = model.x, 
-                                   y       = ydata, 
-                                   weights = weights, 
-                                   offset  = offset,
-                                   control = control,
-                                   mustart = mu.start,
-                                   family  = statmod::tweedie(var.power  = p, 
-                                                              link.power = link.power)),
+      fit.model <- fit_glm(p, mustart = mu.start),
       silent = TRUE
     )
     
@@ -707,14 +758,7 @@ tweedie_profile <- function(formula,
       if (xi.max != 0) warning("True maximum possibly not detected.")
       
     } else {
-      fit.max <- stats::glm.fit( y       = ydata, 
-                                 x       = model.x, 
-                                 weights = weights, 
-                                 offset  = offset,
-                                 control = control,
-                                 start   = start_near(xi.max),
-                                 family  = statmod::tweedie(var.power  = xi.max, 
-                                                            link.power = link.power))
+      fit.max <- fit_glm(xi.max, start = start_near(xi.max))
       mu <- fitted( fit.max )
       
       if ( phi.method == "saddlepoint"){
@@ -810,14 +854,7 @@ tweedie_profile <- function(formula,
       if ( fit.glm ) {
         # Reuse the fit at the MLE of p, if it was needed to find phi.max
         if ( is.null(fit.max) ) {
-          fit.max <- stats::glm.fit( x       = model.x, 
-                                     y       = ydata, 
-                                     weights = weights, 
-                                     offset  = offset,
-                                     control = control,
-                                     start   = start_near(xi.max),
-                                     family  = statmod::tweedie(var.power  = xi.max, 
-                                                                link.power = link.power) )
+          fit.max <- fit_glm(xi.max, start = start_near(xi.max))
         }
         out$glm.obj <- fit.max      }
       
@@ -828,6 +865,20 @@ tweedie_profile <- function(formula,
       }
   
   if ( verbose ) cat("\n")
+
+  # Report any GLM fits that did not converge (muffled in  fit_glm()  above)
+  if ( length(not.converged) > 0 ) {
+    not.converged <- unique(not.converged)
+    msg <- paste0("The GLM fit did not converge for ", length(not.converged),
+                  " value(s) of ", index.par, " (",
+                  paste(signif(utils::head(not.converged, 5), 4), collapse = ", "),
+                  if ( length(not.converged) > 5 ) ", ..." else "",
+                  "), so the profile likelihood may be unreliable.")
+    if ( !is.function(glm.method) && (glm.method == "glm.fit") ) {
+      msg <- paste(msg, "Try  glm.method = \"glm.fit2\"  (needs the glm2 package).")
+    }
+    warning(msg, call. = FALSE)
+  }
   
   invisible( out )
   
@@ -853,6 +904,7 @@ tweedie.profile <- function(formula,
                             control    = list( epsilon = 1e-09, 
                                                maxit   = stats::glm.control()$maxit, 
                                               trace    = glm.control()$trace ),
+                            glm.method = "glm.fit",
                             do.points  = do.plot, 
                             method     = "inversion",
                             conf.level = 0.95, 

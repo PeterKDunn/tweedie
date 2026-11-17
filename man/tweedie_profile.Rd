@@ -9,7 +9,7 @@ tweedie_profile(formula, p.vec = NULL, xi.vec = NULL, link.power = 0,
   data, weights = 1, offset = 0, fit.glm = FALSE, do.smooth = TRUE, 
   do.plot = FALSE, do.ci = do.smooth, eps = 1/6, 
   control = list( epsilon = 1e-09, maxit = stats::glm.control()$maxit, 
-  trace = glm.control()$trace ),
+  trace = glm.control()$trace ), glm.method = "glm.fit",
   do.points = do.plot, method = "inversion", conf.level = 0.95, 
   phi.method = ifelse(method == "saddlepoint", "saddlepoint", "mle"), 
   verbose = FALSE, add0 = FALSE,
@@ -30,6 +30,7 @@ tweedie.profile(
   eps = 1/6,
   control = list(epsilon = 1e-09, maxit = stats::glm.control()$maxit, trace =
     glm.control()$trace),
+  glm.method = "glm.fit",
   do.points = do.plot,
   method = "inversion",
   conf.level = 0.95,
@@ -82,6 +83,18 @@ Confidence intervals are only computed if \code{do.smooth = TRUE}.}
 \code{eps} is ignored unless \code{method = "saddlepoint"}.}
 
 \item{control}{a list of parameters for controlling the fitting process;}
+
+\item{glm.method}{the function used to fit the generalized linear model at each value of
+\eqn{p}{p}: either \code{"glm.fit"} (the default; \code{\link[stats]{glm.fit}}),
+\code{"glm.fit2"} (\code{glm.fit2} from the \pkg{glm2} package, which must be installed),
+or a function with the same arguments as \code{\link[stats]{glm.fit}}.
+The usual fitting algorithm (iteratively reweighted least squares) sometimes fails to
+converge for Tweedie models, typically cycling between two values without settling;
+the profile likelihood is then jagged rather than smooth, and the estimate of
+\eqn{p}{p} may be poor.
+\code{glm.fit2} halves the step size whenever the deviance increases, and so converges
+in many such cases.
+A warning is given if the fit does not converge for any value of \eqn{p}{p}.}
 
 \item{do.points}{logical; if \code{TRUE}, the points used to compute the likelihood as given by \code{p.vec} (or equivalently, \code{xi.vec}) are explicitly shown by points. 
 The defaults is the value of \code{do.plot}.}
