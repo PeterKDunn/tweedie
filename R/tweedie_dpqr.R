@@ -435,7 +435,9 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       #                      1e6 < xi and phis <= 1e-5, the saddlepoint
       #                      approximation is used in the body instead (relative
       #                      error below about 3e-10).
-      #   xi > 1e7         : the saddlepoint approximation, for every y; and
+      #   xi > 1e7         : the saddlepoint approximation, for every y, when
+      #                      phis <= 1e-5 (otherwise p is within 1e-2 of 2,
+      #                      and the density is integrated: see below); and
       #                      also at xi = 1e7 when phis <= 1e-5 (then p >= 2.01),
       #                      where it is more accurate than the integration. Its
       #                      error falls as xi grows (about 2e-8 at xi = 1e7 for
@@ -460,6 +462,49 @@ ptweedie <- function(q, xi = NULL, mu, phi, power = NULL, lower.tail = TRUE, log
       use_inv <- !special_y_cases
       xi_d    <- mu^(2 - power) / (phi * (power - 2))
       phis    <- phi * mu^(power - 2)
+      # p within 1e-2 of 2, with xi > 1e7 but phis > 1e-5: xi is large only
+      # because p is near 2 (xi -> Inf as p -> 2), not because the dispersion
+      # is small, so the saddlepoint approximation is poor there (errors of
+      # 6e-7 at phis = 1e-3, 3e-3 at phis = 0.1 and 8e-2 at phis = 1, for
+      # every p this close to 2). Instead, the density from dtweedie() is
+      # integrated (relative errors below 1e-12 where dtweedie() uses its
+      # corrected saddlepoint approximation, phis <= 0.01 or so, and about
+      # 1e-8 above that, from the inversion's density). If that fails (very
+      # close to 2, for phis >= 1 or so, where dtweedie() itself fails), the
+      # saddlepoint approximation is used, with a warning.
+      near2 <- use_inv & ptweedie_near2(xi_d, phis)
+      n_near2_bad <- 0
+      for (j in which(near2)) {
+        ti <- ptweedie_tail_integrate(q            = q[j],
+                                      mu           = mu[j],
+                                      phi          = phi[j],
+                                      power        = power,
+                                      lower.tail   = lower.tail,
+                                      fallback     = TRUE,
+                                      use_dtweedie = TRUE)
+        if (ti$ok) {
+          f[j] <- if (log.p) ti$logp else exp(ti$logp)
+        } else {
+          f[j] <- ptweedie_saddle(q          = q[j],
+                                  mu         = mu[j],
+                                  phi        = phi[j],
+                                  power      = power,
+                                  lower.tail = lower.tail,
+                                  log.p      = log.p)
+          n_near2_bad <- n_near2_bad + 1
+        }
+      }
+      if (any(near2)) {
+        if (verbose) cat("- With p > 2: integrating the density for", sum(near2), "value(s) (p near 2)\n")
+        use_inv[near2] <- FALSE
+      }
+      if (n_near2_bad > 0) {
+        warning("ptweedie: with p this close to 2, the density could not be integrated for ", 
+                n_near2_bad, " value(s); the saddlepoint approximation was used for these ",
+                "instead, and they may be inaccurate (errors of 1e-2 or more when phi mu^(p - 2) ",
+                "is near 1).", call. = FALSE)
+      }
+      
       if ( any(use_inv) ) {
         # (xi within rounding of 1e7 counts as xi = 1e7: it is included only
         # when phis <= 1e-5; near p = 2, at xi = 1e7, the integration is the

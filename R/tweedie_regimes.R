@@ -58,8 +58,13 @@ tweedie_regime_settings <- function() {
     p_xi_body_sp  = 1e6,
     p_phis_saddle = 1e-5,
     
-    # xi above this (or equal to it, with phis <= p_phis_saddle): the
-    # saddlepoint approximation for every value
+    # xi above this (or equal to it), with phis <= p_phis_saddle: the
+    # saddlepoint approximation for every value. Near p = 2, xi is large
+    # whatever the dispersion (xi -> Inf as p -> 2), so xi above this with
+    # phis > p_phis_saddle happens only for p within 1e-2 of 2; there the
+    # saddlepoint approximation is poor (relative errors of 6e-7 at
+    # phis = 1e-3, 3e-3 at phis = 0.1, 8e-2 at phis = 1), and the density
+    # (from dtweedie()) is integrated instead
     p_xi_saddle   = 1e7,
     
     # A failed tail probability below this (the inversion's value then has
@@ -121,8 +126,11 @@ ptweedie_regime <- function(q, mu, phi, power) {
   #   "integration"   p_xi_body_int < xi <= p_xi_saddle: the density is
   #                   integrated (in the body, the saddlepoint approximation
   #                   when xi > p_xi_body_sp and phis <= p_phis_saddle)
-  #   "saddlepoint"   xi > p_xi_saddle (or xi = p_xi_saddle, to within
-  #                   rounding, when phis <= p_phis_saddle)
+  #   "saddlepoint"   xi >= p_xi_saddle (to within rounding) and
+  #                   phis <= p_phis_saddle
+  #   "integration (p near 2)"  xi > p_xi_saddle but phis > p_phis_saddle
+  #                   (so p is within 1e-2 of 2): the density, from
+  #                   dtweedie(), is integrated
   # Which tail a value is in is decided by the inversion's value, so is
   # known only once that is computed. NA where q is NA.
   S    <- tweedie_regime_settings()
@@ -150,6 +158,7 @@ ptweedie_regime <- function(q, mu, phi, power) {
   regime[ok & (xi > S$p_xi_trust)]           <- "integration in tails"
   regime[ok & (xi > S$p_xi_body_int)]        <- "integration"
   regime[ok & ptweedie_use_saddle(xi, phis)] <- "saddlepoint"
+  regime[ok & ptweedie_near2(xi, phis)]      <- "integration (p near 2)"
   regime[ok & (q <= 0)]                      <- "exact"
   regime
 }
@@ -159,10 +168,29 @@ ptweedie_regime <- function(q, mu, phi, power) {
 #' @noRd
 ptweedie_use_saddle <- function(xi, phis) {
   # TRUE where ptweedie() (p > 2) uses the saddlepoint approximation for
-  # every value: xi > p_xi_saddle, or xi = p_xi_saddle (to within rounding)
-  # with phis <= p_phis_saddle (near p = 2 at xi = p_xi_saddle, the
-  # integration is the more accurate)
+  # every value: xi >= p_xi_saddle and phis <= p_phis_saddle (each to within
+  # rounding). The saddlepoint approximation's accuracy depends on phis, not
+  # on xi; xi is large also when p is near 2 (xi -> Inf as p -> 2 whatever
+  # phis is), and there, unless phis is small, it is poor: see ptweedie_near2().
+  # (Before 2026-11, xi > p_xi_saddle alone was enough, which gave silent
+  # errors of up to 4e-1 for p within 1e-7 of 2.)
   S <- tweedie_regime_settings()
-  (xi > S$p_xi_saddle * (1 + 1e-8)) |
-    ( (xi >= S$p_xi_saddle * (1 - 1e-8)) & (phis <= S$p_phis_saddle) )
+  big_xi     <- (xi > S$p_xi_saddle * (1 + 1e-8))
+  at_xi      <- (xi >= S$p_xi_saddle * (1 - 1e-8))
+  small_phis <- (phis <= S$p_phis_saddle * (1 + 1e-8))
+  ( big_xi & small_phis ) |
+    ( at_xi & (phis <= S$p_phis_saddle) )
+}
+
+
+
+#' @noRd
+ptweedie_near2 <- function(xi, phis) {
+  # TRUE where ptweedie() (p > 2) integrates the density from dtweedie():
+  # xi > p_xi_saddle, but phis > p_phis_saddle, which happens only for p
+  # within 1e-2 of 2 (xi (p - 2) = 1/phis). There the saddlepoint
+  # approximation is poor, and the inversion is not used for xi this large.
+  S <- tweedie_regime_settings()
+  (xi > S$p_xi_saddle * (1 + 1e-8)) & 
+    (phis > S$p_phis_saddle * (1 + 1e-8))
 }

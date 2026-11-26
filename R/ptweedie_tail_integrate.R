@@ -5,7 +5,7 @@
 #' integration of the density function.
 #'
 #' @usage ptweedie_tail_integrate(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
-#'                                fallback = TRUE)
+#'                                fallback = TRUE, use_dtweedie = FALSE)
 #'
 #' @param q vector of quantiles.
 #' @param mu vector of mean \eqn{\mu}{mu}.
@@ -19,6 +19,9 @@
 #' @param fallback logical; if ]\code{FALSE},only the Gauss-Laguerre rules are tried,
 #'    which is cheap; the slower piecewise adaptive integration is skipped, and 
 #'    \code{ok = FALSE} returned if they fail. The default is \code{TRUE}
+#' @param use_dtweedie logical; if \code{TRUE}, the density is computed by
+#'    \code{dtweedie()} (which chooses the most accurate method for each value)
+#'    rather than by the Fourier inversion. The default is \code{FALSE}.
 #'     
 #' @examples
 #' ptweedie_tail_integrate(0.00001, power = 2.1, mu = 1, phi = 1)
@@ -35,7 +38,7 @@
 #' 
 #' @export
 ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
-                                    fallback = TRUE) {
+                                    fallback = TRUE, use_dtweedie = FALSE) {
   # Tail probability for p > 2 by integrating the density; for scalar q, mu, phi.
   #
   # The Fourier inversion gives F(q) = 1/2 -/+ I/pi, with an error that is
@@ -57,13 +60,32 @@ ptweedie_tail_integrate <- function(q, mu, phi, power, lower.tail = TRUE, IGexac
   # if they fail.
   # (IGexact is passed to dtweedie_inversion; it matters only for p = 3, and
   #  is set to FALSE in the tests to check against the exact inverse Gaussian.)
+  #
+  # If use_dtweedie = TRUE, the density is computed by dtweedie() instead of
+  # the inversion. This is needed for p very close to 2 (see ptweedie()),
+  # where the inversion's density is not accurate when phi y^(p - 2) is small
+  # (relative errors of about 3e-6 at p = 2 + 1e-8, phi = 1e-4), but
+  # dtweedie()'s corrected saddlepoint approximation is. A value is marked as
+  # failed (exitstatus = 1) if dtweedie() warns that it may be inaccurate.
 
   dens <- function(t) {
-    suppressWarnings(
-      dtweedie_inversion(t, mu = mu, phi = phi, power = power,
-                         IGexact = IGexact, 
-                         details = TRUE) 
-      )
+    if (use_dtweedie) {
+      warned <- FALSE
+      d <- withCallingHandlers(
+             dtweedie(t, mu = mu, phi = phi, power = power),
+             warning = function(w) {
+               warned <<- TRUE
+               invokeRestart("muffleWarning")
+             })
+      list(density    = d,
+           exitstatus = rep(if (warned) 1L else 0L, length(t)))
+    } else {
+      suppressWarnings(
+        dtweedie_inversion(t, mu = mu, phi = phi, power = power,
+                           IGexact = IGexact, 
+                           details = TRUE) 
+        )
+    }
   }
 
   d_q <- dens(q)

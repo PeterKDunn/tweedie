@@ -14,6 +14,16 @@ tweedie 3.3.??? (Release date: )
   halves the step whenever the deviance increases, and converges in such cases.
 * tweedie_profile() now gives a single warning listing the values of p where
   the GLM fit did not converge (rather than one warning from glm.fit() for each).
+* ptweedie(), p just above 2: fixed silent errors. For p > 2 the saddlepoint
+  approximation was used whenever xi = mu^(2 - p)/{phi (p - 2)} > 1e7. But xi
+  is huge for p near 2 whatever the dispersion, so for p within about 1e-7 of 2
+  the saddlepoint was used even for large phi, where it is poor (e.g. errors of
+  5e-4 for phi = 0.5, and up to 40% for phi = 5). Now the saddlepoint is used
+  only when phi mu^(p - 2) <= 1e-5 as well; otherwise (p within 1e-2 of 2) the
+  density from dtweedie() is integrated (relative errors below about 1e-8). If
+  that fails (p within about 1e-8 of 2 and phi of 1 or more), the saddlepoint is
+  still used, but with a warning. ptweedie_tail_integrate() has a new argument
+  `use_dtweedie` for this.
 
 
 tweedie 3.2.2 (Release date: 2026-11-15)

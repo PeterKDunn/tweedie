@@ -5,7 +5,7 @@
 \title{Tweedie CDF evaluation using direct integration (in the tails only)}
 \usage{
 ptweedie_tail_integrate(q, mu, phi, power, lower.tail = TRUE, IGexact = TRUE,
-                               fallback = TRUE)
+                               fallback = TRUE, use_dtweedie = FALSE)
 }
 \arguments{
 \item{q}{vector of quantiles.}
@@ -26,6 +26,10 @@ Gaussian distribution using the 'exact' values, otherwise uses inversion.}
 \item{fallback}{logical; if ]\code{FALSE},only the Gauss-Laguerre rules are tried,
 which is cheap; the slower piecewise adaptive integration is skipped, and 
 \code{ok = FALSE} returned if they fail. The default is \code{TRUE}}
+
+\item{use_dtweedie}{logical; if \code{TRUE}, the density is computed by
+\code{dtweedie()} (which chooses the most accurate method for each value)
+rather than by the Fourier inversion. The default is \code{FALSE}.}
 }
 \description{
 Distribution function evaluation in the distribution tails using direct
