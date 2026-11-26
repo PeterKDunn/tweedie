@@ -1,4 +1,4 @@
-tweedie 3.3.??? (Release date: )
+tweedie 3.3.0 (Release date: )
 ==============
 
 ## Summary
@@ -6,6 +6,8 @@ tweedie 3.3.??? (Release date: )
 ## Changed and fixed
 * Fixed some minor typos in the vignette.
 * Corrections to README.
+* The regimes changed where p was larger than 2 but a *very* small amount (e.g., 
+  for p = 2.00000001), for improved rel. accuracy there.
 * tweedie_profile() has a new argument `glm.method`, to choose the function that
   fits the GLM at each value of p: `"glm.fit"` (the default, as before),
   `"glm.fit2"` (from the glm2 package, now in Suggests), or a user-supplied
